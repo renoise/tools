@@ -449,15 +449,15 @@ function xStream:__init(...)
 
   self.osc_client.first_run_observable:add_notifier(function()
     TRACE("*** osc_client.first_run_observable fired...")
-    self.prefs.osc_client_first_run.value = osc_client.first_run_observable.value
+    self.prefs.osc_client_first_run.value = self.osc_client.first_run_observable.value
   end)
   self.osc_client.osc_host_observable:add_notifier(function()
     TRACE("*** osc_client.osc_host_observable fired...")
-    self.prefs.osc_client_host.value = osc_client.osc_host_observable.value
+    self.prefs.osc_client_host.value = self.osc_client.osc_host_observable.value
   end)
   self.osc_client.osc_port_observable:add_notifier(function()
     TRACE("*** osc_client.osc_port_observable fired...")
-    self.prefs.osc_client_port.value = osc_client.osc_port_observable.value
+    self.prefs.osc_client_port.value = self.osc_client.osc_port_observable.value
   end)
 
   -- tool --
