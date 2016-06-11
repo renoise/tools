@@ -1397,7 +1397,7 @@ end
 -------------------------------------------------------------------------------
 -- produce a valid, unique data/event key (name)
 -- @param str_name (string), preferred name
--- @param type (string, "events" or "data")
+-- @param cb_type (string, "events" or "data")
 -- @return string, a unique name for the callback
 
 function xStreamModel:get_suggested_callback_name(str_name,cb_type)
@@ -1455,6 +1455,7 @@ end
 
 -------------------------------------------------------------------------------
 -- return the path to the internal models 
+-- @param str_name (string)
 
 function xStreamModel.get_normalized_file_path(str_name)
   local prefs = renoise.tool().preferences

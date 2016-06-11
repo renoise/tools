@@ -3,11 +3,13 @@ xStream
 ============================================================================]]--
 --[[
 
-  The main xStream class - where it all comes together
+The main xStream class - where it all comes together
+.
+#
 
-  TODO refactor the blockloop tracking into the xStreamPos class
-  and implement a "refresh_fn" handler for recalculating the read buffer
-  (see idle method for a partial implementation of this)
+TODO refactor the blockloop tracking into the xStreamPos class
+and implement a "refresh_fn" handler for recalculating the read buffer
+(see idle method for a partial implementation of this)
 
 ]]
 
@@ -1869,8 +1871,13 @@ function xStream:handle_midi_input(xmsg)
     return
   end
 
-  -- pass to voicemanager 
-  local rslt,idx = self.voicemgr:input_message(xmsg)
+  -- pass to voicemanager (which might redefine the message in case
+  -- we have configured it to follow the active track/instrument/etc)
+  local _xmsg = self.voicemgr:input_message(xmsg)
+  --print("handle_midi_input POST",_xmsg)
+  if _xmsg then
+    xmsg = _xmsg
+  end
 
   -- pass to event handlers (if any)
   local event_key = "midi."..tostring(xmsg.message_type)

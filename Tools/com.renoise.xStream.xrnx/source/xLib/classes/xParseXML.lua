@@ -8,11 +8,10 @@ Parsing is based on the implementation by Roberto Ierusalimschy, modified to sup
 
 (TODO) In addition to the raw XML parsing, the class can also convert a XML document into a native renoise.Document instance (particularly optimized for renoise-generated documents). 
 
-See also 
-@{http://lua-users.org/wiki/LuaXml}
+See also: {http://lua-users.org/wiki/LuaXml}
   
 
-]]
+]]--
 
 class 'xParseXML'
 

@@ -76,12 +76,13 @@ function xMidiIO:__init(...)
 end
 
 --------------------------------------------------------------------------------
--- Class methods
---------------------------------------------------------------------------------
 -- open access to midi port 
+-- @param port_name (string)
 
 function xMidiIO:open_midi_input(port_name)
   TRACE("xMidiIO:open_midi_input(port_name)",port_name)
+
+  assert(type(port_name),"string","Expected port_name to be a string")
 
   local input_devices = renoise.Midi.available_input_devices()
   if table.find(input_devices, port_name) then
@@ -130,7 +131,8 @@ end
 
 --------------------------------------------------------------------------------
 -- input raw midi messages here and pass them into xMidiInput
--- @param msg (table), midi message
+-- @param midi_msg (table), midi message
+-- @param port_name (string)
 
 function xMidiIO:input_midi(midi_msg,port_name)
   TRACE("xMidiIO:input_midi(midi_msg,port_name)",midi_msg,port_name)
@@ -164,9 +166,12 @@ function xMidiIO:input_sysex(sysex_msg,port_name)
 end
 
 --------------------------------------------------------------------------------
+-- @param port_name (string)
 
 function xMidiIO:close_midi_input(port_name)
   TRACE("xMidiIO:close_midi_input(port_name)")
+
+  assert(type(port_name),"string","Expected port_name to be a string")
 
   local midi_input = self._midi_input_ports[port_name] 
   if (midi_input and midi_input.is_open) 
@@ -180,9 +185,12 @@ function xMidiIO:close_midi_input(port_name)
 end
 
 --------------------------------------------------------------------------------
+-- @param port_name (string)
 
 function xMidiIO:open_midi_output(port_name)
   TRACE("xMidiIO:open_midi_output(port_name)")
+
+  assert(type(port_name),"string","Expected port_name to be a string")
 
   local output_devices = renoise.Midi.available_output_devices()
   if table.find(output_devices, port_name) then
@@ -194,9 +202,12 @@ function xMidiIO:open_midi_output(port_name)
 end
 
 --------------------------------------------------------------------------------
+-- @param port_name (string)
 
 function xMidiIO:close_midi_output(port_name)
   TRACE("xMidiIO:close_midi_output(port_name)")
+
+  assert(type(port_name),"string","Expected port_name to be a string")
 
   local midi_output = self._midi_output_ports[port_name] 
   if (midi_output and midi_output.is_open) 

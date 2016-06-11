@@ -99,6 +99,7 @@ end
 -------------------------------------------------------------------------------
 -- Add property to our document, register notifier
 -- @param arg (table), see xStreamArg.constructor
+-- @param index (int), at which index to add (optional, default == at end)
 -- @param do_replace (bool), do not add getter - it's already defined
 -- @return bool, true when accepted
 -- @return string, error message (set on failure)

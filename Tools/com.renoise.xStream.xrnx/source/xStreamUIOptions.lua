@@ -659,7 +659,6 @@ function xStreamUIOptions:on_idle()
 end
 
 --------------------------------------------------------------------------------
--- [xMIDIApplication] 
 
 function xStreamUIOptions:update_input_tab()
 
@@ -700,8 +699,9 @@ end
 
 
 -------------------------------------------------------------------------------
--- [xMIDIApplication] find among midi inputs/outputs
--- @param port_name (string)
+-- find among midi inputs/outputs
+-- @param list (table)
+-- @param value (string)
 -- @return int or nil
 
 function xStreamUIOptions:match_in_list(list,value)

@@ -3,7 +3,11 @@ xStreamUIFavorites
 ============================================================================]]--
 --[[
 
-	Supporting class for xStream 
+Supporting class for xStream, takes care of building the favorites UI
+
+.
+#
+
 
 ]]
 
@@ -942,6 +946,7 @@ end
 -- apply a single property to a favorite (existing or empty)
 -- @param favorite_idx (int)
 -- @param prop_name (string)
+-- @param prop_value (number/string/boolean)
 
 function xStreamUIFavorites:apply_property(favorite_idx,prop_name,prop_value)
   TRACE("xStreamUIFavorites:apply_property(favorite_idx,prop_name,prop_value)",favorite_idx,prop_name,prop_value)
@@ -1006,6 +1011,7 @@ function xStreamUIFavorites:update_favorite_selector()
 end
 
 -------------------------------------------------------------------------------
+-- @param model_names (table)
 
 function xStreamUIFavorites:update_model_selector(model_names)
   TRACE("xStreamUIFavorites:update_model_selector(model_names)",model_names)
@@ -1023,6 +1029,7 @@ end
 
 
 -------------------------------------------------------------------------------
+--
 
 function xStreamUIFavorites:update_pinned_state()
   TRACE("xStreamUIFavorites:update_pinned_state()")
@@ -1037,10 +1044,9 @@ function xStreamUIFavorites:update_pinned_state()
 end
 
 -------------------------------------------------------------------------------
+-- blinking/flashing stuff, delayed display updates
 
 function xStreamUIFavorites:on_idle()
-
-  -- scheduling: blinking stuff ---------------------------
 
   local blink_state = (math.floor(os.clock()*4)%2 == 0) 
   if (blink_state ~= self.blink_state) then
@@ -1049,8 +1055,6 @@ function xStreamUIFavorites:on_idle()
         self.scheduled_favorite_index, (not blink_state) and xStreamUI.DIMMED_AMOUNT)
     end
   end
-
-  -- delayed display updates ------------------------------
 
   if self.build_requested then
     self.build_requested = false
@@ -1073,8 +1077,6 @@ function xStreamUIFavorites:on_idle()
     self:update_edit_rack()
     self:update_button(self.xstream.favorites.last_selected_index)
   end
-
-  -- briefly flashing buttons -----------------------------
 
   for k,v in ripairs(self.flash_favorite_buttons) do
     if (v.clocked < os.clock() - xStreamUI.FLASH_TIME) then

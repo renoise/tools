@@ -400,7 +400,7 @@ end
 
 -------------------------------------------------------------------------------
 -- retrieve models matching the preset_bank_name
--- @param model_name (string)
+-- @param preset_bank_name (string)
 -- @return table<int> 
 
 function xStreamFavorites:get_by_preset_bank(preset_bank_name)
@@ -423,6 +423,8 @@ function xStreamFavorites:get_by_preset_bank(preset_bank_name)
 end
 
 -------------------------------------------------------------------------------
+-- @param str_old (string)
+-- @param str_new (string)
 -- @return bool, true when one or more items were renamed
 
 function xStreamFavorites:rename_model(str_old,str_new)
@@ -443,6 +445,7 @@ end
 
 
 -------------------------------------------------------------------------------
+-- @param idx (int)
 -- @return table or nil if not found
 
 function xStreamFavorites:get_by_index(idx)
@@ -454,6 +457,7 @@ end
 
 -------------------------------------------------------------------------------
 -- when triggered via UI - launch if not in edit mode
+-- @param idx (int)
 
 function xStreamFavorites:trigger(idx)
   TRACE("xStreamFavorites:trigger(idx)",idx)
@@ -472,6 +476,7 @@ end
 
 -------------------------------------------------------------------------------
 -- launch favorite 
+-- @param idx (int)
 
 function xStreamFavorites:launch(idx)
   TRACE("xStreamFavorites:launch(idx)",idx)

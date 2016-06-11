@@ -291,7 +291,7 @@ end
 
 -------------------------------------------------------------------------------
 -- resolve the 'bind string' into an ObservableXXX object
--- @param str (string), e.g. "rns.transport.keyboard_velocity_observable"
+-- @param bind_str (string), e.g. "rns.transport.keyboard_velocity_observable"
 -- @return ObservableXXX or nil
 
 function xStreamArg.resolve_binding(bind_str)

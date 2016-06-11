@@ -321,8 +321,10 @@ end
 
 -------------------------------------------------------------------------------
 -- "safer" renaming of a string token (for example, a variable name)
+-- @param str_fn (string), the function text 
 -- @param old_name (string)
 -- @param new_name (string)
+-- @param prefix (string), prepend to old/new name when defined
 
 function xSandbox.rename_string_token(str_fn,old_name,new_name,prefix)
 

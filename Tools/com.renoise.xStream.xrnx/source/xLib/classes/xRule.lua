@@ -356,6 +356,7 @@ function xRule:__init(def)
     -- @param val1 (number)
     -- @param val2 (number)
     -- @param operator (xRule.OPERATOR)
+    -- @param precision (number), optional precision factor
     local compare_numbers = function(val1,val2,operator,precision)
       --print("compare_numbers - val1,val2,operator,precision",val1,val2,operator,precision)
       local is_equal = precision and xLib.float_compare(val1,val2,precision) 

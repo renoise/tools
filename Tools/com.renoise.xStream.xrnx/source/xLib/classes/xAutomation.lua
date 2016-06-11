@@ -265,9 +265,9 @@ end
 
 -------------------------------------------------------------------------------
 -- Scale an incoming value to the automation range (0-1)
--- @param param - renoise.DeviceParameter
--- @param value - number
--- @param value_mode - xMidiMessage.MODE - abs/rel + #bits
+-- @param value (number)
+-- @param value_mode (xMidiMessage.MODE), abs/rel + #bits
+-- @return number
 
 function xAutomation.get_scaled_value(value,value_mode)
   TRACE("xAutomation.get_scaled_value(value,value_mode)",value,value_mode)
