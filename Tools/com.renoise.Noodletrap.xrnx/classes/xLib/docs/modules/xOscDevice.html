@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>ldoc</h1>
+<h1>xLib</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -41,6 +41,7 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
@@ -53,6 +54,7 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="../modules/xMessage.html">xMessage</a></li>
   <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
   <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
@@ -62,9 +64,11 @@
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParameter.html">xParameter</a></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
+  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
+  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -77,8 +81,8 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xTransport.html">xTransport</a></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
-  <li><a href="../modules/xVoice.html">xVoice</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -275,6 +279,13 @@ socket<em>error(),socket</em>message()</p>
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        bool, true when message was transmitted</li>
+        <li>
+        string, message when failed</li>
+    </ol>
 
 
 

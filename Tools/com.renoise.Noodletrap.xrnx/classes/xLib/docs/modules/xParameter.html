@@ -42,7 +42,7 @@
   <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
-  <li><strong>xDocument</strong></li>
+  <li><a href="../modules/xDocument.html">xDocument</a></li>
   <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
   <li><a href="../modules/xFilesystem.html">xFilesystem</a></li>
   <li><a href="../modules/xInstrument.html">xInstrument</a></li>
@@ -62,7 +62,7 @@
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
-  <li><a href="../modules/xParameter.html">xParameter</a></li>
+  <li><strong>xParameter</strong></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
   <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
@@ -88,23 +88,15 @@
 
 <div id="content">
 
-<h1>Module <code>xDocument</code></h1>
-<p>Extend xDocument to create classes with basic import/export features
+<h1>Module <code>xParameter</code></h1>
+<p>Abstract device-parameter class, supports relative values (xMidiMessage)
 .</p>
 <p>
 
 <h1></h1>
 
-<p>For the xDocument to work, you need to define a static DOC_PROPS property, which will define the properties which should be included in exports/imports as well as their type (number,boolean,string)</p>
-
-<p>For example: </p>
-
-<pre><code>MyClass.DOC_PROPS = {
-  active = "boolean",
-  name = "string",
-}
-</code></pre>
-
+<p>PLANNED
+  Parameter pickup (remember last set value)</p>
 
 </p>
 
@@ -112,22 +104,16 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#import">import (str)</a></td>
-	<td class="summary">import serialized values that match one of our DOC_PROPS</td>
+	<td class="name" nowrap><a href="#set_value">set_value (param, val, mode, val_min, val_max, msg_type)</a></td>
+	<td class="summary">Apply a value, optionally with a specific mode</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#export">export ()</a></td>
-	<td class="summary">
-
-</td>
+	<td class="name" nowrap><a href="#increment_value">increment_value (param, val)</a></td>
+	<td class="summary">Increment value by "number of steps"</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#serialize">serialize (obj, props)</a></td>
-	<td class="summary">collect properties from object</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#deserialize">deserialize (str, props)</a></td>
-	<td class="summary">deserialize string</td>
+	<td class="name" nowrap><a href="#decrement_value">decrement_value (param, val)</a></td>
+	<td class="summary">Decrement value by "number of steps"</td>
 	</tr>
 </table>
 
@@ -138,100 +124,113 @@
     <h2><a name="Functions"></a>Functions</h2>
     <dl class="function">
     <dt>
-    <a name = "import"></a>
-    <strong>import (str)</strong>
+    <a name = "set_value"></a>
+    <strong>set_value (param, val, mode, val_min, val_max, msg_type)</strong>
     </dt>
     <dd>
-    import serialized values that match one of our DOC_PROPS
+    Apply a value, optionally with a specific mode
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">str</span>
-         (string) serialized values
+        <li><span class="parameter">param</span>
+
+<ul>
+    <li>DeviceParameter</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">val</span>
+
+<ul>
+    <li>number</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">mode</span>
+
+<ul>
+    <li>xMidiMessage.MODE - absolute/relative + number of bits</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">val_min</span>
+
+<ul>
+    <li>int, smallest possible value (derived from mode if not specified)</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">val_max</span>
+
+<ul>
+    <li>int, largest possible value (derived from mode if not specified)</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">msg_type</span>
+
+<ul>
+    <li>xMidiMessage.TYPE (required for 14-bit relative msgs)</li>
+</ul>
+
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-        string, serialized values
-    </ol>
 
 
 
 
 </dd>
     <dt>
-    <a name = "export"></a>
-    <strong>export ()</strong>
+    <a name = "increment_value"></a>
+    <strong>increment_value (param, val)</strong>
     </dt>
     <dd>
+    Increment value by "number of steps"
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">param</span>
 
 
 
+        </li>
+        <li><span class="parameter">val</span>
 
-    <h3>Returns:</h3>
-    <ol>
 
-        string, serialized values
-    </ol>
+
+        </li>
+    </ul>
+
 
 
 
 
 </dd>
     <dt>
-    <a name = "serialize"></a>
-    <strong>serialize (obj, props)</strong>
+    <a name = "decrement_value"></a>
+    <strong>decrement_value (param, val)</strong>
     </dt>
     <dd>
-    collect properties from object
+    Decrement value by "number of steps"
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">obj</span>
-         (class instance)
+        <li><span class="parameter">param</span>
+
+
+
         </li>
-        <li><span class="parameter">props</span>
-         (table) DOC_PROPS
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table
-    </ol>
+        <li><span class="parameter">val</span>
 
 
 
-
-</dd>
-    <dt>
-    <a name = "deserialize"></a>
-    <strong>deserialize (str, props)</strong>
-    </dt>
-    <dd>
-    deserialize string
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">str</span>
-         (str) serialized string
-        </li>
-        <li><span class="parameter">props</span>
-         (table) DOC_PROPS
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-        table or nil
-    </ol>
 
 
 
