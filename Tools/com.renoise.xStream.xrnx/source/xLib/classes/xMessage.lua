@@ -4,12 +4,17 @@ xMessage
 
 --[[--
 
-Abstract message class (extend to create your own type)
+Abstract message class (the basis for OSC and MIDI messages)
 .
 #
 
+### About
+
+Some properties are added because of the xVoiceManager. This includes all the originating_XX properties (on by default). Usually you don't have to change these values - read the xVoiceManager description to learn what they do. 
+
 ### See also 
-@{xOscMessage},@{xMidiMessage} 
+@{xOscMessage},@{xMidiMessage},@{xVoiceManager}
+
 
 ]]
 
@@ -47,26 +52,39 @@ function xMessage:__init(...)
   self.instrument_index = property(self.get_instrument_index,self.set_instrument_index)
   self._instrument_index = args.instrument_index or rns.selected_instrument_index
 
-  --- int, 1-12 - the note column index
+  --- int, 1-12 -- the note column index
   self.note_column_index = property(self.get_note_column_index,self.set_note_column_index)
   self._note_column_index = args.note_column_index or rns.selected_note_column_index
 
-  --- int, 1-512 - the pattern-line number
+  --- int, 1-512 -- the pattern-line number
   self.line_index = property(self.get_line_index,self.set_line_index)
   self._line_index = args.line_index or rns.selected_line_index
 
-  --- int, 0-8 - the octave 
+  --- float, 0-1 -- optional high-precision value
+  self.line_fraction = property(self.get_line_fraction,self.set_line_fraction)
+  self._line_fraction = args.line_fraction or rns.selected_line_index
+
+  --- int, 0-8 -- the octave 
   self.octave = property(self.get_octave,self.set_octave)
-  self._line_index = args.octave or rns.transport.octave
+  self._octave = args.octave or rns.transport.octave
 
   --- the raw message, as received (or ready to send)
   self.raw_message = property(self.get_raw_message,self.set_raw_message)
   self._raw_message = args.raw_message
 
+  -- internal --
+
+  --- int, used when following (xVoiceManager)
+  self._originating_track_index = nil
+
+  --- int, -//-
+  self._originating_instrument_index = nil
+
+  --- int, -//-
+  self._originating_octave = nil
+
   --- table, constructor 
   self.__def = property(self.get_definition)
-
-  -- private --
 
   self._raw_cache = nil
 
@@ -168,6 +186,7 @@ end
 
 
 -------------------------------------------------------------------------------
+-- @return table, a representation of the object state
 
 function xMessage:get_definition()
 
@@ -175,7 +194,13 @@ function xMessage:get_definition()
     values = table.copy(self.values),
     track_index = self.track_index,
     instrument_index = self.instrument_index,
+    note_column_index = self.note_column_index,
+    line_index = self.line_index,
+    octave = self.octave,
     raw_message = self.raw_message,
+    _originating_instrument = self._originating_instrument,
+    _originating_octave = self._originating_octave,
+    _originating_track = self._originating_track,
   }
 
 end

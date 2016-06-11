@@ -83,8 +83,6 @@ xMidiMessage.DEFAULT_CHANNEL = 0
 xMidiMessage.DEFAULT_PORT_NAME = "Unknown port"
 
 -------------------------------------------------------------------------------
--- Class Methods
--------------------------------------------------------------------------------
 
 function xMidiMessage:__init(...)
 
@@ -130,6 +128,25 @@ function xMidiMessage:__init(...)
 
 end
 
+-------------------------------------------------------------------------------
+-- xMessage
+-------------------------------------------------------------------------------
+
+function xMidiMessage:get_definition()
+  --print("xMidiMessage:get_definition()")
+
+  local def = xMessage.get_definition(self)
+  def.message_type = self.message_type
+  def.channel = self.channel
+  def.bit_depth = self.bit_depth
+  def.port_name = self.port_name
+  
+  return def
+
+end
+
+-------------------------------------------------------------------------------
+-- xMidiMessage
 -------------------------------------------------------------------------------
 
 function xMidiMessage:get_message_type()
@@ -378,21 +395,6 @@ function xMidiMessage:create_raw_message()
       return raw_midi
     end
   end
-
-end
-
--------------------------------------------------------------------------------
-
-function xMidiMessage:get_definition()
-  --print("xMidiMessage:get_definition()")
-
-  local def = xMessage.get_definition(self)
-  def.message_type = self.message_type
-  def.channel = self.channel
-  def.bit_depth = self.bit_depth
-  def.port_name = self.port_name
-  
-  return def
 
 end
 
