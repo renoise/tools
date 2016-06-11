@@ -26,7 +26,7 @@ class 'xStreamPos'
 
 function xStreamPos:__init()
 
-  --- (renoise.SongPos) monitor changes to playback 
+  --- (xPlayPos) monitor changes to playback 
   --self.playpos = rns.transport.playback_pos
   self.playpos = xPlayPos()
 
@@ -73,16 +73,23 @@ end
 function xStreamPos:start()
 
   if rns.transport.playing then
+    self.readpos = xSongPos(rns.transport.playback_pos)
     if not self.just_started_playback then
-      -- when already playing, start from next line
+      --print(">>> xStreamPos:start - already playing")
       self.writepos = xSongPos(rns.transport.playback_pos)
       self.writepos.lines_travelled = -1
       self.writepos:increase_by_lines(1)
+      self.readpos:increase_by_lines(1)
     else
+      --print(">>> xStreamPos:start - playback just started ")
       self.writepos = xSongPos(rns.transport.playback_pos)
+      self.readpos:increase_by_lines(1)
     end
   else
+    --print(">>> xStreamPos:start - from stopped state")
     self.writepos = xSongPos(rns.transport.edit_pos)
+    self.readpos = xSongPos(rns.transport.edit_pos)
+    self.readpos:increase_by_lines(1)
   end
 
 end
@@ -383,6 +390,7 @@ function xStreamPos:track_pos()
     end
   else
     -- paused playback, do not output 
+    --self:set_pos(rns.transport.edit_pos)
   end
 
   if (self.just_started_playback == 0) then

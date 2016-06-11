@@ -1,0 +1,405 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
+  <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
+  <li><a href="../modules/xDebug.html">xDebug</a></li>
+  <li><a href="../modules/xDocument.html">xDocument</a></li>
+  <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
+  <li><a href="../modules/xFilesystem.html">xFilesystem</a></li>
+  <li><a href="../modules/xInstrument.html">xInstrument</a></li>
+  <li><a href="../modules/xLib.html">xLib</a></li>
+  <li><a href="../modules/xLine.html">xLine</a></li>
+  <li><a href="../modules/xLineAutomation.html">xLineAutomation</a></li>
+  <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
+  <li><a href="../modules/xMessage.html">xMessage</a></li>
+  <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
+  <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
+  <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
+  <li><a href="../modules/xObservable.html">xObservable</a></li>
+  <li><a href="../modules/xOscClient.html">xOscClient</a></li>
+  <li><a href="../modules/xOscDevice.html">xOscDevice</a></li>
+  <li><a href="../modules/xOscMessage.html">xOscMessage</a></li>
+  <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
+  <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
+  <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParameter.html">xParameter</a></li>
+  <li><a href="../modules/xParseXML.html">xParseXML</a></li>
+  <li><a href="../modules/xPhrase.html">xPhrase</a></li>
+  <li><strong>xPhraseManager</strong></li>
+  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="../modules/xPreferences.html">xPreferences</a></li>
+  <li><a href="../modules/xReflection.html">xReflection</a></li>
+  <li><a href="../modules/xRule.html">xRule</a></li>
+  <li><a href="../modules/xRules.html">xRules</a></li>
+  <li><a href="../modules/xRuleset.html">xRuleset</a></li>
+  <li><a href="../modules/xSample.html">xSample</a></li>
+  <li><a href="../modules/xSampleMapping.html">xSampleMapping</a></li>
+  <li><a href="../modules/xSandbox.html">xSandbox</a></li>
+  <li><a href="../modules/xScale.html">xScale</a></li>
+  <li><a href="../modules/xSongPos.html">xSongPos</a></li>
+  <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
+  <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xTransport.html">xTransport</a></li>
+  <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>xPhraseManager</code></h1>
+<p>This class will assist in managing phrases, phrase mappings
+.</p>
+<p>
+
+<h1></h1>
+
+
+<p>Note that some methods only work with the selected instrument. This is a
+API limitation which would stands until we can determine the selected phrase
+without having to rely on the global 'selected<em>phrase/</em>index' property</p>
+
+<p>See also:
+http://forum.renoise.com/index.php/topic/26329-the-api-wishlist-thread/?p=221484</p>
+
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#get_available_slot">get_available_slot (instr_idx, insert_range, insert_idx)</a></td>
+	<td class="summary">Retrieve the next available phrase mapping, based on current criteria</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#auto_insert_phrase">auto_insert_phrase (instr_idx, create_keymap)</a></td>
+	<td class="summary">Automatically add a new phrase to the specified instrument</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#select_previous_phrase">select_previous_phrase ()</a></td>
+	<td class="summary">Select previous phrase</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#select_next_phrase">select_next_phrase ()</a></td>
+	<td class="summary">Select previous/next phrase</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#select_next_phrase_mapping">select_next_phrase_mapping ()</a></td>
+	<td class="summary">Select next phrase mapping as it appears in phrase bar</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#select_previous_phrase_mapping">select_previous_phrase_mapping ()</a></td>
+	<td class="summary">Select previous phrase mapping as it appears in phrase bar</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_selected_phrase_by_mapping_index">set_selected_phrase_by_mapping_index (idx)</a></td>
+	<td class="summary">API5: Using the mapping index to specify the selected phrase</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#delete_selected_phrase">delete_selected_phrase ()</a></td>
+	<td class="summary">Delete the currently selected phrase</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#delete_selected_phrase_mapping">delete_selected_phrase_mapping ()</a></td>
+	<td class="summary">Delete the currently selected phrase mapping
+ TODO in API4+, delete phrase + mapping</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_selected_mapping">get_selected_mapping ()</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_selected_mapping_index">get_selected_mapping_index ()</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "get_available_slot"></a>
+    <strong>get_available_slot (instr_idx, insert_range, insert_idx)</strong>
+    </dt>
+    <dd>
+    Retrieve the next available phrase mapping, based on current criteria
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">instr_idx</span>
+         (int), index of instrument
+        </li>
+        <li><span class="parameter">insert_range</span>
+         (int), the size of the mapping in semitones
+        </li>
+        <li><span class="parameter">insert_idx</span>
+         (int), start search from this phrase index (first, if nil)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        table{} or nil (if not able to find room)</li>
+        <li>
+        int, the index where we can insert</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "auto_insert_phrase"></a>
+    <strong>auto_insert_phrase (instr_idx, create_keymap)</strong>
+    </dt>
+    <dd>
+    Automatically add a new phrase to the specified instrument
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">instr_idx</span>
+         (int), index of instrument
+        </li>
+        <li><span class="parameter">create_keymap</span>
+         (bool), add mapping
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+  + InstrumentPhrase, the resulting phrase object
+  + int, the phrase index
+  or nil if failed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "select_previous_phrase"></a>
+    <strong>select_previous_phrase ()</strong>
+    </dt>
+    <dd>
+    Select previous phrase
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int (phrase index) or nil if no phrase was selected
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "select_next_phrase"></a>
+    <strong>select_next_phrase ()</strong>
+    </dt>
+    <dd>
+    Select previous/next phrase
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int (phrase index) or nil if no phrase was selected
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "select_next_phrase_mapping"></a>
+    <strong>select_next_phrase_mapping ()</strong>
+    </dt>
+    <dd>
+    Select next phrase mapping as it appears in phrase bar
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "select_previous_phrase_mapping"></a>
+    <strong>select_previous_phrase_mapping ()</strong>
+    </dt>
+    <dd>
+    Select previous phrase mapping as it appears in phrase bar
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_selected_phrase_by_mapping_index"></a>
+    <strong>set_selected_phrase_by_mapping_index (idx)</strong>
+    </dt>
+    <dd>
+    API5: Using the mapping index to specify the selected phrase
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "delete_selected_phrase"></a>
+    <strong>delete_selected_phrase ()</strong>
+    </dt>
+    <dd>
+    Delete the currently selected phrase
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "delete_selected_phrase_mapping"></a>
+    <strong>delete_selected_phrase_mapping ()</strong>
+    </dt>
+    <dd>
+    Delete the currently selected phrase mapping
+ TODO in API4+, delete phrase + mapping
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        renoise.InstrumentPhraseMapping or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_selected_mapping"></a>
+    <strong>get_selected_mapping ()</strong>
+    </dt>
+    <dd>
+
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        renoise.InstrumentPhraseMapping or nil</li>
+        <li>
+        int</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_selected_mapping_index"></a>
+    <strong>get_selected_mapping_index ()</strong>
+    </dt>
+    <dd>
+
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

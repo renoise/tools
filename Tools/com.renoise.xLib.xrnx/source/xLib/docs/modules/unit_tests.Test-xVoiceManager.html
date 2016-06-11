@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>xLib</h1>
+<h1>ldoc</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -32,17 +32,18 @@
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><strong>unit_tests.Test-xVoiceManager</strong></li>
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
   <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
-  <li><strong>xDocument</strong></li>
+  <li><a href="../modules/xDocument.html">xDocument</a></li>
   <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
   <li><a href="../modules/xFilesystem.html">xFilesystem</a></li>
   <li><a href="../modules/xInstrument.html">xInstrument</a></li>
@@ -88,46 +89,18 @@
 
 <div id="content">
 
-<h1>Module <code>xDocument</code></h1>
-<p>Extend xDocument to create classes with basic import/export features
-.</p>
+<h1>Module <code>unit_tests.Test-xVoiceManager</code></h1>
+<p>test steps (in reverse order)</p>
 <p>
-
-<h1></h1>
-
-<p>For the xDocument to work, you need to define a static DOC_PROPS property, which will define the properties which should be included in exports/imports as well as their type (number,boolean,string)</p>
-
-<p>For example: </p>
-
-<pre><code>MyClass.DOC_PROPS = {
-  active = "boolean",
-  name = "string",
-}
-</code></pre>
-
 
 </p>
 
 
-<h2><a href="#Functions">Functions</a></h2>
+<h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#import">import (str)</a></td>
-	<td class="summary">import serialized values that match one of our DOC_PROPS</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#export">export ()</a></td>
-	<td class="summary">
-
-</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#serialize">serialize (obj, props)</a></td>
-	<td class="summary">collect properties from object</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#deserialize">deserialize (str, props)</a></td>
-	<td class="summary">deserialize string</td>
+	<td class="name" nowrap><a href="#scheduled_fn">scheduled_fn</a></td>
+	<td class="summary">execute steps via idle notifier</td>
 	</tr>
 </table>
 
@@ -135,103 +108,17 @@
 <br/>
 
 
-    <h2><a name="Functions"></a>Functions</h2>
+    <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
     <dt>
-    <a name = "import"></a>
-    <strong>import (str)</strong>
+    <a name = "scheduled_fn"></a>
+    <strong>scheduled_fn</strong>
     </dt>
     <dd>
-    import serialized values that match one of our DOC_PROPS
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">str</span>
-         (string) serialized values
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        string, serialized values
-    </ol>
+    execute steps via idle notifier
 
 
 
-
-</dd>
-    <dt>
-    <a name = "export"></a>
-    <strong>export ()</strong>
-    </dt>
-    <dd>
-
-
-
-
-    <h3>Returns:</h3>
-    <ol>
-
-        string, serialized values
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "serialize"></a>
-    <strong>serialize (obj, props)</strong>
-    </dt>
-    <dd>
-    collect properties from object
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">obj</span>
-         (class instance)
-        </li>
-        <li><span class="parameter">props</span>
-         (table) DOC_PROPS
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "deserialize"></a>
-    <strong>deserialize (str, props)</strong>
-    </dt>
-    <dd>
-    deserialize string
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">str</span>
-         (str) serialized string
-        </li>
-        <li><span class="parameter">props</span>
-         (table) DOC_PROPS
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table or nil
-    </ol>
 
 
 

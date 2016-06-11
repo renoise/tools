@@ -39,10 +39,10 @@ xLinePattern.EFFECT_CHARS = {
 
 function xLinePattern:__init(note_columns,effect_columns)
 
-  --- table
+  --- table<xNoteColumn>
   self.note_columns = table.create()
 
-  --- table
+  --- table<xEffectColumn>
   self.effect_columns = table.create()
 
   -- initialize -----------------------
@@ -291,6 +291,7 @@ end
 
 function xLinePattern:__tostring()
 
-  return "xLinePattern "..tostring(self.note_columns[1])
+  return type(self)
+    ..", column#1="..tostring(self.note_columns[1])
 
 end

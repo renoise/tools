@@ -41,7 +41,7 @@
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
   <li><a href="../modules/xAutomation.html">xAutomation</a></li>
-  <li><strong>xBlockLoop</strong></li>
+  <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
   <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
@@ -67,7 +67,7 @@
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
   <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
-  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><strong>xPlayPos</strong></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -89,12 +89,29 @@
 
 <div id="content">
 
-<h1>Module <code>xBlockLoop</code></h1>
-<p>Static methods for working with the renoise loop_block
+<h1>Module <code>xPlayPos</code></h1>
+<p>Extended play-position which support fractional time (between lines)
 .</p>
 <p>
 
 <h1></h1>
+
+
+<h3>How to use</h3>
+
+<pre><code>-- create an instance of the class
+local pos = xPlayPos()
+
+-- call update() when idle to track playback
+pos:update()
+
+-- ask for the position (normal SongPos object)
+pos:get()
+
+-- ask for the expanded position (table)
+pos:get_fractional()
+</code></pre>
+
 
 </p>
 
@@ -102,47 +119,57 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
+	<td class="name" nowrap><a href="#get_line">get_line ()</a></td>
+	<td class="summary">Getters/Setters</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#update">update ()</a></td>
+	<td class="summary">Class Methods</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set">set (pos)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#get">get ()</a></td>
-	<td class="summary">retrieve 'expanded' block loop info (resolving the end point)</td>
+	<td class="summary">return a valid object for SongPos comparison operators</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#get_block_lines">get_block_lines (seq_idx)</a></td>
-	<td class="summary">retrive number of lines in a block for a given pattern</td>
+	<td class="name" nowrap><a href="#get_fractional">get_fractional ()</a></td>
+	<td class="summary">
+
+</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#get_start">get_start ()</a></td>
-	<td class="summary">return start line of the block loop</td>
+	<td class="name" nowrap><a href="#has_changed">has_changed (pos)</a></td>
+	<td class="summary">
+
+</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#get_end">get_end ()</a></td>
-	<td class="summary">calculates end line of the block loop</td>
+	<td class="name" nowrap><a href="#maintain_position">maintain_position (pos)</a></td>
+	<td class="summary">look for when we enter a 'beat' in the global timeline</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#within">within (seq_idx, line_idx, end_pos)</a></td>
-	<td class="summary">determine if position is within block loop</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#exiting">exiting (seq_idx, line_idx, line_delta, end_pos)</a></td>
-	<td class="summary">check if we are heading out of a blockloop</td>
+	<td class="name" nowrap><a href="#__eq">__eq (other)</a></td>
+	<td class="summary">Metamethods - see also <a href="../modules/xSongPos.html#">xSongPos</a></td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#self.writeahead">self.writeahead</a></td>
+	<td class="name" nowrap><a href="#self.last_beat_pos">self.last_beat_pos</a></td>
+	<td class="summary">int, SongPos, last position where a beat started</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.line">self.line</a></td>
 	<td class="summary">int</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.start_line">self.start_line</a></td>
+	<td class="name" nowrap><a href="#self.sequence">self.sequence</a></td>
 	<td class="summary">int</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.end_line">self.end_line</a></td>
-	<td class="summary">int</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.length">self.length</a></td>
-	<td class="summary">int, read-only</td>
 	</tr>
 </table>
 
@@ -153,22 +180,68 @@
     <h2><a name="Functions"></a>Functions</h2>
     <dl class="function">
     <dt>
+    <a name = "get_line"></a>
+    <strong>get_line ()</strong>
+    </dt>
+    <dd>
+    Getters/Setters
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "update"></a>
+    <strong>update ()</strong>
+    </dt>
+    <dd>
+    Class Methods  call as often as possible to maintain/track position
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set"></a>
+    <strong>set (pos)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pos</span>
+         (SongPos)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "get"></a>
     <strong>get ()</strong>
     </dt>
     <dd>
-    retrieve 'expanded' block loop info (resolving the end point)
+    return a valid object for SongPos comparison operators
 
 
 
     <h3>Returns:</h3>
     <ol>
-
-         table or nil
-  sequence
-  start<em>line
-  end</em>line
-[[
+        <li>
+        SongPos</li>
+        <li>
+        table (like SongPos but with extra 'fraction' field)</li>
     </ol>
 
 
@@ -176,17 +249,63 @@
 
 </dd>
     <dt>
-    <a name = "get_block_lines"></a>
-    <strong>get_block_lines (seq_idx)</strong>
+    <a name = "get_fractional"></a>
+    <strong>get_fractional ()</strong>
     </dt>
     <dd>
-    retrive number of lines in a block for a given pattern
+
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        table (like SongPos but with extra 'fraction' field)</li>
+        <li>
+        boolean</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "has_changed"></a>
+    <strong>has_changed (pos)</strong>
+    </dt>
+    <dd>
+
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">seq_idx</span>
-        TRACE("xBlockLoop.get<em>block</em>lines(seq<em>idx)",seq</em>idx)
+        <li><span class="parameter">pos</span>
+         SongPos
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "maintain_position"></a>
+    <strong>maintain_position (pos)</strong>
+    </dt>
+    <dd>
+    look for when we enter a 'beat' in the global timeline
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pos</span>
+        within the first line of a "song beat"?
         </li>
     </ul>
 
@@ -196,103 +315,23 @@
 
 </dd>
     <dt>
-    <a name = "get_start"></a>
-    <strong>get_start ()</strong>
+    <a name = "__eq"></a>
+    <strong>__eq (other)</strong>
     </dt>
     <dd>
-    return start line of the block loop
-
-
-
-    <h3>Returns:</h3>
-    <ol>
-
-        int, line index or nil
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "get_end"></a>
-    <strong>get_end ()</strong>
-    </dt>
-    <dd>
-    calculates end line of the block loop
-
-
-
-    <h3>Returns:</h3>
-    <ol>
-
-        int, line index or nil
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "within"></a>
-    <strong>within (seq_idx, line_idx, end_pos)</strong>
-    </dt>
-    <dd>
-    determine if position is within block loop
+    Metamethods - see also <a href="../modules/xSongPos.html#">xSongPos</a> [[
+ __eq sets handler for '==', '~='
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">seq_idx</span>
-         (int)
-        </li>
-        <li><span class="parameter">line_idx</span>
-         (int) line to check
-        </li>
-        <li><span class="parameter">end_pos</span>
-         (int) optional, avoids having to calculate this
+        <li><span class="parameter">other</span>
+
+
+
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-        bool
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "exiting"></a>
-    <strong>exiting (seq_idx, line_idx, line_delta, end_pos)</strong>
-    </dt>
-    <dd>
-    check if we are heading out of a blockloop
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">seq_idx</span>
-         (int)
-        </li>
-        <li><span class="parameter">line_idx</span>
-         (int)
-        </li>
-        <li><span class="parameter">line_delta</span>
-         (int), #lines to add/subtract, negative when decreasing
-        </li>
-        <li><span class="parameter">end_pos</span>
-         (int) optional, avoids having to calculate this
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        line (int)
-    </ol>
 
 
 
@@ -302,8 +341,22 @@
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
     <dt>
-    <a name = "self.writeahead"></a>
-    <strong>self.writeahead</strong>
+    <a name = "self.last_beat_pos"></a>
+    <strong>self.last_beat_pos</strong>
+    </dt>
+    <dd>
+    int, SongPos, last position where a beat started
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.line"></a>
+    <strong>self.line</strong>
     </dt>
     <dd>
     int
@@ -316,39 +369,11 @@
 
 </dd>
     <dt>
-    <a name = "self.start_line"></a>
-    <strong>self.start_line</strong>
+    <a name = "self.sequence"></a>
+    <strong>self.sequence</strong>
     </dt>
     <dd>
     int
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.end_line"></a>
-    <strong>self.end_line</strong>
-    </dt>
-    <dd>
-    int
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.length"></a>
-    <strong>self.length</strong>
-    </dt>
-    <dd>
-    int, read-only
 
 
 
