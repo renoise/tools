@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>ldoc</h1>
+<h1>xLib</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -40,6 +40,7 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
@@ -52,6 +53,7 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="../modules/xMessage.html">xMessage</a></li>
   <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
   <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
@@ -61,9 +63,11 @@
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParameter.html">xParameter</a></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
+  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
+  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -76,8 +80,8 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xTransport.html">xTransport</a></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
-  <li><a href="../modules/xVoice.html">xVoice</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -142,9 +146,22 @@ local result = sandback.callback('my_arg')
 	<td class="summary">call method to evaluate function (ensure that it's safe to run)</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#contains_comment_blocks">contains_comment_blocks (str)</a></td>
+	<td class="summary">nested block comments/longstrings are depricated and will fail</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#test_syntax">test_syntax (str_fn)</a></td>
 	<td class="summary">check for syntax errors
   (assert provides better error messages)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#insert_return">insert_return (str_fn)</a></td>
+	<td class="summary">automatically insert a return statement into a code snippet
+ step 1: detect if return statement is present</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#rename_string_token">rename_string_token (str_fn, old_name, new_name, prefix)</a></td>
+	<td class="summary">"safer" renaming of a string token (for example, a variable name)</td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
@@ -207,6 +224,28 @@ local result = sandback.callback('my_arg')
 
 </dd>
     <dt>
+    <a name = "contains_comment_blocks"></a>
+    <strong>contains_comment_blocks (str)</strong>
+    </dt>
+    <dd>
+    nested block comments/longstrings are depricated and will fail
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "test_syntax"></a>
     <strong>test_syntax (str_fn)</strong>
     </dt>
@@ -229,6 +268,58 @@ local result = sandback.callback('my_arg')
         <li>
         string, when failed</li>
     </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "insert_return"></a>
+    <strong>insert_return (str_fn)</strong>
+    </dt>
+    <dd>
+    automatically insert a return statement into a code snippet
+ step 1: detect if return statement is present
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str_fn</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "rename_string_token"></a>
+    <strong>rename_string_token (str_fn, old_name, new_name, prefix)</strong>
+    </dt>
+    <dd>
+    "safer" renaming of a string token (for example, a variable name)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str_fn</span>
+         (string), the function text
+        </li>
+        <li><span class="parameter">old_name</span>
+         (string)
+        </li>
+        <li><span class="parameter">new_name</span>
+         (string)
+        </li>
+        <li><span class="parameter">prefix</span>
+         (string), prepend to old/new name when defined
+        </li>
+    </ul>
+
 
 
 

@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
 <li><a href="#Fields">Fields</a></li>
 </ul>
 
@@ -53,11 +54,11 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="../modules/xMessage.html">xMessage</a></li>
   <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
-  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
+  <li><strong>xMidiIO</strong></li>
   <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
-  <li><strong>xOscClient</strong></li>
+  <li><a href="../modules/xOscClient.html">xOscClient</a></li>
   <li><a href="../modules/xOscDevice.html">xOscDevice</a></li>
   <li><a href="../modules/xOscMessage.html">xOscMessage</a></li>
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
@@ -89,18 +90,17 @@
 
 <div id="content">
 
-<h1>Module <code>xOscClient</code></h1>
-<p>xOscClient is a simple OSC client
+<h1>Module <code>xMidiIO</code></h1>
+<p>Extend applications with MIDI input/output
 .</p>
 <p>
 
 <h1></h1>
 
-<ul>
-    <li>Connects to the built-in OSC server in Renoise, </li>
-    <li>Produce realtime messages (notes or MIDI messages)</li>
-</ul>
-
+<p>Requires
+xLib
+xObservable
+xMidiInput</p>
 
 </p>
 
@@ -108,52 +108,68 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#__init">__init (...)</a></td>
-	<td class="summary">Class methods</td>
+	<td class="name" nowrap><a href="#open_midi_input">open_midi_input (port_name)</a></td>
+	<td class="summary">open access to midi port</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#create">create (osc_host, osc_port)</a></td>
-	<td class="summary">Initialize the xOscClient class</td>
+	<td class="name" nowrap><a href="#input_midi">input_midi (midi_msg, port_name)</a></td>
+	<td class="summary">input raw midi messages here and pass them into xMidiInput</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#trigger_instrument">trigger_instrument (note_on, instr, track, note, velocity)</a></td>
-	<td class="summary">Trigger instrument-note</td>
+	<td class="name" nowrap><a href="#input_sysex">input_sysex (sysex_msg, port_name)</a></td>
+	<td class="summary">input raw sysex messages here (immediately matched)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#trigger_midi">trigger_midi (t)</a></td>
-	<td class="summary">Trigger standard midi-message</td>
+	<td class="name" nowrap><a href="#close_midi_input">close_midi_input (port_name)</a></td>
+	<td class="summary">
+
+</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#trigger_auto">trigger_auto (xmsg)</a></td>
-	<td class="summary">trigger 'automatic MIDI' using the internal OSC client
- if notes, route to specified track + instrument - else, pass as raw MIDI</td>
+	<td class="name" nowrap><a href="#open_midi_output">open_midi_output (port_name)</a></td>
+	<td class="summary">
+
+</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#trigger_raw">trigger_raw (xmsg)</a></td>
-	<td class="summary">trigger 'raw MIDI' (makes notes MIDI-mappable)</td>
+	<td class="name" nowrap><a href="#close_midi_output">close_midi_output (port_name)</a></td>
+	<td class="summary">
+
+</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_show_instructions">_show_instructions ()</a></td>
-	<td class="summary">Display usage instructions the first time the class is used</td>
+	<td class="name" nowrap><a href="#initialize_midi_devices">initialize_midi_devices ()</a></td>
+	<td class="summary">make sure the specified ports (and only those) are opened</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#get_first_run">get_first_run ()</a></td>
+	<td class="name" nowrap><a href="#get_midi_inputs">get_midi_inputs ()</a></td>
 	<td class="summary">Get/set methods</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self._midi_input_ports">self._midi_input_ports</a></td>
+	<td class="summary">table<renoise.Midi.MidiInputDevice></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._midi_output_ports">self._midi_output_ports</a></td>
+	<td class="summary">table<renoise.Midi.MidiOutputDevice></td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#self.osc_host">self.osc_host</a></td>
-	<td class="summary">string</td>
+	<td class="name" nowrap><a href="#self.midi_inputs">self.midi_inputs</a></td>
+	<td class="summary">table<string> the ports to open</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.osc_port">self.osc_port</a></td>
-	<td class="summary">int</td>
+	<td class="name" nowrap><a href="#self.midi_outputs">self.midi_outputs</a></td>
+	<td class="summary">table<string> the ports to open</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self._connection">self._connection</a></td>
-	<td class="summary">the socket connection, nil if not established</td>
+	<td class="name" nowrap><a href="#self.interpretor">self.interpretor</a></td>
+	<td class="summary">xMidiInput</td>
 	</tr>
 </table>
 
@@ -164,19 +180,17 @@
     <h2><a name="Functions"></a>Functions</h2>
     <dl class="function">
     <dt>
-    <a name = "__init"></a>
-    <strong>__init (...)</strong>
+    <a name = "open_midi_input"></a>
+    <strong>open_midi_input (port_name)</strong>
     </dt>
     <dd>
-    Class methods
+    open access to midi port
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">...</span>
-
-
-
+        <li><span class="parameter">port_name</span>
+         (string)
         </li>
     </ul>
 
@@ -186,156 +200,117 @@
 
 </dd>
     <dt>
-    <a name = "create"></a>
-    <strong>create (osc_host, osc_port)</strong>
+    <a name = "input_midi"></a>
+    <strong>input_midi (midi_msg, port_name)</strong>
     </dt>
     <dd>
-    Initialize the xOscClient class
+    input raw midi messages here and pass them into xMidiInput
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">osc_host</span>
-         (string) the host-address name (can be an IP address)
+        <li><span class="parameter">midi_msg</span>
+         (table), midi message
         </li>
-        <li><span class="parameter">osc_port</span>
-         (int) the host port
+        <li><span class="parameter">port_name</span>
+         (string)
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-        <li>
-        boolean,</li>
-        <li>
-        string, error message when failed</li>
-    </ol>
 
 
 
 
 </dd>
     <dt>
-    <a name = "trigger_instrument"></a>
-    <strong>trigger_instrument (note_on, instr, track, note, velocity)</strong>
+    <a name = "input_sysex"></a>
+    <strong>input_sysex (sysex_msg, port_name)</strong>
     </dt>
     <dd>
-    Trigger instrument-note
+    input raw sysex messages here (immediately matched)
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">note_on</span>
-         (bool), true when note-on and false when note-off
+        <li><span class="parameter">sysex_msg</span>
+         (table), sysex message
         </li>
-        <li><span class="parameter">instr</span>
-         (int), the Renoise instrument index
-        </li>
-        <li><span class="parameter">track</span>
-         (int) the Renoise track index
-        </li>
-        <li><span class="parameter">note</span>
-         (int), the desired pitch, 0-120
-        </li>
-        <li><span class="parameter">velocity</span>
-         (int), the desired velocity, 0-127
+        <li><span class="parameter">port_name</span>
+         (string)
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-        bool, true when triggered
-    </ol>
 
 
 
 
 </dd>
     <dt>
-    <a name = "trigger_midi"></a>
-    <strong>trigger_midi (t)</strong>
+    <a name = "close_midi_input"></a>
+    <strong>close_midi_input (port_name)</strong>
     </dt>
     <dd>
-    Trigger standard midi-message
+
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">t</span>
-         (table), a ready-to-send MIDI message
+        <li><span class="parameter">port_name</span>
+         (string)
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-        bool, true when triggered
-    </ol>
 
 
 
 
 </dd>
     <dt>
-    <a name = "trigger_auto"></a>
-    <strong>trigger_auto (xmsg)</strong>
+    <a name = "open_midi_output"></a>
+    <strong>open_midi_output (port_name)</strong>
     </dt>
     <dd>
-    trigger 'automatic MIDI' using the internal OSC client
- if notes, route to specified track + instrument - else, pass as raw MIDI
+
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">xmsg</span>
-         (xMidiMessage or xOscMessage)
+        <li><span class="parameter">port_name</span>
+         (string)
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-        bool, true when triggered
-    </ol>
 
 
 
 
 </dd>
     <dt>
-    <a name = "trigger_raw"></a>
-    <strong>trigger_raw (xmsg)</strong>
+    <a name = "close_midi_output"></a>
+    <strong>close_midi_output (port_name)</strong>
     </dt>
     <dd>
-    trigger 'raw MIDI' (makes notes MIDI-mappable)
+
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">xmsg</span>
-         (xMidiMessage or xOscMessage)
+        <li><span class="parameter">port_name</span>
+         (string)
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-        <li>
-        bool, true when triggered</li>
-        <li>
-        string, error message when failed</li>
-    </ol>
 
 
 
 
 </dd>
     <dt>
-    <a name = "_show_instructions"></a>
-    <strong>_show_instructions ()</strong>
+    <a name = "initialize_midi_devices"></a>
+    <strong>initialize_midi_devices ()</strong>
     </dt>
     <dd>
-    Display usage instructions the first time the class is used
+    make sure the specified ports (and only those) are opened
 
 
 
@@ -345,8 +320,8 @@
 
 </dd>
     <dt>
-    <a name = "get_first_run"></a>
-    <strong>get_first_run ()</strong>
+    <a name = "get_midi_inputs"></a>
+    <strong>get_midi_inputs ()</strong>
     </dt>
     <dd>
     Get/set methods
@@ -359,14 +334,45 @@
 
 </dd>
 </dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self._midi_input_ports"></a>
+    <strong>self._midi_input_ports</strong>
+    </dt>
+    <dd>
+    table<renoise.Midi.MidiInputDevice>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._midi_output_ports"></a>
+    <strong>self._midi_output_ports</strong>
+    </dt>
+    <dd>
+    table<renoise.Midi.MidiOutputDevice>
+
+
+
+
+
+
+
+</dd>
+</dl>
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
     <dt>
-    <a name = "self.osc_host"></a>
-    <strong>self.osc_host</strong>
+    <a name = "self.midi_inputs"></a>
+    <strong>self.midi_inputs</strong>
     </dt>
     <dd>
-    string
+    table<string> the ports to open
 
 
 
@@ -376,11 +382,11 @@
 
 </dd>
     <dt>
-    <a name = "self.osc_port"></a>
-    <strong>self.osc_port</strong>
+    <a name = "self.midi_outputs"></a>
+    <strong>self.midi_outputs</strong>
     </dt>
     <dd>
-    int
+    table<string> the ports to open
 
 
 
@@ -390,11 +396,11 @@
 
 </dd>
     <dt>
-    <a name = "self._connection"></a>
-    <strong>self._connection</strong>
+    <a name = "self.interpretor"></a>
+    <strong>self.interpretor</strong>
     </dt>
     <dd>
-    the socket connection, nil if not established
+    xMidiInput
 
 
 

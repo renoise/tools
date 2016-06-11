@@ -42,7 +42,7 @@
   <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
-  <li><strong>xDocument</strong></li>
+  <li><a href="../modules/xDocument.html">xDocument</a></li>
   <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
   <li><a href="../modules/xFilesystem.html">xFilesystem</a></li>
   <li><a href="../modules/xInstrument.html">xInstrument</a></li>
@@ -79,7 +79,7 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
-  <li><a href="../modules/xTransport.html">xTransport</a></li>
+  <li><strong>xTransport</strong></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
@@ -88,22 +88,12 @@
 
 <div id="content">
 
-<h1>Module <code>xDocument</code></h1>
-<p>Extend xDocument to create classes with basic import/export features
+<h1>Module <code>xTransport</code></h1>
+<p>Extended transport, including pattern-sequence sections and more
 .</p>
 <p>
 
 <h1></h1>
-
-<p>For the xDocument to work, you need to define a static DOC_PROPS property, which will define the properties which should be included in exports/imports as well as their type (number,boolean,string)</p>
-
-<p>For example: </p>
-
-<pre><code>MyClass.DOC_PROPS = {
-  active = "boolean",
-  name = "string",
-}
-</code></pre>
 
 
 </p>
@@ -112,22 +102,12 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#import">import (str)</a></td>
-	<td class="summary">import serialized values that match one of our DOC_PROPS</td>
+	<td class="name" nowrap><a href="#forward">forward ()</a></td>
+	<td class="summary">Basic transport controls</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#export">export ()</a></td>
-	<td class="summary">
-
-</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#serialize">serialize (obj, props)</a></td>
-	<td class="summary">collect properties from object</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#deserialize">deserialize (str, props)</a></td>
-	<td class="summary">deserialize string</td>
+	<td class="name" nowrap><a href="#toggle_loop_section">toggle_loop_section ()</a></td>
+	<td class="summary">Sections (Pattern-Sequence)</td>
 	</tr>
 </table>
 
@@ -138,100 +118,28 @@
     <h2><a name="Functions"></a>Functions</h2>
     <dl class="function">
     <dt>
-    <a name = "import"></a>
-    <strong>import (str)</strong>
+    <a name = "forward"></a>
+    <strong>forward ()</strong>
     </dt>
     <dd>
-    import serialized values that match one of our DOC_PROPS
+    Basic transport controls
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">str</span>
-         (string) serialized values
-        </li>
-    </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-        string, serialized values
-    </ol>
 
 
 
 
 </dd>
     <dt>
-    <a name = "export"></a>
-    <strong>export ()</strong>
+    <a name = "toggle_loop_section"></a>
+    <strong>toggle_loop_section ()</strong>
     </dt>
     <dd>
+    Sections (Pattern-Sequence)
 
 
 
-
-    <h3>Returns:</h3>
-    <ol>
-
-        string, serialized values
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "serialize"></a>
-    <strong>serialize (obj, props)</strong>
-    </dt>
-    <dd>
-    collect properties from object
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">obj</span>
-         (class instance)
-        </li>
-        <li><span class="parameter">props</span>
-         (table) DOC_PROPS
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "deserialize"></a>
-    <strong>deserialize (str, props)</strong>
-    </dt>
-    <dd>
-    deserialize string
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">str</span>
-         (str) serialized string
-        </li>
-        <li><span class="parameter">props</span>
-         (table) DOC_PROPS
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table or nil
-    </ol>
 
 
 
