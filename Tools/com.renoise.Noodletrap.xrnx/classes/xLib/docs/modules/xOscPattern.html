@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>xLib</h1>
+<h1>ldoc</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -41,7 +41,6 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
-  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
@@ -54,7 +53,6 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="../modules/xMessage.html">xMessage</a></li>
   <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
-  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
   <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
@@ -64,11 +62,9 @@
   <li><strong>xOscPattern</strong></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
-  <li><a href="../modules/xParameter.html">xParameter</a></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
-  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -81,8 +77,8 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
-  <li><a href="../modules/xTransport.html">xTransport</a></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoice.html">xVoice</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -122,14 +118,6 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#get_arg_names">get_arg_names ()</a></td>
-	<td class="summary">get/set "display name" for each captured part, e.g.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#get_complete">get_complete ()</a></td>
-	<td class="summary">test the input/output pattern and return the result (validate)</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#parse_input_pattern">parse_input_pattern ()</a></td>
 	<td class="summary">Define the OSC pattern and wildcards/literal values
  + also determines if pattern is cacheable</td>
@@ -141,22 +129,12 @@
  + rearrange the order of values via "$n" tokens</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#purely_literal">purely_literal ()</a></td>
-	<td class="summary">Check if the pattern contains only literal values (no wildcards/tokens)
- return boolean</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#generate">generate (args)</a></td>
 	<td class="summary">Create a new OSC message from internal or provided values</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#test_pattern">test_pattern (str_pattern)</a></td>
 	<td class="summary">Static methods</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#types_are_matching">types_are_matching (this, that)</a></td>
-	<td class="summary">Check if pattern is matching same type of values as another pattern,
- disregarding any literal values being set - only look for the type/tag.</td>
 	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
@@ -181,6 +159,10 @@
 	<td class="summary">boolean, true when message contain functioning patterns</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#self.callback_fn">self.callback_fn</a></td>
+	<td class="summary">function, where to output message to</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#self.before_modified_observable">self.before_modified_observable</a></td>
 	<td class="summary">called when patterns are changed</td>
 	</tr>
@@ -194,8 +176,8 @@
 	<td class="summary">number, avoid rounding errors when comparing floats</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.uid">self.uid</a></td>
-	<td class="summary">string, unique identifier for the pattern</td>
+	<td class="name" nowrap><a href="#uid_counter">uid_counter</a></td>
+	<td class="summary">int, unique identifier for the pattern</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.cacheable">self.cacheable</a></td>
@@ -229,40 +211,6 @@
     <h2><a name="Functions"></a>Functions</h2>
     <dl class="function">
     <dt>
-    <a name = "get_arg_names"></a>
-    <strong>get_arg_names ()</strong>
-    </dt>
-    <dd>
-    get/set "display name" for each captured part, e.g.  {"x","y","z"}
- (always matching the number of arguments - undefined names are left empty)
-
-
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table<string>
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "get_complete"></a>
-    <strong>get_complete ()</strong>
-    </dt>
-    <dd>
-    test the input/output pattern and return the result (validate)
-
-
-
-
-
-
-
-</dd>
-    <dt>
     <a name = "parse_input_pattern"></a>
     <strong>parse_input_pattern ()</strong>
     </dt>
@@ -285,21 +233,6 @@
     Decide how outgoing messages are constructed
  + define a new "osc pattern"
  + rearrange the order of values via "$n" tokens
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "purely_literal"></a>
-    <strong>purely_literal ()</strong>
-    </dt>
-    <dd>
-    Check if the pattern contains only literal values (no wildcards/tokens)
- return boolean
 
 
 
@@ -346,38 +279,9 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">str_pattern</span>
-        check for initial forward slash
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        boolean,string
-    </ol>
 
 
 
-
-</dd>
-    <dt>
-    <a name = "types_are_matching"></a>
-    <strong>types_are_matching (this, that)</strong>
-    </dt>
-    <dd>
-    Check if pattern is matching same type of values as another pattern,
- disregarding any literal values being set - only look for the type/tag. <br/>
- For example, "/test %i" would match "/test 42" as they have the same path
- and are both matching an integer value...
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">this</span>
-         (xOscPattern)
-        </li>
-        <li><span class="parameter">that</span>
-         (xOscPattern)
         </li>
     </ul>
 
@@ -454,6 +358,20 @@
 
 </dd>
     <dt>
+    <a name = "self.callback_fn"></a>
+    <strong>self.callback_fn</strong>
+    </dt>
+    <dd>
+    function, where to output message to
+
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "self.before_modified_observable"></a>
     <strong>self.before_modified_observable</strong>
     </dt>
@@ -497,11 +415,11 @@
 
 </dd>
     <dt>
-    <a name = "self.uid"></a>
-    <strong>self.uid</strong>
+    <a name = "uid_counter"></a>
+    <strong>uid_counter</strong>
     </dt>
     <dd>
-    string, unique identifier for the pattern
+    int, unique identifier for the pattern
 
 
 

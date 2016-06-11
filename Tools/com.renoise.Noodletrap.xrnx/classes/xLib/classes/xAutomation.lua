@@ -102,8 +102,6 @@ function xAutomation:__init(...)
 end
 
 --------------------------------------------------------------------------------
--- Class methods
---------------------------------------------------------------------------------
 --- add automation point at current time 
 -- @param track_idx (int)
 -- @param param (renoise.DeviceParameter)
@@ -131,7 +129,7 @@ function xAutomation:record(track_idx,param,value,value_mode)
     LOG("Could not write automation, invalid sequence index #",pos.sequence)
   end
   local ptrack = rns.patterns[patt_idx]:track(track_idx)
-  local ptrack_auto = xAutomation.get_or_create_automation(ptrack,param)
+  local ptrack_auto = self:get_or_create_automation(ptrack,param)
 
   if not rns.transport.playing or
     (self.follow_mode == xAutomation.FOLLOW_MODE.EDIT_POS)
@@ -200,6 +198,19 @@ function xAutomation:clear_range(pos_from,length,ptrack_auto)
 end
 
 --------------------------------------------------------------------------------
+-- get or create the parameter automation 
+
+function xAutomation:get_or_create_automation(ptrack,param)
+
+  local ptrack_auto = ptrack:find_automation(param)
+  if not ptrack_auto then
+    ptrack_auto = ptrack:create_automation(param)
+  end
+  return ptrack_auto
+
+end
+
+--------------------------------------------------------------------------------
 -- retrieve the correct SongPos object according to FOLLOW_MODE
 -- @return int
 
@@ -223,6 +234,16 @@ end
 
 --------------------------------------------------------------------------------
 
+function xAutomation:compute_writeahead()
+  --TRACE("xAutomation:compute_writeahead()")
+
+  self.writeahead = (rns.transport.bpm * rns.transport.lpb / 200)
+  --print("self.writeahead",self.writeahead)
+
+end
+
+--------------------------------------------------------------------------------
+
 function xAutomation:attach_to_song()
 
   rns = renoise.song()
@@ -237,37 +258,11 @@ function xAutomation:attach_to_song()
 
 end
 
---------------------------------------------------------------------------------
-
-function xAutomation:compute_writeahead()
-  --TRACE("xAutomation:compute_writeahead()")
-
-  self.writeahead = (rns.transport.bpm * rns.transport.lpb / 200)
-  --print("self.writeahead",self.writeahead)
-
-end
-
-
---------------------------------------------------------------------------------
--- Static methods
---------------------------------------------------------------------------------
--- get or create the parameter automation 
-
-function xAutomation.get_or_create_automation(ptrack,param)
-
-  local ptrack_auto = ptrack:find_automation(param)
-  if not ptrack_auto then
-    ptrack_auto = ptrack:create_automation(param)
-  end
-  return ptrack_auto
-
-end
-
 -------------------------------------------------------------------------------
 -- Scale an incoming value to the automation range (0-1)
--- @param value (number)
--- @param value_mode (xMidiMessage.MODE), abs/rel + #bits
--- @return number
+-- @param param - renoise.DeviceParameter
+-- @param value - number
+-- @param value_mode - xMidiMessage.MODE - abs/rel + #bits
 
 function xAutomation.get_scaled_value(value,value_mode)
   TRACE("xAutomation.get_scaled_value(value,value_mode)",value,value_mode)

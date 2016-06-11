@@ -86,6 +86,12 @@ function xOscDevice:__init(...)
   --- function
   self.idle_notifier = nil
 
+  --- renoise.Osc.Message, the last recieved message 
+  --self.last_input_message = nil
+
+  --- renoise.Osc.Message, the last generated message 
+  --self.last_output_message = nil
+
   --- table, used when bundling is enabled
   self.message_queue = {}
 
@@ -409,8 +415,6 @@ end
 --------------------------------------------------------------------------------
 -- build raw message, send or add to queue
 -- @param xmsg, xOscMessage
--- @return bool, true when message was transmitted
--- @return string, message when failed
 
 function xOscDevice:send(xmsg)
 
@@ -443,8 +447,6 @@ function xOscDevice:send(xmsg)
       self:send_bundle()
     end
   end
-
-  return true
 
 end
 

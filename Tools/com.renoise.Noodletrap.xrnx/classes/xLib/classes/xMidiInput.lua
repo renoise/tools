@@ -146,11 +146,10 @@ end
 -- @param port_name (string), where message originated from
 
 function xMidiInput:input(msg,port_name)
-  TRACE("xMidiInput:input(msg,port_name)",msg,port_name)
 
-  assert(type(msg)=="table","Expected MIDI message to be a table")
-  assert(#msg==3,"Malformed MIDI message, expected 3 parts")
-  assert(type(port_name)=="string","Expected port_name to be a string")
+   assert(type(msg)=="table","Expected MIDI message to be a table")
+   assert(#msg==3,"Malformed MIDI message, expected 3 parts")
+   assert(type(port_name)=="string","Expected port_name to be a string")
 
   --[[
   if not self.callback_fn then
@@ -517,7 +516,7 @@ function xMidiInput:input(msg,port_name)
     LOG("Unrecognized MIDI message: "..xLib.serialize_table(msg))
   end
 
-  --print(">>> xMidiInput - msg_values",rprint(msg_values))
+  --print("xMidiInput - msg_values[1]",msg_values[1])
   --print("xMidiInput - msg_values[2]",msg_values[2])
 
   self.callback_fn(xMidiMessage{

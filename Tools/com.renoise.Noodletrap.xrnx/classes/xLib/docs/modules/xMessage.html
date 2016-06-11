@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>xLib</h1>
+<h1>ldoc</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -40,7 +40,6 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
-  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
@@ -53,7 +52,6 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><strong>xMessage</strong></li>
   <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
-  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
   <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
@@ -63,11 +61,9 @@
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
-  <li><a href="../modules/xParameter.html">xParameter</a></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
-  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -80,8 +76,8 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
-  <li><a href="../modules/xTransport.html">xTransport</a></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoice.html">xVoice</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -90,19 +86,14 @@
 <div id="content">
 
 <h1>Module <code>xMessage</code></h1>
-<p>Abstract message class (the basis for OSC and MIDI messages)
+<p>Abstract message class (extend to create your own type)
 .</p>
 <p>
 
 <h1></h1>
 
-<h3>About</h3>
-
-<p>Some properties are added because of the xVoiceManager. This includes all the originating_XX properties (on by default). Usually you don't have to change these values - read the xVoiceManager description to learn what they do. </p>
-
 <h3>See also</h3>
-<p><a href="../modules/xOscMessage.html#">xOscMessage</a>,<a href="../modules/xMidiMessage.html#">xMidiMessage</a>,<a href="../modules/xVoiceManager.html#">xVoiceManager</a></p>
-
+<p><a href="../modules/xOscMessage.html#">xOscMessage</a>,<a href="../modules/xMidiMessage.html#">xMidiMessage</a> </p>
 
 </p>
 
@@ -117,54 +108,28 @@
 	<td class="name" nowrap><a href="#create_raw_message">create_raw_message ()</a></td>
 	<td class="summary">produce a raw message (retrieve from cache if possible)</td>
 	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#get_definition">get_definition ()</a></td>
-	<td class="summary">
-
-</td>
-	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
 <table class="function_list">
-	<tr>
-	<td class="name" nowrap><a href="#self.timestamp">self.timestamp</a></td>
-	<td class="summary">number, when message got created</td>
-	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.values">self.values</a></td>
 	<td class="summary">table<xValue or implementation thereof></td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.track_index">self.track_index</a></td>
-	<td class="summary">int, 1-num_tracks</td>
+	<td class="summary">int, 1-num_tracks (can be nil)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.instrument_index">self.instrument_index</a></td>
-	<td class="summary">int, 1-num_instruments</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.line_index">self.line_index</a></td>
-	<td class="summary">int, 1-512 -- the pattern-line number</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.line_fraction">self.line_fraction</a></td>
-	<td class="summary">float, 0-1 -- optional high-precision value</td>
+	<td class="summary">int, 1-num_instruments (can be nil)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.raw_message">self.raw_message</a></td>
 	<td class="summary">the raw message, as received (or ready to send)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self._originating_track_index">self._originating_track_index</a></td>
-	<td class="summary">int, used when following (xVoiceManager)</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self._originating_instrument_index">self._originating_instrument_index</a></td>
-	<td class="summary">int, -//-</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self._originating_octave">self._originating_octave</a></td>
-	<td class="summary">int, -//-</td>
+	<td class="name" nowrap><a href="#self.timestamp">self.timestamp</a></td>
+	<td class="summary">number, when message got created</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.__def">self.__def</a></td>
@@ -203,31 +168,10 @@
 
     <h3>Returns:</h3>
     <ol>
-        <li>
-
-
-</li>
-        <li>
-        table, a representation of the object state</li>
-    </ol>
 
 
 
 
-</dd>
-    <dt>
-    <a name = "get_definition"></a>
-    <strong>get_definition ()</strong>
-    </dt>
-    <dd>
-
-
-
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table, a representation of the object state
     </ol>
 
 
@@ -237,20 +181,6 @@
 </dl>
     <h2><a name="Fields"></a>Fields</h2>
     <dl class="function">
-    <dt>
-    <a name = "self.timestamp"></a>
-    <strong>self.timestamp</strong>
-    </dt>
-    <dd>
-    number, when message got created
-
-
-
-
-
-
-
-</dd>
     <dt>
     <a name = "self.values"></a>
     <strong>self.values</strong>
@@ -270,7 +200,7 @@
     <strong>self.track_index</strong>
     </dt>
     <dd>
-    int, 1-num_tracks
+    int, 1-num_tracks (can be nil)
 
 
 
@@ -284,35 +214,7 @@
     <strong>self.instrument_index</strong>
     </dt>
     <dd>
-    int, 1-num_instruments
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.line_index"></a>
-    <strong>self.line_index</strong>
-    </dt>
-    <dd>
-    int, 1-512 -- the pattern-line number
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.line_fraction"></a>
-    <strong>self.line_fraction</strong>
-    </dt>
-    <dd>
-    float, 0-1 -- optional high-precision value
+    int, 1-num_instruments (can be nil)
 
 
 
@@ -336,39 +238,11 @@
 
 </dd>
     <dt>
-    <a name = "self._originating_track_index"></a>
-    <strong>self._originating_track_index</strong>
+    <a name = "self.timestamp"></a>
+    <strong>self.timestamp</strong>
     </dt>
     <dd>
-    int, used when following (xVoiceManager)
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self._originating_instrument_index"></a>
-    <strong>self._originating_instrument_index</strong>
-    </dt>
-    <dd>
-    int, -//-
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self._originating_octave"></a>
-    <strong>self._originating_octave</strong>
-    </dt>
-    <dd>
-    int, -//-
+    number, when message got created
 
 
 

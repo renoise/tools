@@ -421,7 +421,7 @@ function xRuleset:load_definition(file_path)
 
   local passed = xRuleset.looks_like_definition(str_def)
   if not passed then
-    return false,("The file %s does not look like a ruleset definition"):format(file_path)
+    return false,"The file does not look like a ruleset definition"
   end
 
   -- check if we are able to load the definition

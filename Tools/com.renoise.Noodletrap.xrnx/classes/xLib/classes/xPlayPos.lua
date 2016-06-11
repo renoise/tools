@@ -4,24 +4,24 @@ xPlayPos
 
 --[[--
 
-Extended play-position which support fractional time (between lines) 
+Extended play-position which support fractional time (‘between lines’) 
 .
 #
 
 
 ### How to use
 
-    -- create an instance of the class
-    local pos = xPlayPos()
+  -- create an instance of the class
+  local pos = xPlayPos()
 
-    -- call update() when idle to track playback
-    pos:update()
-    
-    -- ask for the position (normal SongPos object)
-    pos:get()
+  -- call update() when idle to track playback
+  pos:update()
+  
+  -- ask for the position (normal SongPos object)
+  pos:get()
 
-    -- ask for the expanded position (table)
-    pos:get_fractional()
+  -- ask for the expanded position (table)
+  pos:get_fractional()
 
 
 ]]
@@ -85,13 +85,13 @@ end
 -------------------------------------------------------------------------------
 -- Class Methods
 -------------------------------------------------------------------------------
---- call as often as possible to maintain/track position
 
 function xPlayPos:update()
   self:set(rns.transport.playback_pos)
 end
 
 -------------------------------------------------------------------------------
+--- call as often as possible to maintain/track position
 -- @param pos (SongPos)
 
 function xPlayPos:set(pos)
@@ -117,7 +117,8 @@ function xPlayPos:get()
 end
 
 -------------------------------------------------------------------------------
--- @return table (like SongPos but with extra 'fraction' field)
+-- return a 'full' object, including fractional time
+-- @return SongPos
 
 function xPlayPos:get_fractional()
 
@@ -139,7 +140,7 @@ function xPlayPos:get_fractional()
 end
 
 -------------------------------------------------------------------------------
--- @param pos SongPos
+-- @param SongPos
 -- @return boolean
 
 function xPlayPos:has_changed(pos)

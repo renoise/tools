@@ -38,7 +38,6 @@ end
 
 --------------------------------------------------------------------------------
 --- get send track
--- @param send_index (int)
 
 function xTrack.get_send_track(send_index)
   if (send_index <= rns.send_track_count) then
@@ -50,7 +49,7 @@ function xTrack.get_send_track(send_index)
 end
 
 --------------------------------------------------------------------------------
--- @param track_type (renoise.Track.TRACK_TYPE_xxx)
+-- @param renoise.Track.TRACK_TYPE_xxx
 -- @return int, number of tracks matching the type 
 
 function xTrack.get_track_count(track_type)
@@ -67,10 +66,8 @@ end
 
 --------------------------------------------------------------------------------
 --- get the type of track: sequencer/master/send
--- @param track_index (int)
 
 function xTrack.determine_track_type(track_index)
-
   local master_idx = get_master_track_index()
   local tracks = rns.tracks
   if (track_index < master_idx) then
@@ -80,6 +77,4 @@ function xTrack.determine_track_type(track_index)
   elseif (track_index <= #tracks) then
     return renoise.Track.TRACK_TYPE_SEND
   end
-
 end
-
