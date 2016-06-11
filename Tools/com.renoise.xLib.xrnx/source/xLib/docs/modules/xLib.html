@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>ldoc</h1>
+<h1>xLib</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -39,6 +39,7 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
@@ -51,6 +52,7 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="../modules/xMessage.html">xMessage</a></li>
   <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
   <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
@@ -60,9 +62,11 @@
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParameter.html">xParameter</a></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
+  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
+  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -75,8 +79,8 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xTransport.html">xTransport</a></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
-  <li><a href="../modules/xVoice.html">xVoice</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -91,18 +95,6 @@
 
 <h1></h1>
 
-<h3>About xLib</h3>
-
-<p>The xLib library is a suite of classes that extend the standard Renoise API. Each class aims to be implemented with static methods as widely as possible -  this should make xLib compatible with most programming styles. </p>
-
-<h3>How to use</h3>
-
-<p>If you are planning to use xLib in your own project, you need to include this file or define the TRACE/LOG methods yourself (note: including xDebug will replace them with a more sophisticated version). </p>
-
-<p>The recommended practice is to require any classes you need in the main.lua of your tool (as this also documents the exact requirements). Only interdependent classes are automatically resolved when you include them. To document this, they are located in their own folder - this keeps the project tidy.</p>
-
-<p>Finally, to improve the performance of xLib, the entire library is using a single variable to reference the Renoise song object - called "rns". You will need to define/maintain this variable yourself (see below)</p>
-
 
 </p>
 
@@ -114,20 +106,37 @@
 	<td class="summary">Turn varargs into a table</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#is_song_available">is_song_available ()</a></td>
+	<td class="summary">Detect if we have a renoise song: in rare cases it can briefly go missing,
+ mostly while loading a song or creating a new document...</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#match_table_key">match_table_key (t, key)</a></td>
 	<td class="summary">Match item(s) in an associative array (provide key)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#scale_value">scale_value (value, in_min, in_max, out_min, out_max)</a></td>
-	<td class="summary">scale_value: scale a value to a range within a range</td>
+	<td class="summary">Number methods</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#clamp_value">clamp_value (value, min_value, max_value)</a></td>
 	<td class="summary">clamp_value: ensure value is within min/max</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#gcd">gcd (m, n)</a></td>
+	<td class="summary">greatest common divisor</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#lcm">lcm (m, n)</a></td>
+	<td class="summary">least common multiplier (2 args)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#least_common">least_common (t)</a></td>
+	<td class="summary">find least common multiplier</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#split">split (str, pat)</a></td>
-	<td class="summary">split string - original script: http://lua-users.org/wiki/SplitJoin</td>
+	<td class="summary">String methods</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#trim">trim (s)</a></td>
@@ -139,6 +148,10 @@
  TODO keep dashes, and allow a certain length per line</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#detect_counter_in_str">detect_counter_in_str (str)</a></td>
+	<td class="summary">detect counter in string (used for incrementing, unique names)</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#get_hex_digits">get_hex_digits (val)</a></td>
 	<td class="summary">find number of hex digits needed to represent a number (e.g.</td>
 	</tr>
@@ -148,7 +161,7 @@
  (strip illegal characters instead of trying to fix them)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#stringify_table">stringify_table (t)</a></td>
+	<td class="name" nowrap><a href="#stringify_table">stringify_table (t, prefix, suffix)</a></td>
 	<td class="summary">take a table and convert into strings - useful e.g.</td>
 	</tr>
 	<tr>
@@ -164,6 +177,10 @@
 	<td class="summary">compare two numbers with variable precision</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#fraction">fraction (val)</a></td>
+	<td class="summary">return the fractional part of a number</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#table_compare">table_compare (t1, t2)</a></td>
 	<td class="summary">quick'n'dirty table compare (values in first level only)</td>
 	</tr>
@@ -173,7 +190,7 @@
  the result should be a valid, quotable string</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#serialize_table">serialize_table (t, max_depth)</a></td>
+	<td class="name" nowrap><a href="#serialize_table">serialize_table (t, max_depth, longstring)</a></td>
 	<td class="summary">serialize table into string, with some formatting options</td>
 	</tr>
 </table>
@@ -200,6 +217,21 @@
 
         </li>
     </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "is_song_available"></a>
+    <strong>is_song_available ()</strong>
+    </dt>
+    <dd>
+    Detect if we have a renoise song: in rare cases it can briefly go missing,
+ mostly while loading a song or creating a new document...
+
+
 
 
 
@@ -239,7 +271,7 @@
     <strong>scale_value (value, in_min, in_max, out_min, out_max)</strong>
     </dt>
     <dd>
-    scale_value: scale a value to a range within a range
+    Number methods  scale_value: scale a value to a range within a range
 
 
     <h3>Parameters:</h3>
@@ -303,11 +335,85 @@
 
 </dd>
     <dt>
+    <a name = "gcd"></a>
+    <strong>gcd (m, n)</strong>
+    </dt>
+    <dd>
+    greatest common divisor
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">m</span>
+
+
+
+        </li>
+        <li><span class="parameter">n</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "lcm"></a>
+    <strong>lcm (m, n)</strong>
+    </dt>
+    <dd>
+    least common multiplier (2 args)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">m</span>
+
+
+
+        </li>
+        <li><span class="parameter">n</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "least_common"></a>
+    <strong>least_common (t)</strong>
+    </dt>
+    <dd>
+    find least common multiplier
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         (table), use values in table as argument
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "split"></a>
     <strong>split (str, pat)</strong>
     </dt>
     <dd>
-    split string - original script: http://lua-users.org/wiki/SplitJoin
+    String methods  split string - original script: http://lua-users.org/wiki/SplitJoin
 
 
     <h3>Parameters:</h3>
@@ -383,6 +489,28 @@
 
 </dd>
     <dt>
+    <a name = "detect_counter_in_str"></a>
+    <strong>detect_counter_in_str (str)</strong>
+    </dt>
+    <dd>
+    detect counter in string (used for incrementing, unique names)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "get_hex_digits"></a>
     <strong>get_hex_digits (val)</strong>
     </dt>
@@ -435,7 +563,7 @@
 </dd>
     <dt>
     <a name = "stringify_table"></a>
-    <strong>stringify_table (t)</strong>
+    <strong>stringify_table (t, prefix, suffix)</strong>
     </dt>
     <dd>
     take a table and convert into strings - useful e.g.  for viewbuilder popup
@@ -446,6 +574,12 @@
     <ul>
         <li><span class="parameter">t</span>
          (table)
+        </li>
+        <li><span class="parameter">prefix</span>
+         (string) insert before each entry
+        </li>
+        <li><span class="parameter">suffix</span>
+         (string) insert after each entry
         </li>
     </ul>
 
@@ -529,10 +663,44 @@
 
         </li>
         <li><span class="parameter">precision</span>
-        val1 = math.floor(val1 * precision) val2 = math.floor(val2 * precision)
+
+
+
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fraction"></a>
+    <strong>fraction (val)</strong>
+    </dt>
+    <dd>
+    return the fractional part of a number
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">val</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        number
+    </ol>
 
 
 
@@ -549,14 +717,10 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">t1</span>
-
-
-
+         (table)
         </li>
         <li><span class="parameter">t2</span>
-
-
-
+         (table)
         </li>
     </ul>
 
@@ -598,7 +762,7 @@
 </dd>
     <dt>
     <a name = "serialize_table"></a>
-    <strong>serialize_table (t, max_depth)</strong>
+    <strong>serialize_table (t, max_depth, longstring)</strong>
     </dt>
     <dd>
     serialize table into string, with some formatting options
@@ -611,6 +775,9 @@
         </li>
         <li><span class="parameter">max_depth</span>
          (int), determine how many levels to process - optional
+        </li>
+        <li><span class="parameter">longstring</span>
+         (boolean), use longstring format for multiline text
         </li>
     </ul>
 

@@ -83,8 +83,6 @@ xMidiMessage.DEFAULT_CHANNEL = 0
 xMidiMessage.DEFAULT_PORT_NAME = "Unknown port"
 
 -------------------------------------------------------------------------------
--- Class Methods
--------------------------------------------------------------------------------
 
 function xMidiMessage:__init(...)
 
@@ -131,6 +129,25 @@ function xMidiMessage:__init(...)
 end
 
 -------------------------------------------------------------------------------
+-- xMessage
+-------------------------------------------------------------------------------
+
+function xMidiMessage:get_definition()
+  --print("xMidiMessage:get_definition()")
+
+  local def = xMessage.get_definition(self)
+  def.message_type = self.message_type
+  def.channel = self.channel
+  def.bit_depth = self.bit_depth
+  def.port_name = self.port_name
+  
+  return def
+
+end
+
+-------------------------------------------------------------------------------
+-- xMidiMessage
+-------------------------------------------------------------------------------
 
 function xMidiMessage:get_message_type()
   return self._message_type
@@ -157,31 +174,6 @@ function xMidiMessage:set_channel(val)
 end
 
 -------------------------------------------------------------------------------
---[[
-function xMidiMessage:get_value1()
-  return self._value1
-end
-
-function xMidiMessage:set_value1(val)
-  --TRACE("xMidiMessage:set_value1",val)
-  -- TODO fit within bit depth
-  self._value1 = val
-  self._raw_midi_cache = nil
-end
-
--------------------------------------------------------------------------------
-
-function xMidiMessage:get_value2()
-  return self._value2
-end
-
-function xMidiMessage:set_value2(val)
-  -- TODO fit within bit depth
-  self._value2 = val
-  self._raw_midi_cache = nil
-end
-]]
--------------------------------------------------------------------------------
 
 function xMidiMessage:get_bit_depth()
   return self._bit_depth
@@ -192,18 +184,12 @@ function xMidiMessage:set_bit_depth(val)
   self._raw_midi_cache = nil
 end
 
---[[
-function xMidiMessage:convert_bit_depth(val)
-  -- TODO same as 'set' but will keep/scale the current value
-end
-]]
-
 -------------------------------------------------------------------------------
 -- Class Methods
 -------------------------------------------------------------------------------
-
 -- produce a raw MIDI message from an xMidiMessage (cached)
 -- @return table<table> (table, as we might return a multi-byte message)
+
 function xMidiMessage:create_raw_message()
   --TRACE("xMidiMessage:create_raw_message()")
 
@@ -409,21 +395,6 @@ function xMidiMessage:create_raw_message()
       return raw_midi
     end
   end
-
-end
-
--------------------------------------------------------------------------------
-
-function xMidiMessage:get_definition()
-  --print("xMidiMessage:get_definition()")
-
-  local def = xMessage.get_definition(self)
-  def.message_type = self.message_type
-  def.channel = self.channel
-  def.bit_depth = self.bit_depth
-  def.port_name = self.port_name
-  
-  return def
 
 end
 

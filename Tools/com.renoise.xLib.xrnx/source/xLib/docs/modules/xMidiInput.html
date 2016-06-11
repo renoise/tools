@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>ldoc</h1>
+<h1>xLib</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -41,6 +41,7 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
@@ -53,6 +54,7 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="../modules/xMessage.html">xMessage</a></li>
   <li><strong>xMidiInput</strong></li>
+  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
   <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
@@ -62,9 +64,11 @@
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParameter.html">xParameter</a></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
+  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
+  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -77,8 +81,8 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xTransport.html">xTransport</a></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
-  <li><a href="../modules/xVoice.html">xVoice</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -87,35 +91,41 @@
 <div id="content">
 
 <h1>Module <code>xMidiInput</code></h1>
-<p>Use xMidiInput to interpret MIDI messages
+<p>Asynchroneous interpretation of MIDI messages
 .</p>
 <p>
 
 <h1></h1>
 
-<p>, support all common MIDI messages (including 14-bit)</p>
+<h3>Features</h3>
+<p>Supports all common MIDI messages (including 14-bit). </p>
 
-<p>  Note that the multibyte/NRPN features require an extra bit of processing, and can delay the processing of "normal" (7-bit) messages - for this reason, the 14-bit processing is disabled by default. </p>
+<h3>Notes</h3>
+
+<p>About 14-bit multibyte CC messages: when this feature is enabled, the class will wait for the extra messages to arrive, which can delay the processing of "normal" 7-bit messages. So - if you don't need to support multibyte message, you can disable this feature, or exempt certain CC messages from being interpreted as multibyte messages (multibyte_exempted)</p>
+
+<p>About Data Increment and Data Decrement: the value portion of these messages is sometimes given a value or step size, but the transmitted value byte is commonly set to zero. This class will preserve the value, but whether it is used or not depends on the application. </p>
 
 <h3>How to use</h3>
 
 <p>The class is implemented with a callback, which will recieve xMidiMessages</p>
 
 <pre><code>-- define our callback
-myCallback = function(msg)
+myCallback = function(xmsg)
   -- do something with the message
 end
 
 -- Then, instantiate this class with the callback as argument:
-myMidiInput = xMidiInput(myCallback)
+myMidiInput = xMidiInput{
+  callback_fn = myCallback
+}
 
 -- Now you can feed it with raw midi messages:
 myMidiInput:input({0x90,0x45,0x6F})
 </code></pre>
 
 
-<h3>See also</h3>
-
+<h3>Requires</h3>
 <p><a href="../modules/xMidiMessage.html#">xMidiMessage</a></p>
 
 </p>
@@ -123,6 +133,10 @@ myMidiInput:input({0x90,0x45,0x6F})
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#__init">__init (args)</a></td>
+	<td class="summary">Constructor</td>
+	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#input">input (msg, port_name)</a></td>
 	<td class="summary">process incoming message - will invoke the callback function when able
@@ -132,11 +146,6 @@ myMidiInput:input({0x90,0x45,0x6F})
 	<td class="name" nowrap><a href="#_create_fingerprint">_create_fingerprint (msg_type, midi_msgs)</a></td>
 	<td class="summary">Create MIDI 'fingerprint' for the provided message(s)
  (just enough information to identify the CC/NRPN source)</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#assemble_nrpn_message">assemble_nrpn_message (match_nrpn_num)</a></td>
-	<td class="summary">(Re)construct the table of MIDI messages that together form a complete
- NRPN message (compares the provided number with the active NRPN messages)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#add_multibyte_exempt">add_multibyte_exempt (msg_type, msgs)</a></td>
@@ -163,7 +172,7 @@ myMidiInput:input({0x90,0x45,0x6F})
 	<tr>
 	<td class="name" nowrap><a href="#self._mb_messages">self._mb_messages</a></td>
 	<td class="summary">
-<p>table of multibyte messages</p>
+<p>table of pending multibyte messages</p>
 <pre><code>[fingerprint]{
   type      = [enum] msg_type
   timestamp = [number]
@@ -179,7 +188,7 @@ myMidiInput:input({0x90,0x45,0x6F})
 	<tr>
 	<td class="name" nowrap><a href="#self._nrpn_messages">self._nrpn_messages</a></td>
 	<td class="summary">
-<p>table of NRPN messages</p>
+<p>table of pending NRPN messages</p>
 <pre><code>{
   timestamp = [number]
   channel   = [int]
@@ -228,6 +237,31 @@ myMidiInput:input({0x90,0x45,0x6F})
 
     <h2><a name="Functions"></a>Functions</h2>
     <dl class="function">
+    <dt>
+    <a name = "__init"></a>
+    <strong>__init (args)</strong>
+    </dt>
+    <dd>
+    Constructor
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">args</span>
+        , table
+  callback<em>fn
+  multibyte</em>enabled
+  nrpn<em>enabled
+  terminate</em>nrpns
+  timeout
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
     <dt>
     <a name = "input"></a>
     <strong>input (msg, port_name)</strong>
@@ -279,35 +313,6 @@ myMidiInput:input({0x90,0x45,0x6F})
     <ol>
 
         string
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "assemble_nrpn_message"></a>
-    <strong>assemble_nrpn_message (match_nrpn_num)</strong>
-    </dt>
-    <dd>
-    (Re)construct the table of MIDI messages that together form a complete
- NRPN message (compares the provided number with the active NRPN messages)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">match_nrpn_num</span>
-
-
-
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table or nil
-[[
     </ol>
 
 
@@ -395,7 +400,7 @@ myMidiInput:input({0x90,0x45,0x6F})
     </dt>
     <dd>
 
-<p>table of multibyte messages</p>
+<p>table of pending multibyte messages</p>
 <pre><code>[fingerprint]{
   type      = [enum] msg_type
   timestamp = [number]
@@ -421,7 +426,7 @@ myMidiInput:input({0x90,0x45,0x6F})
     </dt>
     <dd>
 
-<p>table of NRPN messages</p>
+<p>table of pending NRPN messages</p>
 <pre><code>{
   timestamp = [number]
   channel   = [int]

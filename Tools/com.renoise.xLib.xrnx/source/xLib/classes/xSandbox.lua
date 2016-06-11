@@ -321,20 +321,16 @@ end
 
 -------------------------------------------------------------------------------
 -- "safer" renaming of a string token (for example, a variable name)
+-- @param str_fn (string), the function text 
 -- @param old_name (string)
 -- @param new_name (string)
+-- @param prefix (string), prepend to old/new name when defined
 
 function xSandbox.rename_string_token(str_fn,old_name,new_name,prefix)
 
-  local str_search = old_name
-  local str_replace = new_name
+  local str_search = prefix and prefix..old_name or old_name
+  local str_replace = prefix and prefix..new_name or new_name
   local str_patt = "(.?)("..str_search..")([^%w])"
-
-  if prefix then
-    str_search = prefix..str_search
-    str_replace = prefix..str_replace
-  end
-
   str_fn = string.gsub(str_fn,str_patt,function(...)
     local c1,c2,c3 = select(1,...),select(2,...),select(3,...)
     --print("c1,c2,c3",c1,c2,c3)

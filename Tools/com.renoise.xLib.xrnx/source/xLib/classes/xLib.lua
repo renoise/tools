@@ -223,6 +223,8 @@ end
 -- take a table and convert into strings - useful e.g. for viewbuilder popup 
 -- (if table is associative, will use values)
 -- @param t (table)
+-- @param prefix (string) insert before each entry
+-- @param suffix (string) insert after each entry
 -- @return table<string>
 
 function xLib.stringify_table(t,prefix,suffix)

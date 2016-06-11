@@ -301,6 +301,8 @@ end
 -- @param xmsg_in (xMessage)
 -- @param ruleset_idx (int)
 -- @param rule_idx (int)
+-- @return bool, true when triggered
+-- @return string, error message when failed
 
 function xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)
 
@@ -308,21 +310,57 @@ function xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)
 
   local target = out.target
   local xmsg = out.xmsg
-  local str_msg -- log message
+  local str_msg 
+  local triggered,err
 
   --print("*** transmit - target",target)
 
   if (target == xRules.OUTPUT_OPTIONS.INTERNAL_AUTO) then
-    str_msg = self:transmit_auto(xmsg)
+
+    triggered,err = self.osc_client:trigger_auto(xmsg)
+    str_msg = "Renoise (AUTO) ↩ " .. tostring(xmsg)
+
   elseif (target == xRules.OUTPUT_OPTIONS.INTERNAL_RAW) then
-    str_msg = self:transmit_raw(xmsg)
+
+    triggered,err = self.osc_client:trigger_raw(xmsg)
+    str_msg = "Renoise (RAW) ↩ " .. tostring(xmsg)
+
   elseif (target == xRules.OUTPUT_OPTIONS.EXTERNAL_MIDI) then
-    str_msg = self:transmit_midi(xmsg)
+
+    for k,midi_output in pairs(self.midi_outputs) do
+      if (k == xmsg.port_name) then
+        str_msg = "MIDI ↪ " .. tostring(xmsg)
+        local midi_msgs = xmsg:create_raw_message()
+        --print("*** midi_msgs",rprint(midi_msgs))
+        for _,midi_msg in ipairs(midi_msgs) do
+          midi_output:send(midi_msg)
+        end
+        triggered = true
+        break
+      end
+    end
+
   elseif (target == xRules.OUTPUT_OPTIONS.EXTERNAL_OSC) then
-    str_msg = self:transmit_osc(xmsg)
+
+    --str_msg = self:transmit_osc(xmsg)
+    for k,osc_device in pairs(self.osc_devices) do
+      if (xmsg.device_name == osc_device.name) then
+        str_msg = "OSC ↪ " .. tostring(xmsg)
+        triggered,err = osc_device:send(xmsg)
+        break
+      end
+    end
+
+
   else
-    -- here for compability reasons (v0.5 did not have output options)
-    str_msg = self:transmit_auto(xmsg)
+    -- here for compability reasons (xRules v0.5 did not have output options)
+    triggered,err = self.osc_client:trigger_auto(xmsg)
+    str_msg = "Renoise (AUTO) ↩ " .. tostring(xmsg)
+
+  end
+
+  if not triggered then
+    return false,err
   end
 
   -- TODO register with voice-manager
@@ -332,101 +370,6 @@ function xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)
   -- invoke callback, i.e. to provide visual feedback
   if self.callback then
     self.callback(xmsg_in,ruleset_idx,rule_idx,str_msg)
-  end
-
-end
-
---------------------------------------------------------------------------------
--- trigger 'automatic MIDI' using the internal OSC client
--- if notes, route to specified track + instrument - else, pass as raw MIDI
--- @param xmsg (xMidiMessage or xOscMessage)
-
-function xRules:transmit_auto(xmsg)
-
-  local is_note_on = (xmsg.message_type == xMidiMessage.TYPE.NOTE_ON)
-  local is_note_off = (xmsg.message_type == xMidiMessage.TYPE.NOTE_OFF)
-  --print("is_note_on, is_note_off",is_note_on,is_note_off)
-
-  if is_note_on or is_note_off then
-    local str_msg = "Renoise ↩ " .. tostring(xmsg)
-    local instr_idx = xmsg.instrument_index or rns.selected_instrument_index
-    local track_idx = xmsg.track_index or rns.selected_track_index
-    self.osc_client:trigger_instrument(is_note_on,instr_idx,track_idx,xmsg.values[1],xmsg.values[2])
-    return str_msg
-  else
-    if (type(xmsg)~="xMidiMessage") then
-      -- on-the-fly conversion, include MIDI properties 
-      -- that has been specified in the function
-      local def = xmsg.__def
-      def.message_type = xmsg.message_type
-      def.channel = xmsg.channel
-      def.bit_depth = xmsg.bit_depth
-      def.port_name = xmsg.port_name
-      xmsg = xMidiMessage(def) 
-    end
-    return self:transmit_raw(xmsg)
-  end
-
-end
-
---------------------------------------------------------------------------------
--- trigger 'raw MIDI' using the internal OSC 
-
-function xRules:transmit_raw(xmsg)
-
-  assert(type(xmsg)=="xMidiMessage","Expected xMidiMessage as argument")
-
-  if (xmsg.message_type == xMidiMessage.TYPE.SYSEX) then
-    LOG("Warning: the internal OSC server does not support sysex messages")
-    return
-  end
-
-  local str_msg = "Renoise ↩ " .. tostring(xmsg)
-  local midi_msgs = xmsg:create_raw_message()
-  for k,v in ipairs(midi_msgs) do
-    self.osc_client:trigger_midi(v)
-  end
-  return str_msg
-end
-
---------------------------------------------------------------------------------
--- send MIDI on the port specified in the message
-
-function xRules:transmit_midi(xmsg)
-
-  assert(type(xmsg)=="xMidiMessage","Expected xMidiMessage as argument")
-
-  local midi_out
-  for k,midi_output in pairs(self.midi_outputs) do
-    if (k == xmsg.port_name) then
-      local str_msg = "MIDI ↪ " .. tostring(xmsg)
-      local midi_msgs = xmsg:create_raw_message()
-      --print("*** midi_msgs",rprint(midi_msgs))
-      for _,midi_msg in ipairs(midi_msgs) do
-        midi_output:send(midi_msg)
-      end
-      return str_msg
-    end
-  end
-
-end
-
---------------------------------------------------------------------------------
--- send message to OSC device specified in the message
-
-function xRules:transmit_osc(xmsg)
-
-  assert(type(xmsg)=="xOscMessage","Expected xOscMessage as argument")
-
-  for k,osc_device in pairs(self.osc_devices) do
-    if (xmsg.device_name == osc_device.name) then
-      --print(">>> transmit_osc - xmsg.values",xmsg.pattern.osc_pattern_out,xmsg.values[1],xmsg.values[2],xmsg.values[3])
-      local str_msg = "OSC ↪ " .. tostring(xmsg)
-      --local osc_msg = xmsg:create_raw_message()
-      --print("osc_msg",osc_msg)
-      osc_device:send(xmsg)
-      return str_msg
-    end
   end
 
 end

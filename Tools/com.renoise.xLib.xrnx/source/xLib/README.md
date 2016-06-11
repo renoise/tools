@@ -1,7 +1,6 @@
 # About xLib
 
-The xLib library is a suite of classes that extend the standard Renoise API. Each class aims to be implemented with static methods as widely as possible -  this should make xLib compatible with most programming styles. 
-
+The xLib library is a suite of classes that extend the standard Renoise API. 
 
 ## How to use 
 
