@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>xLib</h1>
+<h1>ldoc</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -33,14 +33,12 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
-<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
-  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><strong>xBlockLoop</strong></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
@@ -53,7 +51,6 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="../modules/xMessage.html">xMessage</a></li>
   <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
-  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
   <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
@@ -63,11 +60,9 @@
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
-  <li><a href="../modules/xParameter.html">xParameter</a></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
-  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -80,8 +75,8 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
-  <li><a href="../modules/xTransport.html">xTransport</a></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoice.html">xVoice</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -110,10 +105,6 @@
 	<td class="summary">retrive number of lines in a block for a given pattern</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#get_start">get_start ()</a></td>
-	<td class="summary">return start line of the block loop</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#get_end">get_end ()</a></td>
 	<td class="summary">calculates end line of the block loop</td>
 	</tr>
@@ -124,25 +115,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#exiting">exiting (seq_idx, line_idx, line_delta, end_pos)</a></td>
 	<td class="summary">check if we are heading out of a blockloop</td>
-	</tr>
-</table>
-<h2><a href="#Fields">Fields</a></h2>
-<table class="function_list">
-	<tr>
-	<td class="name" nowrap><a href="#self.writeahead">self.writeahead</a></td>
-	<td class="summary">int</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.start_line">self.start_line</a></td>
-	<td class="summary">int</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.end_line">self.end_line</a></td>
-	<td class="summary">int</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.length">self.length</a></td>
-	<td class="summary">int, read-only</td>
 	</tr>
 </table>
 
@@ -186,29 +158,12 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">seq_idx</span>
-        TRACE("xBlockLoop.get<em>block</em>lines(seq<em>idx)",seq</em>idx)
+
+
+
         </li>
     </ul>
 
-
-
-
-
-</dd>
-    <dt>
-    <a name = "get_start"></a>
-    <strong>get_start ()</strong>
-    </dt>
-    <dd>
-    return start line of the block loop
-
-
-
-    <h3>Returns:</h3>
-    <ol>
-
-        int, line index or nil
-    </ol>
 
 
 
@@ -293,65 +248,6 @@
 
         line (int)
     </ol>
-
-
-
-
-</dd>
-</dl>
-    <h2><a name="Fields"></a>Fields</h2>
-    <dl class="function">
-    <dt>
-    <a name = "self.writeahead"></a>
-    <strong>self.writeahead</strong>
-    </dt>
-    <dd>
-    int
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.start_line"></a>
-    <strong>self.start_line</strong>
-    </dt>
-    <dd>
-    int
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.end_line"></a>
-    <strong>self.end_line</strong>
-    </dt>
-    <dd>
-    int
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.length"></a>
-    <strong>self.length</strong>
-    </dt>
-    <dd>
-    int, read-only
-
-
-
 
 
 

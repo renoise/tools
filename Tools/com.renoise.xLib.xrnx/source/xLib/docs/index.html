@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>xLib</h1>
+<h1>ldoc</h1>
 
 
 
@@ -32,7 +32,6 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="modules/xAudioDevice.html">xAudioDevice</a></li>
-  <li><a href="modules/xAutomation.html">xAutomation</a></li>
   <li><a href="modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="modules/xDebug.html">xDebug</a></li>
   <li><a href="modules/xDocument.html">xDocument</a></li>
@@ -45,7 +44,6 @@
   <li><a href="modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="modules/xMessage.html">xMessage</a></li>
   <li><a href="modules/xMidiInput.html">xMidiInput</a></li>
-  <li><a href="modules/xMidiIO.html">xMidiIO</a></li>
   <li><a href="modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="modules/xObservable.html">xObservable</a></li>
@@ -55,11 +53,9 @@
   <li><a href="modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="modules/xOscValue.html">xOscValue</a></li>
-  <li><a href="modules/xParameter.html">xParameter</a></li>
   <li><a href="modules/xParseXML.html">xParseXML</a></li>
   <li><a href="modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="modules/xPhraseManager.html">xPhraseManager</a></li>
-  <li><a href="modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="modules/xPhraseMgr.html">xPhraseMgr</a></li>
   <li><a href="modules/xPreferences.html">xPreferences</a></li>
   <li><a href="modules/xReflection.html">xReflection</a></li>
   <li><a href="modules/xRule.html">xRule</a></li>
@@ -72,8 +68,8 @@
   <li><a href="modules/xSongPos.html">xSongPos</a></li>
   <li><a href="modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="modules/xTrack.html">xTrack</a></li>
-  <li><a href="modules/xTransport.html">xTransport</a></li>
   <li><a href="modules/xValue.html">xValue</a></li>
+  <li><a href="modules/xVoice.html">xVoice</a></li>
   <li><a href="modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -82,19 +78,12 @@
 <div id="content">
 
 
-  <h2>xLib library</h2>
-  <p>The xLib library is a suite of classes that extend the standard Renoise API. </p>
 
 <h2>Modules</h2>
 <table class="module_list">
 	<tr>
 		<td class="name"  nowrap><a href="modules/xAudioDevice.html">xAudioDevice</a></td>
 		<td class="summary">Static methods for dealing with Audio Devices
-.</td>
-	</tr>
-	<tr>
-		<td class="name"  nowrap><a href="modules/xAutomation.html">xAutomation</a></td>
-		<td class="summary">Easy control of parameter automation
 .</td>
 	</tr>
 	<tr>
@@ -149,17 +138,12 @@
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/xMessage.html">xMessage</a></td>
-		<td class="summary">Abstract message class (the basis for OSC and MIDI messages)
+		<td class="summary">Abstract message class (extend to create your own type)
 .</td>
 	</tr>
 	<tr>
 		<td class="name"  nowrap><a href="modules/xMidiInput.html">xMidiInput</a></td>
-		<td class="summary">Asynchroneous interpretation of MIDI messages
-.</td>
-	</tr>
-	<tr>
-		<td class="name"  nowrap><a href="modules/xMidiIO.html">xMidiIO</a></td>
-		<td class="summary">Extend applications with MIDI input/output
+		<td class="summary">Use xMidiInput to interpret MIDI messages
 .</td>
 	</tr>
 	<tr>
@@ -208,11 +192,6 @@ The router is using instances of xOscPattern to match messages.</td>
 .</td>
 	</tr>
 	<tr>
-		<td class="name"  nowrap><a href="modules/xParameter.html">xParameter</a></td>
-		<td class="summary">Abstract device-parameter class, supports relative values (xMidiMessage)
-.</td>
-	</tr>
-	<tr>
 		<td class="name"  nowrap><a href="modules/xParseXML.html">xParseXML</a></td>
 		<td class="summary">Parsing is based on the implementation by Roberto Ierusalimschy, modified to support underscores in attribute names.</td>
 	</tr>
@@ -222,13 +201,8 @@ The router is using instances of xOscPattern to match messages.</td>
 .</td>
 	</tr>
 	<tr>
-		<td class="name"  nowrap><a href="modules/xPhraseManager.html">xPhraseManager</a></td>
+		<td class="name"  nowrap><a href="modules/xPhraseMgr.html">xPhraseMgr</a></td>
 		<td class="summary">This class will assist in managing phrases, phrase mappings
-.</td>
-	</tr>
-	<tr>
-		<td class="name"  nowrap><a href="modules/xPlayPos.html">xPlayPos</a></td>
-		<td class="summary">Extended play-position which support fractional time (between lines)
 .</td>
 	</tr>
 	<tr>
@@ -292,17 +266,18 @@ The router is using instances of xOscPattern to match messages.</td>
 .</td>
 	</tr>
 	<tr>
-		<td class="name"  nowrap><a href="modules/xTransport.html">xTransport</a></td>
-		<td class="summary">Extended transport, including pattern-sequence sections and more
-.</td>
-	</tr>
-	<tr>
 		<td class="name"  nowrap><a href="modules/xValue.html">xValue</a></td>
 		<td class="summary">Abstract 'value' class.</td>
 	</tr>
 	<tr>
+		<td class="name"  nowrap><a href="modules/xVoice.html">xVoice</a></td>
+		<td class="summary">A representation of a single voice
+.</td>
+	</tr>
+	<tr>
 		<td class="name"  nowrap><a href="modules/xVoiceManager.html">xVoiceManager</a></td>
-		<td class="summary">This class keeps track of active, playing voices as they are triggered.</td>
+		<td class="summary">This class keeps track of active, playing voices
+.</td>
 	</tr>
 </table>
 

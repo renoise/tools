@@ -71,6 +71,6 @@ end
 
 function xLineAutomation:__tostring()
 
-  return type(self)
+  return "xLineAutomation" 
 
 end

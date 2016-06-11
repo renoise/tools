@@ -18,34 +18,23 @@ For now, we only care about the "first level" properties - the ones that belong 
 
 class 'xObservable'
 
+--[[
+xObservable.TYPES = {
+  "integer",
+  "float",
+  "boolean",
+  "string",
+  "decibel",
+}
+]]
+
 xObservable.SONG = {
   artist_observable = {type="string"},
   name_observable = {type="string"},
-  comments_observable = {type="table",subclass="string"}, -- array of strings
-  show_comments_after_loading_observable = {type="boolean"},
-  instruments_observable = {type="table",subclass="Instrument"},
-  patterns_observable = {type="table",subclass="Pattern"},
-  tracks_observable = {type="table",subclass="Track"},
-  selected_instrument_observable = {type="table",subclass="Instrument"},
   selected_instrument_index_observable = {type="number",subclass="integer",min=1},
-  selected_phrase_observable = {type="table",subclass="InstrumentPhrase"},
-  selected_phrase_index_observable = {type="number",subclass="integer",min=0},
-  selected_sample_observable = {type="Sample"},
-  selected_sample_modulation_set_observable = {type="SampleModulationSet"},
-  selected_sample_device_chain_observable = {type="SampleDeviceChain"},
-  selected_sample_device_observable = {type="AudioDevice"},
-  selected_track_observable = {type="Track"},
   selected_track_index_observable = {type="number",subclass="integer",min=1},
-  selected_track_device_observable = {type="AudioDevice"},
-  --selected_device -- deprecated
-  selected_parameter_observable = {type="DeviceParameter"},
-  selected_automation_parameter_observable = {type="DeviceParameter"},
-  selected_automation_device_observable = {type="AudioDevice"},
-  selected_pattern_observable = {type="Pattern"},
   selected_pattern_index_observable = {type="number",subclass="integer",min=1},
-  selected_pattern_track_observable = {type="PatternTrack"},
   selected_sequence_index_observable = {type="number",subclass="integer",min=1},
-  selected_note_column_observable = {type="NoteColumn"},
   transport = {
     playing_observable = {type="boolean"},
     bpm_observable = {type="number",subclass="float",min=32,max=999},
@@ -72,21 +61,13 @@ xObservable.SONG = {
     track_headroom_observable = {type="number",subclass="decibel"},
     keyboard_velocity_enabled_observable = {type="boolean"},
     keyboard_velocity_observable = {type="number",subclass="integer",min=0,max=127},
-  },
-  sequencer = {
-    --:sequence_is_start_of_section_observable = 
-    --:sequence_section_name_observable
-    --:sequence_sections_changed_observable
-    keep_sequence_sorted_observable = {type="boolean"},
-    selection_range_observable = {type="table"}, -- array of two numbers
-    pattern_sequence_observable = {type="table",subclass="integer"}, -- array of numbers
-    pattern_assignments_observable = {type="Observable"}, -- ?? 
-    pattern_slot_mutes_observable = {type="Observable"},
-  },
+  }
 }
 
 -- precomputed version
 xObservable.SONG_BY_TYPE = {}
+
+
 
 -------------------------------------------------------------------------------
 
@@ -196,163 +177,31 @@ function xObservable.get_keys_by_type(str_type,prefix,arr)
 end
 
 --------------------------------------------------------------------------------
--- Remove notifier - wrap in protected call (when observables are gone)
--- supports all three combinations of arguments:
--- function or (object, function) or (function, object)
--- @param obs (renoise.Document.ObservableXXX)
--- @param arg1 (function or object)
--- @param arg2 (function or object)
--- @return bool, true when attached
--- @return string, error message when failed
-
-function xObservable.detach(obs,arg1,arg2)
-
-  local err 
-  obs,err = xObservable.retrieve_observable(obs)
-  if err then
-    return false,err
-  end
-
-  local passed,err = pcall(function()
-    if type(arg1)=="function" then
-      local fn,obj = arg1,arg2
-      if obj then
-        if obs:has_notifier(fn,obj) then 
-          obs:remove_notifier(fn,obj)
-        end
-      else
-        if obs:has_notifier(fn) then 
-          obs:remove_notifier(fn)
-        end
-      end
-    elseif type(arg2)=="function" then
-      local obj,fn = arg1,arg2
-      if obs:has_notifier(obj,fn) then 
-        obs:remove_notifier(obj,fn)
-      end
-    else
-      error("Unsupported arguments")
-    end
-  end)
-
-  return passed,err
-
-end
-
---------------------------------------------------------------------------------
 -- Add notifier, while checking for / removing existing one
 -- supports all three combinations of arguments:
 -- function or (object, function) or (function, object)
 -- @param obs (renoise.Document.ObservableXXX)
 -- @param arg1 (function or object)
 -- @param arg2 (function or object)
--- @return bool, true when attached
--- @return string, error message when failed
 
 function xObservable.attach(obs,arg1,arg2)
   
-  local err = nil
-  obs,err = xObservable.retrieve_observable(obs)
-  if err then
-    return false,err
-  end
-
-  xObservable.detach(obs,arg1,arg2)
-
   if type(arg1)=="function" then
     local fn,obj = arg1,arg2
     if obj then
+      if obs:has_notifier(fn,obj) then obs:remove_notifier(fn,obj) end
       obs:add_notifier(fn,obj)
     else
+      if obs:has_notifier(fn) then obs:remove_notifier(fn) end
       obs:add_notifier(fn)
     end
   elseif type(arg2)=="function" then
     local obj,fn = arg1,arg2
+    if obs:has_notifier(obj,fn) then obs:remove_notifier(obj,fn) end
     obs:add_notifier(obj,fn)
   else
     error("Unsupported arguments")
   end
 
-  return true
-
 end
 
---------------------------------------------------------------------------------
--- support the use of string-based observable names
--- @param obs (string or ObservableXXX)
--- @return ObservableXXX
-
-function xObservable.retrieve_observable(obs)
-
-  local err
-  if (type(obs)=="string") then
-    obs,err = xLib.parse_str(obs)
-    if err then
-      return false,err
-    end
-  end
-  --print("obs",obs)
-
-  return obs
-
-end
-
---------------------------------------------------------------------------------
--- remove all entries from ObservableXXXList with specified value 
-
-function xObservable.list_remove(obs,val)
-  TRACE("xObservable.list_remove",obs,val)
-
-  for k = 1,#obs do
-    if obs[k] and (val == obs[k].value) then
-      --print(">>> list_remove - obs[k].value",obs[k].value)
-      obs:remove(k)
-    end
-  end
-  return obs
-
-end
-
---------------------------------------------------------------------------------
--- add to ObservableXXXList when not already present
-
-function xObservable.list_add(obs,val)
-  TRACE("xObservable.list_add",obs,val)
-
-  local exists = false
-  for k = 1,#obs do
-    if obs[k] and (val == obs[k].value) then
-      exists = true
-    end
-  end
-  if not exists then
-    obs:insert(val)
-  end
-  return obs
-
-end
-
---------------------------------------------------------------------------------
--- return table containing all names (using .dot syntax)
-
-function xObservable.get_song_names()
-
-  local rslt = {}
-  local branches = {"transport","sequencer"}
-
-  for k,v in pairs(xObservable.SONG) do
-    if not table.find(branches,k) then
-      table.insert(rslt,"rns."..k)
-    end
-  end
-
-  for k,v in pairs(branches) do
-    for k2,v2 in pairs(xObservable.SONG[v]) do
-      table.insert(rslt,"rns."..v.."."..k2)
-    end
-  end
-
-  table.sort(rslt)
-  return rslt
-
-end

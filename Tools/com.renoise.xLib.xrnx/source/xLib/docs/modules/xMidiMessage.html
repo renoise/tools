@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>xLib</h1>
+<h1>ldoc</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -40,7 +40,6 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
-  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
@@ -53,7 +52,6 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="../modules/xMessage.html">xMessage</a></li>
   <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
-  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
   <li><strong>xMidiMessage</strong></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
@@ -63,11 +61,9 @@
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
-  <li><a href="../modules/xParameter.html">xParameter</a></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
-  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -80,8 +76,8 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
-  <li><a href="../modules/xTransport.html">xTransport</a></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoice.html">xVoice</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -103,8 +99,8 @@ making it possible to pass around data with higher resolution </p>
 <p>  ability to cache a message once turned into raw MIDI,
   (change it only as message properties are modified via setters)</p>
 
-<h3>Requires</h3>
-<p><a href="../modules/xMessage.html#">xMessage</a> </p>
+<h3>See also</h3>
+<p><a href="../modules/xMidiInput.html#">xMidiInput</a> </p>
 
 </p>
 
@@ -112,16 +108,12 @@ making it possible to pass around data with higher resolution </p>
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#get_definition">get_definition ()</a></td>
-	<td class="summary">xMessage</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#get_message_type">get_message_type ()</a></td>
-	<td class="summary">xMidiMessage</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#create_raw_message">create_raw_message ()</a></td>
+	<td class="name" nowrap><a href="#__init">__init (...)</a></td>
 	<td class="summary">Class Methods</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_value1">get_value1 ()</a></td>
+	<td class="summary">[[</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#split_mb">split_mb (val)</a></td>
@@ -136,8 +128,7 @@ making it possible to pass around data with higher resolution </p>
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#self.message_type">self.message_type</a></td>
-	<td class="summary">xMidiMessage.TYPE (required)
- default to sysex - a neutral default when converting from OSC</td>
+	<td class="summary">xMidiMessage.TYPE (required)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.channel">self.channel</a></td>
@@ -148,11 +139,6 @@ making it possible to pass around data with higher resolution </p>
 	<td class="name" nowrap><a href="#self.bit_depth">self.bit_depth</a></td>
 	<td class="summary">xMidiMessage.BIT_DEPTH, indicates a multibyte message
   (only relevant for CC messages, as they can otherwise be ambivalent)</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#self.mode">self.mode</a></td>
-	<td class="summary">xMidiMessage.MODE, more detailed information about message
- (this property can be set, TODO: auto-detect)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.port_name">self.port_name</a></td>
@@ -167,13 +153,21 @@ making it possible to pass around data with higher resolution </p>
     <h2><a name="Functions"></a>Functions</h2>
     <dl class="function">
     <dt>
-    <a name = "get_definition"></a>
-    <strong>get_definition ()</strong>
+    <a name = "__init"></a>
+    <strong>__init (...)</strong>
     </dt>
     <dd>
-    xMessage
+    Class Methods
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
 
 
 
@@ -181,33 +175,14 @@ making it possible to pass around data with higher resolution </p>
 
 </dd>
     <dt>
-    <a name = "get_message_type"></a>
-    <strong>get_message_type ()</strong>
+    <a name = "get_value1"></a>
+    <strong>get_value1 ()</strong>
     </dt>
     <dd>
-    xMidiMessage
+    [[
 
 
 
-
-
-
-
-</dd>
-    <dt>
-    <a name = "create_raw_message"></a>
-    <strong>create_raw_message ()</strong>
-    </dt>
-    <dd>
-    Class Methods  produce a raw MIDI message from an xMidiMessage (cached)
-
-
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table<table> (table, as we might return a multi-byte message)
-    </ol>
 
 
 
@@ -269,7 +244,6 @@ making it possible to pass around data with higher resolution </p>
     </dt>
     <dd>
     xMidiMessage.TYPE (required)
- default to sysex - a neutral default when converting from OSC
 
 
 
@@ -300,21 +274,6 @@ making it possible to pass around data with higher resolution </p>
     <dd>
     xMidiMessage.BIT_DEPTH, indicates a multibyte message
   (only relevant for CC messages, as they can otherwise be ambivalent)
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "self.mode"></a>
-    <strong>self.mode</strong>
-    </dt>
-    <dd>
-    xMidiMessage.MODE, more detailed information about message
- (this property can be set, TODO: auto-detect)
 
 
 

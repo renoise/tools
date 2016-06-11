@@ -147,7 +147,13 @@ function xFilesystem.ensure_unique_filename(file_path)
     and xFilesystem.file_strip_extension(filename,extension)
     or filename
 
-  local count = xLib.detect_counter_in_str(file_no_ext)
+  -- detect existing counter, and continue from there...
+  local count = string.match(file_no_ext,"%((%d)%)$")
+  if count then 
+    file_no_ext = string.gsub(file_no_ext,"%s*%(%d%)$","")
+  else
+    count = 1
+  end
 
   while (io.exists(rslt)) do
     if extension then

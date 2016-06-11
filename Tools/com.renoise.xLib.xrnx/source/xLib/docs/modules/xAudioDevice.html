@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>xLib</h1>
+<h1>ldoc</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -39,7 +39,6 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><strong>xAudioDevice</strong></li>
-  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
@@ -52,7 +51,6 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="../modules/xMessage.html">xMessage</a></li>
   <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
-  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
   <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
@@ -62,11 +60,9 @@
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
-  <li><a href="../modules/xParameter.html">xParameter</a></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
-  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -79,8 +75,8 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
-  <li><a href="../modules/xTransport.html">xTransport</a></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoice.html">xVoice</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -103,7 +99,7 @@
 	<tr>
 	<td class="name" nowrap><a href="#resolve_parameter">resolve_parameter (param, track_idx, device_idx)</a></td>
 	<td class="summary">Resolve the device/parameter indices based on a parameter
- (TODO: API5 makes a more efficient implementation possible)</td>
+ (TODO: API5 has built-in functionality)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#get_device_routings">get_device_routings (device)</a></td>
@@ -113,10 +109,6 @@
 	<tr>
 	<td class="name" nowrap><a href="#is_send_device">is_send_device (device)</a></td>
 	<td class="summary">Check if provided device is a send device</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#get_mixer_parameters">get_mixer_parameters (device)</a></td>
-	<td class="summary">Get parameters that are visible in the mixer</td>
 	</tr>
 </table>
 
@@ -132,7 +124,7 @@
     </dt>
     <dd>
     Resolve the device/parameter indices based on a parameter
- (TODO: API5 makes a more efficient implementation possible)
+ (TODO: API5 has built-in functionality)
 
 
     <h3>Parameters:</h3>
@@ -141,10 +133,10 @@
         , renoise.DeviceParameter
         </li>
         <li><span class="parameter">track_idx</span>
-        , restrict search to this track (optional)
+        , restrict search to this track
         </li>
         <li><span class="parameter">device_idx</span>
-        , restrict search to this device (optional)
+        , restrict search to this device
         </li>
     </ul>
 
@@ -207,31 +199,6 @@
     <ol>
 
         bool
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "get_mixer_parameters"></a>
-    <strong>get_mixer_parameters (device)</strong>
-    </dt>
-    <dd>
-    Get parameters that are visible in the mixer
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">device</span>
-         (renoise.AudioDevice)
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        table<renoise.DeviceParameter>
     </ol>
 
 
