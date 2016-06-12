@@ -91,7 +91,7 @@ function xStreamBuffer:update_read_buffer()
 
   local pos = self.xstream.stream.readpos
   if pos then
-    for k = 0,self.xstream.writeahead-1 do
+    for k = 0,self.xstream.stream.writeahead-1 do
       local xinc = pos.lines_travelled
       if self.scheduled[xinc] then
         self.line_descriptors[xinc] = self.scheduled[xinc]
@@ -246,7 +246,7 @@ function xStreamBuffer:schedule_line(xline,xinc)
   local live_mode = rns.transport.playing
 
 
-  if (delta <= self.xstream.writeahead) then
+  if (delta <= self.xstream.stream.writeahead) then
     -- within output range - insert into output_buffer
     --print("insert into output_buffer - xinc,delta",xinc,delta)
     self.output_buffer[xinc] = xLine.apply_descriptor(xline)
