@@ -80,9 +80,6 @@ function xStream:__init(...)
   --- xStreamPrefs, current settings
   self.prefs = renoise.tool().preferences
 
-  --- int, writeahead amount
-  self.writeahead = 0
-
   self.buffer = xStreamBuffer(self)
 
   --- int, keep track of the highest/lowest line in our buffers
@@ -122,11 +119,6 @@ function xStream:__init(...)
   --- xStream.PLAYMODE (string-based enum)
   self.automation_playmode = property(self.get_automation_playmode,self.set_automation_playmode)
   self.automation_playmode_observable = renoise.Document.ObservableNumber(xStream.PLAYMODE.LINEAR)
-
-  --- int, decrease this if you are experiencing dropouts during heavy UI
-  -- operations in Renoise (such as opening a plugin GUI) 
-  self.writeahead_factor = property(self.get_writeahead_factor,self.set_writeahead_factor)
-  self.writeahead_factor_observable = renoise.Document.ObservableNumber(300)
 
   --- string, value depends on success/failure during last callback 
   -- "" = no problem
@@ -256,7 +248,7 @@ function xStream:__init(...)
 
   -- initialize --
 
-  self:determine_writeahead()
+  self.stream:determine_writeahead()
 
   self.osc_client = xOscClient{
     osc_host = self.prefs.osc_client_host.value,
@@ -314,7 +306,7 @@ function xStream:__init(...)
   self.scheduling = self.prefs.scheduling.value
   self.mute_mode = self.prefs.mute_mode.value
   self.suspend_when_hidden = self.prefs.suspend_when_hidden.value
-  self.writeahead_factor = self.prefs.writeahead_factor.value
+  self.stream.writeahead_factor = self.prefs.writeahead_factor.value
 
   -- output outputs
   self.automation_playmode = self.prefs.automation_playmode.value
@@ -347,9 +339,9 @@ function xStream:__init(...)
     self.prefs.automation_playmode.value = self.automation_playmode_observable.value
   end)
 
-  self.writeahead_factor_observable:add_notifier(function()
-    TRACE("*** main.lua - self.writeahead_factor_observable fired...")
-    self.prefs.writeahead_factor.value = self.writeahead_factor_observable.value
+  self.stream.writeahead_factor_observable:add_notifier(function()
+    TRACE("*** main.lua - self.stream.writeahead_factor_observable fired...")
+    self.prefs.writeahead_factor.value = self.stream.writeahead_factor_observable.value
   end)
 
   self.include_hidden_observable:add_notifier(function()
@@ -792,7 +784,7 @@ function xStream:schedule_item(model_name,preset_index,preset_bank_name)
     local happening_in_lines = self._scheduled_pos.lines_travelled
       - (self.stream.writepos.lines_travelled)
     --print("happening_in_lines",happening_in_lines)
-    if (happening_in_lines <= self.writeahead) then
+    if (happening_in_lines <= self.stream.writeahead) then
       --print("wipe the buffer")
       self.buffer:wipe_futures()
     end
@@ -1038,21 +1030,6 @@ end
 
 -------------------------------------------------------------------------------
 
-function xStream:get_writeahead_factor()
-  return self.writeahead_factor_observable.value
-end
-
-function xStream:set_writeahead_factor(val)
-  TRACE("xStream:set_writeahead_factor(val)",val)
-
-  self.writeahead_factor_observable.value = val
-
-  self:determine_writeahead()
-
-end
-
--------------------------------------------------------------------------------
-
 function xStream:get_expand_columns()
   return self.expand_columns_observable.value
 end
@@ -1223,7 +1200,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
   end
 
   if not num_lines then
-    num_lines = rns.transport.playing and self.writeahead or 1
+    num_lines = rns.transport.playing and self.stream.writeahead or 1
   end
 
   -- purge old content from buffers
@@ -1386,10 +1363,10 @@ function xStream:get_content(pos,num_lines,xpos)
   local read_pos = nil
   if self.stream.readpos then
     read_pos = self.stream.readpos
-    --print("*** read_pos - self.stream.writepos",self.stream.writepos)
+    --print("*** read_pos - self.stream.readpos",read_pos)
   else
     read_pos = xSongPos(xpos)
-    --print("*** read_pos - xSongPos(xpos)",xpos)
+    --print("*** read_pos - xSongPos(xpos)",read_pos)
   end
 
   -- special case: if the pattern was deleted from the song, the read_pos
@@ -1440,7 +1417,7 @@ function xStream:get_content(pos,num_lines,xpos)
       -- TODO display runtime errors separately (runtime_status)
       self.callback_status_observable.value = err
       --self.buffer[xinc] = xLine({})
-    elseif success then
+    elseif success and buffer_content then
       -- we might have redefined the xline (or parts of it) in our  
       -- callback method - convert everything into class instances...
       -- TODO check against 'user_redefined_xline'
@@ -1451,7 +1428,6 @@ function xStream:get_content(pos,num_lines,xpos)
         LOG("*** Error: could not convert xline - "..err)
         self.buffer.output_buffer[xinc] = self.empty_xline
       end
-
     end
     self.buffer.highest_xinc = math.max(xinc,self.buffer.highest_xinc)
 
@@ -1501,6 +1477,7 @@ function xStream:reset()
   TRACE("xStream:reset()")
 
   self.buffer:clear()
+  self.stream:reset()
   --self.stream.readpos = nil
 
   if self.selected_model then
@@ -1577,21 +1554,6 @@ function xStream:unmute()
 
 end
 
---------------------------------------------------------------------------------
--- [app] decide the writeahead amount, depending on the song tempo
-
-function xStream:determine_writeahead()
-  TRACE("xStream:determine_writeahead()")
-
-  local bpm = rns.transport.bpm
-  local lpb = rns.transport.lpb
-
-  --self.writeahead = math.ceil(math.max(2,(bpm*lpb)/self.writeahead_factor))
-  self.writeahead = 5
-  self.stream.writeahead = self.writeahead
-
-end
-
 -------------------------------------------------------------------------------
 -- [app] perform periodic updates
 
@@ -1654,7 +1616,7 @@ function xStream:attach_to_song()
 
   local tempo_notifier = function()
     TRACE("*** tempo_notifier fired...")
-    self:determine_writeahead()
+    self.stream:determine_writeahead()
   end
 
   local selected_track_index_notifier = function()
@@ -1842,6 +1804,7 @@ function xStream:apply_to_range(from_line,to_line,travelled)
 
   -- write output
   self.active = true
+  self.stream.readpos.line = from_line
   self.bounds_mode = xpos.out_of_bounds
   self.block_mode = xpos.block_boundary
   self.loop_mode = xpos.loop_boundary

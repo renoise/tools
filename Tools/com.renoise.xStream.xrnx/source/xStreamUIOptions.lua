@@ -134,10 +134,10 @@ end
 
 function xStreamUIOptions:create_dialog()
 
-  self.xstream.writeahead_factor_observable:add_notifier(function()
-    TRACE("*** xStreamUI - self.xstream.writeahead_factor_observable fired...",self.xstream.writeahead_factor)
+  self.xstream.stream.writeahead_factor_observable:add_notifier(function()
+    TRACE("*** xStreamUI - self.xstream.stream.writeahead_factor_observable fired...",self.xstream.stream.writeahead_factor)
     local view = self.vb.views["xStreamImplWriteAheadFactor"]
-    view.value = self.xstream.writeahead_factor
+    view.value = self.xstream.stream.writeahead_factor
   end)
 
   local STREAMING_TXT_W = 120
@@ -320,10 +320,9 @@ function xStreamUIOptions:create_dialog()
             min = 125,
             max = 400,
             width = STREAMING_CTRL_W,
-            --bind = self.xstream.writeahead_factor_observable
-            value = self.xstream.writeahead_factor,
+            value = self.xstream.stream.writeahead_factor,
             notifier = function(val)
-              self.xstream.writeahead_factor = val
+              self.xstream.stream.writeahead_factor = val
             end
           },
         },
@@ -649,7 +648,7 @@ function xStreamUIOptions:on_idle()
       ..("\nLines Travelled: %d"):format(xs.stream.writepos.lines_travelled)
       ..("\nReadPosition: %d,%d"):format(xs.stream.readpos.sequence,xs.stream.readpos.line)
       ..("\nWritePosition: %d,%d"):format(xs.stream.writepos.sequence,xs.stream.writepos.line)
-      ..("\nWriteahead: %d lines"):format(xs.writeahead)
+      ..("\nWriteahead: %d lines"):format(xs.stream.writeahead)
       ..("\nSelected model: %s"):format(xs.selected_model and xs.selected_model.name or "N/A") 
       ..("\nStream active: %s"):format(xs.active and "true" or "false") 
       ..("\nStream muted: %s"):format(xs.muted and "true" or "false") 

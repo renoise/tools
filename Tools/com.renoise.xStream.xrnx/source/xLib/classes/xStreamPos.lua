@@ -26,14 +26,14 @@ class 'xStreamPos'
 
 function xStreamPos:__init()
 
-  --- (xPlayPos) monitor changes to playback 
-  --self.playpos = rns.transport.playback_pos
+  --- (xPlayPos) precise playback position
   self.playpos = xPlayPos()
 
   --- (xSongPos) overall progression of the stream 
   self.writepos = xSongPos(rns.transport.playback_pos)
 
   --- (xSongPos) where we most recently read from the pattern
+  -- (always a bit ahead of writepos - see 'writeahead')
   self.readpos = xSongPos(rns.transport.playback_pos)
 
   --- (xBlockLoop)
@@ -44,6 +44,11 @@ function xStreamPos:__init()
   self.block_enabled = rns.transport.loop_block_enabled
   self.block_start_pos = rns.transport.loop_block_start_pos
   self.block_range_coeff = rns.transport.loop_block_range_coeff
+
+  --- int, decrease this if you are experiencing dropouts during heavy UI
+  -- operations in Renoise (such as opening a plugin GUI) 
+  self.writeahead_factor = property(self.get_writeahead_factor,self.set_writeahead_factor)
+  self.writeahead_factor_observable = renoise.Document.ObservableNumber(300)
 
   --- (int) 0 if undefined
   -- implementation should supply this number - used for deciding when 
@@ -70,25 +75,40 @@ end
 
 -------------------------------------------------------------------------------
 
-function xStreamPos:start()
-
+function xStreamPos:reset()
   if rns.transport.playing then
     self.readpos = xSongPos(rns.transport.playback_pos)
+    self.writepos = xSongPos(rns.transport.playback_pos)
+  else
+    self.writepos = xSongPos(rns.transport.edit_pos)
+    self.readpos = xSongPos(rns.transport.edit_pos)
+  end
+  --print("xStreamPos reset() - self.writepos",self.writepos)
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamPos:start()
+
+  self:reset()
+
+  if rns.transport.playing then
+    --self.readpos = xSongPos(rns.transport.playback_pos)
     if not self.just_started_playback then
       --print(">>> xStreamPos:start - already playing")
-      self.writepos = xSongPos(rns.transport.playback_pos)
+      --self.writepos = xSongPos(rns.transport.playback_pos)
       self.writepos.lines_travelled = -1
       self.writepos:increase_by_lines(1)
       self.readpos:increase_by_lines(1)
     else
       --print(">>> xStreamPos:start - playback just started ")
-      self.writepos = xSongPos(rns.transport.playback_pos)
+      --self.writepos = xSongPos(rns.transport.playback_pos)
       self.readpos:increase_by_lines(1)
     end
   else
     --print(">>> xStreamPos:start - from stopped state")
-    self.writepos = xSongPos(rns.transport.edit_pos)
-    self.readpos = xSongPos(rns.transport.edit_pos)
+    --self.writepos = xSongPos(rns.transport.edit_pos)
+    --self.readpos = xSongPos(rns.transport.edit_pos)
     self.readpos:increase_by_lines(1)
   end
 
@@ -139,8 +159,8 @@ end
 -- of these events is not entirely reliable near loop boundaries)
 -- @param pos, renoise.SongPos
 
-function xStreamPos:set_pos(pos)
-  TRACE("xStreamPos:set_pos(pos)",pos)
+function xStreamPos:_set_pos(pos)
+  TRACE("xStreamPos:_set_pos(pos)",pos)
 
   -- TODO refactor
   local near_top = function(line)
@@ -170,7 +190,7 @@ function xStreamPos:set_pos(pos)
         -- conclusion: pattern loop
         local num_lines = (patt_num_lines-self.playpos.line) + pos.line
         self.writepos:increase_by_lines(num_lines)
-        --print("*** *** same pattern, wrap around - pattern loop",num_lines)
+        --print("*** same pattern, wrap around - pattern loop",num_lines)
       elseif rns.transport.loop_block_enabled 
         and self.xblock 
         and self.xblock:pos_near_top(pos.line)  
@@ -204,6 +224,7 @@ function xStreamPos:set_pos(pos)
     if not rns.sequencer.pattern_sequence[self.playpos.sequence] then
       LOG("*** xStreamPos - missing pattern sequence - was removed from song?")
       --self.playpos = rns.transport.playback_pos
+      --LOG("about to set playpos 3")
       self.playpos:set(rns.transport.playback_pos)
     end
 
@@ -227,7 +248,7 @@ function xStreamPos:set_pos(pos)
       self.writepos.sequence = pos.sequence
       if not self.readpos then
         -- ?? why does this happen 
-        LOG("*** xStreamPos - missing readpos in set_pos()")
+        LOG("*** xStreamPos - missing readpos in _set_pos()")
         self.readpos = xSongPos(rns.transport.playback_pos)
       end
       self.readpos.sequence = pos.sequence
@@ -383,20 +404,31 @@ function xStreamPos:track_pos()
         --print("just_started_playback gone...")
       end
     else
+    --[[
       if (playpos ~= self.playpos:get()) then
-      --if not self.playpos:__eq(playpos) then -- ?? why no operator working ??
-        self:set_pos(playpos)
+        self:_set_pos(playpos)
       end
+      ]]
     end
-  else
-    -- paused playback, do not output 
-    --self:set_pos(rns.transport.edit_pos)
   end
 
+  --print("got here - playpos",playpos,self.playpos:get())
+
   if (self.just_started_playback == 0) then
-    --self.playpos = playpos
+    if (playpos ~= self.playpos:get()) then
+      self:_set_pos(playpos)
+      self.playpos:set(playpos)
+    end
+  else
+    LOG("xStreamPos: don't update position right after starting playback...")
+  end
+
+  --[[
+  if (self.just_started_playback == 0) then
+    --LOG("about to set playpos 1")
     self.playpos:set(playpos)
   end
+  ]]
 
 
 end
@@ -409,10 +441,12 @@ function xStreamPos:attach_to_song()
   -- handling changes via observable is quicker than idle notifier
   rns.selected_pattern_index_observable:add_notifier(function()
     --print("pattern_index_notifier fired...")
+    self:track_pos()
+    --[[
     local playpos = rns.transport.playback_pos
-    self:set_pos(playpos)
-    --self.playpos = playpos
+    self:_set_pos(playpos)
     self.playpos:set(playpos)
+    ]]
   end)
 
   -- track when song is started and stopped
@@ -420,13 +454,38 @@ function xStreamPos:attach_to_song()
     --print("xStream playing_notifier fired...")
     if rns.transport.playing then
       self.just_started_playback = os.clock()
-      --self.playpos = rns.transport.playback_pos
-      self.playpos:set(rns.transport.playback_pos,true)
+      self.playpos:set(rns.transport.playback_pos)
     end
   end)
 
 end
 
+
+--------------------------------------------------------------------------------
+-- [app] decide the writeahead amount, depending on the song tempo
+
+function xStreamPos:determine_writeahead()
+  TRACE("xStream:determine_writeahead()")
+
+  local bpm = rns.transport.bpm
+  local lpb = rns.transport.lpb
+
+  self.writeahead = math.ceil(math.max(2,(bpm*lpb)/self.writeahead_factor))
+
+end
+
+
+-------------------------------------------------------------------------------
+
+function xStreamPos:get_writeahead_factor()
+  return self.writeahead_factor_observable.value
+end
+
+function xStreamPos:set_writeahead_factor(val)
+  TRACE("xStream:set_writeahead_factor(val)",val)
+  self.writeahead_factor_observable.value = val
+  self:determine_writeahead()
+end
 
 -------------------------------------------------------------------------------
 
