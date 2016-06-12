@@ -231,7 +231,7 @@ function xVoiceManager:input_message(xmsg)
   if (xmsg.message_type ~= xMidiMessage.TYPE.NOTE_ON) 
     and (xmsg.message_type ~= xMidiMessage.TYPE.NOTE_OFF) 
   then
-    LOG("xVoiceManager - input_message() accepts note messages only ")
+    --LOG("xVoiceManager - input_message() accepts note messages only ")
     return
   end
 
@@ -263,7 +263,7 @@ function xVoiceManager:input_message(xmsg)
     xmsg._originating_instrument_index = xmsg.instrument_index
   end
   if self.follow_octave then
-    xmsg._originating_octave = xmsg.octave_index
+    xmsg._originating_octave = xmsg.octave
   end
 
   self:register(xmsg)
@@ -431,21 +431,21 @@ function xVoiceManager:get_voice_index(xmsg)
           and v._originating_instrument_index 
         then
           _originating_instrument_index = v._originating_instrument_index
-          print("v._originating_instrument_index",v._originating_instrument_index)
+          --print("v._originating_instrument_index",v._originating_instrument_index)
         end
         if not _originating_track_index
           and self.follow_track 
           and v._originating_track_index 
         then
           _originating_track_index = v._originating_track_index
-          print("v._originating_track_index",v._originating_track_index)
+          --print("v._originating_track_index",v._originating_track_index)
         end
         if not _originating_octave
           and self.follow_octave 
           and v._originating_octave 
         then
           _originating_octave = v._originating_octave
-          print("v._originating_octave",v._originating_octave)
+          --print("v._originating_octave",v._originating_octave)
         end
       end
     end
