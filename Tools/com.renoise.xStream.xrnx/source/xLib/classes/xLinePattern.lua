@@ -117,6 +117,7 @@ end
 
 function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hidden,expand_columns,clear_undefined)
 
+  --print("xLinePattern:do_write - tokens",rprint(tokens))
   --print("xLinePattern:do_write - self.note_columns",rprint(self.note_columns))
 
   local rns_line,patt_idx,rns_patt,rns_track,rns_ptrack
@@ -139,8 +140,6 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
   --print("visible_note_cols",visible_note_cols)
 
   -- figure out which sub-columns to display (VOL/PAN/DLY)
-  -- TODO optimize by moving this into a one-time track preparation
-  -- (after the tokens have been extracted and streaming is active)
   if is_seq_track and expand_columns and not table.is_empty(self.note_columns) then
     rns_track_or_phrase.volume_column_visible = rns_track_or_phrase.volume_column_visible or 
       (type(table.find(tokens,"volume_value") or table.find(tokens,"volume_string")) ~= 'nil')
@@ -216,13 +215,13 @@ function xLinePattern:process_columns(
     
     if col then
 
-      if expand_columns --and
-        --(type(col)=="xNoteColumn") or 
-        --(type(col)=="xEffectColumn") 
+      if expand_columns 
+        and ((type(col)=="xNoteColumn") or (type(col)=="xEffectColumn"))
+        or ((type(col) == "table") and not table.is_empty(col))
       then
         if (k > visible_cols) then
           visible_cols = k
-          --print("expand cols to",k)
+          --print(">>> xLinePattern:process_columns - expand cols to",k)
         end
       end
 
