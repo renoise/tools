@@ -225,6 +225,9 @@ function xStreamModel:__init(xstream)
     ["xLib"] = {
       access = function(env) return xLib end,
     },
+    ["xLine"] = {
+      access = function(env) return xLine end,
+    },
     ["xStream"] = {
       access = function(env) return xStream end,
     },
@@ -310,20 +313,23 @@ function xStreamModel:get_callback_str()
   return self.sandbox.callback_str_observable.value
 end
 
-function xStreamModel:set_callback_str(str)
-  TRACE("xStreamModel:set_callback_str - ",#str)
+function xStreamModel:set_callback_str(str_fn)
+  TRACE("xStreamModel:set_callback_str - ",#str_fn)
 
-  local modified = (str ~= self.sandbox.callback_str) 
+  local modified = (str_fn ~= self.sandbox.callback_str) 
   self.modified = modified and true or self.modified
   --print("self.modified",self.modified,self.name)
 
   -- live syntax check
-  local passed,err = self.sandbox:test_syntax(str)
+  local passed,err = self.sandbox:test_syntax(str_fn)
   self.xstream.callback_status_observable.value = passed and "" or err
   
   if not err then
 
-    self.sandbox.callback_str_observable.value = str
+    self.sandbox.callback_str_observable.value = str_fn
+
+    -- extract tokens for the output stage
+    self:extract_tokens(xStreamModel.CB_TYPE.MAIN)
 
     -- compile right away? 
     if self.xstream.prefs.live_coding.value then
@@ -789,7 +795,7 @@ function xStreamModel:add_event(str_name,str_fn)
     elseif (parts[1] == "voice") then
       str_fn = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
--- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
+-- ('xvoicemgr.triggered/released/stolen_index' contains the value)
 ------------------------------------------------------------------------------
 ]]
     elseif (parts[1] == "rns") then
@@ -901,7 +907,9 @@ local val = select(1,...)
 
   self.modified = true
 
-  --print(">>> parse_events - self.events",str_status,rprint(self.events))
+  self:extract_tokens(xStreamModel.CB_TYPE.EVENTS)
+
+  print(">>> parse_events - self.events",str_status,rprint(self.events))
 
   return str_status
 
@@ -909,11 +917,11 @@ end
 
 -------------------------------------------------------------------------------
 -- extract functions (tokens), result is used in the output stage
--- @param str_fn (string)
--- @return table
---[[
-function xStreamModel:extract_tokens(str_fn)
-  TRACE("xStreamModel:extract_tokens(str_fn)",#str_fn)
+-- to determine which sub-columns should be visible
+-- @param cb_type (xStreamModel.CB_TYPE)
+
+function xStreamModel:extract_tokens(cb_type)
+  TRACE("xStreamModel:extract_tokens(cb_type)",cb_type)
 
   local rslt = {}
 
@@ -928,16 +936,33 @@ function xStreamModel:extract_tokens(str_fn)
     "amount_value","amount_string",
   }
 
-  for _,v in ipairs(all_tokens) do
-    if string.find(str_fn,v) then
-      table.insert(rslt,v)
+  local callbacks = {}
+
+  if (cb_type == xStreamModel.CB_TYPE.MAIN) then
+    table.insert(callbacks,self.sandbox.callback_str)
+  elseif (cb_type == xStreamModel.CB_TYPE.DATA) then
+    -- do nothing
+  elseif (cb_type == xStreamModel.CB_TYPE.EVENTS) then
+    for k,v in pairs(self.events) do
+      table.insert(callbacks,v)
     end
   end
+  --print("extract_tokens - callbacks",rprint(callbacks))
 
-  return rslt
+  for _,str_fn in ipairs(callbacks) do
+    for __,token in ipairs(all_tokens) do
+      if string.find(str_fn,token) then
+        rslt[token] = true
+      end
+    end
+  end
+  --print("extract_tokens - rslt",rprint(table.keys(rslt)))
+
+  --return table.keys(rslt)
+  self.output_tokens = table.keys(rslt)
 
 end
-]]
+
 -------------------------------------------------------------------------------
 -- return the model (arguments, callback) as valid lua string
 
