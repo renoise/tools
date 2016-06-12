@@ -217,28 +217,6 @@ function xStreamBuffer:get_scheduled_pos(schedule)
 end
 
 -------------------------------------------------------------------------------
--- Register a scheduled xline. When outside the output range (writeahead), 
--- the line will be included as part of the regular pattern content. When 
--- inside the writeahead range, the output buffer will be affected too. 
--- TODO When a schedule already exist for a given position, offer to merge
--- the two schedules, somehow...
--- @param schedule (xStream.SCHEDULE), NONE/BEAT/BAR
--- @param xline (table, xline descriptor)
---[[
-function xStreamBuffer:schedule_line(schedule,xline)
-  TRACE("xStreamBuffer:schedule_line(schedule,xline)",schedule,xline)
-
-  assert(type(schedule)=="number")
-  assert(type(xline)=="table")
-
-  local xinc,delta = self:get_scheduled_pos(schedule)
-  --print("xinc,delta",xinc,delta)
-  self:add_line(xinc,xline)
-
-end
-]]
-
--------------------------------------------------------------------------------
 -- TODO Unregister a scheduled xline - 
 --[[
 function xStreamBuffer:unschedule_line(xinc)
@@ -256,12 +234,17 @@ end
 
 -------------------------------------------------------------------------------
 
-function xStreamBuffer:schedule_line(xinc,xline)
-  TRACE("xStreamBuffer:schedule_line(xinc,xline)",xinc,xline)
+function xStreamBuffer:schedule_line(xline,xinc)
+  TRACE("xStreamBuffer:schedule_line(xline,xinc)",xline,xinc)
 
-  local live_mode = rns.transport.playing
+  if not xinc then
+    xinc = self:get_xinc()
+  end
+    
   local writepos = self.xstream.stream.writepos
   local delta = xinc - writepos.lines_travelled
+  local live_mode = rns.transport.playing
+
 
   if (delta <= self.xstream.writeahead) then
     -- within output range - insert into output_buffer
@@ -283,12 +266,41 @@ end
 -------------------------------------------------------------------------------
 -- schedule a single column (merge with existing content)
 
-function xStreamBuffer:schedule_note_column(xinc,xnotecol,col_idx)
-  TRACE("xStreamBuffer:schedule_note_column()",xinc,xnotecol,col_idx)
+function xStreamBuffer:schedule_note_column(xnotecol,col_idx,xinc)
+  TRACE("xStreamBuffer:schedule_note_column()",xnotecol,col_idx,xinc)
 
+  assert(type(col_idx)=="number")
+
+  local xinc = self:get_xinc()
   local xline = self:read_pos(xinc)
   xline.note_columns[col_idx] = xnotecol
-  self:schedule_line(xinc,xline)
+  self:schedule_line(xline,xinc)
 
 end
 
+-------------------------------------------------------------------------------
+-- schedule a single column (merge with existing content)
+
+function xStreamBuffer:schedule_effect_column(xeffectcol,col_idx,xinc)
+  TRACE("xStreamBuffer:schedule_effect_column()",xeffectcol,col_idx,xinc)
+
+  assert(type(col_idx)=="number")
+
+  local xinc = self:get_xinc()
+  local xline = self:read_pos(xinc)
+  xline.effect_columns[col_idx] = xeffectcol
+  self:schedule_line(xline,xinc)
+
+end
+
+-------------------------------------------------------------------------------
+-- get the next line when streaming or current one when parked
+
+function xStreamBuffer:get_xinc()
+
+  local live_mode = rns.transport.playing
+  local writepos = self.xstream.stream.writepos
+  local xinc = writepos.lines_travelled 
+  return xinc + (live_mode and 1 or 0)
+
+end
