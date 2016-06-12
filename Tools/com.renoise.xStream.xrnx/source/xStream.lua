@@ -446,6 +446,10 @@ function xStream:__init(...)
     TRACE("*** voicemgr.triggered_observable fired...")
     self:handle_voice_events(xVoiceManager.EVENT.TRIGGERED)
   end)
+  self.voicemgr.stolen_observable:add_notifier(function()
+    TRACE("*** voicemgr.stolen_observable fired...")
+    self:handle_voice_events(xVoiceManager.EVENT.STOLEN)
+  end)
 
   -- osc client --
 
@@ -1314,6 +1318,7 @@ function xStream:do_output(xpos,num_lines,live_mode)
         end
 
         --print("*** do_write - travelled,line,xline",travelled,tmp_pos.line,xline.effect_columns[1].amount_value)
+
         if type(xline)=="xLine" then
           local success,err = pcall(function()
             xline:do_write(
@@ -1328,11 +1333,13 @@ function xStream:do_output(xpos,num_lines,live_mode)
               self.expand_columns,
               self.clear_undefined)
           end)
+
           if not success then
-            LOG("WARNING: an error occurred while writing pattern-line - "..err)
+            LOG("*** WARNING: an error occurred while writing pattern-line - "..err)
           end
+
         else
-          LOG("WARNING Missing xline on output",tmp_pos,xpos.lines_travelled)
+          LOG("*** xStream: no output defined",tmp_pos,xpos.lines_travelled)
         end
       end
 
@@ -1859,11 +1866,11 @@ end
 function xStream:handle_midi_input(xmsg)
   TRACE("xStream:handle_midi_input(xmsg)",xmsg,self)
 
-  --[[
   if not self.active then
     LOG("Stream not active - ignore MIDI input")
     return
   end
+  --[[
   ]]
 
   if not self.selected_model then
@@ -1897,6 +1904,8 @@ function xStream:handle_voice_events(evt)
     index = self.voicemgr.triggered_index
   elseif (evt == xVoiceManager.EVENT.RELEASED) then
     index = self.voicemgr.released_index
+  elseif (evt == xVoiceManager.EVENT.STOLEN) then
+    index = self.voicemgr.stolen_index
   else
     error("Unknown xVoiceManager.EVENT")
   end
@@ -1905,10 +1914,12 @@ function xStream:handle_voice_events(evt)
   --print("handle_voice_events - voice",voice,index)
 
   -- only pass when track is right
+  --[[
   if not (voice.track_index == self.track_index) then
     LOG("Ignore voice events from other tracks")
     return
   end
+  ]]
 
   -- pass to event handlers (if any)
   local event_key = "voice."..evt
