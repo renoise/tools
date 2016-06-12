@@ -366,7 +366,7 @@ function xStreamUIOptions:create_dialog()
         margin = 6,
         width = "100%",
         vb:text{
-          text = "Internal OSC server",
+          text = "Internal routing (OSC server)",
           font = "bold",
         },
         vb:row{

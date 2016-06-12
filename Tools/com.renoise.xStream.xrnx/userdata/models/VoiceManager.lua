@@ -1,9 +1,22 @@
 --[[===========================================================================
-VoiceManager2.lua
+VoiceManager.lua
 ===========================================================================]]--
 
 return {
 arguments = {
+  {
+      ["locked"] = false,
+      ["name"] = "voice_limit",
+      ["linked"] = false,
+      ["value"] = 2,
+      ["properties"] = {
+          ["max"] = 12,
+          ["min"] = 0,
+          ["display_as"] = "integer",
+          ["zero_based"] = false,
+      },
+      ["description"] = "Specify how many voices that can be played simultaneously",
+  },
   {
       ["locked"] = false,
       ["name"] = "schedule",
@@ -49,10 +62,8 @@ data = {
 -- Compute the delay value according to current settings
 -------------------------------------------------------------------------------
 return function(trigger_type)
-  if ((trigger_type == "trigger") 
-    and not args.dly_note_on)
-  or ((trigger_type == "release") 
-    and not args.dly_note_off)
+  if ((trigger_type == "trigger") and not args.dly_note_on)
+  or ((trigger_type == "release") and not args.dly_note_off)
   then
     return 0
   else
@@ -67,26 +78,26 @@ events = {
 -- respond to voice-manager events
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
 ------------------------------------------------------------------------------
- 
+print(">>> events.voice.triggered",xstream.voicemgr.triggered_index)
 local voice = xvoices[arg.index]
 local pos = xbuffer:get_scheduled_pos(args.schedule)
-xbuffer:schedule_note_column(pos,{
+xbuffer:schedule_note_column({
   note_value = voice.values[1],
   volume_value = voice.values[2],
   instrument_value = rns.selected_instrument_index,
   delay_value = data.get_delay_value("trigger"),
-},voice.note_column_index)]],
-  ["voice.released"] = [[--------------------------------------------------------------------------------
+},voice.note_column_index,pos)]],
+  ["voice.released"] = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
---------------------------------------------------------------------------------
-
+------------------------------------------------------------------------------
+print(">>> events.voice.released",xstream.voicemgr.released_index)
 local voice = xvoices[arg.index]
 local pos = xbuffer:get_scheduled_pos(args.schedule)
-xbuffer:schedule_note_column(pos,{
+xbuffer:schedule_note_column({
   note_string = "OFF",
   delay_value = data.get_delay_value("release"),
-},voice.note_column_index)]],
+},voice.note_column_index,pos)]],
 },
 options = {
  color = 0x60AACA,
@@ -97,7 +108,7 @@ callback = [[
 -- All output is created by event hooks that schedule xlines
 -------------------------------------------------------------------------------
 
-
-
+-- override the global voicemgr setting:
+xstream.voicemgr.voice_limit = args.voice_limit
 ]],
 }

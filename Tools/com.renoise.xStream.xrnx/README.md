@@ -294,6 +294,7 @@ xStream is using a subset of the Renoise Lua API. If you are not familiar with L
 ### Classes
 
 	xLib
+	xLine
 	xStream
 	xTrack
 	xTransport
