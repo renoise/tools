@@ -1,5 +1,5 @@
 --[[===========================================================================
-VoiceManager.lua
+VoiceMgr - Scheduled.lua
 ===========================================================================]]--
 
 return {
@@ -84,9 +84,15 @@ local pos = xbuffer:get_scheduled_pos(args.schedule)
 xbuffer:schedule_note_column({
   note_value = voice.values[1],
   volume_value = voice.values[2],
-  instrument_value = rns.selected_instrument_index,
+  instrument_value = rns.selected_instrument_index-1,
   delay_value = data.get_delay_value("trigger"),
 },voice.note_column_index,pos)]],
+  ["args.voice_limit"] = [[------------------------------------------------------------------------------
+-- respond to argument 'voice_limit' changes
+-- @param val (number/boolean/string)}
+------------------------------------------------------------------------------
+
+xstream.voicemgr.voice_limit = args.voice_limit]],
   ["voice.released"] = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
@@ -98,17 +104,31 @@ xbuffer:schedule_note_column({
   note_string = "OFF",
   delay_value = data.get_delay_value("release"),
 },voice.note_column_index,pos)]],
+  ["midi.pitch_bend"] = [[------------------------------------------------------------------------------
+-- respond to MIDI 'pitch_bend' messages
+-- @param xmsg, the xMidiMessage we have received
+------------------------------------------------------------------------------
+local visible_note_columns = rns.tracks[track_index].visible_note_columns
+xbuffer:schedule_note_column({
+  instrument_value = rns.selected_instrument_index,
+  panning_string = "M1",
+},visible_note_columns)
+xbuffer:schedule_effect_column({
+  number_string = ("%.2X"):format(xmsg.values[2]),
+  amount_value = 0,
+},1)]],
 },
 options = {
  color = 0x60AACA,
 },
 callback = [[
 -------------------------------------------------------------------------------
--- Testing the voice-manager + MIDI events
--- All output is created by event hooks that schedule xlines
+-- Using the voice manager to respond to MIDI input. Output is scheduled 
+-- to happen within the next line/beat or bar. If you are instead looking to 
+-- pass MIDI notes directly to Renoise, check out 'VoiceMgr - Realtime' model
 -------------------------------------------------------------------------------
 
--- override the global voicemgr setting:
-xstream.voicemgr.voice_limit = args.voice_limit
+-- nothing to see here, but check out the event callbacks ↘
+
 ]],
 }

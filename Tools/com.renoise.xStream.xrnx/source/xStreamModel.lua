@@ -909,7 +909,7 @@ local val = select(1,...)
 
   self:extract_tokens(xStreamModel.CB_TYPE.EVENTS)
 
-  print(">>> parse_events - self.events",str_status,rprint(self.events))
+  --print(">>> parse_events - self.events",str_status,rprint(self.events))
 
   return str_status
 

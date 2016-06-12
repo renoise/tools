@@ -1,5 +1,5 @@
 --[[===========================================================================
-Passing MIDI 2.lua
+VoiceMgr - Realtime.lua
 ===========================================================================]]--
 
 return {
@@ -8,10 +8,10 @@ arguments = {
       ["locked"] = false,
       ["name"] = "voice_limit",
       ["linked"] = false,
-      ["value"] = 1,
+      ["value"] = 2,
       ["properties"] = {
-          ["max"] = 12,
           ["min"] = 0,
+          ["max"] = 12,
           ["display_as"] = "integer",
           ["zero_based"] = false,
       },
@@ -23,26 +23,32 @@ presets = {
 data = {
 },
 events = {
-  ["voice.triggered"] = [[------------------------------------------------------------------------------
--- respond to voice-manager events
--- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
-------------------------------------------------------------------------------
-
-local xmsg = xvoicemgr.voices[xvoicemgr.triggered_index]
-xstream:output_message(xmsg,'internal_auto')]],
   ["voice.stolen"] = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
 ------------------------------------------------------------------------------
-
-local xmsg = xvoicemgr.voices[xvoicemgr.released_index]
+print(">>> events.voice.stolen",xvoicemgr.stolen_index)
+local xmsg = xvoicemgr.voices[xvoicemgr.stolen_index]
 xmsg.message_type = xMidiMessage.TYPE.NOTE_OFF
 xstream:output_message(xmsg,'internal_auto')]],
+  ["voice.triggered"] = [[------------------------------------------------------------------------------
+-- respond to voice-manager events
+-- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
+------------------------------------------------------------------------------
+print(">>> events.voice.triggered",xvoicemgr.triggered_index)
+local xmsg = xvoicemgr.voices[xvoicemgr.triggered_index]
+xstream:output_message(xmsg,'internal_auto')]],
+  ["args.voice_limit"] = [[------------------------------------------------------------------------------
+-- respond to argument 'voice_limit' changes
+-- @param val (number/boolean/string)}
+------------------------------------------------------------------------------
+
+xstream.voicemgr.voice_limit = val]],
   ["voice.released"] = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
 ------------------------------------------------------------------------------
-
+print(">>> events.voice.released",xvoicemgr.released_index)
 local xmsg = xvoicemgr.voices[xvoicemgr.released_index]
 xstream:output_message(xmsg,'internal_auto')]],
   ["midi.pitch_bend"] = [[------------------------------------------------------------------------------
@@ -50,36 +56,18 @@ xstream:output_message(xmsg,'internal_auto')]],
 -- @param xmsg, the xMidiMessage we have received
 ------------------------------------------------------------------------------
 
-xstream:output_message(xmsg,'internal_auto')
-
-local visible_note_columns = rns.tracks[track_index].visible_note_columns
-xbuffer:schedule_note_column({
-  instrument_value = rns.selected_instrument_index,
-  panning_string = "M1",
-},visible_note_columns)
-xbuffer:schedule_effect_column({
-  number_string = ("%.2X"):format(xmsg.values[2]),
-  amount_value = 0,
-},1)]],
+xstream:output_message(xmsg,'internal_auto')]],
 },
 options = {
  color = 0x000000,
 },
 callback = [[
 -------------------------------------------------------------------------------
--- Passing MIDI to the internal OSC server in Renoise 
--- How it works: look at the event callbacks to see how messages are passed
--- NB: the OSC server needs to be enabled and match the settings in 'Options'
+-- Passing MIDI to the internal OSC server in Renoise in real-time. 
+-- NB: the OSC server needs to be enabled and match the settings in 'Options',
+-- or the model will not be able to route it's MIDI messages into Renoise.
 -------------------------------------------------------------------------------
 
--- override global voicemgr setting:
-xstream.voicemgr.voice_limit = args.voice_limit
-
-
-
-
-
-
-
+-- nothing to see here, but check out the event callbacks ↘
 ]],
 }

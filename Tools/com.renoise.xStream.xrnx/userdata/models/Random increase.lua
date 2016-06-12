@@ -10,8 +10,8 @@ arguments = {
       ["linked"] = false,
       ["value"] = 1,
       ["properties"] = {
-          ["max"] = 255,
           ["min"] = 1,
+          ["max"] = 255,
           ["display_as"] = "hex",
           ["zero_based"] = true,
       },
@@ -22,7 +22,8 @@ arguments = {
 presets = {
 },
 data = {
-  ["current_pitch"] = 14,
+  ["current_pitch"] = [[-- return a value of some kind 
+return 36]],
 },
 events = {
 },
@@ -53,5 +54,6 @@ if (produce_output) then
 else
   xline.note_columns[1] = {}
 end
+
 ]],
 }

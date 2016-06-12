@@ -30,7 +30,7 @@ class 'xPlayPos'
 
 
 function xPlayPos:__init()
-  print("xPlayPos:__init()")
+  TRACE("xPlayPos:__init()")
 
   -- internal --
 
@@ -86,7 +86,7 @@ end
 -- @param pos (SongPos)
 
 function xPlayPos:set(pos)
-  print("xPlayPos:set(pos)",pos.sequence,pos.line)
+  TRACE("xPlayPos:set(pos)",pos.sequence,pos.line)
 
   if self:has_changed(pos) then
     self:maintain_position(pos)
