@@ -38,7 +38,16 @@ function xStreamUIArgsPanel:__init(xstream,midi_prefix,vb,ui)
   self.vb_untabbed = nil
   self.vb_tabbed = nil
 
-  -- table<{}> tabbed argument views
+  -- table tabbed argument views
+  -- {
+  --  name = arg.name,
+  --  tab_name = arg.tab_name,
+  --  view = view,
+  --  view_lock = view_lock,
+  --  view_label = view_label,
+  --  view_link = view_link,
+  --  view_bop = view_bop,
+  -- }
   self.arg_views = {}
 
   -- View
