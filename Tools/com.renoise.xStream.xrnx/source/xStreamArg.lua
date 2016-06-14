@@ -123,6 +123,7 @@ function xStreamArg:__init(arg)
 
   -- table, extra properties (all optional)
   --  impacts_buffer (bool), refresh buffer when changed
+  --  fire_on_start (bool), fire value when first loaded
   --  min, max (number) 
   --  display_as (xStreamArg.DISPLAY_AS) 
   --  zero_based (bool) also used in callback
@@ -161,9 +162,6 @@ function xStreamArg:__init(arg)
   self.linked = property(self.get_linked,self.set_linked)
   self.linked_observable = renoise.Document.ObservableBoolean(arg.linked or false)
 
-  -- xStream, reference to owner
-  --self.xstream = arg.xstream
-
   -- xStream, reference to the owning model 
   self.model = arg.model
 
@@ -176,6 +174,9 @@ function xStreamArg:__init(arg)
   -- add default properties
   if (type(self.properties.impacts_buffer) == "nil") then
     self.properties.impacts_buffer = true
+  end
+  if (type(self.properties.fire_on_start) == "nil") then
+    self.properties.fire_on_start = true
   end
 
   -- evaluate string-based properties

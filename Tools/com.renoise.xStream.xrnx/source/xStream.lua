@@ -619,7 +619,7 @@ function xStream:load_models(str_path)
   end
 
   if (log_msg ~= "") then
-     LOG(log_msg.."WARNING One or more models failed to load during startup")
+     LOG(log_msg.."*** WARNING One or more models failed to load during startup")
   end
 
   -- save the path for later use
@@ -933,18 +933,21 @@ function xStream:set_selected_model_index(idx)
     local preset_idx = self.selected_model.selected_preset_bank.selected_preset_index
     self.selected_model.selected_preset_bank:recall_preset(preset_idx)
   end
+
   local preset_observable_notifier = function()
     TRACE("*** xStream - preset_bank.presets_observable fired...")
     if self.selected_model:is_default_bank() then
       self.selected_model.modified = true
     end
   end
+
   local presets_modified_notifier = function()
     TRACE("*** xStream - selected_preset_bank.modified_observable fired...")
     if self.selected_model.selected_preset_bank.modified then
       self.preset_bank_export_requested = true
     end
   end
+
   local preset_bank_notifier = function()
     TRACE("*** xStream - selected_preset_bank_index_observable fired..")
     local preset_bank = self.selected_model.selected_preset_bank
@@ -952,10 +955,12 @@ function xStream:set_selected_model_index(idx)
     xObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
     xObservable.attach(preset_bank.selected_preset_index_observable,preset_index_notifier)
   end
+
   if self.selected_model then
     xObservable.attach(self.selected_model.args.args_observable,args_observable_notifier)
     xObservable.attach(self.selected_model.selected_preset_bank_index_observable,preset_bank_notifier)
     preset_bank_notifier()
+    self.selected_model.args:fire_startup_arguments()
   end
 
 end
@@ -1563,6 +1568,11 @@ end
 
 function xStream:handle_event(event_key,arg)
   TRACE("xStream:handle_event(event_key,arg)",event_key,arg)
+
+  if not self.selected_model then
+    LOG("*** WARNING Can't handle events - no model was selected")
+    return
+  end
 
   local handler = self.selected_model.events_compiled[event_key]
   if handler then

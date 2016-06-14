@@ -341,6 +341,23 @@ function xStreamArgs:add(arg,index,do_replace)
 
 end
 
+
+-------------------------------------------------------------------------------
+-- trigger the notifier for each argument (invoke when model is selected)
+
+function xStreamArgs:fire_startup_arguments()
+  TRACE("xStreamArgs:fire_startup_arguments()")
+
+  for _,v in ipairs(self.args) do
+    if v.properties.fire_on_start then
+      if (v.notifier) then
+        v.notifier(v)
+      end
+    end
+  end
+
+end
+
 -------------------------------------------------------------------------------
 -- return argument by it's name/tab
 -- @param str_name (string)
@@ -763,6 +780,9 @@ function xStreamArgs:serialize()
       props = table.rcopy(arg.properties_initial)
       if (props.impacts_buffer == true) then
         props.impacts_buffer = nil
+      end
+      if (props.fire_on_start == true) then
+        props.fire_on_start = nil
       end
     end
 
