@@ -23,7 +23,7 @@ callback = [[
 
 -- write looping values (0x10-0x30) into the volume column ... 
 xline.note_columns[1] = {
-  volume_value = xinc % 0x20 + 0x10  
+  note_value = xinc 
 }
 ]],
 }

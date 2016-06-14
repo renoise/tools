@@ -1,5 +1,5 @@
 --[[===========================================================================
-VoiceMgr - Scheduled.lua
+VoiceMgr - Pattern.lua
 ===========================================================================]]--
 
 return {
@@ -8,10 +8,10 @@ arguments = {
       ["locked"] = false,
       ["name"] = "voice_limit",
       ["linked"] = false,
-      ["value"] = 2,
+      ["value"] = 1,
       ["properties"] = {
-          ["max"] = 12,
           ["min"] = 0,
+          ["max"] = 12,
           ["display_as"] = "integer",
           ["zero_based"] = false,
       },
@@ -23,14 +23,24 @@ arguments = {
       ["linked"] = false,
       ["value"] = 1,
       ["properties"] = {
-          ["max"] = 3,
           ["min"] = 1,
+          ["max"] = 3,
           ["display_as"] = "switch",
           ["items"] = {
               "LINE",
               "BEAT",
               "BAR",
           },
+      },
+      ["description"] = "",
+  },
+  {
+      ["locked"] = false,
+      ["name"] = "clear_active",
+      ["linked"] = false,
+      ["value"] = true,
+      ["properties"] = {
+          ["display_as"] = "checkbox",
       },
       ["description"] = "",
   },
@@ -56,6 +66,21 @@ arguments = {
   },
 },
 presets = {
+  {
+      ["schedule"] = 1,
+      ["name"] = "Monophonic",
+      ["dly_note_on"] = true,
+      ["dly_note_off"] = true,
+      ["voice_limit"] = 1,
+  },
+  {
+      ["schedule"] = 2,
+      ["clear_active"] = true,
+      ["name"] = "2 voices, BEAT",
+      ["voice_limit"] = 2,
+      ["dly_note_off"] = false,
+      ["dly_note_on"] = false,
+  },
 },
 data = {
   ["get_delay_value"] = [[-------------------------------------------------------------------------------
@@ -86,7 +111,7 @@ xbuffer:schedule_note_column({
   volume_value = voice.values[2],
   instrument_value = rns.selected_instrument_index-1,
   delay_value = data.get_delay_value("trigger"),
-},voice.note_column_index,pos)]],
+},voice.note_column_index,pos.lines_travelled)]],
   ["args.voice_limit"] = [[------------------------------------------------------------------------------
 -- respond to argument 'voice_limit' changes
 -- @param val (number/boolean/string)}
@@ -100,10 +125,15 @@ xstream.voicemgr.voice_limit = args.voice_limit]],
 print(">>> events.voice.released",xstream.voicemgr.released_index)
 local voice = xvoices[arg.index]
 local pos = xbuffer:get_scheduled_pos(args.schedule)
-xbuffer:schedule_note_column({
-  note_string = "OFF",
-  delay_value = data.get_delay_value("release"),
-},voice.note_column_index,pos)]],
+local xline = xbuffer:get_input(nil,pos)
+local note_col = xline.note_columns[voice.note_column_index]
+-- output note-off only when not occupied by note
+if (note_col.note_value >= EMPTY_NOTE_VALUE) then
+  xbuffer:schedule_note_column({
+    note_string = "OFF",
+    delay_value = data.get_delay_value("release"),
+  },voice.note_column_index,pos.lines_travelled)
+end]],
   ["midi.pitch_bend"] = [[------------------------------------------------------------------------------
 -- respond to MIDI 'pitch_bend' messages
 -- @param xmsg, the xMidiMessage we have received
@@ -123,12 +153,15 @@ options = {
 },
 callback = [[
 -------------------------------------------------------------------------------
--- Using the voice manager to respond to MIDI input. Output is scheduled 
--- to happen within the next line/beat or bar. If you are instead looking to 
--- pass MIDI notes directly to Renoise, check out 'VoiceMgr - Realtime' model
+-- Using the voice manager to write MIDI input directly into the pattern. 
+-- This is mostly a proof-of-concept, as it's more practical to be able to
+-- play notes also while the sequencer is stopped - if you are looking to
+-- do that, check out the 'VoiceMgr - Realtime' model instead. 
 -------------------------------------------------------------------------------
-
--- nothing to see here, but check out the event callbacks ↘
-
+if args.clear_active then
+  for k,v in ipairs(xvoices) do
+    xline.note_columns[v.note_column_index] = {}
+  end
+end
 ]],
 }
