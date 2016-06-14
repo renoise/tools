@@ -291,6 +291,6 @@ end
 function xLinePattern:__tostring()
 
   return type(self)
-    ..", column#1="..tostring(self.note_columns[1])
+    ..":column#1="..tostring(self.note_columns[1])
 
 end

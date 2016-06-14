@@ -52,7 +52,9 @@ function xPlayPos:__init()
 
   -- initialize --
 
-  local pos = rns.transport.playback_pos
+  local pos = rns.transport.playing and
+    rns.transport.playback_pos or rns.transport.edit_pos
+
   self._line = pos.line
   self._sequence = pos.sequence
 
@@ -172,8 +174,8 @@ end
 
 function xPlayPos:__tostring()
   return type(self)
-    .. ", sequence = " .. tostring(self._sequence)
-    .. ", line = " .. tostring(self._line)
+    .. ":sequence=" .. tostring(self._sequence)
+    .. ",line=" .. tostring(self._line)
     --.. ", fraction " .. tostring(self.fraction)
 
 end
