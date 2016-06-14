@@ -25,6 +25,7 @@ class 'xStreamPos'
 -------------------------------------------------------------------------------
 
 function xStreamPos:__init()
+  TRACE("xStreamPos:__init()")
 
   --- (xPlayPos) precise playback position
   self.playpos = xPlayPos()
@@ -33,7 +34,6 @@ function xStreamPos:__init()
   self.writepos = xSongPos(rns.transport.playback_pos)
 
   --- (xSongPos) where we most recently read from the pattern
-  -- (always a bit ahead of writepos - see 'writeahead')
   self.readpos = xSongPos(rns.transport.playback_pos)
 
   --- (xBlockLoop)
@@ -66,7 +66,7 @@ function xStreamPos:__init()
   --- function, define a function to call when it's time for output
   self.callback_fn = nil
 
-  --- TODO function, define a function to call when we need fresh content
+  --- function, called when we need fresh content
   -- (i.e. when the position has been changed by the user, and 
   -- previously produced content no longer would be valid...)
   self.refresh_fn = nil
@@ -76,39 +76,39 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamPos:reset()
+  TRACE("xStreamPos:reset()")
+
+  self.playpos = xPlayPos()
   if rns.transport.playing then
     self.readpos = xSongPos(rns.transport.playback_pos)
     self.writepos = xSongPos(rns.transport.playback_pos)
   else
-    self.writepos = xSongPos(rns.transport.edit_pos)
     self.readpos = xSongPos(rns.transport.edit_pos)
+    self.writepos = xSongPos(rns.transport.edit_pos)
   end
   --print("xStreamPos reset() - self.writepos",self.writepos)
+
 end
 
 -------------------------------------------------------------------------------
 
 function xStreamPos:start()
+  TRACE("xStreamPos:start()")
 
   self:reset()
 
   if rns.transport.playing then
-    --self.readpos = xSongPos(rns.transport.playback_pos)
     if not self.just_started_playback then
       --print(">>> xStreamPos:start - already playing")
-      --self.writepos = xSongPos(rns.transport.playback_pos)
       self.writepos.lines_travelled = -1
       self.writepos:increase_by_lines(1)
       self.readpos:increase_by_lines(1)
     else
       --print(">>> xStreamPos:start - playback just started ")
-      --self.writepos = xSongPos(rns.transport.playback_pos)
       self.readpos:increase_by_lines(1)
     end
   else
     --print(">>> xStreamPos:start - from stopped state")
-    --self.writepos = xSongPos(rns.transport.edit_pos)
-    --self.readpos = xSongPos(rns.transport.edit_pos)
     self.readpos:increase_by_lines(1)
   end
 
@@ -118,6 +118,7 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamPos:play()
+  TRACE("xStreamPos:play()")
 
   if not rns.transport.playing then
     rns.transport:start_at(self.writepos.line)
@@ -155,18 +156,16 @@ end
 -- Update the write position as a result of a changed playback position.
 -- Most of the time we want the stream to continue smoothly forward - this is
 -- true for any kind of pattern, sequence or block loop. However, when we
--- detect 'user' events, the position can also jump backwards (the detection
--- of these events is not entirely reliable near loop boundaries)
--- @param pos, renoise.SongPos
+-- detect 'user events', the position can also jump backwards
+-- @param pos (renoise.SongPos), the playback position
 
 function xStreamPos:_set_pos(pos)
   TRACE("xStreamPos:_set_pos(pos)",pos)
 
-  -- TODO refactor
-  local near_top = function(line)
+  local near_patt_top = function(line)
     return (line <= self.writeahead) and true or false
   end
-  local near_end = function(line,patt_lines)
+  local near_patt_end = function(line,patt_lines)
     return (line >= (patt_lines-self.writeahead))
   end
 
@@ -177,15 +176,11 @@ function xStreamPos:_set_pos(pos)
   if (pos.sequence == self.playpos.sequence) then
     -- within same pattern
     if (pos.line < self.playpos.line) then
-      -- earlier line in pattern
-      --print("*** earlier line in pattern ------------------------------------------")
-      --print("*** self.xblock",self.xblock)
-      --print("*** pos.line",pos.line)
+      --print("*** earlier line in pattern --",pos,self.playpos)
 
       local patt_num_lines = xSongPos.get_pattern_num_lines(self.playpos.sequence)
-
-      if near_top(pos.line) 
-        and near_end(self.playpos.line,patt_num_lines) 
+      if near_patt_top(pos.line) 
+        and near_patt_end(self.playpos.line,patt_num_lines) 
       then
         -- conclusion: pattern loop
         local num_lines = (patt_num_lines-self.playpos.line) + pos.line
@@ -207,12 +202,33 @@ function xStreamPos:_set_pos(pos)
       else
         -- conclusion: "crazy navigation"
         --print("*** same pattern, wrap around - user navigation")
-        -- TODO align read,write position on these occasions
+        self:reset()
+        if self.refresh_fn then
+          self.refresh_fn()
+        end
       end
 
     elseif (pos.line > self.playpos.line) then
-      -- normal progression through pattern
-      self.writepos:increase_by_lines(pos.line - self.playpos.line)
+      --print("*** forward progression -- pos,self.playpos",pos,self.playpos)
+
+      -- forward progression through pattern - 
+      -- figure out how many lines we have progressed
+      local line_diff = pos.line - self.playpos.line
+      --print("*** line_diff",line_diff,pos,"playpos",self.playpos,"writepos",self.writepos,"readpos",self.readpos)
+
+      -- always update write-pos 
+      self.writepos:increase_by_lines(line_diff)
+
+      -- more than writeahead indicates gaps or forward navigation 
+      -- (such as when pressing page down while streaming...)
+      if (line_diff >= self.writeahead) then
+        --print("*** xStreamPos - gap or forward navigation, line_diff=",line_diff)
+        self.readpos:increase_by_lines(line_diff-self.writeahead)
+        if self.refresh_fn then
+          self.refresh_fn()
+        end
+      end
+
     end
   elseif (pos.sequence < self.playpos.sequence) then
     -- earlier pattern, usually caused by seq-loop or song boundary
@@ -222,24 +238,20 @@ function xStreamPos:_set_pos(pos)
     -- playpos is referring to a non-existing pattern - in such a case,
     -- we re-initialize the cached playpos to the current position
     if not rns.sequencer.pattern_sequence[self.playpos.sequence] then
-      LOG("*** xStreamPos - missing pattern sequence - was removed from song?")
-      --self.playpos = rns.transport.playback_pos
-      --LOG("about to set playpos 3")
+      --print("*** xStreamPos - missing pattern sequence - was removed from song?")
       self.playpos:set(rns.transport.playback_pos)
     end
 
     local patt_num_lines = xSongPos.get_pattern_num_lines(self.playpos.sequence)
-
     -- the old position is near the end of the pattern
     -- use the writeahead as the basis for this calculation
-
     if (self.playpos.line >= (patt_num_lines-self.writeahead)) then
       -- conclusion: we've reached the end of the former pattern 
       -- difference is the remaning lines in old position plus the current line 
       local num_lines = (patt_num_lines-self.playpos.line)+pos.line
       self.writepos:increase_by_lines(num_lines)
-      self.writepos.sequence = pos.sequence
-      --print("earlier pattern - end of former pattern - increase by lines",num_lines,pos,self.playpos)
+      --self.writepos.sequence = pos.sequence-1
+      --print("*** earlier pattern - end of former pattern - increase by lines",num_lines,pos,self.playpos)
     else
       -- conclusion: we've changed the position manually, somehow
       -- disregard the sequence and just use the lines
@@ -248,12 +260,12 @@ function xStreamPos:_set_pos(pos)
       self.writepos.sequence = pos.sequence
       if not self.readpos then
         -- ?? why does this happen 
-        LOG("*** xStreamPos - missing readpos in _set_pos()")
+        --print("*** xStreamPos - missing readpos in _set_pos()")
         self.readpos = xSongPos(rns.transport.playback_pos)
       end
       self.readpos.sequence = pos.sequence
       self.readpos.lines_travelled = self.readpos.lines_travelled-self.writeahead
-      --print("earlier pattern - changed manually - increase by lines",num_lines,pos,self.playpos)
+      --print("*** earlier pattern - changed manually - increase by lines",num_lines,pos,self.playpos)
       if self.refresh_fn then
         self.refresh_fn()
       end
@@ -261,23 +273,23 @@ function xStreamPos:_set_pos(pos)
 
   else
     -- later pattern
-    --print("next pattern, pos,self.playpos",pos,self.playpos)
+    --print("*** next pattern, pos,self.playpos",pos,self.playpos)
     local num_lines = xSongPos.get_line_diff(pos,self.playpos:get())
     self.writepos:increase_by_lines(num_lines)
-    --print("next pattern, calculate num_lines",num_lines)
-
   end
   
-  -- call output function - i.e. do_output(self.writepos,nil,true)
   if self.callback_fn then
     self.callback_fn()
   end
+
+  self.playpos:set(pos)
 
 end
 
 -------------------------------------------------------------------------------
 
 function xStreamPos:create_xblock()
+  TRACE("xStreamPos:create_xblock()")
 
   self.xblock = xBlockLoop{
     writeahead = self.writeahead
@@ -289,6 +301,7 @@ end
 -- This function is designed to be called in an idle loop
 
 function xStreamPos:track_pos()
+  TRACE("xStreamPos:track_pos()")
 
   local playpos = rns.transport.playback_pos
 
@@ -299,7 +312,7 @@ function xStreamPos:track_pos()
     self.readpos:decrease_by_lines(self.xblock.length)
     --print(">>> block loop ON - self.readpos #2",self.readpos)
 
-    -- TODO avoid: can result in negative value ??? 
+    -- can result in negative value ??? 
     self.readpos.line = self.readpos:enforce_block_boundary("decrease",self.readpos.line,-self.writeahead)
     --print(">>> block loop ON - self.readpos #3",self.readpos)
 
@@ -354,35 +367,20 @@ function xStreamPos:track_pos()
   end
 
   if (self.block_start_pos ~= rns.transport.loop_block_start_pos) then
-    --print(">>> xStreamPos - loop_block_start_pos changed...",rns.transport.loop_block_start_pos)
-    --print(">>> xStreamPos - self.playpos.line",self.playpos.line)
-    --print(">>> xStreamPos - self.xblock:pos_near_end(self.playpos.line)",self.xblock:pos_near_end(self.playpos.line))
     if rns.transport.loop_block_enabled and
       self.xblock --and self.xblock:pos_near_end(self.playpos.line) 
     then
-
       local next_block_start_line = (self.block_start_pos.line+self.xblock.length)
       local prev_block_start_line = (self.block_start_pos.line-self.xblock.length)
-      --print("next_block_start_line",next_block_start_line)
-      --print("prev_block_start_line",prev_block_start_line)
-
-      --self:create_xblock()
-
       if (next_block_start_line == rns.transport.loop_block_start_pos.line) then
         --print("next block")
         next_block()
       elseif (prev_block_start_line == rns.transport.loop_block_start_pos.line) then
-
         --print("previous block")
         prev_block()
-        --print("self.writepos #1",self.writepos)
-        --self.writepos:decrease_by_lines(self.xblock.length)
-        --print("self.writepos #2",self.writepos)
-
-        --print("playpos",playpos,"self.playpos",self.playpos)
+        -- update writepos, as Renoise changes the cursor when 
+        -- moving to previous loop block ... 
         self.writepos.line = self.writepos.line-(self.playpos.line-playpos.line)
-        --print("self.writepos",self.writepos)
-
       end
     end
     self.block_start_pos = rns.transport.loop_block_start_pos
@@ -391,7 +389,6 @@ function xStreamPos:track_pos()
   if (self.block_range_coeff ~= rns.transport.loop_block_range_coeff) then
     --print(">>> xStreamPos - block_range_coeff changed...")
     -- TODO refresh read buffer if affected by size change
-    --self:create_xblock()
     self.block_range_coeff = rns.transport.loop_block_range_coeff
   end
 
@@ -401,34 +398,15 @@ function xStreamPos:track_pos()
     if (self.just_started_playback > 0) then
       if (0.2 > (os.clock() - self.just_started_playback)) then
         self.just_started_playback = 0
-        --print("just_started_playback gone...")
       end
-    else
-    --[[
-      if (playpos ~= self.playpos:get()) then
-        self:_set_pos(playpos)
-      end
-      ]]
     end
   end
-
-  --print("got here - playpos",playpos,self.playpos:get())
 
   if (self.just_started_playback == 0) then
     if (playpos ~= self.playpos:get()) then
       self:_set_pos(playpos)
-      self.playpos:set(playpos)
     end
-  else
-    LOG("xStreamPos: don't update position right after starting playback...")
   end
-
-  --[[
-  if (self.just_started_playback == 0) then
-    --LOG("about to set playpos 1")
-    self.playpos:set(playpos)
-  end
-  ]]
 
 
 end
@@ -437,24 +415,20 @@ end
 -- call when a new document becomes available
 
 function xStreamPos:attach_to_song()
+  TRACE("xStreamPos:attach_to_song()")
 
   -- handling changes via observable is quicker than idle notifier
   rns.selected_pattern_index_observable:add_notifier(function()
     --print("pattern_index_notifier fired...")
     self:track_pos()
-    --[[
-    local playpos = rns.transport.playback_pos
-    self:_set_pos(playpos)
-    self.playpos:set(playpos)
-    ]]
   end)
 
   -- track when song is started and stopped
   rns.transport.playing_observable:add_notifier(function()
-    --print("xStream playing_notifier fired...")
+    --print("xStreamPos playing_notifier fired... playback_pos",rns.transport.playback_pos)
     if rns.transport.playing then
       self.just_started_playback = os.clock()
-      self.playpos:set(rns.transport.playback_pos)
+      self:track_pos()
     end
   end)
 
@@ -470,6 +444,7 @@ function xStreamPos:determine_writeahead()
   local bpm = rns.transport.bpm
   local lpb = rns.transport.lpb
 
+  -- less than 3 will cause problems with scheduling
   self.writeahead = math.ceil(math.max(2,(bpm*lpb)/self.writeahead_factor))
 
 end
