@@ -1167,9 +1167,9 @@ function xStream:reset()
   self.buffer:clear()
   self.stream:reset()
 
-  if self.selected_model then
-    self.selected_model:reset()
-  end
+  --if self.selected_model then
+    --self.selected_model:reset()
+  --end
 
   self:clear_schedule()
 
@@ -1283,6 +1283,9 @@ function xStream:attach_to_song()
   local selected_track_index_notifier = function()
     TRACE("*** selected_track_index_notifier fired...")
     self.track_index = rns.selected_track_index
+    if self.active then
+      self.buffer:update_read_buffer()
+    end
   end
 
   local device_param_notifier = function()
@@ -1576,6 +1579,7 @@ function xStream:handle_event(event_key,arg)
 
   local handler = self.selected_model.events_compiled[event_key]
   if handler then
+    print("about to handle event",event_key,arg,self.selected_model.name)
     local passed,err = pcall(function()
       handler(arg)
     end)
