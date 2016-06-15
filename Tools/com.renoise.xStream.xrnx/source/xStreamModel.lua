@@ -47,6 +47,10 @@ function xStreamModel:__init(xstream)
   self.callback_str = property(self.get_callback_str,self.set_callback_str)
   self.callback_str_observable = renoise.Document.ObservableString("")
 
+  -- bool, true when the callback is not blank space / comments
+  -- (use this to skip processing when not needed...)
+  self.callback_contains_code = false
+
   -- boolean, true when the model definition has been changed
   self.modified = property(self.get_modified,self.set_modified)
   self.modified_observable = renoise.Document.ObservableBoolean(false)
@@ -204,6 +208,9 @@ function xStreamModel:__init(xstream)
 
     -- xStream objects
 
+    ["xmodel"] = {
+      access = function(env) return self end,
+    },
     ["xplaypos"] = {
       access = function(env) return self.xstream.stream.playpos end,
     },
@@ -317,8 +324,14 @@ function xStreamModel:set_callback_str(str_fn)
   TRACE("xStreamModel:set_callback_str - ",#str_fn)
 
   local modified = (str_fn ~= self.sandbox.callback_str) 
-  self.modified = modified and true or self.modified
+  if modified then
+    self.modified = modified 
+  end
   --print("self.modified",self.modified,self.name)
+
+  -- check if the callback contain any code at all? 
+  self.callback_contains_code = xSandbox.contains_code(str_fn)
+  --print("self.callback_contains_code",self.callback_contains_code,self.name)
 
   -- live syntax check
   local passed,err = self.sandbox:test_syntax(str_fn)
@@ -393,6 +406,7 @@ end
 -- reset to initial state
 
 function xStreamModel:reset()
+  TRACE("xStreamModel:reset()")
 
   self:parse_userdata(self.data_initial)
   self.modified = false
@@ -525,6 +539,10 @@ function xStreamModel:parse_definition(def)
   if not passed then
     return false, err
   end
+
+  -- detach from song - only the selected model
+  -- should receive active notifications
+  self:detach_from_song()
   
   return true
 
@@ -588,12 +606,14 @@ function xStreamModel:parse_presets(preset_def)
 end
 
 -------------------------------------------------------------------------------
--- @param data_def (table)
+-- @param data_def (table), new userdata definitions 
 -- @return string, containing potential error message 
 
 function xStreamModel:parse_userdata(data_def)
   TRACE("xStreamModel:parse_userdata(data_def)",data_def)
   
+  assert(type(data_def)=="table","Expected table as argument")
+
   self.data = {}
   self.data_initial = {}
 
@@ -629,8 +649,6 @@ function xStreamModel:parse_userdata(data_def)
 
     end
   end
-
-  self.modified = true
 
   --print(">>> parse_userdata - self.data",rprint(self.data))
   --print(">>> parse_userdata - self.data_initial",rprint(self.data_initial))
@@ -712,7 +730,8 @@ function xStreamModel:rename_token(old_name,new_name,cb_type)
     end
   end
   if data_modified then
-    self.parse_userdata()
+    self.parse_userdata(self.data_initial)
+    self.modified = true
   end
 
   local events_modified = false
@@ -726,6 +745,7 @@ function xStreamModel:rename_token(old_name,new_name,cb_type)
   end
   if events_modified then
     self:parse_events()
+    self.modified = true
   end
 
   if main_modified or data_modified or events_modified then
@@ -773,6 +793,7 @@ return {"some_value"}
   self.data_initial[str_name] = str_fn
 
   self.modified = true
+
   self.data_observable:bang()
 
 end
@@ -822,6 +843,7 @@ function xStreamModel:add_event(str_name,str_fn)
   self:parse_events()
 
   self.modified = true
+
   self.events_observable:bang()
 
 end
@@ -869,10 +891,8 @@ local arg = select(1,...)
 local val = select(1,...)
 ]]..v
     elseif (parts[1] == "rns") then
-      -- value for renoise event
-      str_fn = [[
---local arg = select(1,...)
-]]..v
+      -- renoise event (no value)
+      str_fn = v
     else 
       error("Unexpected event type")
     end
@@ -880,19 +900,16 @@ local val = select(1,...)
     local passed,err = self.sandbox:test_syntax(str_fn)
     if passed then
 
+      -- renoise event : remove 
       if (parts[1] == "rns") and self.events_compiled[k] then
-        --print(">>> about to remove notifier",k)
-        local detached,err = xObservable.detach(k,self.events_compiled[k])
-        if not detached then
-          LOG("*** Something went wrong while parsing notifier",k,err)
-        end
+        self:remove_event_notifier(k)
       end
 
       self.events_compiled[k] = loadstring(str_fn)
       setfenv(self.events_compiled[k], self.sandbox.env)
 
+      -- renoise event : add 
       if (parts[1] == "rns") then
-        --print(">>> about to attach notifier",k)
         local attached,err = xObservable.attach(k,self.events_compiled[k])
         if not attached then
           LOG("*** Something went wrong while parsing notifier",k,err)
@@ -905,10 +922,7 @@ local val = select(1,...)
     end
   end
 
-  self.modified = true
-
   self:extract_tokens(xStreamModel.CB_TYPE.EVENTS)
-
   --print(">>> parse_events - self.events",str_status,rprint(self.events))
 
   return str_status
@@ -954,6 +968,21 @@ function xStreamModel:extract_tokens(cb_type)
   --print("extract_tokens - rslt POST ",self.name,rprint(rslt),rprint(table.keys(rslt)))
 
   self.output_tokens = table.keys(rslt)
+
+end
+
+-------------------------------------------------------------------------------
+-- remove previously registered notifier 
+-- @param key (string), name of 
+
+function xStreamModel:remove_event_notifier(key)
+  TRACE("xStreamModel:remove_event_notifier(key)",key)
+
+  --print(">>> about to remove notifier",key,"from this model",self.name)
+  local detached,err = xObservable.detach(key,self.events_compiled[key])
+  if not detached then
+    LOG("*** Something went wrong while parsing notifier",key,err)
+  end
 
 end
 
@@ -1185,18 +1214,7 @@ end
 function xStreamModel:attach_to_song()
   TRACE("xStreamModel:attach_to_song()")
 
-  --[[
-  self.env.rns = rns
-
-  local compiled_fn,err = self:compile(self.callback_str)
-  if not compiled_fn then
-    LOG("The callback contains errors: "..err)
-  end
-  ]]
-
-  -- maintain renoise event bindings 
   self:parse_events()
-
   self.args:attach_to_song()
 
 end
@@ -1217,6 +1235,13 @@ function xStreamModel:detach_from_song()
   TRACE("xStreamModel:detach_from_song()")
 
   self.args:detach_from_song()
+
+  for k,v in pairs(self.events) do
+    local parts = xLib.split(k,"%.") -- split at dot
+    if (parts[1] == "rns") and self.events_compiled[k] then
+      self:remove_event_notifier(k)
+    end
+  end
 
 end
 
