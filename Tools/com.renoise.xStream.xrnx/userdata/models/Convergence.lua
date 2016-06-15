@@ -197,22 +197,22 @@ arguments = {
 },
 presets = {
   {
-      ["name"] = "Empty",
-      ["import_song"] = false,
-      ["set_instr"] = false,
-      ["sync_instr"] = true,
-      ["sync_track"] = true,
-      ["track_01"] = "",
-      ["track_02"] = "",
-      ["track_03"] = "",
-      ["track_04"] = "",
       ["track_05"] = "",
       ["track_06"] = "",
-      ["track_07"] = "",
-      ["track_08"] = "",
-      ["track_09"] = "",
+      ["sync_instr"] = true,
       ["track_10"] = "",
+      ["track_07"] = "",
+      ["import_song"] = false,
+      ["sync_track"] = true,
+      ["set_instr"] = false,
+      ["name"] = "Empty",
       ["track_11"] = "",
+      ["track_04"] = "",
+      ["track_03"] = "",
+      ["track_02"] = "",
+      ["track_01"] = "",
+      ["track_09"] = "",
+      ["track_08"] = "",
       ["track_12"] = "",
   },
 },
@@ -233,11 +233,13 @@ if not data.suppress_notifier then
   for k = 1,data.total_count do
     local arg_name = data.get_arg_name(k)
     local instr_name = rns.selected_instrument.name
-    for k,v in ipairs(rns.instruments) do
-      if (v.name == instr_name) then
-        local track = rns.tracks[k]
-        if track then
-          rns.selected_track_index = k
+    if (instr_name ~= "") then
+      for k,v in ipairs(rns.instruments) do
+        if (v.name == instr_name) then
+          local track = rns.tracks[k]
+          if track then
+            rns.selected_track_index = k
+          end
         end
       end
     end
@@ -319,6 +321,10 @@ callback = [[
 -- Options:
 -- 'sync_instr' -> synchronize track when instrument has changed
 -- 'sync_track' -> synchronize instrument when track has changed
+
+
+
+
 
 ]],
 }

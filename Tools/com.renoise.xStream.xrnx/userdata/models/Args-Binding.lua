@@ -9,7 +9,9 @@ arguments = {
       ["name"] = "velocity_enabled",
       ["linked"] = false,
       ["value"] = true,
-      ["properties"] = {},
+      ["properties"] = {
+          ["display_as"] = "checkbox",
+      },
       ["bind"] = "rns.transport.keyboard_velocity_enabled_observable",
       ["description"] = "Whether to apply velocity or note",
   },
@@ -17,7 +19,7 @@ arguments = {
       ["locked"] = false,
       ["name"] = "velocity",
       ["linked"] = false,
-      ["value"] = 69,
+      ["value"] = 84,
       ["properties"] = {
           ["min"] = 0,
           ["display_as"] = "hex",
@@ -32,8 +34,8 @@ arguments = {
       ["linked"] = false,
       ["value"] = 1,
       ["properties"] = {
-          ["min"] = 1,
           ["max"] = 255,
+          ["min"] = 1,
           ["display_as"] = "hex",
           ["zero_based"] = true,
       },
@@ -76,5 +78,6 @@ xline.note_columns[1] = {
   instrument_value = args.instr_idx,
   volume_value = args.velocity_enabled and args.velocity or EMPTY_VOLUME_VALUE,
 }
+
 ]],
 }

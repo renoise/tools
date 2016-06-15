@@ -16,16 +16,17 @@ options = {
 },
 callback = [[
 -------------------------------------------------------------------------------
--- Create a burst of scheduled notes
+-- Create a burst of scheduled events
 -------------------------------------------------------------------------------
 if (xinc == 1) then  
-  xbuffer:schedule_line({note_columns = {{note_string = "C-4"}}},3)
+  -- scheduling a whole line (will clear existing)
+  xbuffer:schedule_line({note_columns = {{note_string = "C-4"}}},3)  
+  -- scheduling note columns (will retain other content)
   xbuffer:schedule_note_column({note_string="C-4"},2,5)
   xbuffer:schedule_note_column({note_string="C-4"},1,8)
-  --xbuffer:schedule_note_column({note_string="C-4"},3,5)
-  --xbuffer:schedule_note_column({note_string="C-4"},4,9)
-  --xbuffer:schedule_note_column({note_string="C-4"},5,10)
-  --xbuffer:schedule_note_column({note_string="C-4"},6,10)
+  -- scheduling effect columns (will retain other content)
+  xbuffer:schedule_effect_column({value_string="11"},1,3)
+  xbuffer:schedule_effect_column({amount_string="22"},1,4)
 end
 ]],
 }
