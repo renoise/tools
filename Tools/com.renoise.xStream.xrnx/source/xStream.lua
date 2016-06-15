@@ -1579,7 +1579,7 @@ function xStream:handle_event(event_key,arg)
 
   local handler = self.selected_model.events_compiled[event_key]
   if handler then
-    print("about to handle event",event_key,arg,self.selected_model.name)
+    --print("about to handle event",event_key,arg,self.selected_model.name)
     local passed,err = pcall(function()
       handler(arg)
     end)

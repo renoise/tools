@@ -33,12 +33,6 @@ function xStreamUIOptions:__init(xstream)
 
   self.title = "xStream options"
 
-  --self.start_option = property(self.get_start_option,self.set_start_option)
-  --self.start_option_observable = renoise.Document.ObservableNumber(xStreamUIOptions.START_OPTION.ON_PLAY_EDIT)
-
-  --self.autostart = property(self.get_autostart,self.set_autostart)
-  --self.autostart_observable = renoise.Document.ObservableBoolean(false)
-
   self.update_model_requested = false
 
   self.selected_tab_index = 1
@@ -223,7 +217,8 @@ function xStreamUIOptions:create_dialog()
             notifier = function()
               self.prefs.user_folder.value = xStreamPrefs.USER_FOLDER
             end,
-          }        },
+          }        
+        },
         --[[
         vb:button{
           text = "remove trace statements",

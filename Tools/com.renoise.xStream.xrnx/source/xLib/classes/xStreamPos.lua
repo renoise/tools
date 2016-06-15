@@ -443,8 +443,6 @@ function xStreamPos:determine_writeahead()
 
   local bpm = rns.transport.bpm
   local lpb = rns.transport.lpb
-
-  -- less than 3 will cause problems with scheduling
   self.writeahead = math.ceil(math.max(2,(bpm*lpb)/self.writeahead_factor))
 
 end
