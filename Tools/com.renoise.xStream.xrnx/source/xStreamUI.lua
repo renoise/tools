@@ -642,19 +642,15 @@ function xStreamUI:build()
       end)
       xObservable.attach(model.data_observable,function()
         TRACE("*** xStreamUI - data_observable fired...")
-        --self:update_editor()
         self.update_editor_requested = true
       end)
       xObservable.attach(model.events_observable,function()
         TRACE("*** xStreamUI - events_observable fired...")
-        --self:update_editor()
         self.update_editor_requested = true
       end)
       xObservable.attach(model.sandbox.callback_str_observable,function()
         TRACE("*** xStreamUI - sandbox.callback_notifier fired...")
         if not self.user_modified_callback then
-          --print("... got here")
-          --self:update_editor()
           self.update_editor_requested = true
         end
       end)
@@ -668,7 +664,6 @@ function xStreamUI:build()
     end
     self.update_model_requested = true
     self.editor_view = "main"
-    --self:update_editor()
     self.update_editor_requested = true
 
     if vPrompt.color_prompt.dialog and vPrompt.color_prompt.dialog.visible then
@@ -1090,6 +1085,7 @@ function xStreamUI:apply_editor_content()
       local str_status = model:parse_events(def)
       self.xstream.callback_status_observable.value = str_status
     end
+    model.modified = true
 
   end
 
@@ -1192,7 +1188,6 @@ end
 
 function xStreamUI:set_editor_visible_lines(val)
   self.editor_visible_lines_observable.value = val
-  --self:update_editor()
   self.update_editor_requested = true
 end
 
@@ -1298,7 +1293,6 @@ function xStreamUI:remove_callback()
   if (choice == "OK") then
     local cb_type,cb_key,cb_subtype = xStream.parse_callback_type(self.editor_view)
     model:remove_callback(cb_type,cb_subtype and cb_key.."."..cb_subtype or cb_key)
-    --self:update_editor()
     self.update_editor_requested = true
   end
 
