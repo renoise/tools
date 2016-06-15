@@ -97,6 +97,6 @@ callback = [[
 
 local existing_note = xline.note_columns[1].note_value
 xline.note_columns[1].note_value =
-  restrict_to_scale(existing_note,args.curr_scale,args.curr_key)
+  xScale.restrict_to_scale(existing_note,args.curr_scale,args.curr_key)
 ]],
 }
