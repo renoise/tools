@@ -104,6 +104,7 @@ function xSandbox:__init()
     next = _G.next,
     pairs = _G.pairs,
     print = _G.print,
+    pcall = _G.pcall,
     select = _G.select,
     string = _G.string,
     table = _G.table,
@@ -280,6 +281,37 @@ function xSandbox:test_syntax(str_fn)
   end
 
   return true
+
+end
+
+-------------------------------------------------------------------------------
+-- strip code comments from a string
+-- @param str_fn (string)
+-- @return string
+
+function xSandbox.strip_comments(str_fn)
+  TRACE("xSandbox.strip_comments(str_fn)",str_fn)
+
+  local t = xLib.split(str_fn,"\n")
+  for k,v in ripairs(t) do
+    local ln = xLib.trim(v)
+    if (ln:sub(0,2) == "--") then 
+      table.remove(t,k)
+    end
+  end
+  return table.concat(t,"\n")
+
+end
+
+-------------------------------------------------------------------------------
+-- check if a given string consists of comments only
+-- @param str_fn (string)
+-- @return bool
+
+function xSandbox.contains_code(str_fn)
+  TRACE("xSandbox.contains_code(str_fn)",str_fn)
+
+  return string.match(xSandbox.strip_comments(str_fn),"%a") and true or false
 
 end
 

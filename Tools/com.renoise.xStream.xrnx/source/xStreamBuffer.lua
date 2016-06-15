@@ -24,6 +24,7 @@ Scheduled events do not actually affect the buffer until the stream get_output()
 class 'xStreamBuffer'
 
 function xStreamBuffer:__init(xstream)
+  TRACE("xStreamBuffer:__init(xstream)",xstream)
 
   self.xstream = xstream
 
@@ -106,27 +107,27 @@ end
 function xStreamBuffer:wipe_futures()
   TRACE("xStreamBuffer:wipe_futures()")
 
-  -- do not wipe while muted
-  --if self.xstream.muted then
-  --  return
-  --end
-
   local from_idx = self.xstream.stream.writepos.lines_travelled
   if rns.transport.playing then
     -- when live streaming, exclude current line
     from_idx = from_idx+1
   end
 
+  --print("*** xStreamBuffer:wipe_futures - wiped buffer from",from_idx,"to",self.highest_xinc)
   for i = from_idx,self.highest_xinc do
     self.output_buffer[i] = nil
-    --print("*** wiped buffer at",i)
   end
 
   self.highest_xinc = self.xstream.stream.writepos.lines_travelled
-  --print("*** self.highest_xinc",self.highest_xinc)
+  --print("*** xStreamBuffer:wipe_futures - self.highest_xinc",self.highest_xinc)
+
+  -- pull the read position back to this point
+  self.xstream.stream.readpos = xSongPos(self.xstream.stream.writepos)
+  if rns.transport.playing then
+    self.xstream.stream.readpos:increase_by_lines(1)
+  end
 
 end
-
 
 -------------------------------------------------------------------------------
 --- clear when preparing to stream
@@ -144,6 +145,23 @@ function xStreamBuffer:clear()
   self.pattern_buffer = {}
   self.output_buffer = {}
   self.scheduled = {}
+
+end
+
+-------------------------------------------------------------------------------
+-- get a xSongPos based on buffer read-position
+-- (only be reliable as long as outer conditions does not change - loops,etc.)
+-- @param xinc (int)
+-- @return xSongPos
+
+function xStreamBuffer:get_pos(xinc)
+  TRACE("xStreamBuffer:get_pos(xinc)",xinc)
+
+  local pos = xSongPos(self.xstream.stream.writepos)
+  local delta = xinc - pos.lines_travelled
+  pos:increase_by_lines(delta)
+  --print("xStreamBuffer:get_pos - POST",pos)
+  return pos
 
 end
 
@@ -194,7 +212,6 @@ end
 -- TODO Unregister a scheduled xline - 
 --[[
 function xStreamBuffer:unschedule_line(xinc)
-  TRACE("xStreamBuffer:unschedule_line(xinc)",xinc)
 
 
   -- when within output range, wipe output buffer
@@ -221,14 +238,17 @@ function xStreamBuffer:schedule_line(xline,xinc)
   -- any range: insert into events table 
   --print("add scheduled xline at position",xinc)
   self.scheduled[xinc] = xline
+  --print("self.scheduled",rprint(self.scheduled))
 
   if (delta <= self.xstream.stream.writeahead) then
-    -- within output range - insert into output_buffer
-    self.output_buffer[xinc] = xLine.apply_descriptor(xline)
-    self.highest_xinc = math.max(xinc,self.highest_xinc)
     if (delta == 1) then
-      -- TODO immediate output, but avoid infinite loops!
-      --self:write_output(writepos,2,live_mode)
+      -- immediate output
+      self:wipe_futures()
+      self:write_output(writepos,2,live_mode)
+    else
+      -- within output range - insert into output_buffer
+      self.output_buffer[xinc] = xLine.apply_descriptor(xline)
+      self.highest_xinc = math.max(xinc,self.highest_xinc)
     end
   end
 
@@ -238,12 +258,13 @@ end
 -- schedule a single column (merge into existing xline)
 
 function xStreamBuffer:schedule_note_column(xnotecol,col_idx,xinc)
-  TRACE("xStreamBuffer:schedule_note_column()",xnotecol,col_idx,xinc)
+  TRACE("xStreamBuffer:schedule_note_column(xnotecol,col_idx,xinc)",xnotecol,col_idx,xinc)
 
   assert(type(col_idx)=="number")
 
   if not xinc then xinc = self:get_xinc() end
-  local xline = self:get_input(xinc) -- TODO supply position
+  local pos = self:get_pos(xinc)
+  local xline = self:get_input(xinc,pos) 
   xline.note_columns[col_idx] = xnotecol
   self:schedule_line(xline,xinc)
 
@@ -253,12 +274,14 @@ end
 -- schedule a single column (merge into existing xline)
 
 function xStreamBuffer:schedule_effect_column(xeffectcol,col_idx,xinc)
-  TRACE("xStreamBuffer:schedule_effect_column()",xeffectcol,col_idx,xinc)
+  TRACE("xStreamBuffer:schedule_effect_column(xeffectcol,col_idx,xinc)",xeffectcol,col_idx,xinc)
 
   assert(type(col_idx)=="number")
 
   if not xinc then xinc = self:get_xinc() end
-  local xline = self:get_input(xinc) -- TODO supply position
+  local pos = self:get_pos(xinc)
+  local xline = self:get_input(xinc,pos)
+  --print("schedule_effect_column - xline",rprint(xline))
   xline.effect_columns[col_idx] = xeffectcol
   self:schedule_line(xline,xinc)
 
@@ -270,18 +293,12 @@ end
 -- @param offset (int), number of lines 
 -- @return int
 
-function xStreamBuffer:get_xinc(offset)
-  TRACE("xStreamBuffer:get_xinc(offset)",offset)
-
-  if not offset then
-    offset = 0
-  else
-    assert(type(offset)=="number")
-  end
+function xStreamBuffer:get_xinc()
+  TRACE("xStreamBuffer:get_xinc()")
 
   local writepos = self.xstream.stream.writepos
   local live_mode = rns.transport.playing
-  return writepos.lines_travelled  + offset + (live_mode and 1 or 0)
+  return writepos.lines_travelled + (live_mode and 1 or 0)
 
 end
 
@@ -291,7 +308,7 @@ end
 function xStreamBuffer:mute()
   TRACE("xStreamBuffer:mute()")
 
-  self:wipe_futures()
+  --self:wipe_futures()
 
   local function produce_note_off()
     local note_cols = {}
@@ -381,14 +398,10 @@ function xStreamBuffer:create_content(num_lines)
 
     local xinc = readpos.lines_travelled
     
-    -- retrieve existing content --------------------------
-
-    local xline,has_read_buffer = self:get_input(xinc,readpos)
-    --print("*** get_input - xinc,readpos,has_read_buffer,xline",xinc,readpos,has_read_buffer,xline.note_columns[1].note_string)
-
     -- handle scheduling ----------------------------------
 
     local callback = nil
+    local contains_code = nil
     local change_to_scheduled = false
     if self.xstream._scheduled_pos and self.xstream._scheduled_model then
       local compare_to = 1 + readpos.lines_travelled - num_lines + i
@@ -399,34 +412,47 @@ function xStreamBuffer:create_content(num_lines)
     end
     if change_to_scheduled then
       callback = self.xstream._scheduled_model.sandbox.callback
+      contains_code = self.xstream._scheduled_model.callback_contains_code
       -- TODO apply preset arguments 
     else
       callback = self.xstream.selected_model.sandbox.callback
+      contains_code = self.xstream.selected_model.callback_contains_code
     end
 
-    -- process the callback -------------------------------
+    if not contains_code then
+      --LOG("*** Skip, callback does not provide any functionality")
+      -- TODO stacked model - forward 
+    else
 
-    local buffer_content = nil
-    local success,err = pcall(function()
-      buffer_content = callback(xinc,xLine(xline),xSongPos(readpos))
-    end)
-    --print("processed callback - xinc,readpos",xinc,readpos)
-    if not success and err then
-      LOG("*** Error: please review the callback function - "..err)
-      -- TODO display runtime errors separately (runtime_status)
-      self.xstream.callback_status_observable.value = err
-    elseif success and buffer_content then
-      -- we might have redefined the xline (or parts of it) in our  
-      -- callback method - convert everything into class instances...
+      -- retrieve existing content --------------------------
+
+      local xline = self:get_input(xinc,readpos)
+
+      -- process the callback -------------------------------
+
+      local buffer_content = nil
       local success,err = pcall(function()
-        self.output_buffer[xinc] = xLine.apply_descriptor(buffer_content)
+        buffer_content = callback(xinc,xLine(xline),xSongPos(readpos))
       end)
+      --print("processed callback - xinc,readpos",xinc,readpos)
       if not success and err then
-        LOG("*** Error: could not convert xline - "..err)
-        self.output_buffer[xinc] = table.rcopy(xLine.EMPTY_XLINE)
+        LOG("*** Error: please review the callback function - "..err)
+        -- TODO display runtime errors separately (runtime_status)
+        self.xstream.callback_status_observable.value = err
+      elseif success and buffer_content then
+        -- we might have redefined the xline (or parts of it) in our  
+        -- callback method - convert everything into class instances...
+        local success,err = pcall(function()
+          self.output_buffer[xinc] = xLine.apply_descriptor(buffer_content)
+        end)
+        if not success and err then
+          LOG("*** Error: could not convert xline - "..err)
+          self.output_buffer[xinc] = table.rcopy(xLine.EMPTY_XLINE)
+        end
+        --print("*** xStreamBuffer:create_content (callback evaluated) - highest_xinc,buffer",xinc,self.output_buffer[xinc])
+        self.highest_xinc = math.max(xinc,self.highest_xinc)
       end
-      --print("*** xStreamBuffer:create_content - self.output_buffer POST",xinc,self.output_buffer[xinc])
-      self.highest_xinc = math.max(xinc,self.highest_xinc)
+
     end
 
     -- update counters -------------------------------
@@ -445,7 +471,7 @@ end
 -- @param live_mode (bool), skip line at playpos when true
 
 function xStreamBuffer:write_output(xpos,num_lines,live_mode)
-  TRACE("xStreamBuffer:write_output(xpos)",xpos,num_lines,live_mode)
+  TRACE("xStreamBuffer:write_output(xpos,num_lines,live_mode)",xpos,num_lines,live_mode)
 
   if not self.xstream.selected_model then
     return
@@ -519,7 +545,7 @@ function xStreamBuffer:write_output(xpos,num_lines,live_mode)
 
         -- check if we can/need to resolve automation
         if type(xline)=="xLine" then
-          if self.device_param and xline.automation then
+          if self.xstream.device_param and xline.automation then
             --print("*** xline.automation",xline.automation)
             if (tmp_pos.sequence ~= last_auto_seq_idx) then
               last_auto_seq_idx = tmp_pos.sequence
@@ -535,7 +561,7 @@ function xStreamBuffer:write_output(xpos,num_lines,live_mode)
           end
         end
 
-        --print("*** do_write - xinc,line,xline",xinc,tmp_pos.line,xline and xline.note_columns[1].note_string)
+        --print("*** do_write - xinc,line,xline",xinc,tmp_pos.line,xline)
         if type(xline)=="xLine" then
           local success,err = pcall(function()
             xline:do_write(
@@ -590,8 +616,7 @@ end
 -- if neither exist, and pos is defined, we proceed to read from song
 -- @param xinc (int), the buffer position
 -- @param pos (SongPos), where to read from song
--- @return xLine, xline descriptor or nil
--- @return bool (true when content comes from buffer)
+-- @return xLine, xline descriptor (never nil)
 
 function xStreamBuffer:get_input(xinc,pos)
   TRACE("xStreamBuffer:get_input(xinc,pos)",xinc,pos)
@@ -599,29 +624,33 @@ function xStreamBuffer:get_input(xinc,pos)
   local xline = nil
   if xinc then
     if self.scheduled[xinc] then
+      --print("*** xStreamBuffer:get_input - read from event buffer",xinc,rprint(self.scheduled[xinc]))
       xline = self.scheduled[xinc]
-      --print(">>> get_input - read from event buffer",xinc,xline)
-    else
+      -- descriptor might not be fully defined
+      if not xline.note_columns then
+        xline.note_columns = {}
+      end
+      if not xline.effect_columns then
+        xline.effect_columns = {}
+      end
+    elseif self.pattern_buffer[xinc] then
+      --print("*** xStreamBuffer:get_input - read from pattern buffer",xinc,self.pattern_buffer[xinc])
       xline = self.pattern_buffer[xinc]
-      --print(">>> get_input - read from pattern buffer",xinc,xline)
     end
   end
-  local buffered = xline and true or false
-  if not buffered and pos then
-    local seq_idx,line_idx = pos.sequence,pos.line
-    xline = xLine.do_read(
-      seq_idx,line_idx,self.xstream.include_hidden,self.xstream.track_index)
-    --self.pattern_buffer[xinc] = table.rcopy(xline) 
+  if pos then
+    -- read from pattern & add to buffer 
+    xline = xLine.do_read(pos.sequence,pos.line,self.xstream.include_hidden,self.xstream.track_index)    
     self.pattern_buffer[pos.lines_travelled] = table.rcopy(xline) 
-    --print(">>> get_input - read from pattern",pos.lines_travelled,pos,self.pattern_buffer[pos.lines_travelled].note_columns[1].note_string)
+    --print("*** xStreamBuffer:get_input - read from pattern",pos.lines_travelled,pos,xline)
   end
 
   if not xline then
-    --print(">>> get_input - return empty xline")
+    --print("*** xStreamBuffer:get_input - return empty xline")
     xline = table.rcopy(xLine.EMPTY_XLINE)
   end
 
-  return xline,buffered
+  return xline
 
 end
 
