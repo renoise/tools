@@ -924,6 +924,9 @@ function xStreamModel:extract_tokens(cb_type)
   TRACE("xStreamModel:extract_tokens(cb_type)",cb_type)
 
   local rslt = {}
+  for k,v in ipairs(self.output_tokens) do
+    rslt[v] = true
+  end
 
   -- combined note/effect-column tokens
   local all_tokens = {
@@ -937,18 +940,10 @@ function xStreamModel:extract_tokens(cb_type)
   }
 
   local callbacks = {}
-
-  if (cb_type == xStreamModel.CB_TYPE.MAIN) then
-    table.insert(callbacks,self.sandbox.callback_str)
-  elseif (cb_type == xStreamModel.CB_TYPE.DATA) then
-    -- do nothing
-  elseif (cb_type == xStreamModel.CB_TYPE.EVENTS) then
-    for k,v in pairs(self.events) do
-      table.insert(callbacks,v)
-    end
+  table.insert(callbacks,self.sandbox.callback_str)
+  for k,v in pairs(self.events) do
+    table.insert(callbacks,v)
   end
-  --print("extract_tokens - callbacks",rprint(callbacks))
-
   for _,str_fn in ipairs(callbacks) do
     for __,token in ipairs(all_tokens) do
       if string.find(str_fn,token) then
@@ -956,9 +951,8 @@ function xStreamModel:extract_tokens(cb_type)
       end
     end
   end
-  --print("extract_tokens - rslt",rprint(table.keys(rslt)))
+  --print("extract_tokens - rslt POST ",self.name,rprint(rslt),rprint(table.keys(rslt)))
 
-  --return table.keys(rslt)
   self.output_tokens = table.keys(rslt)
 
 end
