@@ -312,6 +312,26 @@ function xStreamUIArgsEditor:build()
             height = 60,
           },
         },
+
+        vb:column{ -- fire_on_start
+          vb:row{
+            tooltip = "When enabled, the argument will fire its value once loaded,"
+                    .."\ncalling any associated event handlers as a result."
+                    .."\nDefault value is 'enabled'",
+            vb:text{
+              text = "fire-start",
+              font = "mono",
+              width = label_w,
+            },
+            vb:checkbox{
+              id = "xStreamArgsEditorFireOnStart",
+              value = false,
+            },
+
+          },
+
+        },
+
       },
       vb:column{
         vb:space{
@@ -391,6 +411,7 @@ function xStreamUIArgsEditor:create_arg_descriptor(arg_index,arg_value)
   local view_type           = self.vb.views["xStreamArgsEditorType"]
   local view_display_as     = self.vb.views["xStreamArgsEditorDisplayAs"]
   local view_buffer         = self.vb.views["xStreamArgsEditorImpactsBuffer"]
+  local view_fire_on_start  = self.vb.views["xStreamArgsEditorFireOnStart"]
   local view_min_value      = self.vb.views["xStreamArgsEditorMinValue"]
   local view_max_value      = self.vb.views["xStreamArgsEditorMaxValue"]
   local view_zero_based     = self.vb.views["xStreamArgsEditorZeroBased"]
@@ -518,6 +539,7 @@ function xStreamUIArgsEditor:create_arg_descriptor(arg_index,arg_value)
   end
 
   arg_props.impacts_buffer = view_buffer.value
+  arg_props.fire_on_start = view_fire_on_start.value
 
   -- return table 
 
@@ -582,6 +604,7 @@ function xStreamUIArgsEditor:update()
   local view_type         = self.vb.views["xStreamArgsEditorType"]
   local view_display_as   = self.vb.views["xStreamArgsEditorDisplayAs"]
   local view_buffer       = self.vb.views["xStreamArgsEditorImpactsBuffer"]
+  local view_fire_on_start= self.vb.views["xStreamArgsEditorFireOnStart"]
   local view_props        = self.vb.views["xStreamArgsEditorPropControls"]
   local view_min_value    = self.vb.views["xStreamArgsEditorMinValue"]
   local view_max_value    = self.vb.views["xStreamArgsEditorMaxValue"]
@@ -611,6 +634,7 @@ function xStreamUIArgsEditor:update()
   view_type.active = has_selected
   view_display_as.active = has_selected
   view_buffer.active = has_selected
+  view_fire_on_start.active = has_selected
   view_min_value.active = has_selected
   view_max_value.active = has_selected
   view_zero_based.active = has_selected
@@ -686,6 +710,7 @@ function xStreamUIArgsEditor:update()
   end
 
   view_buffer.value = arg.properties.impacts_buffer
+  view_fire_on_start.value = arg.properties.fire_on_start
 
   self:show_relevant_arg_edit_controls(display_as)
   
