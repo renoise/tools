@@ -547,3 +547,117 @@ function xVoiceManager:attach_to_song()
 
 end
 
+-------------------------------------------------------------------------------
+-- Get a voice with a specific pitch
+-- @return xMidiMessage or nil
+-- @return int or nil
+
+function xVoiceManager:get_by_pitch(pitch)
+  TRACE("xVoiceManager:get_by_pitch(pitch)",pitch)
+
+  for k,v in ipairs(self.voices) do
+    if (v.values[1] == pitch) then
+      return v,k
+    end
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- Get a voice which has a higher pitch than the provided one
+-- @return xMidiMessage or nil
+-- @return int or nil
+
+function xVoiceManager:get_higher(idx)
+  TRACE("xVoiceManager:get_higher(idx)",idx)
+
+  local voice = self.voices[idx]
+  if not voice then
+    return
+  end
+  local base_pitch = voice.values[1]
+  local pitch = nil
+  for k,v in ipairs(self.voices) do
+    --print("v.values[1]",v.values[1])
+    if (v.values[1] > base_pitch) then
+      if not pitch then
+        pitch = v.values[1]
+      end
+      pitch = math.min(pitch,v.values[1])
+    end
+  end
+  --print("pitch,base_pitch",pitch,base_pitch)
+  if pitch then
+    return self:get_by_pitch(pitch)
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- Get the voice with the highest pitch 
+-- @return xMidiMessage or nil
+-- @return int or nil
+
+function xVoiceManager:get_highest()
+  TRACE("xVoiceManager:get_highest()")
+
+  local rslt,idx 
+  local pitch = 0
+  for k,v in ipairs(self.voices) do
+    --print("v.values[1]",v.values[1])
+    if (v.values[1] > pitch) then
+      rslt = v
+      pitch = v.values[1]
+      idx = k
+    end
+  end
+  return rslt,idx
+
+end
+
+-------------------------------------------------------------------------------
+-- Get a voice which has a lower pitch than the provided one
+-- @return xMidiMessage or nil
+
+function xVoiceManager:get_lower(idx)
+  TRACE("xVoiceManager:get_lower(idx)",idx)
+
+  local voice = self.voices[idx]
+  if not voice then
+    return
+  end
+  local base_pitch = voice.values[1]
+  local pitch = nil
+  for k,v in ipairs(self.voices) do
+    if (v.values[1] < base_pitch) then
+      if not pitch then
+        pitch = v.values[1]
+      end
+      pitch = math.max(pitch,v.values[1])
+    end
+  end
+  if pitch then
+    return self:get_by_pitch(pitch)
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- Get the voice with the lowest pitch 
+-- @return xMidiMessage or nil
+
+function xVoiceManager:get_lowest()
+  TRACE("xVoiceManager:get_lowest()")
+
+  local rslt,idx 
+  local pitch = 999
+  for k,v in ipairs(self.voices) do
+    if (v.values[1] < pitch) then
+      rslt = v
+      pitch = v.values[1]
+      idx = k
+    end
+  end
+  return rslt,idx
+
+end
