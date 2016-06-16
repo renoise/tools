@@ -352,6 +352,7 @@ It's recommended to open the scripting console for more detailed feedback and th
 `xpos.sequence (number)` -> pattern sequence index  
 `xpos.lines_travelled (number)` -> lines travelled since output started   
 `xstream (xStream)` -> access to the xStream instance  
+`xmodel (xStreamModel)` -> access to the running xStreamModel instance (the selected one)
 `xbuffer (xStreamBuffer)` -> access to the stream buffer (shorthand for xstream.buffer)  
 `xvoicemgr (xVoiceManager)` -> access the voice-manager (shorthand for xstream.voicemgr)  
 `xvoices (table<xMidiMessage>)` -> access the active voices (shorthand for xstream.voicemgr.voices)  
