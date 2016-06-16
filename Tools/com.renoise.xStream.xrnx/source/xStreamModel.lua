@@ -611,8 +611,6 @@ end
 
 function xStreamModel:parse_userdata(data_def)
   TRACE("xStreamModel:parse_userdata(data_def)",data_def)
-  
-  assert(type(data_def)=="table","Expected table as argument")
 
   self.data = {}
   self.data_initial = {}
