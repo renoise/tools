@@ -236,9 +236,7 @@ function xStreamBuffer:schedule_line(xline,xinc)
   local live_mode = rns.transport.playing
 
   -- any range: insert into events table 
-  --print("add scheduled xline at position",xinc)
   self.scheduled[xinc] = xline
-  --print("self.scheduled",rprint(self.scheduled))
 
   if (delta <= self.xstream.stream.writeahead) then
     if (delta == 1) then
@@ -251,6 +249,8 @@ function xStreamBuffer:schedule_line(xline,xinc)
       self.highest_xinc = math.max(xinc,self.highest_xinc)
     end
   end
+
+  --print("self.scheduled",rprint(self.scheduled))
 
 end
 
@@ -582,7 +582,7 @@ function xStreamBuffer:write_output(xpos,num_lines,live_mode)
           end
 
         else
-          LOG("*** xStream: no output defined",tmp_pos,xpos.lines_travelled)
+          --LOG("*** xStream: no output defined",tmp_pos,xpos.lines_travelled)
         end
       end
 
