@@ -152,8 +152,12 @@ socket_client.peer_port -> [number]
 
 -------- Functions
 
--- Send a message string to the connected server. When sending failed, "success"
--- will be false and error_message is set.
+-- Send a message string (or OSC messages or bundles) to the connected server. 
+-- When sending fails, "success" return value will be false and "error_message"
+-- is set, describing the error in a human readable format.
+-- NB: when using TCP instead of UDP as protocol for OSC messages, !no! SLIP 
+-- encoding and no size prefixing of the passed OSC data will be done here. 
+-- So, when necessary, do this manually by your own please.
 socket_client:send(message) ->
   [success (boolean), error_message (string or nil)]
 

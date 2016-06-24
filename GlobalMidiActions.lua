@@ -82,6 +82,7 @@ info about this.
 
 -- max mapping counts
 
+MAX_SECTION_MAPPINGS = 64
 MAX_SEQUENCE_MAPPINGS = 256
 MAX_TRACK_MAPPINGS = 64
 MAX_SEND_TRACK_MAPPINGS = 32
@@ -489,6 +490,34 @@ local function parameter_message_fader_value(message, volume_parameter)
     return parameter_message_value(message, volume_parameter)
 
   end
+end
+
+
+-- section helpers
+
+local gather_section_positions = function()
+  local positions = {}
+  for k,v in ipairs(song().sequencer.pattern_sequence) do
+    if song().sequencer:sequence_is_start_of_section(k) then
+      table.insert(positions,k)
+    end
+  end
+  return positions
+end
+
+local get_section_index_by_seq_pos = function(seq_pos)
+  local positions = gather_section_positions()
+  if not table.is_empty(positions) then
+    for k,v in ipairs(positions) do
+      if (v > seq_pos) then
+        return k-1
+      elseif (v == seq_pos) then
+        return k
+      end
+    end
+    return #positions,positions
+  end
+  
 end
 
 
@@ -909,12 +938,180 @@ for sequence_pos = 1,MAX_SEQUENCE_MAPPINGS do
 end
 
 
--- Seq. Triggering:Schedule
+-- Seq. Triggering:Schedule:Section 
+
+local set_scheduled_section = function(section_index)
+  local positions = gather_section_positions()
+  if positions[section_index] then
+    song().transport:set_scheduled_sequence(positions[section_index])
+  end
+end
+
+add_action("Seq. Triggering:Schedule:Section:Current [Trigger]",
+function(message)
+  if message:is_trigger() then
+    local seq_pos = song().transport.edit_pos.sequence
+    local section_index = get_section_index_by_seq_pos(seq_pos)
+    set_scheduled_section(section_index)
+  end
+end)
+
+add_action("Seq. Triggering:Schedule:Section:Next [Trigger]",
+function(message)
+  if message:is_trigger() then
+    local seq_pos = song().transport.edit_pos.sequence
+    local section_index = get_section_index_by_seq_pos(seq_pos)
+    set_scheduled_section(section_index+1)
+  end
+end)
+
+add_action("Seq. Triggering:Schedule:Section:Previous [Trigger]",
+function(message)
+  if message:is_trigger() then
+    local seq_pos = song().transport.edit_pos.sequence
+    local section_index = get_section_index_by_seq_pos(seq_pos)
+    set_scheduled_section(section_index-1)
+  end
+end)
+
+add_action("Seq. Triggering:Schedule:Section:Section XX [Set]",
+function(message)
+  if message:is_abs_value() then
+    local section_index = clamp_value(
+      message.int_value, 1, MAX_SECTION_MAPPINGS)
+    set_scheduled_section(section_index)
+  end
+end)
+
+for section_index = 1,MAX_SECTION_MAPPINGS do
+  add_action(string.format(
+    "Seq. Triggering:Schedule:Section XX:Section #%02d [Trigger]",
+    section_index),
+  function(message)
+    if message:is_trigger() then
+      set_scheduled_section(section_index)
+    end
+  end)
+end
+
+
+-- Seq. Looping:Section 
+
+local loop_section_by_index = function(section_index)
+
+  local positions = gather_section_positions()
+  if table.is_empty(positions) then
+    return
+  end
+  if not positions[section_index] then
+    return
+  end
+
+  -- rules: enable loop if partially selected, or unselected
+  -- disable loop if section (and _only_ section) is wholly looped
+
+  local section_start = positions[section_index] 
+  local section_end = positions[section_index+1] and 
+    positions[section_index+1]-1 or #song().sequencer.pattern_sequence
+
+  local within_range = function(pos,range_start,range_end)
+    return pos >= range_start and pos <= range_end
+  end
+
+  local enable_loop = false
+  local loop_seq_empty = (song().transport.loop_sequence_range[1] == 0) and 
+    (song().transport.loop_sequence_range[2] == 0)
+  if not loop_seq_empty then
+    local all_looped,all_empty = false,false
+    for k,v in ipairs(song().sequencer.pattern_sequence) do
+      if within_range(k,section_start,section_end) then
+        if within_range(k,song().transport.loop_sequence_start,song().transport.loop_sequence_end) then
+          if not all_looped then
+            all_looped = true
+          end
+          all_empty = false
+        else
+          if not all_empty then
+            all_empty = true
+          end
+          all_looped = false
+        end
+      end
+    end
+    if all_looped then
+      enable_loop = false
+    elseif all_empty then
+      enable_loop = true
+    end
+  else
+    enable_loop = true
+  end
+
+  if enable_loop then
+    song().transport.loop_sequence_range = {section_start,section_end}
+  else
+    song().transport.loop_sequence_range = {}
+  end
+
+end
+
+add_action("Seq. Looping:Section:Current Section [Trigger]",
+function(message)
+  if message:is_trigger() then
+    local seq_pos = song().transport.edit_pos.sequence
+    local section_index = get_section_index_by_seq_pos(seq_pos)
+    loop_section_by_index(section_index)
+  end
+end)
+
+add_action("Seq. Looping:Section:Section XX [Set]",
+function(message)
+  if message:is_abs_value() then
+    local positions = gather_section_positions()
+    if positions[message.int_value] then
+      loop_section_by_index(message.int_value)
+    end
+  end
+end)
+
+for section_index = 1,MAX_SECTION_MAPPINGS do
+  add_action(string.format(
+    "Seq. Looping:Section XX:Section #%02d [Trigger]",
+    section_index),
+  function(message)
+    if message:is_trigger() then
+      loop_section_by_index(section_index)
+    end
+  end)
+end
+
+
+-- Seq. Triggering:Schedule:
 
 add_action("Seq. Triggering:Schedule:Current [Trigger]",
 function(message)
   if message:is_trigger() then
     song().transport:set_scheduled_sequence(song().transport.edit_pos.sequence)
+  end
+end)
+
+add_action("Seq. Triggering:Schedule:Next [Trigger]",
+function(message)
+  if message:is_trigger() then
+    local seq_pos = song().transport.edit_pos.sequence + 1
+    if song().sequencer.pattern_sequence[seq_pos] then
+      song().transport:set_scheduled_sequence(seq_pos)
+    end
+  end
+end)
+
+add_action("Seq. Triggering:Schedule:Previous [Trigger]",
+function(message)
+  if message:is_trigger() then
+    local seq_pos = song().transport.edit_pos.sequence - 1
+    if song().sequencer.pattern_sequence[seq_pos] then
+      song().transport:set_scheduled_sequence(seq_pos)
+    end
   end
 end)
 
@@ -1844,6 +2041,28 @@ function(message)
   end
 end)
 
+add_action("Navigation:Columns:Show Sample FX Column [Toggle]",
+function(message)
+  if message:is_trigger() then
+    local selected_track = selected_track()
+    if selected_track.max_note_columns > 0 then
+      selected_track.sample_effects_column_visible = toggle_message_value(
+        message, selected_track.sample_effects_column_visible)
+    end
+  end
+end)
+
+add_action("Navigation:Columns:Show Sample FX Column [Set]",
+function(message)
+  if message:is_trigger() then
+    local selected_track = selected_track()
+    if selected_track.max_note_columns > 0 then
+      selected_track.sample_effects_column_visible = boolean_message_value(
+        message, selected_track.sample_effects_column_visible)
+    end
+  end
+end)
+
 
 -- Navigation:Track DSPs
 
@@ -2098,10 +2317,11 @@ table.insert(middle_frame_views,
 table.insert(middle_frame_views,
   renoise.ApplicationWindow.MIDDLE_FRAME_MIXER)
 table.insert(middle_frame_views,
-  renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR)
--- skip MIDDLE_FRAME_INSTRUMENT_SAMPLE_OVERVIEW when cycling
+  renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_PHRASE_EDITOR)
 table.insert(middle_frame_views,
   renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_KEYZONES)
+table.insert(middle_frame_views,
+  renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR)
 table.insert(middle_frame_views,
   renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_MODULATION)
 table.insert(middle_frame_views,
@@ -2171,6 +2391,14 @@ add_action("GUI:Middle Frame:Show Pattern Advanced Edit [Toggle]",
 function(message)
   app().window.pattern_advanced_edit_is_visible = toggle_message_value(
     message, app().window.pattern_advanced_edit_is_visible)
+end)
+
+add_action("GUI:Middle Frame:Show Instrument Phrase Editor [Trigger]",
+function(message)
+  if message:is_trigger() then
+    app().window.active_middle_frame =
+      renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_PHRASE_EDITOR
+  end
 end)
 
 add_action("GUI:Middle Frame:Show Instrument Sample Editor [Trigger]",

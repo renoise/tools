@@ -113,11 +113,51 @@ renoise.app():new_song_no_template()
 -- Just like new_song(), the song is not loaded immediately, but soon after 
 -- the call was made. See 'renoise.app():new_song()' for details.
 renoise.app():load_song(filename)
+-- Load a file into the currently selected components (selected instrument,
+-- track, sampl, ...) of the song. If no component is selected it will be 
+-- created when possible. Any errors during the export are shown to the user. 
+-- returns success.
+renoise.app():load_track_device_chain(filename) 
+  -> [boolean]
+renoise.app():load_track_device_preset(filename) 
+  -> [boolean]
+renoise.app():load_instrument(filename)
+  -> [boolean]
+renoise.app():load_instrument_multi_sample(filename)
+  -> [boolean]
+renoise.app():load_instrument_device_chain(filename)
+  -> [boolean]
+renoise.app():load_instrument_device_preset(filename)
+  -> [boolean]
+renoise.app():load_instrument_modulation_set(filename)
+  -> [boolean]
+renoise.app():load_instrument_phrase(filename)
+  -> [boolean]
+renoise.app():load_instrument_sample(filename)
+  -> [boolean]
+renoise.app():load_theme(filename)
 
 -- Quicksave or save the current song under a new name. Any errors
 -- during the export are shown to the user.
 renoise.app():save_song()
 renoise.app():save_song_as(filename)
+-- Save a currently selected components of the song. Any errors
+-- during the export are shown to the user. returns success
+renoise.app():save_track_device_chain(filename) 
+  -> [boolean]
+renoise.app():save_instrument(filename)
+  -> [boolean]
+renoise.app():save_instrument_multi_sample(filename)
+  -> [boolean]
+renoise.app():save_instrument_device_chain(filename)
+  -> [boolean]
+renoise.app():save_instrument_modulation_set(filename)
+  -> [boolean]
+renoise.app():save_instrument_phrase(filename)
+  -> [boolean]
+renoise.app():save_instrument_sample(filename)
+  -> [boolean]
+renoise.app():save_theme(filename)
 
 
 -------- Properties
@@ -162,9 +202,9 @@ renoise.ApplicationWindow.UPPER_FRAME_MASTER_SPECTRUM
 
 renoise.ApplicationWindow.MIDDLE_FRAME_PATTERN_EDITOR
 renoise.ApplicationWindow.MIDDLE_FRAME_MIXER
-renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_OVERVIEW
-renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR
+renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_PHRASE_EDITOR
 renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_KEYZONES
+renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR
 renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_MODULATION
 renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EFFECTS
 renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_PLUGIN_EDITOR

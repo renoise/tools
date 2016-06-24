@@ -75,6 +75,7 @@ To do so, use one of the specified categories in its name:
 + "Pattern Matrix Header"
 + "Phrase Editor"
 + "Phrase Mappings"
++ "Phrase Grid"
 + "Sample Navigator"
 + "Sample Editor"
 + "Sample Editor Ruler"
@@ -238,8 +239,8 @@ The Lua table passed to 'add_file_import_hook' is defined as:
 
 * Required fields:
   + ["category"] = in which disk browser category the file type shows up. 
-      "song", "instrument", "effect chain", "modulation set", "phrase", 
-      "sample" or "theme"
+      "song", "instrument", "effect chain", "effect preset", "modulation set", 
+      "phrase", "sample" or "theme"
   + ["extensions"] = a list of strings, file extensions, that will invoke
       your hook, like for example {"txt", "swave"}
   + ["invoke"] = function that is called to do the import. return true when

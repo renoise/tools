@@ -21,7 +21,7 @@ Do not try to execute this file. It uses a .lua extension for markup only.
 
 -------- Constants
 
--- Currently 4.0. Any changes in the API which are not backwards compatible,
+-- Currently 5.0. Any changes in the API which are not backwards compatible,
 -- will increase the internal API's major version number (e.g. from 1.4 -> 2.0). 
 -- All other backwards compatible changes, like new functionality, new functions
 -- and classes which do not break existing scripts, will increase only the minor

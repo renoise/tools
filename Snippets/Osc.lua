@@ -8,6 +8,9 @@ error("do not run this file. read and copy/paste from it only...")
 local OscMessage = renoise.Osc.Message
 local OscBundle = renoise.Osc.Bundle
 
+-- NB: when using TCP instead of UDP as socket protocol, manual SLIP en/decoding
+-- of OSC message data would be required too. This is left out here, so the examples 
+-- below only work with UDP servers/clients.
 
 -------------------------------------------------------------------------------
 ---- Osc server (receive Osc from one or more clients)

@@ -383,6 +383,11 @@ textfield:remove_notifier(function or {object, function} or {object, function})
 
 ----------- Properties
 
+-- When false, text is displayed but can not be entered/modified by the user.
+-- By default true.
+textfield.active
+  -> [boolean]
+
 -- The currently shown value / text. The text will not be updated when editing,
 -- rather only after editing is complete (return is pressed, or focus is lost).
 -- By default empty.
@@ -465,6 +470,11 @@ multiline_textfield:clear()
 
 
 -------- Properties
+
+-- When false, text is displayed but can not be entered/modified by the user.
+-- By default true.
+multiline_textfield.active
+  -> [boolean]
 
 -- The current text as a single line, uses newline characters to specify
 -- paragraphs.

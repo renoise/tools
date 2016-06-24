@@ -305,7 +305,7 @@ serializable:from_string(string)
 
 
 --------------------------------------------------------------------------------
--- renoise.Document.Observable (inherits Serializable)
+-- renoise.Document.Observable
 --------------------------------------------------------------------------------
 
 -------- Functions
@@ -327,8 +327,22 @@ observable:remove_notifier(function or (object, function) or
 
 
 --------------------------------------------------------------------------------
--- renoise.Document.ObservableBoolean/Number/String (inherits Observable)
+-- renoise.Document.ObservableBang (inherits Observable)
 --------------------------------------------------------------------------------
+
+-- Observable without a value which sends out notifications when "banging" it.
+
+-------- Functions
+
+-- fire a notification, calling all registered notifiers.
+observable:bang()
+
+
+--------------------------------------------------------------------------------
+-- renoise.Document.ObservableBoolean/Number/String (inherits Observable, Serializable)
+--------------------------------------------------------------------------------
+
+-- Observables which send out notifications on value changes.
 
 -------- Properties
 
@@ -338,7 +352,7 @@ observable.value
 
 
 --------------------------------------------------------------------------------
--- renoise.Document.ObservableBoolean/String/NumberList (inherits Observable)
+-- renoise.Document.ObservableBoolean/String/NumberList (inherits Observable, Serializable)
 --------------------------------------------------------------------------------
 
 -------- Operators

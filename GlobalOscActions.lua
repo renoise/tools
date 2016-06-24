@@ -98,6 +98,9 @@ info about this.
 
 local global_action_pattern_map = table.create{}
 
+local instrument_action_pattern_map = table.create{}
+local instrument_action_pattern_map_prefix = "/song/instrument"
+
 local track_action_pattern_map = table.create{}
 local track_action_pattern_map_prefix = "/song/track"
 
@@ -178,6 +181,13 @@ local function add_global_action(info)
 end
 
 
+-- add_instrument_action
+
+local function add_instrument_action(info)
+  add_action(instrument_action_pattern_map, info)
+end
+
+
 -- add_track_action
 
 local function add_track_action(info)
@@ -209,6 +219,7 @@ local evaluate_env = {
   assert = _G.assert,
   error = _G.error,
   ipairs = _G.ipairs,
+  ripairs = _G.ripairs,
   next = _G.next,
   pairs = _G.pairs,
   pcall = _G.pcall,
@@ -295,7 +306,44 @@ local function convert_value(value, dest_type)
   end
 end
     
-    
+
+-- selected_instrument_index
+
+local function selected_instrument_index()
+  return song().selected_instrument_index
+end
+  
+
+-- set_instrument_property
+
+local function set_instrument_property(
+    instrument_index, property_name, value, min_value, max_value)
+  if (instrument_index >= 1 and instrument_index <= #song().instruments) then
+    if (min_value ~= nil and max_value  ~= nil) then
+      song():instrument(instrument_index)[property_name] = 
+        clamp_value(value, min_value, max_value)
+    else
+      song():instrument(instrument_index)[property_name] = value
+    end
+  end
+end
+
+
+-- set_instrument_trigger_property
+
+local function set_instrument_trigger_property(
+    instrument_index, property_name, value, min_value, max_value)
+  if (instrument_index >= 1 and instrument_index <= #song().instruments) then
+    if (min_value ~= nil and max_value  ~= nil) then
+      song():instrument(instrument_index).trigger_options[property_name] = 
+        clamp_value(value, min_value, max_value)
+    else
+      song():instrument(instrument_index).trigger_options[property_name] = value
+    end
+  end
+end
+
+
 -- selected_track_index
 
 local function selected_track_index()
@@ -700,7 +748,193 @@ add_global_action {
   end
 }
 
+
+--------------------------------------------------------------------------------
+-- Instrument Action Registration
+--------------------------------------------------------------------------------
+
+-- NOTE: instrument action handler functions will get the instrument index as first 
+-- argument, but should not specify it in its argument list. Its resolved from 
+-- the message pattern.
+
+
+-- /song/instrument/XXX/volume
+
+add_instrument_action { 
+  pattern = "/volume", 
+  description = "Set instrument XXX's global volume [0 - db2lin(6)]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
   
+  arguments = { argument("value", "number") },
+  handler = function(instrument_index, value)
+    set_instrument_property(instrument_index, "volume", 
+      value, 0, math.db2lin(6))
+  end
+}
+
+
+-- /song/instrument/XXX/volume_db
+
+add_instrument_action { 
+  pattern = "/volume_db", 
+  description = "Set instrument XXX's global volume in dB [0 - 6]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "number") },
+  handler = function(instrument_index, value)
+    set_instrument_property(instrument_index, "volume", 
+      math.db2lin(value), 0, math.db2lin(6))
+  end
+}
+
+
+-- /song/instrument/XXX/transpose
+
+add_instrument_action { 
+  pattern = "/transpose", 
+  description = "Set instrument XXX's global transpose [-120 - 120]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "number") },
+  handler = function(instrument_index, value)
+    set_instrument_property(instrument_index, "transpose", 
+      value, -120, 120)
+  end
+}
+
+
+-- /song/instrument/XXX/phrase_playback
+
+add_instrument_action { 
+  pattern = "/phrase_playback", 
+  description = "Set instrument XXX's phrase playback mode [Off, Program, Keymap]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "string") },
+  handler = function(instrument_index, value)
+    local playback_values = {
+      ["off"]=1, ["program"]=2, ["keymap"]=3
+    }
+    local playback_value = playback_values[string.lower(value)] or tonumber(value) or 1
+    set_instrument_property(instrument_index, "phrase_playback_mode", playback_value)
+  end
+}
+
+
+-- /song/instrument/XXX/scale_mode
+
+add_instrument_action { 
+  pattern = "/scale_mode", 
+  description = "Set instrument XXX's note scaling mode\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "string") },
+  handler = function(instrument_index, value)
+    set_instrument_trigger_property(instrument_index, "scale_mode", value)
+  end
+}
+
+
+-- /song/instrument/XXX/scale_key
+
+add_instrument_action { 
+  pattern = "/scale_key", 
+  description = "Set instrument XXX's note scaling key [C,C#...B]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "string") },
+  handler = function(instrument_index, value)
+    local scale_key_values = {
+      ["c"]=1, ["c#"]=2, ["d"]=3, ["d#"]=4, ["e"]=5, ["f"]=6,
+      ["f#"]=7, ["g"]=8, ["g#"]=9, ["a"]=10, ["a#"]=11, ["b"]=12,
+    }
+    local key_value = scale_key_values[string.lower(value)] or tonumber(value) or 1
+    set_instrument_trigger_property(instrument_index, "scale_key", key_value)
+  end
+}
+
+
+-- /song/instrument/XXX/quantize
+
+add_instrument_action { 
+  pattern = "/quantize", 
+  description = "Set instrument XXX's trigger quantization [None,Line,Beat,Bar]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "string") },
+  handler = function(instrument_index, value)
+    local quantize_values = {
+      ["none"]=1, ["line"]=2, ["beat"]=3, ["bar"]=4
+    }
+    local quantize_value = quantize_values[string.lower(value)] or tonumber(value) or 1
+    set_instrument_trigger_property(instrument_index, "quantize", quantize_value)
+  end
+}
+
+
+-- /song/instrument/XXX/monophonic
+
+add_instrument_action { 
+  pattern = "/monophonic", 
+  description = "Set instrument XXX's trigger mono mode [True/False]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "boolean") },
+  handler = function(instrument_index, value)
+    set_instrument_trigger_property(instrument_index, "monophonic", value)
+  end
+}
+
+
+-- /song/instrument/XXX/monophonic_glide
+
+add_instrument_action { 
+  pattern = "/monophonic_glide", 
+  description = "Set instrument XXX's trigger mono glide abount [0-255]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "number") },
+  handler = function(instrument_index, value)
+    set_instrument_trigger_property(instrument_index, "monophonic_glide", 
+      value, 0, 255)
+  end
+}
+
+
+-- /song/instrument/XXX/phrase_program
+
+add_instrument_action { 
+  pattern = "/phrase_program", 
+  description = "Set instrument XXX's phrase program [0 - 127]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "number") },
+  handler = function(instrument_index, value)
+    set_instrument_property(instrument_index, "phrase_program", 
+      value, 0, 127)
+  end
+}
+
+
+-- /song/instrument/XXX/macro1-8
+
+for macro_index = 1, 8 do
+  add_instrument_action { 
+    pattern = ("/macro%d"):format(macro_index), 
+    description = "Set instrument XXX's macro parameter value [0 - 1]\n"..
+      "XXX is the instrument index, -1 the currently selected one",
+    
+    arguments = { argument("value", "number") },
+    handler = function(instrument_index, value)
+      if (instrument_index >= 1 and instrument_index <= #song().instruments) then
+        song():instrument(instrument_index):macro(macro_index).value = 
+          clamp_value(value, 0.0, 1.0)
+      end
+    end
+  }
+end
+
+
 --------------------------------------------------------------------------------
 -- Track Action Registration
 --------------------------------------------------------------------------------
@@ -995,6 +1229,10 @@ function available_messages()
     scope = ""
   }
   action_pattern_maps:insert{
+    map = instrument_action_pattern_map, 
+    scope = instrument_action_pattern_map_prefix.."/XXX"
+  }
+  action_pattern_maps:insert{
     map = track_action_pattern_map, 
     scope = track_action_pattern_map_prefix.."/XXX"
   }
@@ -1045,34 +1283,49 @@ function process_message(pattern, arguments)
   local action_arguments = table.create{}
   
   if (not action) then
+  -- instrument pattern match
+    local _, _, instrument_index, instrument_pattern = pattern:find(
+      instrument_action_pattern_map_prefix.."/(-?%d+)(/.+)")
   
-    -- track pattern match
-    local _, _, track_index, track_pattern = pattern:find(
-      track_action_pattern_map_prefix.."/(-?%d+)(/.+)")
-  
-    if (track_index and track_pattern) then
-      track_index = tonumber(track_index) or 0
-      if (track_index == -1) then
-        track_index = selected_track_index() 
+    if (instrument_index and instrument_pattern) then
+
+    instrument_index = tonumber(instrument_index) or 0
+      if (instrument_index == -1) then
+        instrument_index = selected_instrument_index() 
       end
       
-      action = track_action_pattern_map[track_pattern]
-      action_arguments:insert(track_index)
+      action = instrument_action_pattern_map[instrument_pattern]
+      action_arguments:insert(instrument_index)
+
+  else
+      -- track pattern match
+      local _, _, track_index, track_pattern = pattern:find(
+        track_action_pattern_map_prefix.."/(-?%d+)(/.+)")
+  
+      if (track_index and track_pattern) then
+        track_index = tonumber(track_index) or 0
+        if (track_index == -1) then
+          track_index = selected_track_index() 
+        end
       
-      if (not action) then
+        action = track_action_pattern_map[track_pattern]
+        action_arguments:insert(track_index)
+      
+        if (not action) then
   
-        -- track device match
-        local _, _, device_index, device_pattern = track_pattern:find(
-          device_action_pattern_map_prefix.."/(-?%d+)(/.+)")
+          -- track device match
+          local _, _, device_index, device_pattern = track_pattern:find(
+            device_action_pattern_map_prefix.."/(-?%d+)(/.+)")
   
-        if (device_index and device_pattern) then
-          device_index = tonumber(device_index) or 0
-          if (device_index == -1) then
-            device_index = selected_track_device_index() 
+          if (device_index and device_pattern) then
+            device_index = tonumber(device_index) or 0
+            if (device_index == -1) then
+              device_index = selected_track_device_index() 
+            end
+      
+            action = device_action_pattern_map[device_pattern]
+            action_arguments:insert(device_index)
           end
-      
-          action = device_action_pattern_map[device_pattern]
-          action_arguments:insert(device_index)
         end
       end
     end

@@ -71,6 +71,7 @@ for track_index, track in pairs(renoise.song().tracks) do
   local found_volume = false
   local found_panning = false
   local found_delay = false
+  local found_sample_effects = false
   -- Check whether or not this is a regular track
   if
     track.type ~= renoise.Track.TRACK_TYPE_MASTER and
@@ -95,11 +96,19 @@ for track_index, track in pairs(renoise.song().tracks) do
           if note_column.delay_value ~= renoise.PatternLine.EMPTY_DELAY then
             found_delay = true
           end
+          -- Check for sample effects
+          if note_column.effect_number_value ~= renoise.PatternLine.EMPTY_EFFECT_NUMBER then
+            found_sample_effects = true
+          end
+          if note_column.effect_amount_value ~= renoise.PatternLine.EMPTY_EFFECT_AMOUNT then
+            found_sample_effects = true
+          end
+          
         end
         -- If we found something in all three vol, pan, and del
         -- Then there's no point in continuing down the rest of the track 
         -- We break this loop and move on to the next track
-        if found_volume and found_panning and found_delay then
+        if found_volume and found_panning and found_delay and found_sample_effects then
           break
         end
       end
@@ -108,6 +117,7 @@ for track_index, track in pairs(renoise.song().tracks) do
     track.volume_column_visible = found_volume
     track.panning_column_visible = found_panning
     track.delay_column_visible = found_delay
+    track.sample_effects_column_visible = found_sample_effects
   end
 end
 
