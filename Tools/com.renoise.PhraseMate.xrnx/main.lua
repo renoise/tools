@@ -3,25 +3,91 @@ com.renoise.PhraseMate.xrnx/main.lua
 ============================================================================]]--
 --[[
 
-  PhraseMate aims to make it more convenient to work with phrases in the
-  pattern editor. Define the behavior of the tool by launching it from
-  the tool menu, or use the keyboard shortcuts to produce output
-  (search for 'PhraseMate' in Renoise preferences > keys)
+PhraseMate aims to make it more convenient to work with phrases 
+.
+#
+
+## How to use
+
+Define the behavior of the tool by launching it from the tool menu, or 
+use the keyboard shortcuts to produce output (search for 'PhraseMate' in 
+Renoise preferences > keys)
+
+## TODO
+
+* Re-use empty phrases ('takeover') when collection didn't yield any results 
+* Detect duplicate phrases (xPhraseManager.find_duplicates)
+
+## LIMITATIONS
+
+When collecting a phrase from a specific source instrument, the tool will look for effects that are associated with that particular instrument. In case multiple instruments are triggered on the same line (but in different note-columns), any effect commands are not removed as they might influence both instruments.  
+When the source instrument is already making use of phrases, notes that trigger phrases are skipped
+When starting to collect phrases from the middle of a pattern/song, ghost notes are not resolved until an instrument is reached. As a result, the first notes might be missing. 
+
+## PLANNED
+
+Ability to transpose and harmonize notes
+- Read from pattern using triggering note as basenote 
+- Apply to pattern using a specific basenote
 
 ]]
+
+--------------------------------------------------------------------------------
+-- required files
+--------------------------------------------------------------------------------
+
+rns = nil
+_xlibroot = 'source/xLib/classes/'
+_trace_filters = nil
+--_trace_filters = {".*"}
+
+require (_xlibroot..'xLib')
+require (_xlibroot..'xDebug')
+require (_xlibroot.."xPhrase")
+require (_xlibroot..'xPhraseManager')
+require (_xlibroot..'xNoteColumn') 
+require (_xlibroot..'xSelection')
 
 --------------------------------------------------------------------------------
 -- variables, helpers
 --------------------------------------------------------------------------------
 
+local UI_TABS = {
+  INPUT = 1,
+  OUTPUT = 2,
+  REALTIME = 3,
+}
+
+local OUTPUT_SCOPE = {
+  SELECTION_IN_PATTERN = 1,
+  SELECTION_IN_MATRIX = 2,
+  TRACK_IN_PATTERN = 3,
+  TRACK_IN_SONG = 4,
+}
+
+local PLAYBACK_MODES = {"Off","Prg","Map"}
+local PLAYBACK_MODE = {
+  PHRASES_OFF = 1,
+  PHRASES_PLAY_SELECTIVE = 2,
+  PHRASES_PLAY_KEYMAP = 3,
+}
+
+local UI_WIDTH = 186
+local UI_KEYMAP_LABEL_W = 90
+local UI_BUTTON_LG_H = 22
+
 local initialized = false
 local modified_lines = {}
 local suppress_line_notifier = false
-local suppress_phrase_notifier = false
+
+-- int, phrase index when manually set 
 local user_set_program = nil
 
+-- keep track of 'ghost notes' thoughout note columns
+local ghost_columns = {}
+
 function invoke_task(rslt,err)
-  if (rslt == false) then
+  if (rslt == false and err) then
     renoise.app():show_status(err)
   end
 end
@@ -31,15 +97,31 @@ end
 --------------------------------------------------------------------------------
 
 local options = renoise.Document.create("ScriptingToolPreferences"){}
+-- general
+options:add_property("active_tab_index",renoise.Document.ObservableNumber(UI_TABS.INPUT))
+options:add_property("output_show_collection_report", renoise.Document.ObservableBoolean(true))
+-- input
 options:add_property("anchor_to_selection", renoise.Document.ObservableBoolean(true))
 options:add_property("cont_paste", renoise.Document.ObservableBoolean(true))
 options:add_property("skip_muted", renoise.Document.ObservableBoolean(true))
 options:add_property("expand_columns", renoise.Document.ObservableBoolean(true))
 options:add_property("expand_subcolumns", renoise.Document.ObservableBoolean(true))
 options:add_property("mix_paste", renoise.Document.ObservableBoolean(false))
+-- output
+options:add_property("output_scope", renoise.Document.ObservableNumber(OUTPUT_SCOPE.SELECTION_IN_PATTERN))
+--options:add_property("output_skip_duplicates", renoise.Document.ObservableBoolean(true))
+options:add_property("output_collect_everything", renoise.Document.ObservableBoolean(false))
+options:add_property("output_collect_in_new", renoise.Document.ObservableBoolean(true))
+options:add_property("output_replace_collected", renoise.Document.ObservableBoolean(true))
+options:add_property("output_create_keymappings", renoise.Document.ObservableBoolean(true))
+options:add_property("output_keymap_range", renoise.Document.ObservableNumber(1))
+options:add_property("output_keymap_offset", renoise.Document.ObservableNumber(1))
+-- realtime
 options:add_property("zxx_mode", renoise.Document.ObservableBoolean(false))
 
 renoise.tool().preferences = options
+
+--print("options.output_scope.value",options.output_scope.value)
 
 --------------------------------------------------------------------------------
 -- user interface
@@ -48,6 +130,8 @@ renoise.tool().preferences = options
 local vb,dialog,dialog_content
 
 function show_preferences()
+
+  rns = renoise.song()
 
   if dialog and dialog.visible then
     
@@ -58,95 +142,264 @@ function show_preferences()
     vb = renoise.ViewBuilder()
     dialog_content = vb:column{
       margin = 6,
-      spacing = 6,
-      vb:text{
-        text="Hover over for more info",
+      spacing = 4,
+      
+      vb:switch{
+        width = UI_WIDTH,
+        items = {"Input","Output","Realtime"},
+        bind = options.active_tab_index,
+        notifier = function()
+          ui_show_tab()
+        end
       },
-
       vb:column{
-        style = "group",
-        margin = 6,
-        vb:row{
-        },
-        vb:row{
-          tooltip = "When writing to a selection, this option determines if the output is written relative to the top of the selection, or the top of the pattern",
-          vb:checkbox{
-            bind = options.anchor_to_selection
-          },
-          vb:text{
-            text = "Anchor to selection",
-          }
-        },
-        vb:row{
-          tooltip = "When source phrase is shorter than pattern/selection, repeat in order to fill",
-          vb:checkbox{
-            bind = options.cont_paste
-          },
-          vb:text{
-            text = "Continuous paste",
-          }
-        },
-        vb:row{
-          tooltip = "Skip note-columns when they are muted in the phrase (and clear pattern, unless mix-paste is enabled)",
-          vb:checkbox{
-            bind = options.skip_muted
-          },
-          vb:text{
-            text = "Skip muted columns",
-          }
-        },
-
-        vb:row{
-          tooltip = "Show additional note columns if required by source phrase",
-          vb:checkbox{
-            bind = options.expand_columns
-          },
-          vb:text{
-            text = "Expand columns",
-          }
-        },
-        vb:row{
-          tooltip = "Show sub-columns (VOL/PAN/DLY/FX) if required by source phrase",
-          vb:checkbox{
-            bind = options.expand_subcolumns
-          },
-          vb:text{
-            text = "Expand sub-columns",
-          }
-        },
-        vb:row{
-          tooltip = "Attempt to keep existing content when producing output (works the same as Mix-Paste in the advanced edit panel)",
-          vb:checkbox{
-            bind = options.mix_paste
-          },
-          vb:text{
-            text = "Mix-Paste",
-          }
-        },
-      },
-
-      vb:column{
+        id = "tab_input",
+        visible = false,
         width = "100%",
-        vb:button{
-          text = "Write to selection",
-          width = "100%",
-          height = 22,
-          notifier = function()
-            invoke_task(apply_phrase_to_selection())
-          end
-        },
-        vb:button{
-          text = "Write to track",
-          width = "100%",
-          height = 22,
-          notifier = function()
-            invoke_task(apply_phrase_to_track())
-          end
-        },
-
-      },
-      vb:column{
+        --margin = 6,
+        spacing = 3,
         vb:row{
+          margin = 6,
+          style = "group",
+          width = "100%",
+          vb:chooser{
+            width = "100%",
+            items = {
+              "Selection in Pattern",
+              "Selection in Matrix",
+              "Track in pattern",
+              "Track in song",
+            },
+            bind = options.output_scope,
+          },
+        },
+        vb:column{
+          style = "group",
+          margin = 6,
+          width = "100%",
+          --[[
+          vb:row{
+            vb:checkbox{
+              bind = options.output_skip_duplicates,
+            },
+            vb:text{
+              text = "Skip duplicate phrases"
+            },
+          },
+          ]]
+          vb:row{
+            vb:checkbox{
+              bind = options.output_collect_everything,
+            },
+            vb:text{
+              text = "Collect everything"
+            },
+          },
+          vb:row{
+            vb:checkbox{
+              bind = options.output_collect_in_new,
+            },
+            vb:text{
+              text = "Collect in new instrument"
+            },
+          },
+          vb:row{
+            vb:checkbox{
+              bind = options.output_replace_collected,
+            },
+            vb:text{
+              text = "Replace notes with phrase"
+            },
+          },
+          vb:row{
+            vb:checkbox{
+              bind = options.output_create_keymappings,
+            },
+            vb:text{
+              text = "Create keymap"
+            },
+          },
+          vb:column{
+            id = "keymap_options",
+            vb:row{
+              vb:space{
+                width = 20,
+              },
+              vb:text{
+                text = "Semitone range",
+                width = UI_KEYMAP_LABEL_W,
+              },
+              vb:valuebox{
+                id = "ui_output_keymap_range",
+                bind = options.output_keymap_range,
+              }
+            },
+            vb:row{
+              vb:space{
+                width = 20,
+              },
+              vb:text{
+                text = "Starting offset",
+                width = UI_KEYMAP_LABEL_W,
+              },
+              vb:valuebox{
+                id = "ui_output_keymap_offset",
+                min = 0,
+                max = 120,
+                bind = options.output_keymap_offset,
+                tostring = function(val)
+                  return xNoteColumn.note_value_to_string(math.floor(val))
+                end,
+                tonumber = function(str)
+                  return xNoteColumn.note_string_to_value(str)
+                end,
+              },
+              
+            },
+          },
+        },
+        vb:button{
+          text = "Collect phrases",
+          width = "100%",
+          height = 22,
+          notifier = function()
+            invoke_task(collect_phrases())
+          end
+        },
+      },
+      vb:column{ 
+        id = "tab_output",
+        visible = false,
+        width = "100%",
+        spacing = 3,
+        vb:column{ 
+          style = "group",
+          margin = 3,
+          width = "100%",
+          vb:row{
+            tooltip = "When writing to a selection, this option determines if the output is written relative to the top of the selection, or the top of the pattern",
+            vb:checkbox{
+              bind = options.anchor_to_selection
+            },
+            vb:text{
+              text = "Anchor to selection",
+            }
+          },
+          vb:row{
+            tooltip = "When source phrase is shorter than pattern/selection, repeat in order to fill",
+            vb:checkbox{
+              bind = options.cont_paste
+            },
+            vb:text{
+              text = "Continuous paste",
+            }
+          },
+          vb:row{
+            tooltip = "Skip note-columns when they are muted in the phrase (and clear pattern, unless mix-paste is enabled)",
+            vb:checkbox{
+              bind = options.skip_muted
+            },
+            vb:text{
+              text = "Skip muted columns",
+            }
+          },
+
+          vb:row{
+            tooltip = "Show additional note columns if required by source phrase",
+            vb:checkbox{
+              bind = options.expand_columns
+            },
+            vb:text{
+              text = "Expand columns",
+            }
+          },
+          vb:row{
+            tooltip = "Show sub-columns (VOL/PAN/DLY/FX) if required by source phrase",
+            vb:checkbox{
+              bind = options.expand_subcolumns
+            },
+            vb:text{
+              text = "Expand sub-columns",
+            }
+          },
+          vb:row{
+            tooltip = "Attempt to keep existing content when producing output (works the same as Mix-Paste in the advanced edit panel)",
+            vb:checkbox{
+              bind = options.mix_paste
+            },
+            vb:text{
+              text = "Mix-Paste",
+            }
+          },
+        },
+        vb:column{
+          width = "100%",
+          vb:button{
+            text = "Write to selection",
+            width = "100%",
+            height = 22,
+            notifier = function()
+              invoke_task(apply_phrase_to_selection())
+            end
+          },
+          vb:button{
+            text = "Write to track",
+            width = "100%",
+            height = 22,
+            notifier = function()
+              invoke_task(apply_phrase_to_track())
+            end
+          },
+
+        },
+      },
+      vb:column{ 
+        id = "tab_realtime",
+        visible = false,
+        width = "100%",
+        spacing = 3,
+        vb:column{
+          style = "group",
+          margin = 3,
+          width = "100%",
+          vb:text{
+            text = "These buttons are also accessible"
+                .."\nvia keyboard shortcuts and MIDI:",
+          },
+          vb:row{
+            vb:button{
+              text = "Prev",
+              width = 36,
+              height = UI_BUTTON_LG_H,
+              notifier = function()
+                invoke_task(xPhraseManager.select_previous_phrase())
+              end
+            },
+            vb:button{
+              text = "Next",
+              width = 36,
+              height = UI_BUTTON_LG_H,
+              notifier = function()
+                invoke_task(xPhraseManager.select_next_phrase())
+              end
+            },
+            vb:space{
+              width = 6,
+            },
+            vb:switch{
+              width = 100,
+              height = UI_BUTTON_LG_H,
+              items = PLAYBACK_MODES,
+              notifier = function(idx)
+                invoke_task(xPhraseManager.set_playback_mode(idx))
+              end
+            },
+          },
+        },
+        vb:row{
+          style = "group",
+          margin = 3,
+          width = "100%",
           tooltip = "Insert Zxx commands into the first available effect column when the following conditions are met:"
                   .."\n* Phrase is set to program playback"
                   .."\n* Edit-mode is enabled in Renoise",
@@ -154,11 +407,14 @@ function show_preferences()
             bind = options.zxx_mode
           },
           vb:text{
-            text = "Monitor pattern and"
-                .."\ninsert Zxx commands",
+            text = "Monitor changes to pattern"
+                .."\nand insert Zxx commands as"
+                .."\nnotes are entered",
           },
         },
+
       },
+
     }
 
     local keyhandler = nil
@@ -168,10 +424,39 @@ function show_preferences()
 
   end
 
+  ui_show_tab()
+  ui_update_keymap()
+
 end
 
 --------------------------------------------------------------------------------
--- tool setup
+
+function ui_update_keymap()
+  local active = options.output_create_keymappings.value
+  vb.views["ui_output_keymap_range"].active = active
+  vb.views["ui_output_keymap_offset"].active = active
+end
+
+options.output_create_keymappings:add_notifier(ui_update_keymap)
+
+--------------------------------------------------------------------------------
+
+function ui_show_tab()
+
+  local tabs = {
+    vb.views["tab_input"],
+    vb.views["tab_output"],
+    vb.views["tab_realtime"],
+  }
+
+  for k,v in ipairs(tabs) do
+    v.visible = (options.active_tab_index.value == k) and true or false
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- Menu entries
 --------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
@@ -181,22 +466,48 @@ renoise.tool():add_menu_entry {
   end
 } 
 
+-- input
+
 renoise.tool():add_menu_entry {
-  name = "Pattern Editor:Selection:Write Phrase to Selection (PhraseMate)...",
+  name = "Pattern Editor:Selection:Copy Selection to Phrase (PhraseMate)",
+  invoke = function() extract_phrase() end
+}
+
+-- output
+
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:Selection:Write Phrase to Selection In Pattern (PhraseMate)",
   invoke = function() 
     invoke_task(apply_phrase_to_selection())
   end
 } 
 
 renoise.tool():add_menu_entry {
-  name = "Pattern Editor:Track:Write Phrase to Track (PhraseMate)...",
+  name = "Pattern Editor:Track:Write phrase to Track (PhraseMate)",
   invoke = function() 
     invoke_task(apply_phrase_to_track())
   end
 } 
 
+--------------------------------------------------------------------------------
+-- Keybindings
+--------------------------------------------------------------------------------
+
+-- input
+
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Write phrase to selection...",
+  name = "Global:PhraseMate:Copy Selection in Pattern to Phrase",
+  invoke = function(repeated)
+    if (not repeated) then 
+      invoke_task(extract_phrase())
+    end
+  end
+}
+
+-- output
+
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Write Phrase to Selection in Pattern",
   invoke = function(repeated)
     if (not repeated) then 
       invoke_task(apply_phrase_to_selection())
@@ -204,61 +515,366 @@ renoise.tool():add_keybinding {
   end
 }
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Write Phrase to Track...",
+  name = "Global:PhraseMate:Write Phrase to Track",
   invoke = function(repeated)
     if (not repeated) then 
       invoke_task(apply_phrase_to_track())
     end
   end
 }
+
+-- realtime
+
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Select Previous Phrase",
   invoke = function()
-    invoke_task(select_previous_phrase())
+    invoke_task(xPhraseManager.select_previous_phrase())
   end
 }
+
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Select Next Phrase",
   invoke = function()
-    invoke_task(select_next_phrase())
+    invoke_task(xPhraseManager.select_next_phrase())
   end
 }
-renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Capture Phrase From Pattern",
-  invoke = function()
-    invoke_task(capture_phrase_index())
-  end
-}
+
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Disable Phrases",
   invoke = function(repeated)
     if (not repeated) then 
-      invoke_task(set_mode(renoise.Instrument.PHRASES_OFF))
+      invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_OFF))
     end
   end
 }
+
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Set to Program Mode",
   invoke = function(repeated)
     if (not repeated) then 
-      invoke_task(set_mode(renoise.Instrument.PHRASES_PLAY_SELECTIVE))
+      invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_PLAY_SELECTIVE))
     end
   end
 }
+
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Set to Keymap Mode",
   invoke = function(repeated)
     if (not repeated) then 
-      invoke_task(set_mode(renoise.Instrument.PHRASES_PLAY_KEYMAP))
+      invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_PLAY_KEYMAP))
     end
   end
 }
 
+--------------------------------------------------------------------------------
+-- Input methods
+--------------------------------------------------------------------------------
+-- return pattern name, or "Patt XX" if not defined
+
+function get_pattern_name(seq_idx)
+  local name = rns.patterns[rns.sequencer:pattern(seq_idx)].name
+  return (name=="") and ("Pattern %.2d"):format(seq_idx) or "Pattern "..name
+end
 
 --------------------------------------------------------------------------------
--- main 
+-- return track name, or "Track XX" if not defined
+
+function get_track_name(trk_idx)
+  local name = rns.tracks[trk_idx].name
+  return (name=="") and ("Track %.2d") or name 
+end
+
 --------------------------------------------------------------------------------
 
+-- invoked when pressing the 'collect phrases' button/shortcut
+-- @return bool
+-- @return string (error message)
+
+function collect_phrases()
+  TRACE("collect_phrases()")
+
+  -- table, will contain the indices of created phrases
+  local rslt = nil
+
+  local source_instr_idx = renoise.song().selected_instrument_index
+  local target_instr_idx = renoise.song().selected_instrument_index
+  
+  -- clone instrument (create next to original)
+  if options.output_collect_in_new.value then
+    target_instr_idx = source_instr_idx+1
+    local source_instr = rns.instruments[source_instr_idx]
+    local target_instr = rns:insert_instrument_at(target_instr_idx)
+    target_instr:copy_from(source_instr)
+  end
+
+  ghost_columns = {}
+
+  if (options.output_scope.value == OUTPUT_SCOPE.SELECTION_IN_PATTERN) then
+    rslt = collect_from_pattern_selection(source_instr_idx,target_instr_idx)
+  elseif (options.output_scope.value == OUTPUT_SCOPE.SELECTION_IN_MATRIX) then
+    rslt = collect_from_matrix_selection(source_instr_idx,target_instr_idx)
+  elseif (options.output_scope.value == OUTPUT_SCOPE.TRACK_IN_PATTERN) then
+    rslt = collect_from_track_in_pattern(source_instr_idx,target_instr_idx)
+  elseif (options.output_scope.value == OUTPUT_SCOPE.TRACK_IN_SONG) then
+    rslt = collect_from_track_in_song(source_instr_idx,target_instr_idx)
+  else
+    error("Unexpected output scope")
+  end
+
+
+  if (type(rslt)=="table") and (#rslt > 0) then
+
+    -- TODO check for duplicates 
+    local duplicates = 0
+
+    -- if cloned instrument, select it
+    if options.output_collect_in_new.value then
+      rns.selected_instrument_index = target_instr_idx
+    end
+    -- update selected phrase-index
+    --print("rslt",rprint(rslt))
+    rns.selected_phrase_index = rslt[#rslt]
+
+    -- show report to user
+    if options.output_show_collection_report.value then
+      local msg = ("Created %d phrases"):format(#rslt)
+      if (duplicates > 0) then
+        msg = ("%s (ignored %d duplicates)"):format(msg,duplicates)
+      end
+      renoise.app():show_message(msg)
+    end
+    
+
+  end
+
+
+  return rslt
+
+end
+
+--------------------------------------------------------------------------------
+-- @param target_instr_idx (int)
+-- @return bool
+-- @return string (error message)
+
+function collect_from_pattern_selection(source_instr_idx,target_instr_idx)
+  TRACE("collect_from_pattern_selection(source_instr_idx,target_instr_idx)",source_instr_idx,target_instr_idx)
+
+  local patt_sel,err = xSelection.get_pattern_if_single_track()
+  if not patt_sel then
+    return false,err
+  end
+
+  local phrase_idx = create_phrase(source_instr_idx,target_instr_idx,nil,nil,patt_sel)
+  return {phrase_idx}
+
+end
+
+--------------------------------------------------------------------------------
+-- collect phrases from the matrix selection
+-- @param target_instr_idx (int)
+-- @return bool
+-- @return string (error message)
+
+function collect_from_matrix_selection(source_instr_idx,target_instr_idx)
+  TRACE("collect_from_matrix_selection(source_instr_idx,target_instr_idx)",source_instr_idx,target_instr_idx)
+
+  local matrix_sel,err = xSelection.get_matrix_selection()
+  if table.is_empty(matrix_sel) then
+    return false,"No selection is defined in the matrix"
+  end
+
+  local create_keymap = options.output_create_keymappings.value
+  local phrase_indices = {}
+  for seq_idx = 1, #rns.sequencer.pattern_sequence do
+    if matrix_sel[seq_idx] then
+      for trk_idx = 1, #rns.tracks do
+        if matrix_sel[seq_idx][trk_idx] then
+          table.insert(phrase_indices,
+            create_phrase(source_instr_idx,target_instr_idx,seq_idx,trk_idx))
+        end
+      end
+    end
+  end
+
+  return phrase_indices
+
+end
+
+--------------------------------------------------------------------------------
+-- collect phrases from the selected pattern-track 
+-- @param target_instr_idx (int)
+-- @return bool
+-- @return string (error message)
+
+function collect_from_track_in_pattern(source_instr_idx,target_instr_idx)
+  TRACE("collect_from_track_in_pattern(source_instr_idx,target_instr_idx)",source_instr_idx,target_instr_idx)
+
+  local phrase_idx = create_phrase(source_instr_idx,target_instr_idx)
+  return {phrase_idx}
+
+end
+
+--------------------------------------------------------------------------------
+-- collect phrases from the selected track in the song
+-- @param target_instr_idx (int)
+-- @return bool
+-- @return string (error message)
+
+function collect_from_track_in_song(source_instr_idx,target_instr_idx)
+  TRACE("collect_from_track_in_song(source_instr_idx,target_instr_idx)",source_instr_idx,target_instr_idx)
+
+  local phrase_indices = {}
+  for seq_idx = 1, #rns.sequencer.pattern_sequence do
+    table.insert(phrase_indices,
+      create_phrase(source_instr_idx,target_instr_idx,seq_idx))
+  end
+
+  return phrase_indices
+
+end
+
+--------------------------------------------------------------------------------
+-- invoked by the collect_from_xx methods
+-- @param target_instr_idx (int)
+-- @param seq_idx (int)
+-- @param trk_idx (int)
+-- @param patt_sel (table), pattern-selection
+-- @return int (index of newly created phrase) or nil
+
+function create_phrase(source_instr_idx,target_instr_idx,seq_idx,trk_idx,patt_sel)
+  TRACE("create_phrase(source_instr_idx,target_instr_idx,seq_idx,trk_idx,patt_sel)",source_instr_idx,target_instr_idx,seq_idx,trk_idx,patt_sel)
+
+  if not seq_idx then
+    seq_idx = rns.selected_sequence_index
+  end
+  if not trk_idx then
+    trk_idx = rns.selected_track_index
+  end
+
+  local takeover = true
+  local create_keymap = options.output_create_keymappings.value
+  local keymap_range = options.output_keymap_range.value
+  local keymap_offset = options.output_keymap_offset.value
+  local phrase,phrase_idx = xPhraseManager.auto_insert_phrase(target_instr_idx,create_keymap,keymap_range,keymap_offset)
+  if phrase then
+    if not patt_sel then
+      patt_sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+    end
+    local track = rns.tracks[trk_idx]
+    local patt_idx = rns.sequencer:pattern(seq_idx)
+    local patt_lines = rns.pattern_iterator:lines_in_pattern_track(patt_idx,trk_idx)
+    copy_selected_lines_to_phrase(patt_sel,phrase,patt_lines,source_instr_idx,phrase_idx,trk_idx)
+    phrase.name = ("%s : %s"):format(get_pattern_name(seq_idx),get_track_name(trk_idx))
+    phrase.volume_column_visible = track.volume_column_visible
+    phrase.panning_column_visible = track.panning_column_visible
+    phrase.delay_column_visible = track.delay_column_visible
+    phrase.sample_effects_column_visible = track.sample_effects_column_visible
+    phrase.visible_note_columns = track.visible_note_columns
+    phrase.visible_effect_columns = track.visible_effect_columns
+  end
+
+  return phrase_idx
+
+end
+
+--------------------------------------------------------------------------------
+-- copy over a range of lines to the provided instrument-phrase
+-- @param selection (table), pattern-selection
+-- @param phrase (InstrumentPhrase)
+-- @param patt_lines (iterator:table<PatternLine>)
+-- @param source_instr_idx (int) if defined, only include notes from this instr
+-- @param phrase_idx (int) 
+-- @param trk_idx (int) 
+
+function copy_selected_lines_to_phrase(selection,phrase,patt_lines,source_instr_idx,phrase_idx,trk_idx)
+  TRACE("copy_selected_lines_to_phrase(selection,phrase,patt_lines,source_instr_idx,phrase_idx,trk_idx)",selection,phrase,patt_lines,source_instr_idx,phrase_idx,trk_idx)
+
+  phrase.number_of_lines = 1 + selection.end_line - selection.start_line
+  for pos, line in patt_lines do
+    if pos.line > selection.end_line then break end
+    if pos.line >= selection.start_line then
+      if not line.is_empty then
+        local phrase_line_idx = pos.line - (selection.start_line-1)
+        if options.output_collect_everything.value then
+          local phrase_line = phrase:line(phrase_line_idx)
+          phrase_line:copy_from(line)
+          if options.output_replace_collected.value then
+            line:clear()
+          end
+
+        elseif source_instr_idx then   
+          --print("pos,source_instr_idx",pos,source_instr_idx)
+
+          for note_col_idx,note_col in ipairs(line.note_columns) do
+            --print("note_col",note_col)
+            local phrase_col = phrase:line(phrase_line_idx).note_columns[note_col_idx]
+
+            --print("phrase_col",phrase_col)
+
+            -- maintain ghost columns
+            if (note_col.instrument_value < 255) then
+              ghost_columns[note_col_idx] = note_col.instrument_value+1
+            elseif (note_col.note_value == renoise.PatternLine.NOTE_OFF) then
+              table.remove(ghost_columns,note_col_idx)
+            end
+            --print("ghost_columns",rprint(ghost_columns))
+
+            -- we have a note - ghost or actual
+            if (ghost_columns[note_col_idx] == source_instr_idx) then
+
+              -- skip if triggering phrase
+              local is_phrase_trigger = xPhrase.note_is_phrase_trigger(line,note_col_idx,source_instr_idx,trk_idx)
+              --print(">>> is_phrase_trigger",is_phrase_trigger)
+              if not is_phrase_trigger then
+                phrase_col:copy_from(note_col)
+                
+                if options.output_replace_collected.value then
+                  note_col:clear()
+                end
+              end
+
+            end
+
+          end
+
+          for fx_col_idx,fx_col in ipairs(line.effect_columns) do
+            local phrase_col = phrase:line(phrase_line_idx).effect_columns[fx_col_idx]
+              phrase_col:copy_from(fx_col)
+              if options.output_replace_collected.value then
+                fx_col:clear()
+              end
+          end
+
+        else
+          error("Should not get here")
+        end
+      end
+    end
+  end
+
+  xPhrase.clear_foreign_commands(phrase)
+
+  if options.output_replace_collected.value then
+    if not phrase.is_empty then
+      for k,v in patt_lines do
+        local trigger_note_col = v.note_columns[1]
+        local trigger_fx_col = v.effect_columns[1]
+        trigger_note_col.instrument_value = source_instr_idx-1
+        trigger_note_col.note_string = "C-4"
+        trigger_fx_col.number_string = "0Z"
+        trigger_fx_col.amount_value = phrase_idx
+        break
+      end
+    end
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+-- Output methods
+--------------------------------------------------------------------------------
 -- @param start_col - note/effect column index
 -- @param end_col - note/effect column index
 -- @param start_line - pattern line
@@ -266,7 +882,6 @@ renoise.tool():add_keybinding {
 
 function apply_phrase_to_track(start_col,end_col,start_line,end_line)
 
-  local rns = renoise.song()  
   local track_index = rns.selected_track_index
   local instr_index = rns.selected_instrument_index
   local phrase = rns.selected_phrase
@@ -369,7 +984,7 @@ function apply_phrase_to_track(start_col,end_col,start_line,end_line)
             if phrase.volume_column_visible then
               if (source_col.volume_value ~= 255) then
                 target_col.volume_value = source_col.volume_value
-                if options.expand_subcolumns then
+                if options.expand_subcolumns.value then
                   track.volume_column_visible = true
                 end
               elseif not options.mix_paste.value then
@@ -381,7 +996,7 @@ function apply_phrase_to_track(start_col,end_col,start_line,end_line)
             if phrase.panning_column_visible then
               if (source_col.panning_value ~= 255) then
                 target_col.panning_value = source_col.panning_value
-                if options.expand_subcolumns then
+                if options.expand_subcolumns.value then
                   track.panning_column_visible = true
                 end
               elseif not options.mix_paste.value then
@@ -393,7 +1008,7 @@ function apply_phrase_to_track(start_col,end_col,start_line,end_line)
             if phrase.delay_column_visible then
               if (source_col.delay_value > 0) then
                 target_col.delay_value = source_col.delay_value
-                if options.expand_subcolumns then
+                if options.expand_subcolumns.value then
                   track.delay_column_visible = true
                 end
               elseif not options.mix_paste.value then
@@ -405,7 +1020,7 @@ function apply_phrase_to_track(start_col,end_col,start_line,end_line)
             if phrase.sample_effects_column_visible then
               if (source_col.effect_amount_value > 0) then
                 target_col.effect_amount_value = source_col.effect_amount_value
-                if options.expand_subcolumns then
+                if options.expand_subcolumns.value then
                   track.sample_effects_column_visible = true
                 end
               elseif not options.mix_paste.value then
@@ -413,7 +1028,7 @@ function apply_phrase_to_track(start_col,end_col,start_line,end_line)
               end          
               if (source_col.effect_number_value > 0) then
                 target_col.effect_number_value = source_col.effect_number_value
-                if options.expand_subcolumns then
+                if options.expand_subcolumns.value then
                   track.sample_effects_column_visible = true
                 end
               elseif not options.mix_paste.value then
@@ -480,125 +1095,18 @@ end
 
 function apply_phrase_to_selection()
 
-  local sel = renoise.song().selection_in_pattern
+  local pass,err = xSelection.pattern_has_single_track()
+  if not pass then
+    return false,err
+  end
 
-  if not sel then
-    return false, "No selection is defined in the pattern"
-  end
-  
-  if (sel.start_track ~= sel.end_track) then
-    return false, "The selection needs to fit within a single track"
-  end
-  
+  local sel = renoise.song().selection_in_pattern
   return apply_phrase_to_track(sel.start_column,sel.end_column,sel.start_line,sel.end_line)
 
 end
 
 --------------------------------------------------------------------------------
--- capture the phrase index specified at the selected line
-
-function capture_phrase_index()
-
-  local rns = renoise.song()
-  local line = rns.selected_line
-  local track = rns.selected_track
-  local ptrack = rns.selected_pattern_track
-
-  local search_line = function(ptrack,line) 
-    for k,fx_col in ipairs(line.effect_columns) do
-      if (k <= track.visible_effect_columns) then
-        if (fx_col.number_string == "0Z") then
-          local num_phrases = #rns.selected_instrument.phrases
-          return math.min(num_phrases,fx_col.amount_value)
-        end
-      else
-        break
-      end
-    end
-  end
-
-  -- start search at current line, then move backwards
-  for line_idx = rns.selected_line_index, 1, -1 do
-    local line = ptrack:line(line_idx)
-    local matched_index = search_line(ptrack,line) 
-    if matched_index then
-      rns.selected_phrase_index = matched_index
-      return
-    end
-  end
-
-end
-
---------------------------------------------------------------------------------
-
-function select_next_phrase()
-
-  local rns = renoise.song()
-  local phrase = rns.selected_phrase
-  if not phrase then
-    return false, "No phrase is selected"
-  end
-  
-  local phrase_idx = renoise.song().selected_phrase_index
-  if (phrase_idx > 1) then
-    renoise.song().selected_phrase_index = phrase_idx - 1 
-  end
-
-end
-
---------------------------------------------------------------------------------
-
-function select_previous_phrase()
-
-  local rns = renoise.song()
-  local phrase = rns.selected_phrase
-  if not phrase then
-    return false, "No phrase is selected"
-  end
-  
-  local phrase_idx = renoise.song().selected_phrase_index
-  if (phrase_idx > 1) then
-    rns.selected_phrase_index = phrase_idx - 1 
-  end
-
-end
-
---------------------------------------------------------------------------------
-
-function select_next_phrase()
-
-  local rns = renoise.song()
-  local phrase = rns.selected_phrase
-  if not phrase then
-    return false, "No phrase is selected"
-  end
-  
-  local phrase_idx = rns.selected_phrase_index
-  local num_phrases = #rns.selected_instrument.phrases
-  if (phrase_idx < num_phrases) then
-    rns.selected_phrase_index = phrase_idx + 1 
-  end
-
-end
-
---------------------------------------------------------------------------------
-
-function set_mode(mode)
-  
-  local rns = renoise.song()
-  local phrase = rns.selected_phrase
-  if not phrase then
-    return false, "No phrase is selected"
-  end
-
-  if (rns.selected_instrument.phrase_playback_mode == mode) then
-    rns.selected_instrument.phrase_playback_mode = renoise.Instrument.PHRASES_OFF
-  else
-    rns.selected_instrument.phrase_playback_mode = mode
-  end
-
-end
-
+-- Realtime methods
 --------------------------------------------------------------------------------
 
 function line_notifier_fn(pos)
@@ -611,7 +1119,6 @@ end
 
 function handle_modified_line(pos)
 
-  local rns = renoise.song()
   local patt = rns.patterns[pos.pattern]
   local ptrack = patt:track(pos.track)
   local line = ptrack:line(pos.line)
@@ -653,11 +1160,11 @@ function handle_modified_line(pos)
         local where_we_were = rns.transport.edit_pos.line - rns.transport.edit_step
         if (pos.line == where_we_were) then
           local num_phrases = #rns.selected_instrument.phrases
-          suppress_phrase_notifier = true
           rns.selected_phrase_index = user_set_program or math.min(num_phrases,fx_col.amount_value)
-          suppress_phrase_notifier = false
           fx_col.number_string = "0Z"
           fx_col.amount_value = rns.selected_phrase_index
+        else
+          --print("got here")
         end
         break
       elseif fx_col.is_empty then
@@ -672,7 +1179,8 @@ function handle_modified_line(pos)
     -- clear Zxx command
 
     if zxx_command.note_column_index then
-      -- do nothing
+      --line.note_columns[zxx_command.note_column_index].effect_amount_value = 0
+      --line.note_columns[zxx_command.note_column_index].effect_number_value = 0
     elseif zxx_command.effect_column_index then
       line.effect_columns[zxx_command.effect_column_index].amount_value = 0
       line.effect_columns[zxx_command.effect_column_index].number_value = 0
@@ -682,12 +1190,43 @@ function handle_modified_line(pos)
 end
 
 --------------------------------------------------------------------------------
+--[[
+function phrase_playback_mode_handler()
+  print("phrase_playback_mode_handler")
+
+end
+
+--------------------------------------------------------------------------------
+
+function attach_to_instrument()
+
+  local instr = rns.selected_instrument
+
+  if not instr.phrase_playback_mode_observable:has_notifier(phrase_playback_mode_handler) then
+    instr.phrase_playback_mode_observable:add_notifier(phrase_playback_mode_handler)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function detach_from_instrument()
+
+  local instr = rns.selected_instrument
+
+  if instr.phrase_playback_mode_observable:has_notifier(phrase_playback_mode_handler) then
+    instr.phrase_playback_mode_observable:remove_notifier(phrase_playback_mode_handler)
+  end
+
+end
+]]
+
+--------------------------------------------------------------------------------
 
 function attach_to_pattern()
 
   modified_lines = {}
 
-  local rns = renoise.song()
   local pattern = rns.selected_pattern
 
   if not pattern:has_line_notifier(line_notifier_fn) then
@@ -700,7 +1239,6 @@ end
 
 function detach_from_pattern()
 
-  local rns = renoise.song()
   local pattern = rns.selected_pattern
 
   if pattern:has_line_notifier(line_notifier_fn) then
@@ -709,36 +1247,31 @@ function detach_from_pattern()
 
 end
 
-
 --------------------------------------------------------------------------------
-
+--[[
 function phrase_notifier()
 
-  if suppress_phrase_notifier then
-    return
-  end
-
-  local rns = renoise.song()
   user_set_program = rns.selected_phrase_index
-  --print(">>> user_set_program",user_set_program)
-  
-end
+  print("user_set_program 1",user_set_program)
 
+end
+]]
 --------------------------------------------------------------------------------
 
 function attach_to_song()
-
-  local rns = renoise.song()
 
   if not rns.selected_pattern_observable:has_notifier(attach_to_pattern) then
     rns.selected_pattern_observable:add_notifier(attach_to_pattern)
   end
   attach_to_pattern()
-
-  if not rns.selected_phrase_observable:has_notifier(phrase_notifier) then
-    rns.selected_phrase_observable:add_notifier(phrase_notifier)
-  end
   
+  --[[
+  if not rns.selected_instrument_observable:has_notifier(attach_to_instrument) then
+    rns.selected_instrument_observable:add_notifier(attach_to_instrument)
+  end
+  attach_to_instrument()
+  ]]
+
 end
 
 
@@ -746,20 +1279,20 @@ end
 
 function detach_from_song()
 
-  local rns = renoise.song()
   if rns.selected_pattern_observable:has_notifier(attach_to_pattern) then
     rns.selected_pattern_observable:remove_notifier(attach_to_pattern)
   end
   detach_from_pattern()
 
-  if not rns.selected_phrase_observable:has_notifier(phrase_notifier) then
-    rns.selected_phrase_observable:add_notifier(phrase_notifier)
+  --[[
+  if rns.selected_instrument_observable:has_notifier(attach_to_instrument) then
+    rns.selected_instrument_observable:remove_notifier(attach_to_instrument)
   end
+  detach_from_instrument()
+  ]]
 
 end
 
---------------------------------------------------------------------------------
--- handle zxx mode
 --------------------------------------------------------------------------------
 
 local zxx_mode_handler = function()
@@ -772,15 +1305,13 @@ end
 options.zxx_mode:add_notifier(zxx_mode_handler)
 
 --------------------------------------------------------------------------------
--- idle notifier
+-- notifications
 --------------------------------------------------------------------------------
 
 renoise.tool().app_idle_observable:add_notifier(function()
 
-  local rns = renoise.song()
   if not initialized and rns then
     zxx_mode_handler()
-    user_set_program = rns.selected_phrase_index
     initialized = true
   end
 
@@ -791,8 +1322,20 @@ renoise.tool().app_idle_observable:add_notifier(function()
       end
     end
     modified_lines = {}
+    user_set_program = nil
+    --print("user_set_program 2",user_set_program)
   end
 
 end)
 
+--------------------------------------------------------------------------------
+
+renoise.tool().app_new_document_observable:add_notifier(function()
+  TRACE("*** app_new_document_observable fired...")
+
+  rns = renoise.song()
+
+end)
+
+--------------------------------------------------------------------------------
 
