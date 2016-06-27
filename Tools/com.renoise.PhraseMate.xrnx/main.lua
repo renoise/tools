@@ -72,6 +72,12 @@ local PLAYBACK_MODE = {
   PHRASES_PLAY_KEYMAP = 3,
 }
 
+local MIDI_MAPPING = {
+  PREV_PHRASE_IN_INSTR = "Global:PhraseMate:Select Previous Phrase in Instrument [Trigger]",
+  NEXT_PHRASE_IN_INSTR = "Global:PhraseMate:Select Next Phrase in Instrument [Trigger]",
+  SET_PLAYBACK_MODE = "Global:PhraseMate:Select Playback Mode [Set]",
+}
+
 local UI_WIDTH = 186
 local UI_KEYMAP_LABEL_W = 90
 local UI_BUTTON_LG_H = 22
@@ -97,31 +103,25 @@ end
 --------------------------------------------------------------------------------
 
 local options = renoise.Document.create("ScriptingToolPreferences"){}
--- general
 options:add_property("active_tab_index",renoise.Document.ObservableNumber(UI_TABS.INPUT))
 options:add_property("output_show_collection_report", renoise.Document.ObservableBoolean(true))
--- input
 options:add_property("anchor_to_selection", renoise.Document.ObservableBoolean(true))
 options:add_property("cont_paste", renoise.Document.ObservableBoolean(true))
 options:add_property("skip_muted", renoise.Document.ObservableBoolean(true))
 options:add_property("expand_columns", renoise.Document.ObservableBoolean(true))
 options:add_property("expand_subcolumns", renoise.Document.ObservableBoolean(true))
 options:add_property("mix_paste", renoise.Document.ObservableBoolean(false))
--- output
 options:add_property("output_scope", renoise.Document.ObservableNumber(OUTPUT_SCOPE.SELECTION_IN_PATTERN))
 --options:add_property("output_skip_duplicates", renoise.Document.ObservableBoolean(true))
 options:add_property("output_collect_everything", renoise.Document.ObservableBoolean(false))
+options:add_property("output_replace_collected", renoise.Document.ObservableBoolean(false))
 options:add_property("output_collect_in_new", renoise.Document.ObservableBoolean(true))
-options:add_property("output_replace_collected", renoise.Document.ObservableBoolean(true))
 options:add_property("output_create_keymappings", renoise.Document.ObservableBoolean(true))
 options:add_property("output_keymap_range", renoise.Document.ObservableNumber(1))
-options:add_property("output_keymap_offset", renoise.Document.ObservableNumber(1))
--- realtime
+options:add_property("output_keymap_offset", renoise.Document.ObservableNumber(0))
 options:add_property("zxx_mode", renoise.Document.ObservableBoolean(false))
 
 renoise.tool().preferences = options
-
---print("options.output_scope.value",options.output_scope.value)
 
 --------------------------------------------------------------------------------
 -- user interface
@@ -134,16 +134,12 @@ function show_preferences()
   rns = renoise.song()
 
   if dialog and dialog.visible then
-    
     dialog:show()
-
   else
-
     vb = renoise.ViewBuilder()
     dialog_content = vb:column{
       margin = 6,
       spacing = 4,
-      
       vb:switch{
         width = UI_WIDTH,
         items = {"Input","Output","Realtime"},
@@ -197,18 +193,18 @@ function show_preferences()
           },
           vb:row{
             vb:checkbox{
-              bind = options.output_collect_in_new,
-            },
-            vb:text{
-              text = "Collect in new instrument"
-            },
-          },
-          vb:row{
-            vb:checkbox{
               bind = options.output_replace_collected,
             },
             vb:text{
               text = "Replace notes with phrase"
+            },
+          },
+          vb:row{
+            vb:checkbox{
+              bind = options.output_collect_in_new,
+            },
+            vb:text{
+              text = "Collect in new instrument"
             },
           },
           vb:row{
@@ -231,6 +227,8 @@ function show_preferences()
               },
               vb:valuebox{
                 id = "ui_output_keymap_range",
+                min = 1,
+                max = 119,
                 bind = options.output_keymap_range,
               }
             },
@@ -245,7 +243,7 @@ function show_preferences()
               vb:valuebox{
                 id = "ui_output_keymap_offset",
                 min = 0,
-                max = 120,
+                max = 119,
                 bind = options.output_keymap_offset,
                 tostring = function(val)
                   return xNoteColumn.note_value_to_string(math.floor(val))
@@ -254,7 +252,6 @@ function show_preferences()
                   return xNoteColumn.note_string_to_value(str)
                 end,
               },
-              
             },
           },
         },
@@ -303,7 +300,6 @@ function show_preferences()
               text = "Skip muted columns",
             }
           },
-
           vb:row{
             tooltip = "Show additional note columns if required by source phrase",
             vb:checkbox{
@@ -350,7 +346,6 @@ function show_preferences()
               invoke_task(apply_phrase_to_track())
             end
           },
-
         },
       },
       vb:column{ 
@@ -371,6 +366,7 @@ function show_preferences()
               text = "Prev",
               width = 36,
               height = UI_BUTTON_LG_H,
+              midi_mapping = MIDI_MAPPING.PREV_PHRASE_IN_INSTR,
               notifier = function()
                 invoke_task(xPhraseManager.select_previous_phrase())
               end
@@ -379,6 +375,7 @@ function show_preferences()
               text = "Next",
               width = 36,
               height = UI_BUTTON_LG_H,
+              midi_mapping = MIDI_MAPPING.NEXT_PHRASE_IN_INSTR,
               notifier = function()
                 invoke_task(xPhraseManager.select_next_phrase())
               end
@@ -388,6 +385,7 @@ function show_preferences()
             },
             vb:switch{
               width = 100,
+              midi_mapping = MIDI_MAPPING.SET_PLAYBACK_MODE,
               height = UI_BUTTON_LG_H,
               items = PLAYBACK_MODES,
               notifier = function(idx)
@@ -412,16 +410,13 @@ function show_preferences()
                 .."\nnotes are entered",
           },
         },
-
       },
-
     }
 
     local keyhandler = nil
 
     dialog = renoise.app():show_custom_dialog(
       "PhraseMate", dialog_content, keyhandler)
-
   end
 
   ui_show_tab()
@@ -456,7 +451,7 @@ function ui_show_tab()
 end
 
 --------------------------------------------------------------------------------
--- Menu entries
+-- Menu entries & MIDI/Key mappings
 --------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
@@ -465,47 +460,131 @@ renoise.tool():add_menu_entry {
     show_preferences() 
   end
 } 
-
--- input
-
-renoise.tool():add_menu_entry {
-  name = "Pattern Editor:Selection:Copy Selection to Phrase (PhraseMate)",
-  invoke = function() extract_phrase() end
-}
-
--- output
-
-renoise.tool():add_menu_entry {
-  name = "Pattern Editor:Selection:Write Phrase to Selection In Pattern (PhraseMate)",
-  invoke = function() 
-    invoke_task(apply_phrase_to_selection())
-  end
-} 
-
-renoise.tool():add_menu_entry {
-  name = "Pattern Editor:Track:Write phrase to Track (PhraseMate)",
-  invoke = function() 
-    invoke_task(apply_phrase_to_track())
-  end
-} 
-
---------------------------------------------------------------------------------
--- Keybindings
---------------------------------------------------------------------------------
-
--- input
-
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Copy Selection in Pattern to Phrase",
+  name = "Global:PhraseMate:Show preferences...",
   invoke = function(repeated)
     if (not repeated) then 
-      invoke_task(extract_phrase())
+      show_preferences() 
     end
   end
 }
 
--- output
+-- input : SELECTION_IN_PATTERN
 
+renoise.tool():add_midi_mapping{
+  name = "Tools:PhraseMate:Create Phrase from Selection in Pattern [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      invoke_task(collect_phrases(OUTPUT_SCOPE.SELECTION_IN_PATTERN))
+    end
+  end
+}
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:PhraseMate:Create Phrase from Selection",
+  invoke = function() 
+    invoke_task(collect_phrases(OUTPUT_SCOPE.SELECTION_IN_PATTERN))
+  end
+}
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Create Phrase from Selection in Pattern",
+  invoke = function(repeated)
+    if (not repeated) then 
+      invoke_task(collect_phrases(OUTPUT_SCOPE.SELECTION_IN_PATTERN))
+    end
+  end
+}
+
+-- input : SELECTION_IN_MATRIX
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:PhraseMate:Create Phrase from Selection in Matrix [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      invoke_task(collect_phrases(OUTPUT_SCOPE.SELECTION_IN_MATRIX))
+    end
+  end
+}
+renoise.tool():add_menu_entry {
+  name = "Pattern Matrix:PhraseMate:Create Phrase from Selection",
+  invoke = function() 
+    invoke_task(collect_phrases(OUTPUT_SCOPE.SELECTION_IN_MATRIX))
+  end
+}
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Create Phrase from Selection in Matrix",
+  invoke = function(repeated)
+    if (not repeated) then 
+      invoke_task(collect_phrases(OUTPUT_SCOPE.SELECTION_IN_MATRIX))
+    end
+  end
+}
+
+-- input : TRACK_IN_PATTERN
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:PhraseMate:Create Phrase from Track [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      invoke_task(collect_phrases(OUTPUT_SCOPE.TRACK_IN_PATTERN))
+    end
+  end
+}
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:PhraseMate:Create Phrase from Track",
+  invoke = function() 
+    invoke_task(collect_phrases(OUTPUT_SCOPE.TRACK_IN_PATTERN))
+  end
+}
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Create Phrase from Track",
+  invoke = function(repeated)
+    if (not repeated) then 
+      invoke_task(collect_phrases(OUTPUT_SCOPE.TRACK_IN_PATTERN))
+    end
+  end
+}
+
+-- input : TRACK_IN_SONG
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:PhraseMate:Create Phrases from Track in Song [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      invoke_task(collect_phrases(OUTPUT_SCOPE.TRACK_IN_SONG))
+    end
+  end
+}
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:PhraseMate:Create Phrases from Track in Song",
+  invoke = function() 
+    invoke_task(collect_phrases(OUTPUT_SCOPE.TRACK_IN_SONG))
+  end
+}
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Create Phrases from Track in Song",
+  invoke = function(repeated)
+    if (not repeated) then 
+      invoke_task(collect_phrases(OUTPUT_SCOPE.TRACK_IN_SONG))
+    end
+  end
+}
+
+-- output : apply_phrase_to_selection
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:PhraseMate:Write Phrase to Selection In Pattern [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      invoke_task(apply_phrase_to_selection())
+    end
+  end
+}
+renoise.tool():add_menu_entry {
+  name = "--- Pattern Editor:PhraseMate:Write Phrase to Selection In Pattern",
+  invoke = function() 
+    invoke_task(apply_phrase_to_selection())
+  end
+} 
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Write Phrase to Selection in Pattern",
   invoke = function(repeated)
@@ -514,6 +593,24 @@ renoise.tool():add_keybinding {
     end
   end
 }
+
+-- output : apply_phrase_to_track
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:PhraseMate:Write Phrase to Track [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      invoke_task(apply_phrase_to_track())
+    end
+  end
+}
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:PhraseMate:Write Phrase to Track",
+  invoke = function() 
+    invoke_task(apply_phrase_to_track())
+  end
+} 
+
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Write Phrase to Track",
   invoke = function(repeated)
@@ -526,43 +623,79 @@ renoise.tool():add_keybinding {
 -- realtime
 
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Select Previous Phrase",
+  name = "Global:PhraseMate:Select Previous Phrase in Instrument",
   invoke = function()
     invoke_task(xPhraseManager.select_previous_phrase())
   end
 }
-
-renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Select Next Phrase",
-  invoke = function()
-    invoke_task(xPhraseManager.select_next_phrase())
+renoise.tool():add_midi_mapping {
+  name = MIDI_MAPPING.PREV_PHRASE_IN_INSTR,
+  invoke = function(msg)
+    if msg:is_trigger() then
+      invoke_task(xPhraseManager.select_previous_phrase())
+    end
   end
 }
 
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Disable Phrases",
+  name = "Global:PhraseMate:Select Next Phrase in Instrument",
+  invoke = function()
+    invoke_task(xPhraseManager.select_next_phrase())
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = MIDI_MAPPING.NEXT_PHRASE_IN_INSTR,
+  invoke = function(msg)
+    if msg:is_trigger() then
+      invoke_task(xPhraseManager.select_next_phrase())
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Set Playback Mode to 'Off'",
   invoke = function(repeated)
     if (not repeated) then 
       invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_OFF))
     end
   end
 }
-
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Set to Program Mode",
+  name = "Global:PhraseMate:Set Playback Mode to 'Program'",
   invoke = function(repeated)
     if (not repeated) then 
       invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_PLAY_SELECTIVE))
     end
   end
 }
-
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Set to Keymap Mode",
+  name = "Global:PhraseMate:Set Playback Mode to 'Keymap'",
   invoke = function(repeated)
     if (not repeated) then 
       invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_PLAY_KEYMAP))
     end
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = "Global:PhraseMate:Select Playback Mode [Set]",
+  invoke = function(msg)
+    local mode = xLib.clamp_value(msg.int_value,1,3)
+    invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_PLAY_KEYMAP))
+  end
+}
+
+-- addendum
+
+renoise.tool():add_menu_entry {
+  name = "--- Pattern Editor:PhraseMate:Adjust settings...",
+  invoke = function() 
+    show_preferences()
+  end
+}
+renoise.tool():add_menu_entry {
+  name = "--- Pattern Matrix:PhraseMate:Adjust settings...",
+  invoke = function() 
+    show_preferences()
   end
 }
 
@@ -586,15 +719,18 @@ end
 
 --------------------------------------------------------------------------------
 
--- invoked when pressing the 'collect phrases' button/shortcut
--- @return bool
--- @return string (error message)
+-- invoked when pressing the 'collect phrases' button/shortcuts
+-- @param scope (OUTPUT_SCOPE), when invoked via shortcut
+-- @return table (created phrase indices)
 
-function collect_phrases()
-  TRACE("collect_phrases()")
+function collect_phrases(scope)
+  TRACE("collect_phrases(scope)",scope)
 
-  -- table, will contain the indices of created phrases
   local rslt = nil
+
+  if not scope then
+    scope = options.output_scope.value
+  end
 
   local source_instr_idx = renoise.song().selected_instrument_index
   local target_instr_idx = renoise.song().selected_instrument_index
@@ -609,13 +745,13 @@ function collect_phrases()
 
   ghost_columns = {}
 
-  if (options.output_scope.value == OUTPUT_SCOPE.SELECTION_IN_PATTERN) then
+  if (scope == OUTPUT_SCOPE.SELECTION_IN_PATTERN) then
     rslt = collect_from_pattern_selection(source_instr_idx,target_instr_idx)
-  elseif (options.output_scope.value == OUTPUT_SCOPE.SELECTION_IN_MATRIX) then
+  elseif (scope == OUTPUT_SCOPE.SELECTION_IN_MATRIX) then
     rslt = collect_from_matrix_selection(source_instr_idx,target_instr_idx)
-  elseif (options.output_scope.value == OUTPUT_SCOPE.TRACK_IN_PATTERN) then
+  elseif (scope == OUTPUT_SCOPE.TRACK_IN_PATTERN) then
     rslt = collect_from_track_in_pattern(source_instr_idx,target_instr_idx)
-  elseif (options.output_scope.value == OUTPUT_SCOPE.TRACK_IN_SONG) then
+  elseif (scope == OUTPUT_SCOPE.TRACK_IN_SONG) then
     rslt = collect_from_track_in_song(source_instr_idx,target_instr_idx)
   else
     error("Unexpected output scope")
@@ -643,10 +779,8 @@ function collect_phrases()
       end
       renoise.app():show_message(msg)
     end
-    
 
   end
-
 
   return rslt
 
@@ -815,8 +949,8 @@ function copy_selected_lines_to_phrase(selection,phrase,patt_lines,source_instr_
             -- maintain ghost columns
             if (note_col.instrument_value < 255) then
               ghost_columns[note_col_idx] = note_col.instrument_value+1
-            elseif (note_col.note_value == renoise.PatternLine.NOTE_OFF) then
-              table.remove(ghost_columns,note_col_idx)
+            --elseif (note_col.note_value == renoise.PatternLine.NOTE_OFF) then
+            --  table.remove(ghost_columns,note_col_idx)
             end
             --print("ghost_columns",rprint(ghost_columns))
 
@@ -870,7 +1004,6 @@ function copy_selected_lines_to_phrase(selection,phrase,patt_lines,source_instr_
   end
 
 end
-
 
 --------------------------------------------------------------------------------
 -- Output methods
@@ -1337,5 +1470,4 @@ renoise.tool().app_new_document_observable:add_notifier(function()
 
 end)
 
---------------------------------------------------------------------------------
 
