@@ -1,0 +1,380 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
+  <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
+  <li><a href="../modules/xDebug.html">xDebug</a></li>
+  <li><a href="../modules/xDocument.html">xDocument</a></li>
+  <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
+  <li><a href="../modules/xFilesystem.html">xFilesystem</a></li>
+  <li><a href="../modules/xInstrument.html">xInstrument</a></li>
+  <li><a href="../modules/xLib.html">xLib</a></li>
+  <li><a href="../modules/xLine.html">xLine</a></li>
+  <li><a href="../modules/xLineAutomation.html">xLineAutomation</a></li>
+  <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
+  <li><a href="../modules/xMessage.html">xMessage</a></li>
+  <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
+  <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
+  <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
+  <li><a href="../modules/xObservable.html">xObservable</a></li>
+  <li><a href="../modules/xOscClient.html">xOscClient</a></li>
+  <li><a href="../modules/xOscDevice.html">xOscDevice</a></li>
+  <li><a href="../modules/xOscMessage.html">xOscMessage</a></li>
+  <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
+  <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
+  <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParameter.html">xParameter</a></li>
+  <li><a href="../modules/xParseXML.html">xParseXML</a></li>
+  <li><a href="../modules/xPhrase.html">xPhrase</a></li>
+  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
+  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="../modules/xPreferences.html">xPreferences</a></li>
+  <li><a href="../modules/xReflection.html">xReflection</a></li>
+  <li><a href="../modules/xRule.html">xRule</a></li>
+  <li><a href="../modules/xRules.html">xRules</a></li>
+  <li><a href="../modules/xRuleset.html">xRuleset</a></li>
+  <li><a href="../modules/xSample.html">xSample</a></li>
+  <li><a href="../modules/xSampleMapping.html">xSampleMapping</a></li>
+  <li><a href="../modules/xSandbox.html">xSandbox</a></li>
+  <li><a href="../modules/xScale.html">xScale</a></li>
+  <li><a href="../modules/xSongPos.html">xSongPos</a></li>
+  <li><strong>xStreamPos</strong></li>
+  <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xTransport.html">xTransport</a></li>
+  <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>xStreamPos</code></h1>
+<p>This class can track playback progression in a song
+.</p>
+<p>
+
+<h1></h1>
+
+<h3>How to use</h3>
+
+<p>Create an instance, and supply it with a steady flow of song-position changes (idle loop). </p>
+
+<h3>Requires</h3>
+<p><a href="../modules/xPlayPos.html#">xPlayPos</a>
+<a href="../modules/xSongPos.html#">xSongPos</a>
+<a href="../modules/xBlockLoop.html#">xBlockLoop</a></p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#set_pos">set_pos (pos)</a></td>
+	<td class="summary">Update the write position as a result of a changed playback position.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#track_pos">track_pos ()</a></td>
+	<td class="summary">This function is designed to be called in an idle loop</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#attach_to_song">attach_to_song ()</a></td>
+	<td class="summary">call when a new document becomes available</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.playpos">self.playpos</a></td>
+	<td class="summary">(xPlayPos) monitor changes to playback
+self.playpos = rns.transport.playback_pos</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.writepos">self.writepos</a></td>
+	<td class="summary">(xSongPos) overall progression of the stream</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.readpos">self.readpos</a></td>
+	<td class="summary">(xSongPos) where we most recently read from the pattern</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.xblock">self.xblock</a></td>
+	<td class="summary">(xBlockLoop)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.block_enabled">self.block_enabled</a></td>
+	<td class="summary">bool, track changes to loop<em>block</em>enabled
+ TODO refactor into xBlockloop</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.writeahead">self.writeahead</a></td>
+	<td class="summary">(int) 0 if undefined
+ implementation should supply this number - used for deciding when
+ we are approaching the boundary of a pattern/block</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.just_started_playback">self.just_started_playback</a></td>
+	<td class="summary">number, or 0 if undefined
+ this is a short-lived timestamp indicating that we should ignore
+ changes to the playback position, right after playback has started
+ (the fuzziness is due to API living in separate thread)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.callback_fn">self.callback_fn</a></td>
+	<td class="summary">function, define a function to call when it's time for output</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.refresh_fn">self.refresh_fn</a></td>
+	<td class="summary">TODO function, define a function to call when we need fresh content
+ (i.e.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "set_pos"></a>
+    <strong>set_pos (pos)</strong>
+    </dt>
+    <dd>
+    Update the write position as a result of a changed playback position.
+ Most of the time we want the stream to continue smoothly forward - this is
+ true for any kind of pattern, sequence or block loop. However, when we
+ detect 'user' events, the position can also jump backwards (the detection
+ of these events is not entirely reliable near loop boundaries)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pos</span>
+        , renoise.SongPos
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "track_pos"></a>
+    <strong>track_pos ()</strong>
+    </dt>
+    <dd>
+    This function is designed to be called in an idle loop
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "attach_to_song"></a>
+    <strong>attach_to_song ()</strong>
+    </dt>
+    <dd>
+    call when a new document becomes available
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.playpos"></a>
+    <strong>self.playpos</strong>
+    </dt>
+    <dd>
+    (xPlayPos) monitor changes to playback
+self.playpos = rns.transport.playback_pos
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.writepos"></a>
+    <strong>self.writepos</strong>
+    </dt>
+    <dd>
+    (xSongPos) overall progression of the stream
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.readpos"></a>
+    <strong>self.readpos</strong>
+    </dt>
+    <dd>
+    (xSongPos) where we most recently read from the pattern
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.xblock"></a>
+    <strong>self.xblock</strong>
+    </dt>
+    <dd>
+    (xBlockLoop)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.block_enabled"></a>
+    <strong>self.block_enabled</strong>
+    </dt>
+    <dd>
+    bool, track changes to loop<em>block</em>enabled
+ TODO refactor into xBlockloop
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.writeahead"></a>
+    <strong>self.writeahead</strong>
+    </dt>
+    <dd>
+    (int) 0 if undefined
+ implementation should supply this number - used for deciding when
+ we are approaching the boundary of a pattern/block
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.just_started_playback"></a>
+    <strong>self.just_started_playback</strong>
+    </dt>
+    <dd>
+    number, or 0 if undefined
+ this is a short-lived timestamp indicating that we should ignore
+ changes to the playback position, right after playback has started
+ (the fuzziness is due to API living in separate thread)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.callback_fn"></a>
+    <strong>self.callback_fn</strong>
+    </dt>
+    <dd>
+    function, define a function to call when it's time for output
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.refresh_fn"></a>
+    <strong>self.refresh_fn</strong>
+    </dt>
+    <dd>
+    TODO function, define a function to call when we need fresh content
+ (i.e.  when the position has been changed by the user, and
+ previously produced content no longer would be valid...)
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

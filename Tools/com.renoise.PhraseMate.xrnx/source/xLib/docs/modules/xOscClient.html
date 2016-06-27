@@ -1,0 +1,416 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
+  <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
+  <li><a href="../modules/xDebug.html">xDebug</a></li>
+  <li><a href="../modules/xDocument.html">xDocument</a></li>
+  <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
+  <li><a href="../modules/xFilesystem.html">xFilesystem</a></li>
+  <li><a href="../modules/xInstrument.html">xInstrument</a></li>
+  <li><a href="../modules/xLib.html">xLib</a></li>
+  <li><a href="../modules/xLine.html">xLine</a></li>
+  <li><a href="../modules/xLineAutomation.html">xLineAutomation</a></li>
+  <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
+  <li><a href="../modules/xMessage.html">xMessage</a></li>
+  <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
+  <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
+  <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
+  <li><a href="../modules/xObservable.html">xObservable</a></li>
+  <li><strong>xOscClient</strong></li>
+  <li><a href="../modules/xOscDevice.html">xOscDevice</a></li>
+  <li><a href="../modules/xOscMessage.html">xOscMessage</a></li>
+  <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
+  <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
+  <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParameter.html">xParameter</a></li>
+  <li><a href="../modules/xParseXML.html">xParseXML</a></li>
+  <li><a href="../modules/xPhrase.html">xPhrase</a></li>
+  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
+  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="../modules/xPreferences.html">xPreferences</a></li>
+  <li><a href="../modules/xReflection.html">xReflection</a></li>
+  <li><a href="../modules/xRule.html">xRule</a></li>
+  <li><a href="../modules/xRules.html">xRules</a></li>
+  <li><a href="../modules/xRuleset.html">xRuleset</a></li>
+  <li><a href="../modules/xSample.html">xSample</a></li>
+  <li><a href="../modules/xSampleMapping.html">xSampleMapping</a></li>
+  <li><a href="../modules/xSandbox.html">xSandbox</a></li>
+  <li><a href="../modules/xScale.html">xScale</a></li>
+  <li><a href="../modules/xSongPos.html">xSongPos</a></li>
+  <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
+  <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xTransport.html">xTransport</a></li>
+  <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>xOscClient</code></h1>
+<p>xOscClient is a simple OSC client
+.</p>
+<p>
+
+<h1></h1>
+
+<ul>
+    <li>Connects to the built-in OSC server in Renoise, </li>
+    <li>Produce realtime messages (notes or MIDI messages)</li>
+</ul>
+
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#__init">__init (...)</a></td>
+	<td class="summary">Class methods</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#create">create (osc_host, osc_port)</a></td>
+	<td class="summary">Initialize the xOscClient class</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#trigger_instrument">trigger_instrument (note_on, instr, track, note, velocity)</a></td>
+	<td class="summary">Trigger instrument-note</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#trigger_midi">trigger_midi (t)</a></td>
+	<td class="summary">Trigger standard midi-message</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#trigger_auto">trigger_auto (xmsg)</a></td>
+	<td class="summary">trigger 'automatic MIDI' using the internal OSC client
+ if notes, route to specified track + instrument - else, pass as raw MIDI</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#trigger_raw">trigger_raw (xmsg)</a></td>
+	<td class="summary">trigger 'raw MIDI' (makes notes MIDI-mappable)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_show_instructions">_show_instructions ()</a></td>
+	<td class="summary">Display usage instructions the first time the class is used</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_first_run">get_first_run ()</a></td>
+	<td class="summary">Get/set methods</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.osc_host">self.osc_host</a></td>
+	<td class="summary">string</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.osc_port">self.osc_port</a></td>
+	<td class="summary">int</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self._connection">self._connection</a></td>
+	<td class="summary">the socket connection, nil if not established</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "__init"></a>
+    <strong>__init (...)</strong>
+    </dt>
+    <dd>
+    Class methods
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "create"></a>
+    <strong>create (osc_host, osc_port)</strong>
+    </dt>
+    <dd>
+    Initialize the xOscClient class
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">osc_host</span>
+         (string) the host-address name (can be an IP address)
+        </li>
+        <li><span class="parameter">osc_port</span>
+         (int) the host port
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        boolean,</li>
+        <li>
+        string, error message when failed</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "trigger_instrument"></a>
+    <strong>trigger_instrument (note_on, instr, track, note, velocity)</strong>
+    </dt>
+    <dd>
+    Trigger instrument-note
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">note_on</span>
+         (bool), true when note-on and false when note-off
+        </li>
+        <li><span class="parameter">instr</span>
+         (int), the Renoise instrument index
+        </li>
+        <li><span class="parameter">track</span>
+         (int) the Renoise track index
+        </li>
+        <li><span class="parameter">note</span>
+         (int), the desired pitch, 0-120
+        </li>
+        <li><span class="parameter">velocity</span>
+         (int), the desired velocity, 0-127
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool, true when triggered
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "trigger_midi"></a>
+    <strong>trigger_midi (t)</strong>
+    </dt>
+    <dd>
+    Trigger standard midi-message
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         (table), a ready-to-send MIDI message
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool, true when triggered
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "trigger_auto"></a>
+    <strong>trigger_auto (xmsg)</strong>
+    </dt>
+    <dd>
+    trigger 'automatic MIDI' using the internal OSC client
+ if notes, route to specified track + instrument - else, pass as raw MIDI
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">xmsg</span>
+         (xMidiMessage or xOscMessage)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool, true when triggered
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "trigger_raw"></a>
+    <strong>trigger_raw (xmsg)</strong>
+    </dt>
+    <dd>
+    trigger 'raw MIDI' (makes notes MIDI-mappable)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">xmsg</span>
+         (xMidiMessage or xOscMessage)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        bool, true when triggered</li>
+        <li>
+        string, error message when failed</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_show_instructions"></a>
+    <strong>_show_instructions ()</strong>
+    </dt>
+    <dd>
+    Display usage instructions the first time the class is used
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_first_run"></a>
+    <strong>get_first_run ()</strong>
+    </dt>
+    <dd>
+    Get/set methods
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.osc_host"></a>
+    <strong>self.osc_host</strong>
+    </dt>
+    <dd>
+    string
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.osc_port"></a>
+    <strong>self.osc_port</strong>
+    </dt>
+    <dd>
+    int
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self._connection"></a>
+    <strong>self._connection</strong>
+    </dt>
+    <dd>
+    the socket connection, nil if not established
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

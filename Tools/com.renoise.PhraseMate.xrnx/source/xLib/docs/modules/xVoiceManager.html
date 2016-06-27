@@ -1,0 +1,539 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
+  <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
+  <li><a href="../modules/xDebug.html">xDebug</a></li>
+  <li><a href="../modules/xDocument.html">xDocument</a></li>
+  <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
+  <li><a href="../modules/xFilesystem.html">xFilesystem</a></li>
+  <li><a href="../modules/xInstrument.html">xInstrument</a></li>
+  <li><a href="../modules/xLib.html">xLib</a></li>
+  <li><a href="../modules/xLine.html">xLine</a></li>
+  <li><a href="../modules/xLineAutomation.html">xLineAutomation</a></li>
+  <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
+  <li><a href="../modules/xMessage.html">xMessage</a></li>
+  <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
+  <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
+  <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
+  <li><a href="../modules/xObservable.html">xObservable</a></li>
+  <li><a href="../modules/xOscClient.html">xOscClient</a></li>
+  <li><a href="../modules/xOscDevice.html">xOscDevice</a></li>
+  <li><a href="../modules/xOscMessage.html">xOscMessage</a></li>
+  <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
+  <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
+  <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParameter.html">xParameter</a></li>
+  <li><a href="../modules/xParseXML.html">xParseXML</a></li>
+  <li><a href="../modules/xPhrase.html">xPhrase</a></li>
+  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
+  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="../modules/xPreferences.html">xPreferences</a></li>
+  <li><a href="../modules/xReflection.html">xReflection</a></li>
+  <li><a href="../modules/xRule.html">xRule</a></li>
+  <li><a href="../modules/xRules.html">xRules</a></li>
+  <li><a href="../modules/xRuleset.html">xRuleset</a></li>
+  <li><a href="../modules/xSample.html">xSample</a></li>
+  <li><a href="../modules/xSampleMapping.html">xSampleMapping</a></li>
+  <li><a href="../modules/xSandbox.html">xSandbox</a></li>
+  <li><a href="../modules/xScale.html">xScale</a></li>
+  <li><a href="../modules/xSongPos.html">xSongPos</a></li>
+  <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
+  <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xTransport.html">xTransport</a></li>
+  <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><strong>xVoiceManager</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>xVoiceManager</code></h1>
+<p>This class keeps track of active, playing voices as they are triggered.</p>
+<p>
+
+<p>.</p>
+<h1></h1>
+
+<h3>In more detail</h3>
+
+<p>This class understands some of the more advanced aspects of triggering and releasing voices in Renoise. This includes the ability to trigger and release specific instruments in specific tracks, while preserving the ability to freely move around in Renoise while doing so. </p>
+
+<p>Without voice-management it would be too easy to create hanging notes. Everything from switching track, instrument or octave while playing, to having multiple MIDI sources could cause trouble. A good voice-manager will understand this and be able to determine the originating 'place' where the voice got triggered. </p>
+
+<p>Also the class is able to assist with automatic note-column allocation while recording. It's a basic approach, but close enough to how Renoise usually works to feel familiar. </p>
+
+<ul>
+    <li>Recordings start from the currently selected note column </li>
+    <li>New note columns (voices) are allocated as new notes arrive</li>
+    <li>Voices stay with their column as other voices are released/removed</li>
+</ul>
+
+<h3>Observable events</h3>
+
+<p>Attach notifiers to detect when messages are triggered or released:</p>
+
+<p><code>triggered_observable</code> -> fired right <em>after</em> a voice starts playing <br/>
+<code>released_observable</code> -> fired right <em>before</em> a voice is released  </p>
+
+<p>After you have attached a notifier, you will receive a 'bang', but no argument. Instead, you should look for the <code>triggered/released_index</code> properties - they will contain the value you need.</p>
+
+<h3>Example</h3>
+
+<p>How to instantiate a copy of this class, and feed xMidiMessages into it:</p>
+
+<pre><code>local voicemgr = xVoiceManager{
+  follow_track = false,
+}
+
+voicemgr.triggered_observable:add_notifier(function()
+  print(voicemgr.triggered_index)
+end)
+voicemgr.released_observable:add_notifier(function()
+  print(voicemgr.released_index)
+end)
+
+local xmsg = some_note_on_message -- provide your own message
+voicemgr:input_message(xmsg) -- should trigger our notifier
+</code></pre>
+
+
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#get_active_notes">get_active_notes ()</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#register">register (xmsg)</a></td>
+	<td class="summary">register/add a voice</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#release_all">release_all ()</a></td>
+	<td class="summary">Release all active voices</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#release_all_instrument">release_all_instrument (instr_idx)</a></td>
+	<td class="summary">Release all voices associated with a specific instrument</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#release_all_track">release_all_track (track_idx)</a></td>
+	<td class="summary">Release all voices associated with a specific track</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#release">release (voice_idx)</a></td>
+	<td class="summary">release specific voice</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#check_expired">check_expired ()</a></td>
+	<td class="summary">check if any voices have expired (when duration is set)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_voice_index">get_voice_index (xmsg)</a></td>
+	<td class="summary">locate among active voices, taking the pitch + track + instrument into
+ consideration (if all match, the voice is considered active...)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_available_columns">get_available_columns (track_idx)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#attach_to_song">attach_to_song ()</a></td>
+	<td class="summary">Monitor changes to tracks and instruments</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.voices">self.voices</a></td>
+	<td class="summary">table<xMidiMessage>, active voices</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.voice_limit">self.voice_limit</a></td>
+	<td class="summary">the maximum number of voices (0 = 'unlimited')
+ TODO not yet implemented</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.duration">self.duration</a></td>
+	<td class="summary">number, note duration in seconds (0 = infinite)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.column_allocation">self.column_allocation</a></td>
+	<td class="summary">bool, whether to use automatic column allocation or not</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.released_index">self.released_index</a></td>
+	<td class="summary">voice about to be released (0 = none)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.triggered_index">self.triggered_index</a></td>
+	<td class="summary">newly triggered voice (0 = none)</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "get_active_notes"></a>
+    <strong>get_active_notes ()</strong>
+    </dt>
+    <dd>
+
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table<int> containing all active MIDI-pitches
+[[
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "register"></a>
+    <strong>register (xmsg)</strong>
+    </dt>
+    <dd>
+    register/add a voice
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">xmsg</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "release_all"></a>
+    <strong>release_all ()</strong>
+    </dt>
+    <dd>
+    Release all active voices
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "release_all_instrument"></a>
+    <strong>release_all_instrument (instr_idx)</strong>
+    </dt>
+    <dd>
+    Release all voices associated with a specific instrument
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">instr_idx</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "release_all_track"></a>
+    <strong>release_all_track (track_idx)</strong>
+    </dt>
+    <dd>
+    Release all voices associated with a specific track
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_idx</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "release"></a>
+    <strong>release (voice_idx)</strong>
+    </dt>
+    <dd>
+    release specific voice
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">voice_idx</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "check_expired"></a>
+    <strong>check_expired ()</strong>
+    </dt>
+    <dd>
+    check if any voices have expired (when duration is set)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_voice_index"></a>
+    <strong>get_voice_index (xmsg)</strong>
+    </dt>
+    <dd>
+    locate among active voices, taking the pitch + track + instrument into
+ consideration (if all match, the voice is considered active...)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">xmsg</span>
+         (xMidiMessage) should be a MIDI note-message
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        number or nil</li>
+        <li>
+        table</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_available_columns"></a>
+    <strong>get_available_columns (track_idx)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_idx</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "attach_to_song"></a>
+    <strong>attach_to_song ()</strong>
+    </dt>
+    <dd>
+    Monitor changes to tracks and instruments
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.voices"></a>
+    <strong>self.voices</strong>
+    </dt>
+    <dd>
+    table<xMidiMessage>, active voices
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.voice_limit"></a>
+    <strong>self.voice_limit</strong>
+    </dt>
+    <dd>
+    the maximum number of voices (0 = 'unlimited')
+ TODO not yet implemented
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.duration"></a>
+    <strong>self.duration</strong>
+    </dt>
+    <dd>
+    number, note duration in seconds (0 = infinite)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.column_allocation"></a>
+    <strong>self.column_allocation</strong>
+    </dt>
+    <dd>
+    bool, whether to use automatic column allocation or not
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.released_index"></a>
+    <strong>self.released_index</strong>
+    </dt>
+    <dd>
+    voice about to be released (0 = none)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.triggered_index"></a>
+    <strong>self.triggered_index</strong>
+    </dt>
+    <dd>
+    newly triggered voice (0 = none)
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
+  <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
+  <li><a href="../modules/xDebug.html">xDebug</a></li>
+  <li><a href="../modules/xDocument.html">xDocument</a></li>
+  <li><a href="../modules/xEffectColumn.html">xEffectColumn</a></li>
+  <li><a href="../modules/xFilesystem.html">xFilesystem</a></li>
+  <li><a href="../modules/xInstrument.html">xInstrument</a></li>
+  <li><a href="../modules/xLib.html">xLib</a></li>
+  <li><a href="../modules/xLine.html">xLine</a></li>
+  <li><a href="../modules/xLineAutomation.html">xLineAutomation</a></li>
+  <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
+  <li><a href="../modules/xMessage.html">xMessage</a></li>
+  <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
+  <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
+  <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
+  <li><a href="../modules/xObservable.html">xObservable</a></li>
+  <li><a href="../modules/xOscClient.html">xOscClient</a></li>
+  <li><a href="../modules/xOscDevice.html">xOscDevice</a></li>
+  <li><a href="../modules/xOscMessage.html">xOscMessage</a></li>
+  <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
+  <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
+  <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParameter.html">xParameter</a></li>
+  <li><a href="../modules/xParseXML.html">xParseXML</a></li>
+  <li><a href="../modules/xPhrase.html">xPhrase</a></li>
+  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
+  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
+  <li><a href="../modules/xPreferences.html">xPreferences</a></li>
+  <li><a href="../modules/xReflection.html">xReflection</a></li>
+  <li><a href="../modules/xRule.html">xRule</a></li>
+  <li><a href="../modules/xRules.html">xRules</a></li>
+  <li><a href="../modules/xRuleset.html">xRuleset</a></li>
+  <li><strong>xSample</strong></li>
+  <li><a href="../modules/xSampleMapping.html">xSampleMapping</a></li>
+  <li><a href="../modules/xSandbox.html">xSandbox</a></li>
+  <li><a href="../modules/xScale.html">xScale</a></li>
+  <li><a href="../modules/xSongPos.html">xSongPos</a></li>
+  <li><a href="../modules/xStreamPos.html">xStreamPos</a></li>
+  <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xTransport.html">xTransport</a></li>
+  <li><a href="../modules/xValue.html">xValue</a></li>
+  <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>xSample</code></h1>
+<p>Static methods for working with renoise.Sample objects
+.</p>
+<p>
+
+<h1></h1>
+
+<p>Requires
+<a href="../modules/xReflection.html#">xReflection</a>
+<a href="../modules/xSampleMapping.html#">xSampleMapping</a>
+<a href="../modules/xPhrase.html#">xPhrase</a></p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#get_bit_depth">get_bit_depth (sample)</a></td>
+	<td class="summary">credit goes to dblue</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bits_to_xbits">bits_to_xbits (num_bits)</a></td>
+	<td class="summary">convert any bit-depth to a valid xSample representation</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_channel_info">get_channel_info (sample)</a></td>
+	<td class="summary">check if sample has duplicate channel data, is hard-panned or silent
+ (several detection functions in one means less methods are needed...)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#convert_sample">convert_sample (instr, sample_idx, bit_depth, channel_action, range)</a></td>
+	<td class="summary">convert sample: change bit-depth, perform channel operations, crop etc.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sample_buffer_is_silent">sample_buffer_is_silent (buffer, channels)</a></td>
+	<td class="summary">check if the indicated sample buffer is silent</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#SAMPLE_CONVERT">SAMPLE_CONVERT</a></td>
+	<td class="summary">SAMPLE_CONVERT: misc.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "get_bit_depth"></a>
+    <strong>get_bit_depth (sample)</strong>
+    </dt>
+    <dd>
+    credit goes to dblue
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sample</span>
+         (renoise.Sample)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int (0 when no sample data)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bits_to_xbits"></a>
+    <strong>bits_to_xbits (num_bits)</strong>
+    </dt>
+    <dd>
+    convert any bit-depth to a valid xSample representation
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num_bits</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int (xSample.BIT_DEPTH)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_channel_info"></a>
+    <strong>get_channel_info (sample)</strong>
+    </dt>
+    <dd>
+    check if sample has duplicate channel data, is hard-panned or silent
+ (several detection functions in one means less methods are needed...)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sample</span>
+          (renoise.Sample)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        enum (xSample.SAMPLE_[...])
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "convert_sample"></a>
+    <strong>convert_sample (instr, sample_idx, bit_depth, channel_action, range)</strong>
+    </dt>
+    <dd>
+    convert sample: change bit-depth, perform channel operations, crop etc.
+ (jumping through a few hoops to keep keyzone and phrases intact...)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">instr</span>
+         (renoise.Instrument)
+        </li>
+        <li><span class="parameter">sample_idx</span>
+         (int)
+        </li>
+        <li><span class="parameter">bit_depth</span>
+         (xSample.BIT_DEPTH)
+        </li>
+        <li><span class="parameter">channel_action</span>
+         (xSample.SAMPLE_CONVERT)
+        </li>
+        <li><span class="parameter">range</span>
+         (table) source start/end frames
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        renoise.Sample or nil (when failed to convert)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sample_buffer_is_silent"></a>
+    <strong>sample_buffer_is_silent (buffer, channels)</strong>
+    </dt>
+    <dd>
+    check if the indicated sample buffer is silent
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">buffer</span>
+         (renoise.SampleBuffer)
+        </li>
+        <li><span class="parameter">channels</span>
+         (xSample.SAMPLE_CHANNELS)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool (or nil if no data)
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "SAMPLE_CONVERT"></a>
+    <strong>SAMPLE_CONVERT</strong>
+    </dt>
+    <dd>
+    SAMPLE<em>CONVERT: misc.  channel operations
+ MONO</em>MIX: stereo -> mono mix (mix left and right)
+ MONO_LEFT: stereo -> mono (keep left)
+ MONO_RIGHT: stereo -> mono (keep right)
+ STEREO: mono -> stereo
+ SWAP: stereo (swap channels)
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">MONO_MIX</span>
+        TODO
+        </li>
+        <li><span class="parameter">MONO_LEFT</span>
+
+
+
+        </li>
+        <li><span class="parameter">MONO_RIGHT</span>
+
+
+
+        </li>
+        <li><span class="parameter">STEREO</span>
+
+
+
+        </li>
+        <li><span class="parameter">SWAP</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
