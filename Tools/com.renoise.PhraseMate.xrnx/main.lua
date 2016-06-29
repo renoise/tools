@@ -28,6 +28,7 @@ _trace_filters = nil
 require (_xlibroot..'xLib')
 require (_xlibroot.."xPhrase")
 require (_xlibroot..'xDebug')
+require (_xlibroot..'xFilesystem')
 require (_xlibroot..'xInstrument')
 require (_xlibroot..'xNoteColumn') 
 require (_xlibroot..'xPhraseManager')
@@ -522,6 +523,14 @@ function show_preferences()
           },
         },
       },
+      --[[
+      vb:button{
+        text = "remove trace statements",
+        notifier = function()
+          xDebug.remove_trace_statements()
+        end
+      }
+      ]]
 
     }
 
