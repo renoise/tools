@@ -24,7 +24,7 @@ http://forum.renoise.com/index.php/topic/26329-the-api-wishlist-thread/?p=221484
 class 'xPhraseManager'
 
 --------------------------------------------------------------------------------
--- Retrieve the next available phrase mapping, based on current criteria
+-- Retrieve the next available phrase mapping
 -- @param instr_idx (int), index of instrument 
 -- @param insert_range (int), the size of the mapping in semitones
 -- @param keymap_offset (int), start search from this note [first, if nil]
@@ -52,14 +52,18 @@ function xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
   -- find empty space from the selected phrase and upwards
   -- (nb: phrase mappings are always ordered by note)
   local phrase_idx = nil
-  --local insert_idx = 1
   local max_note = 119
   local begin_at = nil
   local stop_at = nil
   local prev_end = nil
+
   for k,v in ipairs(instr.phrase_mappings) do
     --print(">>> check mapping",v.note_range[1],v.note_range[2])
+
     if (v.note_range[2] >= keymap_offset) then      
+
+      -- find first gap
+
       if not prev_end then
         prev_end = v.note_range[1]-1
       end
@@ -125,6 +129,65 @@ function xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
 end
 
 --------------------------------------------------------------------------------
+-- retrieve existing, empty phrase, searching 'back-to-back' (no gaps)
+-- @param instr_idx (int), index of instrument 
+-- @param keymap_offset (int), start search from this note [first, if nil]
+-- @return table{} or nil, note-range 
+-- @return int or nil, the index where we can insert
+
+function xPhraseManager.get_empty_slot(instr_idx,keymap_offset)
+  TRACE("xPhraseManager.get_empty_slot(instr_idx,keymap_offset)",instr_idx,keymap_offset)
+
+  assert(type(instr_idx)=="number","Expected instr_idx to be a number")
+
+  local instr = rns.instruments[instr_idx]
+  if not instr then
+    return false,"Could not locate instrument"
+  end
+
+  --print("*** get_empty_slot - instr.name",instr.name)
+
+  -- provide defaults...
+  if not keymap_offset then
+    keymap_offset = 0
+  end
+
+  -- start by looking at phrase mappings
+
+  local stop_at = nil
+  for k,v in ipairs(instr.phrase_mappings) do
+    --print("*** get_empty_slot - check mapping",v.note_range[1],v.note_range[2])
+    if (v.note_range[1] >= keymap_offet) 
+      and stop_at 
+      and (v.note_range[1] == stop_at+1)
+    then
+      --print("*** get_empty_slot - v.phrase.is_empty",v.phrase.is_empty)
+      if v.phrase.is_empty then
+        return v.note_range,k
+      end
+    end
+    if not stop_at then
+      stop_at = v.note_range[2]
+    end
+
+  end
+
+  -- next, look at the phrase themselves
+
+  for k,v in ipairs(instr.phrases) do
+    --print("*** get_empty_slot - v.is_empty",v.is_empty)
+    if v.is_empty then
+      if v.mapping then
+        return v.mapping.note_range,k
+      else
+        return nil,k
+      end
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
 --- Automatically add a new phrase to the specified instrument 
 -- @param instr_idx (int), index of instrument 
 -- @param create_keymap (bool), add mapping 
@@ -135,8 +198,8 @@ end
 --  + int, the phrase index
 --  or nil if failed
 
-function xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,keymap_offset)
-  TRACE("xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,keymap_offset)",instr_idx,create_keymap,insert_range,keymap_offset)
+function xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,keymap_offset,takeover)
+  TRACE("xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,keymap_offset,takeover)",instr_idx,create_keymap,insert_range,keymap_offset,takeover)
 
   local instr = rns.instruments[instr_idx]
   if not instr then
@@ -144,30 +207,51 @@ function xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,
     return false,err
   end
 
-  local vphrase,vphrase_idx = nil,nil
-  if create_keymap then
-    vphrase,vphrase_idx = xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
-    if not vphrase then
-      local err = "Failed to allocate a phrase (no more room left?)"
-      return false,err
+  local vphrase_range,vphrase_idx = nil,nil
+
+  -- locate empty phrase before creating a new one
+  local do_create = true
+  if takeover then
+    vphrase_range,vphrase_idx = xPhraseManager.get_empty_slot(instr_idx,keymap_offset)
+    if vphrase_idx then
+      --print("*** auto_insert_phrase - located empty phrase")
+      do_create = false
+      create_keymap = false
     end
-  else
-    vphrase_idx = (#instr.phrases > 0) and #instr.phrases+1 or 1
-    --print(">>> vphrase_idx",vphrase_idx)
   end
-  
-  local phrase = instr:insert_phrase_at(vphrase_idx)
+
+  if not vphrase_idx then
+    if create_keymap then
+      vphrase_range,vphrase_idx = xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
+      if not vphrase_range then
+        local err = "Failed to allocate a phrase (no more room left?)"
+        return false,err
+      end
+    else
+      vphrase_idx = (#instr.phrases > 0) and #instr.phrases+1 or 1
+    end
+  end
+
+  --print(">>> vphrase_idx #2",vphrase_idx)
+
+  local phrase = nil
+  if do_create then
+    phrase = instr:insert_phrase_at(vphrase_idx)
+    phrase:clear() -- clear default C-4 
+  else
+    phrase = instr.phrases[vphrase_idx]
+  end
+
   if (create_keymap and renoise.API_VERSION > 4) then
     instr:insert_phrase_mapping_at(#instr.phrase_mappings+1,phrase)
   end
   if (create_keymap or renoise.API_VERSION <= 4) then
     phrase.mapping.note_range = {
-      vphrase[1],
-      vphrase[2]
+      vphrase_range[1],
+      vphrase_range[2]
     }
-    phrase.mapping.base_note = vphrase[1]
+    phrase.mapping.base_note = vphrase_range[1]
   end
-  phrase:clear() -- clear default C-4 
 
   return phrase,vphrase_idx
 
@@ -181,9 +265,8 @@ end
 function xPhraseManager.select_previous_phrase()
   TRACE("xPhraseManager.select_previous_phrase()")
 
-  local instr = rns.selected_instrument
   local phrase_idx = rns.selected_phrase_index
-  if not phrase_idx then
+  if not phrase_idx or (phrase_idx == 0) then
     return false,"No phrase have been selected"
   end
 
@@ -195,18 +278,34 @@ function xPhraseManager.select_previous_phrase()
 end
 
 --------------------------------------------------------------------------------
+-- @return bool (true when able to select earlier phrase)
+
+function xPhraseManager.can_select_previous_phrase()
+  TRACE("xPhraseManager.can_select_previous_phrase()")
+
+  local phrase_idx = rns.selected_phrase_index
+  if not phrase_idx or (phrase_idx == 0) then
+    return false,"No phrase have been selected"
+  end
+
+  local instr = rns.selected_instrument
+  return (rns.selected_phrase_index > 1) and true or false
+
+end
+
+--------------------------------------------------------------------------------
 -- Select previous/next phrase 
 -- @return int (phrase index) or nil if no phrase was selected
 
 function xPhraseManager.select_next_phrase()
   TRACE("xPhraseManager.select_next_phrase()")
 
-  local instr = rns.selected_instrument
   local phrase_idx = rns.selected_phrase_index
-  if not phrase_idx then
+  if not phrase_idx or (phrase_idx == 0) then
     return false,"No phrase have been selected"
   end
 
+  local instr = rns.selected_instrument
   phrase_idx = math.min(#instr.phrases,phrase_idx+1)
   rns.selected_phrase_index = phrase_idx
 
@@ -216,17 +315,34 @@ function xPhraseManager.select_next_phrase()
 end
 
 --------------------------------------------------------------------------------
+-- @return bool (true when able to select earlier phrase)
+
+function xPhraseManager.can_select_next_phrase()
+  TRACE("xPhraseManager.can_select_next_phrase()")
+
+  local phrase_idx = rns.selected_phrase_index
+  if not phrase_idx or (phrase_idx == 0) then
+    return false,"No phrase have been selected"
+  end
+
+  local instr = rns.selected_instrument
+  return (rns.selected_phrase_index < #instr.phrases) and true or false
+
+end
+
+
+--------------------------------------------------------------------------------
 -- Select next phrase mapping as it appears in phrase bar
 
 function xPhraseManager.select_next_phrase_mapping()
   TRACE("xPhraseManager.select_next_phrase_mapping()")
 
-  local instr = rns.selected_instrument
   local phrase = rns.selected_phrase
   if not phrase.mapping then
     return false,"No mapping has been assigned to selected phrase"
   end
 
+  local instr = rns.selected_instrument
   local lowest_note = nil
   local candidates = {}
   for k,v in ipairs(instr.phrases) do
@@ -395,7 +511,7 @@ end
 -- @param mode (int), renoise.Instrument.PHRASES_xxx
 -- @return int or nil
 -- @return string (error message when failed)
-
+--[[
 function xPhraseManager.set_playback_mode(mode)
   TRACE("xPhraseManager.set_playback_mode(mode)",mode)
 
@@ -411,6 +527,7 @@ function xPhraseManager.set_playback_mode(mode)
   end
 
 end
+]]
 
 --------------------------------------------------------------------------------
 -- locate duplicate phrases within instrument

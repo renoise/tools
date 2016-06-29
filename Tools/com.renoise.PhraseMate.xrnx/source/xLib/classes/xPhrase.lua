@@ -64,68 +64,6 @@ function xPhrase.note_is_keymapped(note,instr)
 end
 
 --------------------------------------------------------------------------------
--- look for implicit/explicit phrase trigger in the provided patternline
--- @param line (renoise.PatternLine)
--- @param note_col_idx (int)
--- @param instr_idx (int)
--- @param trk_idx (int)
--- @return bool
-
-function xPhrase.note_is_phrase_trigger(line,note_col_idx,instr_idx,trk_idx)
-  TRACE("xPhrase.note_is_phrase_trigger(line,note_col_idx,instr_idx,trk_idx)",line,note_col_idx,instr_idx,trk_idx)
-
-  -- no note means no triggering 
-  local note_col = line.note_columns[note_col_idx]
-  if (note_col.note_value > renoise.PatternLine.NOTE_OFF) then
-    --print("No note available")
-    return false
-  end
-
-  -- no phrases means no triggering 
-  local instr = rns.instruments[instr_idx]
-  if (#instr.phrases == 0) then
-    --print("No phrases available")
-    return false
-  end
-
-  local track = rns.tracks[trk_idx]
-  --local visible_note_cols = track.visible_note_columns
-  local visible_fx_cols = track.visible_effect_columns
-
-  local get_zxx_command = function()
-    for k,v in ipairs(line.effect_columns) do
-      if (k > visible_fx_cols) then
-        break
-      elseif (v.number_string == "0Z") then
-        return v.amount_value
-      end
-    end
-  end
-
-  if (note_col.effect_number_string == "0Z") 
-    and (note_col.effect_amount_value > 0x00)
-    and (note_col.effect_amount_value < 0x7F)
-  then
-    return true
-  elseif (instr.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_SELECTIVE) then
-    return true
-  elseif (instr.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_KEYMAP) 
-    and xPhrase.note_is_keymapped(note_col.note_value,instr)
-  then
-    return true
-  else
-    local zxx_index = get_zxx_command() 
-    --print("zxx_index",zxx_index)
-    if (zxx_index > 0x00) and (zxx_index <= 0x7F) then
-      return true
-    end
-  end
-
-  return false
-
-end
-
---------------------------------------------------------------------------------
 -- remove commands that does not belong in a phrase
 -- @param phrase (renoise.InstrumentPhrase)
 
@@ -136,7 +74,10 @@ function xPhrase.clear_foreign_commands(phrase)
     return
   end
 
-  local blacklist = {"0Z"}
+  local blacklist = {
+    "0Z",                         -- phrase index
+    "ZT","ZL","ZK","ZG","ZB","ZD" -- global commands
+  }
   
   for k,v in ipairs(phrase.lines) do
     --print("k,v",k,v)
