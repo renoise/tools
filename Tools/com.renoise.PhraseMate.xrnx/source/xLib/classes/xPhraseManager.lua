@@ -157,7 +157,7 @@ function xPhraseManager.get_empty_slot(instr_idx,keymap_offset)
   local stop_at = nil
   for k,v in ipairs(instr.phrase_mappings) do
     --print("*** get_empty_slot - check mapping",v.note_range[1],v.note_range[2])
-    if (v.note_range[1] >= keymap_offet) 
+    if (v.note_range[1] >= keymap_offset) 
       and stop_at 
       and (v.note_range[1] == stop_at+1)
     then
