@@ -35,8 +35,10 @@ require (_xlibroot..'xInstrument')
 require (_xlibroot..'xNoteColumn') 
 require (_xlibroot..'xPhraseManager')
 require (_xlibroot..'xSelection')
---require (_xlibroot..'xDebug')
---require (_xlibroot..'xFilesystem')
+require (_xlibroot..'xDebug')
+require (_xlibroot..'xFilesystem')
+
+require ('source/ProcessSlicer')
 
 --------------------------------------------------------------------------------
 -- static variables
@@ -140,6 +142,8 @@ local collected_messages = {}
 local modified_lines = {}
 local suppress_line_notifier = false
 local realtime_update_requested = false
+local status_update = nil
+local process_slicer = nil -- (ProcessSlicer)
 
 --------------------------------------------------------------------------------
 -- helper functions
@@ -149,6 +153,23 @@ function invoke_task(rslt,err)
   if (rslt == false and err) then
     renoise.app():show_status(err)
   end
+end
+
+local progress_handler = function(msg)
+  --print("progress_handler")
+  status_update = msg
+end
+
+local done_handler = function(msg)
+  --print("done_handler")
+  status_update = "(PhraseMate) Done processing!"
+  renoise.app():show_message(msg)
+end
+
+function invoke_sliced_task(fn,arg)
+  --print("invoke_sliced_task",fn,arg)
+  process_slicer = ProcessSlicer(fn,arg)
+  process_slicer:start()
 end
 
 --------------------------------------------------------------------------------
@@ -436,7 +457,7 @@ function show_preferences()
           width = "100%",
           height = 22,
           notifier = function()
-            invoke_task(collect_phrases())
+            invoke_sliced_task(collect_phrases)
           end
         },
       },
@@ -511,7 +532,7 @@ function show_preferences()
             width = "100%",
             height = 22,
             notifier = function()
-              invoke_task(apply_phrase_to_selection())
+              invoke_sliced_task(apply_phrase_to_selection)
             end
           },
           vb:button{
@@ -519,7 +540,7 @@ function show_preferences()
             width = "100%",
             height = 22,
             notifier = function()
-              invoke_task(apply_phrase_to_track())
+              invoke_sliced_task(apply_phrase_to_track)
             end
           },
         },
@@ -667,21 +688,21 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrase from Selection in Pattern [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      invoke_task(collect_phrases(INPUT_SCOPE.SELECTION_IN_PATTERN))
+      invoke_sliced_task(collect_phrases,INPUT_SCOPE.SELECTION_IN_PATTERN)
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Create Phrase from Selection",
   invoke = function() 
-    invoke_task(collect_phrases(INPUT_SCOPE.SELECTION_IN_PATTERN))
+    invoke_sliced_task(collect_phrases,INPUT_SCOPE.SELECTION_IN_PATTERN)
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrase from Selection in Pattern",
   invoke = function(repeated)
     if (not repeated) then 
-      invoke_task(collect_phrases(INPUT_SCOPE.SELECTION_IN_PATTERN))
+      invoke_sliced_task(collect_phrases,INPUT_SCOPE.SELECTION_IN_PATTERN)
     end
   end
 }
@@ -692,21 +713,21 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrase from Selection in Matrix [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      invoke_task(collect_phrases(INPUT_SCOPE.SELECTION_IN_MATRIX))
+      invoke_sliced_task(collect_phrases,INPUT_SCOPE.SELECTION_IN_MATRIX)
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Matrix:PhraseMate:Create Phrase from Selection",
   invoke = function() 
-    invoke_task(collect_phrases(INPUT_SCOPE.SELECTION_IN_MATRIX))
+    invoke_sliced_task(collect_phrases,INPUT_SCOPE.SELECTION_IN_MATRIX)
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrase from Selection in Matrix",
   invoke = function(repeated)
     if (not repeated) then 
-      invoke_task(collect_phrases(INPUT_SCOPE.SELECTION_IN_MATRIX))
+      invoke_sliced_task(collect_phrases,INPUT_SCOPE.SELECTION_IN_MATRIX)
     end
   end
 }
@@ -717,21 +738,21 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrase from Track [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      invoke_task(collect_phrases(INPUT_SCOPE.TRACK_IN_PATTERN))
+      invoke_sliced_task(collect_phrases,INPUT_SCOPE.TRACK_IN_PATTERN)
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Create Phrase from Track",
   invoke = function() 
-    invoke_task(collect_phrases(INPUT_SCOPE.TRACK_IN_PATTERN))
+    invoke_sliced_task(collect_phrases,INPUT_SCOPE.TRACK_IN_PATTERN)
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrase from Track",
   invoke = function(repeated)
     if (not repeated) then 
-      invoke_task(collect_phrases(INPUT_SCOPE.TRACK_IN_PATTERN))
+      invoke_sliced_task(collect_phrases,INPUT_SCOPE.TRACK_IN_PATTERN)
     end
   end
 }
@@ -742,21 +763,21 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrases from Track in Song [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      invoke_task(collect_phrases(INPUT_SCOPE.TRACK_IN_SONG))
+      invoke_sliced_task(collect_phrases,INPUT_SCOPE.TRACK_IN_SONG)
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Create Phrases from Track in Song",
   invoke = function() 
-    invoke_task(collect_phrases(INPUT_SCOPE.TRACK_IN_SONG))
+    invoke_sliced_task(collect_phrases,INPUT_SCOPE.TRACK_IN_SONG)
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrases from Track in Song",
   invoke = function(repeated)
     if (not repeated) then 
-      invoke_task(collect_phrases(INPUT_SCOPE.TRACK_IN_SONG))
+      invoke_sliced_task(collect_phrases,INPUT_SCOPE.TRACK_IN_SONG)
     end
   end
 }
@@ -767,21 +788,21 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Write Phrase to Selection In Pattern [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      invoke_task(apply_phrase_to_selection())
+      invoke_sliced_task(apply_phrase_to_selection)
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "--- Pattern Editor:PhraseMate:Write Phrase to Selection In Pattern",
   invoke = function() 
-    invoke_task(apply_phrase_to_selection())
+    invoke_sliced_task(apply_phrase_to_selection)
   end
 } 
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Write Phrase to Selection in Pattern",
   invoke = function(repeated)
     if (not repeated) then 
-      invoke_task(apply_phrase_to_selection())
+      invoke_sliced_task(apply_phrase_to_selection)
     end
   end
 }
@@ -792,14 +813,14 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Write Phrase to Track [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      invoke_task(apply_phrase_to_track())
+      invoke_sliced_task(apply_phrase_to_track)
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Write Phrase to Track",
   invoke = function() 
-    invoke_task(apply_phrase_to_track())
+    invoke_sliced_task(apply_phrase_to_track)
   end
 } 
 
@@ -807,7 +828,7 @@ renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Write Phrase to Track",
   invoke = function(repeated)
     if (not repeated) then 
-      invoke_task(apply_phrase_to_track())
+      invoke_sliced_task(apply_phrase_to_track)
     end
   end
 }
@@ -1420,8 +1441,9 @@ function collect_phrases(scope)
   end
 
   if not table.is_empty(collected_messages) then
+    --coroutine.yield()
     local msg = table.concat(table.keys(collected_messages),"\n")
-    renoise.app():show_message(msg)
+    done_handler(msg)
   end
 
 end
@@ -1509,7 +1531,10 @@ end
 
 function do_collect(seq_idx,trk_idx,patt_sel)
 
-  --assert(source_instr_idx,"Expected source_instr_idx to be defined")
+  -- display progress
+  local msg_progress = "Collecting phrases : sequence index = %d, track index = %d"
+  progress_handler(msg_progress:format(seq_idx,trk_idx))
+  coroutine.yield()
 
   if not seq_idx then
     seq_idx = rns.selected_sequence_index
@@ -2155,6 +2180,11 @@ renoise.tool().app_idle_observable:add_notifier(function()
     modified_lines = {}
     --user_set_program = nil
     --print("user_set_program 2",user_set_program)
+  end
+
+  if status_update then
+    renoise.app():show_status(status_update)
+    status_update = nil
   end
 
 end)
