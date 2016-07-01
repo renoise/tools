@@ -1,6 +1,6 @@
 # PhraseMate
 
-PhraseMate aims to make it more convenient to work with phrases in Renoise.   
+PhraseMate aims to make it more convenient to work with phrases in Renoise, particularly if you prefer a keyboard-centric workflow. Copy phrases into the pattern editor, or vice versa, and make the tool insert "set phrase" commands (Zxx) automatically as you are entering notes into a song.
 
 ## Quickstart
 
@@ -16,17 +16,38 @@ The tool can be triggered in a number of ways:
 
 The tool has a number of distinctive operating modes:
 
-**Input** - read from pattern/song and automatically turn into phrases
+### Input - convert pattern data into phrases
 
-TODO...
+The input mode makes it easy to convert pattern data into phrases, and has a very flexible set of parameters.
 
-**Output** - turn existing instrument-phrases into normal pattern-data    
+Consider the following diagram for a possible phrase-capturing workflow:
 
-TODO...
+<img src="./manual/collect_capture_all_replace.png"> 
 
-**Realtime** - monitor the pattern and insert Zxx commands in realtime
+Here, a single pattern-track containing three different instruments is collected as phrases in separate instruments. Then, the original pattern data is replaced by the phrases we just collected. 
 
-TODO...
+Settings used:
+ 
+	Source: 'Capture All Instr.'  
+	Target: New instrument(s)  
+	[x] Replace notes with phrase
+
+### Output - convert phrases into pattern-data    
+
+* **Anchor to selection** - when writing to a selection, determine if the output is written relative to the top of the selection, or the top of the pattern
+* **Continuous paste** - when source phrase is shorter than pattern/selection, repeat in order to fill
+* **Skip muted columns** - skip note-columns when they are muted in the phrase (will also clear columns, unless mix-paste is enabled)
+* **Expand columns** - show additional note columns if required by source phrase
+* **Expand sub-columns** - show sub-columns (VOL/PAN/DLY/FX) if required by source phrase
+* **Mix-Paste** - attempt to keep existing content when producing output (same as Mix-Paste in the advanced edit panel)
+
+### Realtime - monitor the pattern and insert Zxx commands
+
+One of the exciting features in Renoise 3.1 is the program mode for phrases. It's awesome to be able to pull up any phrase and trigger it in any key. But, less awesome is the fact that it's easy to forget those pesky Zxx commands that goes along with each note. Hence, the "insert Zxx" mode of this tool.
+
+When enabled, PhraseMate will listen for changes to the pattern and insert Zxx commands when it seems appropriate (or remove them if they are not required). **_It will only do so while you have the edit-mode enabled, and only while your selected instrument/phrase is set to program mode_**. 
+
+Note that the realtime mode is experimental and has a few quirks - please see the following section with questions and answers...
 
 ## Questions & Answers
 
@@ -58,9 +79,44 @@ TODO...
 * (Input) When starting to collect phrases from the middle of a pattern/song, ghost notes are not resolved until an instrument is reached. As a result, the first notes might be missing. 
 * (Output) Phrase output is currently limited to sequencer tracks (avoid targeting group/send/master tracks)
 
-## Roadmap / planned 
 
-* The ability to transpose and harmonize notes (both when reading and writing from/to pattern)
-* The ability to merge multiple (sample-based) instruments into a single one while capturing phrases. 
+## Keyboard Shortcuts
 
-  
+	Global : PhraseMate : Show preferences...
+	Global : PhraseMate : Create Phrase from Selection in Pattern
+	Global : PhraseMate : Create Phrase from Selection in Matrix
+	Global : PhraseMate : Create Phrase from Track
+	Global : PhraseMate : Create Phrases from Track in Song
+	Global : PhraseMate : Write Phrase to Selection in Pattern
+	Global : PhraseMate : Write Phrase to Track
+	Global : PhraseMate : Select Previous Phrase in Instrument
+	Global : PhraseMate : Select Next Phrase in Instrument
+	Global : PhraseMate : Capture Phrase from Pattern
+	Global : PhraseMate : Set Playback Mode to 'Off'
+	Global : PhraseMate : Set Playback Mode to 'Program'
+	Global : PhraseMate : Set Playback Mode to 'Keymap'
+
+## Menu Entries
+
+	Main Menu : Tools : PhraseMate...
+	Pattern Editor : PhraseMate : Create Phrase from Selection
+	Pattern Editor : PhraseMate : Create Phrase from Track
+	Pattern Editor : PhraseMate : Create Phrases from Track in Song
+	Pattern Editor : PhraseMate : Write Phrase to Selection In Pattern
+	Pattern Editor : PhraseMate : Write Phrase to Track
+	Pattern Editor : PhraseMate : Adjust settings...
+	Pattern Matrix : PhraseMate : Create Phrase from Selection
+	Pattern Matrix : PhraseMate : Adjust settings... 
+
+## MIDI Mappings
+
+	Tools : PhraseMate : Create Phrase from Selection in Pattern [Trigger]
+	Tools : PhraseMate : Create Phrase from Selection in Matrix [Trigger]
+	Tools : PhraseMate : Create Phrase from Track [Trigger]
+	Tools : PhraseMate : Create Phrases from Track in Song [Trigger]
+	Tools : PhraseMate : Write Phrase to Selection In Pattern [Trigger]
+	Tools : PhraseMate : Write Phrase to Track [Trigger]
+	Tools : PhraseMate : Select Previous Phrase in Instrument [Trigger]
+	Tools : PhraseMate : Select Next Phrase in Instrument [Trigger]
+	Tools : PhraseMate : Select Playback Mode [Set]
+
