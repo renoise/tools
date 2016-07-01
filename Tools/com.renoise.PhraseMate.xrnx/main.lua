@@ -30,13 +30,13 @@ _trace_filters = nil
 
 require (_xlibroot..'xLib')
 require (_xlibroot.."xPhrase")
-require (_xlibroot..'xDebug')
-require (_xlibroot..'xFilesystem')
 require (_xlibroot..'xLinePattern')
 require (_xlibroot..'xInstrument')
 require (_xlibroot..'xNoteColumn') 
 require (_xlibroot..'xPhraseManager')
 require (_xlibroot..'xSelection')
+--require (_xlibroot..'xDebug')
+--require (_xlibroot..'xFilesystem')
 
 --------------------------------------------------------------------------------
 -- static variables
@@ -869,7 +869,7 @@ renoise.tool():add_keybinding {
   end
 }
 renoise.tool():add_midi_mapping {
-  name = "Global:PhraseMate:Select Playback Mode [Set]",
+  name = MIDI_MAPPING.SET_PLAYBACK_MODE,
   invoke = function(msg)
     local mode = xLib.clamp_value(msg.int_value,1,3)
     invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_PLAY_KEYMAP))
@@ -941,7 +941,6 @@ end
 -- when doing CAPTURE_ONCE, grab the instrument nearest to our cursor 
 
 function do_capture_once(trk_idx,seq_idx)
-  TRACE("do_capture_once(trk_idx,seq_idx)",trk_idx,seq_idx)
 
   if not done_with_capture 
     and (options.input_source_instr.value == SOURCE_INSTR.CAPTURE_ONCE) 
@@ -966,7 +965,6 @@ end
 -- @return bool
 
 function note_is_phrase_trigger(line,note_col_idx,instr_idx,trk_idx)
-  TRACE("note_is_phrase_trigger(line,note_col_idx,instr_idx,trk_idx)",line,note_col_idx,instr_idx,trk_idx)
 
   -- no note means no triggering 
   local note_col = line.note_columns[note_col_idx]
@@ -1036,7 +1034,6 @@ end
 -- update source instr by calling this fn 
 
 function set_source_instr(instr_idx)
-  TRACE("set_source_instr(instr_idx)",instr_idx)
 
   assert(type(instr_idx)=="number","Expected instr_idx to be a number")
 
@@ -1052,12 +1049,11 @@ end
 -- detect notes that trigger phrases later on... 
 
 function save_instr_state(instr_idx)
-  TRACE("save_instr_state(instr_idx)",instr_idx)
 
   local instr = rns.instruments[instr_idx]
   --print("*** save_instr_state - instr_idx,instr",instr_idx,instr)
   if not instr then
-    LOG("Could not locate instrument, state was not saved")
+    --LOG("Could not locate instrument, state was not saved")
     return
   end
   if not initial_instr_states[instr_idx] then
@@ -1074,7 +1070,6 @@ end
 -- when target is 'same as source', invoke this whenever source is set
 
 function sync_source_target_instr()
-  TRACE("sync_source_target_instr()")
 
   if (options.input_target_instr.value == TARGET_INSTR.SAME) then
     target_instr_idx = source_instr_idx
@@ -1087,7 +1082,6 @@ end
 -- will update target_instr_idx ...
 
 function allocate_target_instr()
-  TRACE("allocate_target_instr()")
 
   if (options.input_target_instr.value == TARGET_INSTR.NEW) then
 
@@ -1126,7 +1120,6 @@ end
 -- continue existing phrase, take over empty phrase or create as needed
 
 function allocate_phrase(track,seq_idx,trk_idx,selection)
-  TRACE("allocate_phrase(track,seq_idx,trk_idx,selection)",track,seq_idx,trk_idx,selection)
 
   local phrase,phrase_idx
 
@@ -1196,13 +1189,13 @@ end
 -- @return table (created phrase indices)
 
 function collect_phrases(scope)
-  TRACE("collect_phrases(scope)",scope)
 
   if not scope then
     scope = options.input_scope.value
   end
 
   -- reset variables
+  done_with_capture = false
   source_target_map = {}
   collected_phrases = {}
   ghost_columns = {}
@@ -1217,13 +1210,17 @@ function collect_phrases(scope)
   --sync_source_target_instr()
 
   if (options.input_source_instr.value == SOURCE_INSTR.CUSTOM) then
-    source_instr_idx = vb.views["ui_source_popup"].value - #SOURCE_INSTR-2
+    if vb then
+      source_instr_idx = vb.views["ui_source_popup"].value - #SOURCE_INSTR-2
+    end
   elseif (options.input_source_instr.value == SOURCE_INSTR.SELECTED) then
     source_instr_idx = rns.selected_instrument_index
   end
 
   if (options.input_target_instr.value == TARGET_INSTR.CUSTOM) then
-    target_instr_idx = vb.views["ui_target_popup"].value - #TARGET_INSTR-2
+    if vb then
+      target_instr_idx = vb.views["ui_target_popup"].value - #TARGET_INSTR-2
+    end
   --elseif (options.input_target_instr.value == TARGET_INSTR.SAME) then
   --  target_instr_idx = source_instr_idx
   end
@@ -1434,7 +1431,6 @@ end
 -- @return string (error message)
 
 function collect_from_pattern_selection()
-  TRACE("collect_from_pattern_selection()")
 
   local patt_sel,err = xSelection.get_pattern_if_single_track()
   if not patt_sel then
@@ -1454,7 +1450,6 @@ end
 -- @return string (error message)
 
 function collect_from_matrix_selection()
-  TRACE("collect_from_matrix_selection()")
 
   local matrix_sel,err = xSelection.get_matrix_selection()
   if table.is_empty(matrix_sel) then
@@ -1481,7 +1476,6 @@ end
 -- @return string (error message)
 
 function collect_from_track_in_pattern()
-  TRACE("collect_from_track_in_pattern()")
 
   local trk_idx = rns.selected_track_index
   local seq_idx = rns.selected_sequence_index
@@ -1497,7 +1491,6 @@ end
 -- @return string (error message)
 
 function collect_from_track_in_song()
-  TRACE("collect_from_track_in_song()")
 
   local trk_idx = rns.selected_track_index
 
@@ -1515,7 +1508,6 @@ end
 -- @param patt_sel (table), specified when doing SELECTION_IN_PATTERN
 
 function do_collect(seq_idx,trk_idx,patt_sel)
-  TRACE("do_collect(seq_idx,trk_idx,patt_sel)",seq_idx,trk_idx,patt_sel)
 
   --assert(source_instr_idx,"Expected source_instr_idx to be defined")
 
@@ -1701,11 +1693,10 @@ function apply_phrase_to_track(start_col,end_col,start_line,end_line)
   end
 
   suppress_line_notifier = true
-
   local track = rns.selected_track
 
   -- TODO support other track types
-  if (track.type == renoise.Track.TRACK_TYPE_SEQUENCER) then
+  if (track.type ~= renoise.Track.TRACK_TYPE_SEQUENCER) then
     return false,"Can only write to sequencer tracks"
   end
 
@@ -1911,12 +1902,11 @@ end
 
 function apply_phrase_to_selection()
 
-  local pass,err = xSelection.pattern_has_single_track()
-  if not pass then
+  local sel,err = xSelection.get_pattern_if_single_track()
+  if not sel then
     return false,err
   end
 
-  local sel = rns.selection_in_pattern
   return apply_phrase_to_track(sel.start_column,sel.end_column,sel.start_line,sel.end_line)
 
 end
@@ -1935,7 +1925,6 @@ end
 --------------------------------------------------------------------------------
 
 function handle_modified_line(pos)
-  TRACE("handle_modified_line(pos)",pos)
 
   local patt = rns.patterns[pos.pattern]
   local ptrack = patt:track(pos.track)
@@ -2007,7 +1996,6 @@ end
 
 --------------------------------------------------------------------------------
 function phrase_playback_mode_handler()
-  TRACE("phrase_playback_mode_handler")
 
   realtime_update_requested = true
 
@@ -2016,14 +2004,12 @@ end
 --------------------------------------------------------------------------------
 
 function phrase_index_notifier()
-  TRACE("phrase_index_notifier")
   realtime_update_requested = true
 end
 
 --------------------------------------------------------------------------------
 
 function ui_update_instruments()
-  TRACE("ui_update_instruments")
 
   if not vb then return end
 
@@ -2037,8 +2023,19 @@ end
 
 --------------------------------------------------------------------------------
 
+function zxx_mode_handler()
+
+  if options.zxx_mode.value then
+    attach_to_song()
+  else
+    detach_from_song()
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
 function attach_to_instrument()
-  TRACE("attach_to_instrument()")
 
   local instr = rns.selected_instrument
 
@@ -2053,7 +2050,6 @@ end
 --------------------------------------------------------------------------------
 
 function detach_from_instrument()
-  TRACE("detach_from_instrument()")
 
   local instr = rns.selected_instrument
 
@@ -2066,7 +2062,6 @@ end
 --------------------------------------------------------------------------------
 
 function attach_to_pattern()
-  TRACE("attach_to_pattern()")
 
   modified_lines = {}
 
@@ -2081,7 +2076,6 @@ end
 --------------------------------------------------------------------------------
 
 function detach_from_pattern()
-  TRACE("detach_from_pattern()")
 
   local pattern = rns.selected_pattern
 
@@ -2094,7 +2088,6 @@ end
 --------------------------------------------------------------------------------
 
 function attach_to_song()
-  TRACE("attach_to_song()")
 
   if not rns.selected_pattern_observable:has_notifier(attach_to_pattern) then
     rns.selected_pattern_observable:add_notifier(attach_to_pattern)
@@ -2120,7 +2113,6 @@ end
 --------------------------------------------------------------------------------
 
 function detach_from_song()
-  TRACE("detach_from_song()")
 
   if rns.selected_pattern_observable:has_notifier(attach_to_pattern) then
     rns.selected_pattern_observable:remove_notifier(attach_to_pattern)
@@ -2170,10 +2162,9 @@ end)
 --------------------------------------------------------------------------------
 
 renoise.tool().app_new_document_observable:add_notifier(function()
-  TRACE("*** app_new_document_observable fired...")
 
   rns = renoise.song()
-  attach_to_song()
+  zxx_mode_handler()
   ui_update_realtime()
 
 end)
@@ -2182,10 +2173,12 @@ end)
 --------------------------------------------------------------------------------
 
 renoise.tool().app_release_document_observable:add_notifier(function()
-  TRACE("*** app_release_document_observable fired...")
 
   detach_from_song()
 
 end)
 
+--------------------------------------------------------------------------------
+
+options.zxx_mode:add_notifier(zxx_mode_handler)
 
