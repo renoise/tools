@@ -1023,7 +1023,7 @@ function do_capture_once(trk_idx,seq_idx)
     local seq_idx,trk_idx = rns.selected_sequence_index,rns.selected_track_index
     rns.selected_sequence_index = seq_idx
     rns.selected_track_index = trk_idx
-    print("*** capture source instrument",source_instr_idx)
+    --print("*** capture source instrument",source_instr_idx)
     set_source_instr(xInstrument.autocapture())
     rns.selected_sequence_index,rns.selected_track_index = seq_idx,trk_idx
     done_with_capture = true
