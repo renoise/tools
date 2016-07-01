@@ -48,14 +48,15 @@ end
 --------------------------------------------------------------------------------
 -- check if note is referring to keymapped phrase
 -- @param note (int)
--- @param instr (renoise.Instrument)
+-- @param instr (renoise.Instrument) or table containing 'note_range'
 -- @return bool
 
 function xPhrase.note_is_keymapped(note,instr)
   TRACE("xPhrase.note_is_keymapped(note,instr)",note,instr)
 
   for k,v in ipairs(instr.phrase_mappings) do
-    if (note >= v.note_range[1]) and (note < v.note_range[2]) then
+    --print("note_range",v.note_range[1],v.note_range[2])
+    if (note >= v.note_range[1]) and (note <= v.note_range[2]) then
       return true
     end
   end
@@ -99,5 +100,27 @@ function xPhrase.clear_foreign_commands(phrase)
     end
 
   end
+
+end
+
+--------------------------------------------------------------------------------
+-- create a string representation of the phrase
+-- @param phrase renoise.InstrumentPhrase
+-- @return string
+
+function xPhrase.stringify(phrase)
+  TRACE("xPhrase.stringify",phrase)
+
+  if phrase.is_empty then
+    return ""
+  end
+
+  local rslt = {}
+  for k,v in ipairs(phrase.lines) do
+    table.insert(rslt,tostring(v))
+  end
+
+  --print("*** stringify - rslt",rprint(rslt))
+  return table.concat(rslt,"\n")
 
 end

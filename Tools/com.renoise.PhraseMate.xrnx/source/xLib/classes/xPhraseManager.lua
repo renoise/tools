@@ -204,7 +204,7 @@ function xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,
   local instr = rns.instruments[instr_idx]
   if not instr then
     local msg = "Failed to allocate a phrase (could not locate instrument)"
-    return false,err
+    return false,msg
   end
 
   local vphrase_range,vphrase_idx = nil,nil
@@ -238,6 +238,7 @@ function xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,
   if do_create then
     phrase = instr:insert_phrase_at(vphrase_idx)
     phrase:clear() -- clear default C-4 
+    --print(">>> inserted phrase at",vphrase_idx,"in",instr.name)
   else
     phrase = instr.phrases[vphrase_idx]
   end
@@ -443,9 +444,7 @@ function xPhraseManager.delete_selected_phrase()
 
   local instr = rns.selected_instrument
   local phrase_idx = rns.selected_phrase_index
-  if (phrase_idx 
-    and instr.phrases[phrase_idx]) 
-  then
+  if (phrase_idx and instr.phrases[phrase_idx]) then
     instr:delete_phrase_at(phrase_idx)
   end
 
@@ -535,5 +534,20 @@ end
 -- @return table containing indices 
 
 function xPhraseManager.find_duplicates(instr)
+  TRACE("xPhraseManager.find_duplicates(instr)",instr)
+
+  local phrases_map = {}
+  local duplicates = {}
+
+  for k,v in ipairs(instr.phrases) do
+    local stringified = xPhrase.stringify(v)
+    if phrases_map[stringified] then
+      table.insert(duplicates,k)
+    else
+      phrases_map[stringified] = true
+    end
+  end
+
+  return duplicates
 
 end

@@ -3,16 +3,19 @@ com.renoise.PhraseMate.xrnx/main.lua
 ============================================================================]]--
 --[[
 
-PhraseMate aims to make it more convenient to work with phrases 
+PhraseMate aims to make it more convenient to work with phrases. Launch the tool from the tool menu, by using the right-click (context-menu) shortcuts in the pattern editor or pattern matrix, or via the supplied keyboard shortcuts / MIDI mappings.
+
 .
 #
 
-## TODO
-* When replacing with phrase, detect when/if original notes are released and insert note-off 
-* Detect duplicate phrases (xPhraseManager.find_duplicates). Make optional
-* Allow writing phrases into master/group/send tracks
-  By then, 'clear_foreign_commands' should be optional (allow for 'pure' fx phrases)
-* Option: enable loop on phrases (default = on)
+## Links
+
+Renoise: [Tool page](http://www.renoise.com/tools/phrasemate)
+
+Renoise Forum: [Feedback and bugs](http://forum.renoise.com/index.php/topic/46284-new-tool-31-phrasemate/)
+
+Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.PhraseMate.xrnx/) 
+
 
 ]]
 
@@ -29,6 +32,7 @@ require (_xlibroot..'xLib')
 require (_xlibroot.."xPhrase")
 require (_xlibroot..'xDebug')
 require (_xlibroot..'xFilesystem')
+require (_xlibroot..'xLinePattern')
 require (_xlibroot..'xInstrument')
 require (_xlibroot..'xNoteColumn') 
 require (_xlibroot..'xPhraseManager')
@@ -78,9 +82,9 @@ local PLAYBACK_MODE = {
 }
 
 local MIDI_MAPPING = {
-  PREV_PHRASE_IN_INSTR = "Global:PhraseMate:Select Previous Phrase in Instrument [Trigger]",
-  NEXT_PHRASE_IN_INSTR = "Global:PhraseMate:Select Next Phrase in Instrument [Trigger]",
-  SET_PLAYBACK_MODE = "Global:PhraseMate:Select Playback Mode [Set]",
+  PREV_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Previous Phrase in Instrument [Trigger]",
+  NEXT_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Next Phrase in Instrument [Trigger]",
+  SET_PLAYBACK_MODE = "Tools:PhraseMate:Select Playback Mode [Set]",
 }
 
 local UI_SOURCE_ITEMS = {"➜ Autocapture","➜ Capture All Instr.","➜ Selected Instrument"}
@@ -109,7 +113,18 @@ local done_with_capture = false
 local source_target_map = {}
 
 --- keep track of 'ghost notes' when reading note columns
+-- [track_index][column_index]{
+--    instrument_index = int,
+--    offed = bool,
+--  }
 local ghost_columns = {}
+
+--- keep track of 'initial state' of source before reading note columns
+--  {
+--    number_of_phrases = int
+--    playback_mode = renoise.Instrument.PHRASES_XXX,
+--  }
+local initial_instr_states = {}
 
 --- table<[instr_idx]{
 --  {
@@ -117,6 +132,9 @@ local ghost_columns = {}
 --    phrase_index = int,
 --  }
 local collected_phrases = {}
+
+--- table<[string] = bool>
+local collected_messages = {}
 
 -- realtime
 local modified_lines = {}
@@ -147,10 +165,8 @@ options:add_property("expand_columns", renoise.Document.ObservableBoolean(true))
 options:add_property("expand_subcolumns", renoise.Document.ObservableBoolean(true))
 options:add_property("mix_paste", renoise.Document.ObservableBoolean(false))
 options:add_property("input_scope", renoise.Document.ObservableNumber(INPUT_SCOPE.SELECTION_IN_PATTERN))
---options:add_property("output_source_instrument", renoise.Document.ObservableNumber(1))
---options:add_property("output_target_instrument", renoise.Document.ObservableNumber(1))
---options:add_property("output_skip_duplicates", renoise.Document.ObservableBoolean(true))
---options:add_property("input_collect_everything", renoise.Document.ObservableBoolean(false))
+options:add_property("input_include_empty_phrases", renoise.Document.ObservableBoolean(true))
+options:add_property("input_include_duplicate_phrases", renoise.Document.ObservableBoolean(true))
 options:add_property("input_replace_collected", renoise.Document.ObservableBoolean(false))
 options:add_property("input_source_instr", renoise.Document.ObservableNumber(SOURCE_INSTR.CAPTURE_ONCE))
 options:add_property("input_target_instr", renoise.Document.ObservableNumber(TARGET_INSTR.NEW))
@@ -160,10 +176,6 @@ options:add_property("input_keymap_offset", renoise.Document.ObservableNumber(0)
 options:add_property("zxx_mode", renoise.Document.ObservableBoolean(false))
 
 renoise.tool().preferences = options
-
-options.input_source_instr:add_notifier(function(idx)
-  print(options.input_source_instr.value)
-end)
 
 --------------------------------------------------------------------------------
 -- user interface
@@ -340,6 +352,25 @@ function show_preferences()
             },
           },
           ]]
+          vb:row{
+            tooltip = "During collection of phrases, skip phrases without content",
+            vb:checkbox{
+              bind = options.input_include_empty_phrases,
+            },
+            vb:text{
+              text = "Include empty phrases"
+            },
+          },
+          vb:row{
+            tooltip = "During collection of phrases, detect if phrase is duplicate and skip",
+            vb:checkbox{
+              bind = options.input_include_duplicate_phrases,
+            },
+            vb:text{
+              text = "Include duplicate phrases"
+            },
+          },
+
           vb:row{
             tooltip = "After collecting notes, insert a phrase trigger-note in their place",
             vb:checkbox{
@@ -534,7 +565,10 @@ function show_preferences()
 
     }
 
-    local keyhandler = nil
+    local keyhandler = function(dialog,key)
+      --print("dialog,key",dialog,key)
+      return key
+    end
 
     dialog = renoise.app():show_custom_dialog(
       "PhraseMate", dialog_content, keyhandler)
@@ -915,7 +949,7 @@ function do_capture_once(trk_idx,seq_idx)
     local seq_idx,trk_idx = rns.selected_sequence_index,rns.selected_track_index
     rns.selected_sequence_index = seq_idx
     rns.selected_track_index = trk_idx
-    source_instr_idx = xInstrument.autocapture()
+    set_source_instr(xInstrument.autocapture())
     rns.selected_sequence_index,rns.selected_track_index = seq_idx,trk_idx
     done_with_capture = true
     --print("*** captured instrument",source_instr_idx)
@@ -937,46 +971,34 @@ function note_is_phrase_trigger(line,note_col_idx,instr_idx,trk_idx)
   -- no note means no triggering 
   local note_col = line.note_columns[note_col_idx]
   if (note_col.note_value > renoise.PatternLine.NOTE_OFF) then
-    --print("No note available")
+    --print("*** note_is_phrase_trigger - false, no note is present")
     return false
   end
 
   -- no phrases means no triggering 
   local instr = rns.instruments[instr_idx]
   if (#instr.phrases == 0) then
-    --print("No phrases available")
+    --print("*** note_is_phrase_trigger - false, no phrases available in instrument")
     return false
   end
 
   local track = rns.tracks[trk_idx]
-  --local visible_note_cols = track.visible_note_columns
   local visible_fx_cols = track.visible_effect_columns
 
-  local get_zxx_command = function()
-    for k,v in ipairs(line.effect_columns) do
-      if (k > visible_fx_cols) then
-        break
-      elseif (v.number_string == "0Z") then
-        return v.amount_value
-      end
-    end
-  end
-
-  if (note_col.effect_number_string == "0Z") 
-    and (note_col.effect_amount_value > 0x00)
-    and (note_col.effect_amount_value < 0x7F)
+  if (instr.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_SELECTIVE) 
+    and (initial_instr_states[instr_idx].number_of_phrases > 0)
   then
-    return true
-  elseif (instr.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_SELECTIVE) then
-    return true
+    return true, "Can't collect phrases while the source instrument contains phrases and is set to phrase playback. Please switch playback mode to 'Off' and try again.\n"
+        
   elseif (instr.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_KEYMAP) 
-    and xPhrase.note_is_keymapped(note_col.note_value,instr)
+    and (initial_instr_states[instr_idx].number_of_phrases > 0)
+    and xPhrase.note_is_keymapped(note_col.note_value,initial_instr_states[instr_idx])
   then
-    return true
+    return true,"One or more notes in the pattern were triggered using a phrase in keymap mode. To collect these notes, please switch playback mode to 'Off' and try again.\n"
   else
-    local zxx_index = get_zxx_command() 
-    --print("zxx_index",zxx_index)
-    if (zxx_index > 0x00) and (zxx_index <= 0x7F) then
+    local zxx_index = get_zxx_command(line,note_col_idx,visible_fx_cols) 
+    --print("*** note_is_phrase_trigger - zxx_index",zxx_index)
+    if zxx_index and (zxx_index > 0x00) and (zxx_index <= 0x7F) then
       return true
     end
   end
@@ -985,6 +1007,80 @@ function note_is_phrase_trigger(line,note_col_idx,instr_idx,trk_idx)
 
 end
 
+--------------------------------------------------------------------------------
+-- obtain Zxx value from the provided line, if any
+-- (look in both local and master fx-columns)
+-- @param line (renoise.PatternLine)
+-- @param note_col_idx (int)
+-- @param visible_fx_cols (int)
+-- @return int or nil
+
+function get_zxx_command(line,note_col_idx,visible_fx_cols)
+
+  local note_col = line.note_columns[note_col_idx]
+  if (note_col.effect_number_string == "0Z") then
+    return note_col.effect_amount_value
+  end
+  for k,v in ipairs(line.effect_columns) do
+    if (k > visible_fx_cols) then
+      break
+    elseif (v.number_string == "0Z") then
+      return v.amount_value
+    end
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+-- update source instr by calling this fn 
+
+function set_source_instr(instr_idx)
+  TRACE("set_source_instr(instr_idx)",instr_idx)
+
+  assert(type(instr_idx)=="number","Expected instr_idx to be a number")
+
+  source_instr_idx = instr_idx
+  save_instr_state(instr_idx)
+  sync_source_target_instr()
+
+end
+
+--------------------------------------------------------------------------------
+-- when collecting phrases into instrument itself, we need to know if the 
+-- instrument originally contained phrases or we won't be able to reliably 
+-- detect notes that trigger phrases later on... 
+
+function save_instr_state(instr_idx)
+  TRACE("save_instr_state(instr_idx)",instr_idx)
+
+  local instr = rns.instruments[instr_idx]
+  --print("*** save_instr_state - instr_idx,instr",instr_idx,instr)
+  if not instr then
+    LOG("Could not locate instrument, state was not saved")
+    return
+  end
+  if not initial_instr_states[instr_idx] then
+    initial_instr_states[instr_idx] = {
+      number_of_phrases = #instr.phrases,
+      playback_mode = instr.phrase_playback_mode,
+      phrase_mappings = table.rcopy(instr.phrase_mappings)
+    }
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- when target is 'same as source', invoke this whenever source is set
+
+function sync_source_target_instr()
+  TRACE("sync_source_target_instr()")
+
+  if (options.input_target_instr.value == TARGET_INSTR.SAME) then
+    target_instr_idx = source_instr_idx
+  end
+
+end
 
 --------------------------------------------------------------------------------
 -- reuse instrument (via map), take over (when empty) or create as needed
@@ -1030,6 +1126,7 @@ end
 -- continue existing phrase, take over empty phrase or create as needed
 
 function allocate_phrase(track,seq_idx,trk_idx,selection)
+  TRACE("allocate_phrase(track,seq_idx,trk_idx,selection)",track,seq_idx,trk_idx,selection)
 
   local phrase,phrase_idx
 
@@ -1047,12 +1144,15 @@ function allocate_phrase(track,seq_idx,trk_idx,selection)
   -- takeover/create
   if not phrase then
     
-    local takeover = true
+    local takeover = not options.input_include_empty_phrases.value 
     local create_keymap = options.input_create_keymappings.value
     local keymap_range = options.input_keymap_range.value
     local keymap_offset = options.input_keymap_offset.value
     phrase,phrase_idx = xPhraseManager.auto_insert_phrase(target_instr_idx,create_keymap,keymap_range,keymap_offset,takeover)
     --print("*** allocate_phrase - phrase,phrase_idx",phrase,phrase_idx)
+    if not phrase then
+      LOG(phrase_idx) -- carries error msg
+    end
 
     -- maintain a record for later
     if not collected_phrases[source_instr_idx] then
@@ -1092,7 +1192,7 @@ end
 
 --------------------------------------------------------------------------------
 -- invoked through the 'collect phrases' button/shortcuts
--- @param scope (INPUT_SCOPE), when invoked via shortcut
+-- @param scope (INPUT_SCOPE), defined when invoked via shortcut
 -- @return table (created phrase indices)
 
 function collect_phrases(scope)
@@ -1106,8 +1206,36 @@ function collect_phrases(scope)
   source_target_map = {}
   collected_phrases = {}
   ghost_columns = {}
-  source_instr_idx = rns.selected_instrument_index
-  target_instr_idx = rns.selected_instrument_index
+  initial_instr_states = {}
+  collected_messages = {}
+  source_instr_idx = nil
+  target_instr_idx = nil
+
+  -- set initial source/target instruments
+  -- (might change during collection)
+  --target_instr_idx = rns.selected_instrument_index
+  --sync_source_target_instr()
+
+  if (options.input_source_instr.value == SOURCE_INSTR.CUSTOM) then
+    source_instr_idx = vb.views["ui_source_popup"].value - #SOURCE_INSTR-2
+  elseif (options.input_source_instr.value == SOURCE_INSTR.SELECTED) then
+    source_instr_idx = rns.selected_instrument_index
+  end
+
+  if (options.input_target_instr.value == TARGET_INSTR.CUSTOM) then
+    target_instr_idx = vb.views["ui_target_popup"].value - #TARGET_INSTR-2
+  --elseif (options.input_target_instr.value == TARGET_INSTR.SAME) then
+  --  target_instr_idx = source_instr_idx
+  end
+
+  local capture_all = (options.input_source_instr.value == SOURCE_INSTR.CAPTURE_ALL)
+  if not capture_all then
+    save_instr_state(source_instr_idx)
+  end
+
+  if source_instr_idx then
+    sync_source_target_instr()
+  end
 
   -- do collection
 
@@ -1125,77 +1253,106 @@ function collect_phrases(scope)
 
   -- post-process / finalize
 
-  local delete_instruments = {}
+  local collected_phrase_count = 0
+  local collected_instruments = {}
+  local delete_instruments = {} -- table<[instrument_index]=bool>
+  local empty_phrases = {}     -- table<[instrument_index]={phrase_index,...}>
+  local duplicate_phrases = {}  -- table<[instrument_index]={phrase_index,...}>
 
-  --print("*** collect_phrases - collected_phrases",rprint(collected_phrases))
-  if (type(collected_phrases)=="table") then
+  --print("*** post-process - collected_phrases",rprint(collected_phrases))
+  --print("*** post-process - collected_phrases",rprint(table.keys(collected_phrases)))
+  if (#table.keys(collected_phrases) == 0) then
+
+    local msg = "No phrases were collected"
+    collected_messages[msg] = true
+
+  else
 
     local cached_instr_idx = rns.selected_instrument_index
 
     for instr_idx,collected in pairs(collected_phrases) do
-      --print("instr_idx,collected",instr_idx,collected)
+      --print("*** post-process - instr_idx,collected",instr_idx,collected)
       for __,v in pairs(collected) do
 
         local instr = rns.instruments[v.instrument_index]
 
+        -- check for duplicates 
+        if not options.input_include_duplicate_phrases.value 
+          and not duplicate_phrases[v.instrument_index]
+        then
+          duplicate_phrases[v.instrument_index] = xPhraseManager.find_duplicates(instr)
+        end
+
+        -- remove instrument when without phrases
         if (options.input_target_instr.value == TARGET_INSTR.NEW) 
           and (#instr.phrases == 0)
         then
-          -- newly created instrument contains no phrases,
-          -- it seems safe to remove it again          
           delete_instruments[v.instrument_index] = true
         else
 
+          collected_instruments[v.instrument_index] = true
           local phrase = instr.phrases[v.phrase_index]
+            
+          -- TODO don't process if we are going to remove 
+          -- the (empty,duplicate) phrase anyway
 
-          -- remove empty phrases
-          if phrase.is_empty then
-            instr:delete_phrase_at(v.phrase_index)
-            --print("*** deleted empty phrase at ",v.phrase_index)
-          else
+          if phrase then
 
-            -- TODO check for duplicates 
-            --local duplicates = 0
+            --print("*** post-process - phrase,instr",phrase.name,instr.name)
 
             xPhrase.clear_foreign_commands(phrase)
 
-            -- replace notes with phrase trigger 
-            -- (if multiple instruments, each is a separate note-column)
-            if options.input_replace_collected.value then
-              local track = rns.tracks[v.track_index]
-              local patt_idx = rns.sequencer:pattern(v.sequence_index)
-              local patt_lines = rns.pattern_iterator:lines_in_pattern_track(patt_idx,v.track_index)
-              for ___,line in patt_lines do
-                
-                -- allocate column
-                local col_idx = 1
-                for k,note_col in ipairs(line.note_columns) do
-                  if (note_col.effect_number_string ~= "0Z") then
-                    col_idx = k
-                    track.visible_note_columns = k
-                    break
-                  end
-                end
-                --print("*** replace notes, create trigger in column",col_idx)
-
-                local trigger_note_col = line.note_columns[col_idx]
-                trigger_note_col.instrument_value = v.instrument_index-1
-                trigger_note_col.note_string = "C-4"
-                trigger_note_col.effect_number_string = "0Z"
-                trigger_note_col.effect_amount_value = v.phrase_index
-                track.sample_effects_column_visible = true
-                break
+            -- remove empty phrases
+            if phrase.is_empty 
+              and not options.input_include_empty_phrases.value
+            then
+              if not empty_phrases[v.instrument_index] then
+                empty_phrases[v.instrument_index] = {}
               end
+              table.insert(empty_phrases[v.instrument_index],v.phrase_index)
+              --empty_phrases[v.instrument_index][v.phrase_index] = true
+            else
+              collected_phrase_count = collected_phrase_count+1
+
+              -- replace notes with phrase trigger 
+              -- (if multiple instruments, each is a separate note-column)
+              if options.input_replace_collected.value then
+                local track = rns.tracks[v.track_index]
+                local patt_idx = rns.sequencer:pattern(v.sequence_index)
+                local patt_lines = rns.pattern_iterator:lines_in_pattern_track(patt_idx,v.track_index)
+                for ___,line in patt_lines do
+                  
+                  -- allocate column
+                  local col_idx = 1
+                  for k,note_col in ipairs(line.note_columns) do
+                    if (note_col.effect_number_string ~= "0Z") then
+                      col_idx = k
+                      track.visible_note_columns = k
+                      break
+                    end
+                  end
+                  --print("*** replace notes, create trigger in column",col_idx)
+
+                  local trigger_note_col = line.note_columns[col_idx]
+                  trigger_note_col.instrument_value = v.instrument_index-1
+                  trigger_note_col.note_string = "C-4"
+                  trigger_note_col.effect_number_string = "0Z"
+                  trigger_note_col.effect_amount_value = v.phrase_index
+                  track.sample_effects_column_visible = true
+                  break
+                end
+              end
+
             end
 
-          end
+            -- bring the phrase editor to front for all created instruments 
+            instr.phrase_editor_visible = true
 
-          -- bring the phrase editor to front for all created instruments 
-          instr.phrase_editor_visible = true
+            -- switch to the relevant playback mode
+            if options.input_create_keymappings.value then
+              instr.phrase_playback_mode = renoise.Instrument.PHRASES_PLAY_KEYMAP
+            end
 
-          -- switch to the relevant playback mode
-          if options.input_create_keymappings then
-            instr.phrase_playback_mode = renoise.Instrument.PHRASES_PLAY_KEYMAP
           end
 
         end
@@ -1210,28 +1367,64 @@ function collect_phrases(scope)
       rns.selected_phrase_index = #rns.selected_instrument.phrases
     end
 
+    -- remove from table while maintaining phrase-index order 
+    -- @param t (table<[instrument_index]={phrase_index,...}>)
+    local remove_phrases_via_table = function(t)
+      --print("remove_phrases_via_table - t",rprint(t))
+      local count = 0
+      for instr_idx,v in pairs(t) do
+        local instr = rns.instruments[instr_idx]
+        if instr then
+          for __,phrase_idx in pairs(v) do
+            instr:delete_phrase_at(phrase_idx)
+            count = count+1
+            for k2,v2 in pairs(v) do
+              if (v2 > phrase_idx) then
+                v[k2] = v2-1
+              end
+            end
+          end
+        end
+      end
+      return count
+    end
+
+    -- remove duplicate/empty phrases
+    local empty_phrase_count = remove_phrases_via_table(empty_phrases)
+    local duplicate_phrase_count = remove_phrases_via_table(duplicate_phrases)
+
+    collected_phrase_count = collected_phrase_count-
+      (empty_phrase_count+duplicate_phrase_count)
+
     -- remove newly created instruments without phrases
     if not table.is_empty(delete_instruments) then
       for k = 127,1,-1 do
         if delete_instruments[k] then
-          --print("delete instrument at",k)
+          --print("*** post-process - delete instrument at",k)
           rns:delete_instrument_at(k)
+          collected_instruments[k] = false
         end
       end
       rns.selected_instrument_index = cached_instr_idx
     end
 
-    -- show report 
-    --[[
-    if options.output_show_collection_report.value then
-      local msg = ("Created %d phrases"):format(#collected_phrases)
-      if (duplicates > 0) then
-        msg = ("%s (ignored %d duplicates)"):format(msg,duplicates)
-      end
-      renoise.app():show_message(msg)
-    end
-    ]]
+    local msg_include_empty = options.input_include_empty_phrases.value
+      and "" or (#table.keys(empty_phrases) > 0) and ("\nEmpty phrases skipped: %d "):format(empty_phrase_count) or ""
+    --print("msg_include_empty",msg_include_empty)
 
+    local msg_include_duplicates = options.input_include_duplicate_phrases.value
+      and "" or (#table.keys(duplicate_phrases) > 0) and ("\nDuplicate phrases skipped: %d "):format(duplicate_phrase_count) or ""
+    --print("msg_include_duplicates",msg_include_duplicates)
+
+    local msg = ("Created a total of %d phrase(s) across %d instrument(s)%s%s"):format(
+      collected_phrase_count,#table.keys(collected_instruments),msg_include_empty,msg_include_duplicates)
+    collected_messages[msg] = true
+
+  end
+
+  if not table.is_empty(collected_messages) then
+    local msg = table.concat(table.keys(collected_messages),"\n")
+    renoise.app():show_message(msg)
   end
 
 end
@@ -1324,7 +1517,7 @@ end
 function do_collect(seq_idx,trk_idx,patt_sel)
   TRACE("do_collect(seq_idx,trk_idx,patt_sel)",seq_idx,trk_idx,patt_sel)
 
-  assert(source_instr_idx,"Expected source_instr_idx to be defined")
+  --assert(source_instr_idx,"Expected source_instr_idx to be defined")
 
   if not seq_idx then
     seq_idx = rns.selected_sequence_index
@@ -1355,13 +1548,12 @@ function do_collect(seq_idx,trk_idx,patt_sel)
   for pos, line in patt_lines do
     if pos.line > patt_sel.end_line then break end
     if pos.line >= patt_sel.start_line then
-      if not line.is_empty then
+      --if not line.is_empty then
 
         local phrase_line_idx = pos.line - (patt_sel.start_line-1)
 
         -- iterate through note-columns
         for note_col_idx,note_col in ipairs(line.note_columns) do
-          
 
           if (note_col_idx > track.visible_note_columns) then
             --print("*** do_collect - skip hidden note-column",note_col_idx)
@@ -1369,29 +1561,33 @@ function do_collect(seq_idx,trk_idx,patt_sel)
             --print("*** do_collect - note_col_idx,line idx",note_col_idx,pos.line)
 
             local instr_value = note_col.instrument_value
-            local has_note_value = (instr_value < 255)
+            local has_instr_value = (instr_value < 255)
             local capture_all = (options.input_source_instr.value == SOURCE_INSTR.CAPTURE_ALL)
 
             -- before switching instrument/phrase, produce a note-off
-            if has_note_value and target_phrase then
+            -- (unless a note-off was already detected)
+            if has_instr_value and target_phrase then
               local do_note_off = false
               if capture_all 
                 and ghost_columns[trk_idx][note_col_idx]
-                and (instr_value+1 ~= ghost_columns[trk_idx][note_col_idx])
+                and (instr_value+1 ~= ghost_columns[trk_idx][note_col_idx].instrument_index)
               then
-                -- special treatment for this mode, as the source 
-                -- can change during iteration 
+                --print("*** do_collect - produce a note-off ('capture_all')")
                 do_note_off = true
-                source_instr_idx = ghost_columns[trk_idx][note_col_idx]
+                set_source_instr(ghost_columns[trk_idx][note_col_idx].instrument_index)
                 allocate_target_instr()
                 target_phrase,target_phrase_idx = allocate_phrase(track,seq_idx,trk_idx,patt_sel)
               elseif (source_instr_idx ~= instr_value+1)
-                and (source_instr_idx == ghost_columns[trk_idx][note_col_idx])
+                and ghost_columns[trk_idx][note_col_idx]
+                and (source_instr_idx == ghost_columns[trk_idx][note_col_idx].instrument_index)
               then
-                -- standard 'fixed' source instrument
+                --print("*** do_collect - produce a note-off ('fixed' instrument)")
                 do_note_off = true
               end
-              if do_note_off then
+              if do_note_off 
+                and ghost_columns[trk_idx][note_col_idx]
+                and not ghost_columns[trk_idx][note_col_idx].offed
+              then
                 local phrase_col = target_phrase:line(phrase_line_idx).note_columns[note_col_idx]
                 phrase_col.note_value = renoise.PatternLine.NOTE_OFF
               end
@@ -1399,44 +1595,67 @@ function do_collect(seq_idx,trk_idx,patt_sel)
 
             -- do we need to change source/create instruments on the fly? 
             if capture_all then
-              if has_note_value then
-                source_instr_idx = instr_value+1
+              if has_instr_value then
+                set_source_instr(instr_value+1)
                 target_phrase = nil
                 --print("*** do_collect - switched to source instrument...")
               elseif ghost_columns[trk_idx][note_col_idx] then
-                source_instr_idx = ghost_columns[trk_idx][note_col_idx]
+                set_source_instr(ghost_columns[trk_idx][note_col_idx].instrument_index)
                 target_phrase = nil
                 --print("*** do_collect - ghost columns decided source instrument...")
               end
             end
 
             -- initialize the phrase
-            if not target_phrase then
+            -- will work only when we have an active voice (ghost_columns)
+            if not target_phrase 
+              and source_instr_idx
+            then
               allocate_target_instr()
               target_phrase,target_phrase_idx = allocate_phrase(track,seq_idx,trk_idx,patt_sel)
+              --print("*** do_collect - allocated phrase",target_phrase_idx,target_phrase)
             end
 
-            local phrase_col = target_phrase:line(phrase_line_idx).note_columns[note_col_idx]
-            --print("phrase_col",phrase_col)
+            if target_phrase then
 
-            -- maintain ghost columns
-            if (instr_value < 255) then
-              ghost_columns[trk_idx][note_col_idx] = instr_value+1
-            end
-            --print("*** do_collect - ghost_columns",rprint(ghost_columns))
+              local phrase_col = target_phrase:line(phrase_line_idx).note_columns[note_col_idx]
+              --print("phrase_col",phrase_col)
 
-            -- copy note-column when we have an active (ghost-)note 
-            local do_copy = capture_all and ghost_columns[trk_idx][note_col_idx] or
-              (ghost_columns[trk_idx][note_col_idx] == source_instr_idx)
-
-            if (do_copy) then
-              if not note_is_phrase_trigger(line,note_col_idx,source_instr_idx,trk_idx) then
-                phrase_col:copy_from(note_col)                
-                --print("*** do_collect - copied this column",note_col)
-                if options.input_replace_collected.value then
-                  note_col:clear()
+              local maintain_ghost_columns = function ()
+                if not ghost_columns[trk_idx][note_col_idx] then
+                  ghost_columns[trk_idx][note_col_idx] = {}
                 end
               end
+
+              if (instr_value < 255) then
+                maintain_ghost_columns()
+                ghost_columns[trk_idx][note_col_idx].instrument_index = instr_value+1
+              end
+              if (note_col.note_value == renoise.PatternLine.NOTE_OFF) then
+                maintain_ghost_columns()
+                ghost_columns[trk_idx][note_col_idx].offed = true
+              end
+              --print("*** do_collect - ghost_columns",rprint(ghost_columns))
+
+              -- copy note-column when we have an active (ghost-)note 
+              local do_copy = capture_all and ghost_columns[trk_idx][note_col_idx] or
+                (ghost_columns[trk_idx][note_col_idx] 
+                and (ghost_columns[trk_idx][note_col_idx].instrument_index == source_instr_idx))
+
+              if (do_copy) then
+                local is_note_trigger,msg = note_is_phrase_trigger(line,note_col_idx,source_instr_idx,trk_idx)
+                if is_note_trigger and msg then
+                  --renoise.app():show_message(msg)
+                  collected_messages[msg] = true
+                else
+                  phrase_col:copy_from(note_col)                
+                  --print("*** do_collect - copied this column",note_col)
+                  if options.input_replace_collected.value then
+                    note_col:clear()
+                  end
+                end
+              end
+
             end
           
           end
@@ -1444,15 +1663,18 @@ function do_collect(seq_idx,trk_idx,patt_sel)
         end
 
         -- fx columns are always copied
-        for fx_col_idx,fx_col in ipairs(line.effect_columns) do
-          local phrase_col = target_phrase:line(phrase_line_idx).effect_columns[fx_col_idx]
-          phrase_col:copy_from(fx_col)
-          if options.input_replace_collected.value then
-            fx_col:clear()
+        -- TODO allocate phrase here as well (when in group/master/send track)
+        if target_phrase then
+          for fx_col_idx,fx_col in ipairs(line.effect_columns) do
+            local phrase_col = target_phrase:line(phrase_line_idx).effect_columns[fx_col_idx]
+            phrase_col:copy_from(fx_col)
+            if options.input_replace_collected.value then
+              fx_col:clear()
+            end
           end
         end
 
-      end
+      --end
     end
   end
 

@@ -17,11 +17,11 @@ This is the core xLib class, containing a bunch of static helper methods
 
 -- reference to song document 
 -- rns = renoise.song()
-TRACE = function(...)
+function TRACE(...)
   print(...)
 end
 
-LOG = function(...)
+function LOG(...)
   print(...)
 end
 
