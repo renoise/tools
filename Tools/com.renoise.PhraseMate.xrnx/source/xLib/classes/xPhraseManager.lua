@@ -236,6 +236,10 @@ function xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,
 
   local phrase = nil
   if do_create then
+    if (#instr.phrases == 126) then
+      local err = "Failed to allocate a phrase (can only have up to 126 phrase per instrument)"
+      return false,err
+    end
     phrase = instr:insert_phrase_at(vphrase_idx)
     phrase:clear() -- clear default C-4 
     --print(">>> inserted phrase at",vphrase_idx,"in",instr.name)
