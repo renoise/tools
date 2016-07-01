@@ -76,6 +76,13 @@ local TARGET_INSTR = {
   CUSTOM = 3,
 }
 
+local SLICE_MODES = {"Disabled","Pattern","Patt-track"}
+local SLICE_MODE = {
+  NONE = 1,
+  PATTERN = 2,
+  PATTERN_TRACK = 3,
+}
+
 local PLAYBACK_MODES = {"Off","Prg","Map"}
 local PLAYBACK_MODE = {
   PHRASES_OFF = 1,
@@ -94,6 +101,7 @@ local UI_TARGET_ITEMS = {"➜ Same Instrument","➜ New Instrument(s)"}
 
 local UI_WIDTH = 186
 local UI_KEYMAP_LABEL_W = 90
+local UI_KEYMAP_CTRL_W = 65
 local UI_INSTR_LABEL_W = 45
 local UI_INSTR_POPUP_W = 125
 local UI_BUTTON_LG_H = 22
@@ -146,33 +154,6 @@ local status_update = nil
 local process_slicer = nil -- (ProcessSlicer)
 
 --------------------------------------------------------------------------------
--- helper functions
---------------------------------------------------------------------------------
-
-function invoke_task(rslt,err)
-  if (rslt == false and err) then
-    renoise.app():show_status(err)
-  end
-end
-
-local progress_handler = function(msg)
-  --print("progress_handler")
-  status_update = msg
-end
-
-local done_handler = function(msg)
-  --print("done_handler")
-  status_update = "(PhraseMate) Done processing!"
-  renoise.app():show_message(msg)
-end
-
-function invoke_sliced_task(fn,arg)
-  --print("invoke_sliced_task",fn,arg)
-  process_slicer = ProcessSlicer(fn,arg)
-  process_slicer:start()
-end
-
---------------------------------------------------------------------------------
 -- preferences
 --------------------------------------------------------------------------------
 
@@ -195,8 +176,41 @@ options:add_property("input_create_keymappings", renoise.Document.ObservableBool
 options:add_property("input_keymap_range", renoise.Document.ObservableNumber(1))
 options:add_property("input_keymap_offset", renoise.Document.ObservableNumber(0))
 options:add_property("zxx_mode", renoise.Document.ObservableBoolean(false))
+options:add_property("process_slice_mode", renoise.Document.ObservableNumber(SLICE_MODE.PATTERN))
 
 renoise.tool().preferences = options
+
+--------------------------------------------------------------------------------
+-- helper functions
+--------------------------------------------------------------------------------
+
+function invoke_task(rslt,err)
+  if (rslt == false and err) then
+    renoise.app():show_status(err)
+  end
+end
+
+local progress_handler = function(msg)
+  --print("progress_handler")
+  status_update = msg
+end
+
+local done_handler = function(msg)
+  --print("done_handler")
+  status_update = "(PhraseMate) Done processing!"
+  renoise.app():show_message(msg)
+end
+
+function invoke_sliced_task(fn,arg)
+  --print("invoke_sliced_task",fn,arg)
+  if (options.process_slice_mode.value ~= SLICE_MODE.NONE) then
+    process_slicer = ProcessSlicer(fn,arg)
+    process_slicer:start()
+  else
+    fn(arg)
+  end
+end
+
 
 --------------------------------------------------------------------------------
 -- user interface
@@ -216,6 +230,7 @@ function show_preferences()
       margin = 6,
       spacing = 4,
       vb:column{
+        id = "group_phrase",
         width = "100%",
         vb:column{
           width = "100%",
@@ -281,6 +296,7 @@ function show_preferences()
         },
 
       },
+
       vb:switch{
         width = UI_WIDTH,
         items = {"Input","Output","Realtime"},
@@ -289,6 +305,7 @@ function show_preferences()
           ui_show_tab()
         end
       },
+
       vb:column{
         id = "tab_input",
         visible = false,
@@ -374,6 +391,30 @@ function show_preferences()
           },
           ]]
           vb:row{
+            tooltip = "Decide how often to give time back to Renoise while processing",
+            vb:text{
+              text = "Sliced processing",
+              width = UI_KEYMAP_LABEL_W,
+            },
+            vb:popup{
+              --id = "ui_input_keymap_offset",
+              --min = 0,
+              --max = 119,
+              width = 80,
+              items = SLICE_MODES,
+              bind = options.process_slice_mode,
+              --[[
+              tostring = function(val)
+                return xNoteColumn.note_value_to_string(math.floor(val))
+              end,
+              tonumber = function(str)
+                return xNoteColumn.note_string_to_value(str)
+              end,
+              ]]
+            },
+          },
+
+          vb:row{
             tooltip = "During collection of phrases, skip phrases without content",
             vb:checkbox{
               bind = options.input_include_empty_phrases,
@@ -423,6 +464,7 @@ function show_preferences()
               },
               vb:valuebox{
                 id = "ui_input_keymap_range",
+                width = UI_KEYMAP_CTRL_W,
                 min = 1,
                 max = 119,
                 bind = options.input_keymap_range,
@@ -439,6 +481,7 @@ function show_preferences()
               },
               vb:valuebox{
                 id = "ui_input_keymap_offset",
+                width = UI_KEYMAP_CTRL_W,
                 min = 0,
                 max = 119,
                 bind = options.input_keymap_offset,
@@ -451,6 +494,7 @@ function show_preferences()
               },
             },
           },
+
         },
         vb:button{
           text = "Collect phrases",
@@ -575,6 +619,7 @@ function show_preferences()
           },
         },
       },
+
       --[[
       vb:button{
         text = "remove trace statements",
@@ -836,6 +881,15 @@ renoise.tool():add_keybinding {
 -- realtime
 
 renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Toggle Realtime/Zxx mode",
+  invoke = function(repeated)
+    if (not repeated) then 
+      options.zxx_mode = not options.zxx_mode
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Select Previous Phrase in Instrument",
   invoke = function()
     invoke_task(xPhraseManager.select_previous_phrase())
@@ -969,6 +1023,7 @@ function do_capture_once(trk_idx,seq_idx)
     local seq_idx,trk_idx = rns.selected_sequence_index,rns.selected_track_index
     rns.selected_sequence_index = seq_idx
     rns.selected_track_index = trk_idx
+    print("*** capture source instrument",source_instr_idx)
     set_source_instr(xInstrument.autocapture())
     rns.selected_sequence_index,rns.selected_track_index = seq_idx,trk_idx
     done_with_capture = true
@@ -1394,11 +1449,13 @@ function collect_phrases(scope)
         local instr = rns.instruments[instr_idx]
         if instr then
           for __,phrase_idx in pairs(v) do
-            instr:delete_phrase_at(phrase_idx)
-            count = count+1
-            for k2,v2 in pairs(v) do
-              if (v2 > phrase_idx) then
-                v[k2] = v2-1
+            if instr.phrases[phrase_idx] then
+              instr:delete_phrase_at(phrase_idx)
+              count = count+1
+              for k2,v2 in pairs(v) do
+                if (v2 > phrase_idx) then
+                  v[k2] = v2-1
+                end
               end
             end
           end
@@ -1441,7 +1498,6 @@ function collect_phrases(scope)
   end
 
   if not table.is_empty(collected_messages) then
-    --coroutine.yield()
     local msg = table.concat(table.keys(collected_messages),"\n")
     done_handler(msg)
   end
@@ -1487,6 +1543,11 @@ function collect_from_matrix_selection()
           do_collect(seq_idx,trk_idx)
         end
       end
+      -- display progress
+      if (options.process_slice_mode.value == SLICE_MODE.PATTERN) then
+        progress_handler(("Collecting phrases : sequence index = %d"):format(seq_idx))
+        coroutine.yield()
+      end
     end
   end
 
@@ -1519,6 +1580,11 @@ function collect_from_track_in_song()
   for seq_idx = 1, #rns.sequencer.pattern_sequence do
     do_capture_once(trk_idx,seq_idx)
     do_collect(seq_idx)
+    -- display progress
+    if (options.process_slice_mode.value == SLICE_MODE.PATTERN) then
+      progress_handler(("Collecting phrases : sequence index = %d"):format(seq_idx))
+      coroutine.yield()
+    end
   end
 
 end
@@ -1530,11 +1596,6 @@ end
 -- @param patt_sel (table), specified when doing SELECTION_IN_PATTERN
 
 function do_collect(seq_idx,trk_idx,patt_sel)
-
-  -- display progress
-  local msg_progress = "Collecting phrases : sequence index = %d, track index = %d"
-  progress_handler(msg_progress:format(seq_idx,trk_idx))
-  coroutine.yield()
 
   if not seq_idx then
     seq_idx = rns.selected_sequence_index
@@ -1589,7 +1650,7 @@ function do_collect(seq_idx,trk_idx,patt_sel)
                 and ghost_columns[trk_idx][note_col_idx]
                 and (instr_value+1 ~= ghost_columns[trk_idx][note_col_idx].instrument_index)
               then
-                --print("*** do_collect - produce a note-off ('capture_all')")
+                print("*** do_collect - produce a note-off ('capture_all')")
                 do_note_off = true
                 set_source_instr(ghost_columns[trk_idx][note_col_idx].instrument_index)
                 allocate_target_instr()
@@ -1613,13 +1674,13 @@ function do_collect(seq_idx,trk_idx,patt_sel)
             -- do we need to change source/create instruments on the fly? 
             if capture_all then
               if has_instr_value then
+                print("*** do_collect - switch to source instrument...")
                 set_source_instr(instr_value+1)
                 target_phrase = nil
-                --print("*** do_collect - switched to source instrument...")
               elseif ghost_columns[trk_idx][note_col_idx] then
+                print("*** do_collect - let ghost columns decide source instrument...")
                 set_source_instr(ghost_columns[trk_idx][note_col_idx].instrument_index)
                 target_phrase = nil
-                --print("*** do_collect - ghost columns decided source instrument...")
               end
             end
 
@@ -1695,6 +1756,11 @@ function do_collect(seq_idx,trk_idx,patt_sel)
     end
   end
 
+  -- display progress
+  if (options.process_slice_mode.value == SLICE_MODE.PATTERN_TRACK) then
+    progress_handler(("Collecting phrases : sequence index = %d, track index = %d"):format(seq_idx,trk_idx))
+    coroutine.yield()
+  end
 
 end
 
@@ -1941,6 +2007,11 @@ end
 --------------------------------------------------------------------------------
 
 function line_notifier_fn(pos)
+
+  if not options.zxx_mode.value then
+    return
+  end
+
   if not suppress_line_notifier then
     table.insert(modified_lines,pos)
     --print("modified_lines",#modified_lines)
@@ -2050,11 +2121,15 @@ end
 
 function zxx_mode_handler()
 
+  modified_lines = {}
+
+  --[[
   if options.zxx_mode.value then
     attach_to_song()
   else
     detach_from_song()
   end
+  ]]
 
 end
 
@@ -2089,9 +2164,7 @@ end
 function attach_to_pattern()
 
   modified_lines = {}
-
   local pattern = rns.selected_pattern
-
   if not pattern:has_line_notifier(line_notifier_fn) then
     pattern:add_line_notifier(line_notifier_fn)
   end
@@ -2194,7 +2267,8 @@ end)
 renoise.tool().app_new_document_observable:add_notifier(function()
 
   rns = renoise.song()
-  zxx_mode_handler()
+  --zxx_mode_handler()
+  attach_to_song()
   ui_update_realtime()
 
 end)
