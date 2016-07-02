@@ -106,6 +106,8 @@ local UI_INSTR_LABEL_W = 45
 local UI_INSTR_POPUP_W = 125
 local UI_BUTTON_LG_H = 22
 
+local UI_PROGRESS_TXT = {"/","-","\\","|"}
+
 --------------------------------------------------------------------------------
 -- 'class'
 --------------------------------------------------------------------------------
@@ -146,12 +148,26 @@ local collected_phrases = {}
 --- table<[string] = bool>
 local collected_messages = {}
 
--- realtime
-local modified_lines = {}
-local suppress_line_notifier = false
-local realtime_update_requested = false
-local status_update = nil
-local process_slicer = nil -- (ProcessSlicer)
+--- table<[int] = bool>, remember which patterns we have collected from
+local processed_ptracks = {}
+
+--- table, changed while in realtime mode
+local modified_lines = {} 
+
+--- bool, do not trigger handler while true
+local suppress_line_notifier = false 
+
+--- bool, perform UI update on next idle
+local realtime_update_requested = false 
+
+--- string, scheduled message for status bar
+local status_update = nil  
+
+--- int, position of UI_PROGRESS_TXT
+local progress_txt_count = 1
+
+--- (ProcessSlicer)
+local process_slicer = nil 
 
 --------------------------------------------------------------------------------
 -- preferences
@@ -190,27 +206,65 @@ function invoke_task(rslt,err)
   end
 end
 
+--------------------------------------------------------------------------------
+
 local progress_handler = function(msg)
-  --print("progress_handler")
+  --TRACE("progress_handler")
+
+  progress_txt_count = progress_txt_count+1
+  if (progress_txt_count == #UI_PROGRESS_TXT) then
+    progress_txt_count = 1
+  end
   status_update = msg
+
 end
+
+--------------------------------------------------------------------------------
 
 local done_handler = function(msg)
-  --print("done_handler")
+  --TRACE("done_handler")
+
   status_update = "(PhraseMate) Done processing!"
+  initialize_variables()
+  collectgarbage()
+  --print("Memory used:",collectgarbage("count")*1024)
+
+  process_slicer = nil
+  ui_update_submit_buttons()
   renoise.app():show_message(msg)
+
 end
 
+--------------------------------------------------------------------------------
+
 function invoke_sliced_task(fn,arg)
-  --print("invoke_sliced_task",fn,arg)
+  --TRACE("invoke_sliced_task",fn,arg)
+
   if (options.process_slice_mode.value ~= SLICE_MODE.NONE) then
     process_slicer = ProcessSlicer(fn,arg)
     process_slicer:start()
   else
     fn(arg)
   end
+
 end
 
+--------------------------------------------------------------------------------
+-- reset variables to initial state 
+
+function initialize_variables()
+
+  done_with_capture = false
+  source_target_map = {}
+  collected_phrases = {}
+  processed_ptracks = {}
+  ghost_columns = {}
+  initial_instr_states = {}
+  collected_messages = {}
+  source_instr_idx = nil
+  target_instr_idx = nil
+
+end
 
 --------------------------------------------------------------------------------
 -- user interface
@@ -379,17 +433,6 @@ function show_preferences()
           style = "group",
           margin = 6,
           width = "100%",
-          --[[
-          vb:row{
-            tooltip = "Try to collect as much data as possible, including notes from other instruments",
-            vb:checkbox{
-              bind = options.input_collect_everything,
-            },
-            vb:text{
-              text = "Collect everything"
-            },
-          },
-          ]]
           vb:row{
             tooltip = "Decide how often to give time back to Renoise while processing",
             vb:text{
@@ -397,20 +440,9 @@ function show_preferences()
               width = UI_KEYMAP_LABEL_W,
             },
             vb:popup{
-              --id = "ui_input_keymap_offset",
-              --min = 0,
-              --max = 119,
               width = 80,
               items = SLICE_MODES,
               bind = options.process_slice_mode,
-              --[[
-              tostring = function(val)
-                return xNoteColumn.note_value_to_string(math.floor(val))
-              end,
-              tonumber = function(str)
-                return xNoteColumn.note_string_to_value(str)
-              end,
-              ]]
             },
           },
 
@@ -497,11 +529,16 @@ function show_preferences()
 
         },
         vb:button{
-          text = "Collect phrases",
+          id = "ui_input_submit",
+          text = "",
           width = "100%",
           height = 22,
           notifier = function()
-            invoke_sliced_task(collect_phrases)
+            if process_slicer and process_slicer:running() then
+              process_slicer:stop()
+            else
+              invoke_sliced_task(collect_phrases)
+            end
           end
         },
       },
@@ -572,6 +609,7 @@ function show_preferences()
         vb:column{
           width = "100%",
           vb:button{
+            id = "ui_output_to_selection",
             text = "Write to selection",
             width = "100%",
             height = 22,
@@ -580,6 +618,7 @@ function show_preferences()
             end
           },
           vb:button{
+            id = "ui_output_to_track",
             text = "Write to track",
             width = "100%",
             height = 22,
@@ -644,6 +683,7 @@ function show_preferences()
   ui_update_keymap()
   ui_update_realtime()
   ui_update_instruments()
+  ui_update_submit_buttons()
 
 end
 
@@ -686,8 +726,7 @@ function ui_update_realtime()
   vb.views["ui_realtime_next"].active = instr_has_phrases and xPhraseManager.can_select_next_phrase()
   vb.views["ui_realtime_phrase_name"].text = ("%.2X : %s"):format(
     rns.selected_phrase_index, instr_has_phrases and rns.selected_phrase and rns.selected_phrase.name or "N/A")
-  --vb.views["ui_realtime_phrase_name"].width = UI_WIDTH
-  --vb.views["ui_realtime_phrase_name_header"].width = UI_WIDTH
+
 end
 
 --------------------------------------------------------------------------------
@@ -707,6 +746,34 @@ function ui_show_tab()
   end
 
 end
+
+--------------------------------------------------------------------------------
+-- update submit buttons during processing (show progress/ability to cancel)
+
+function ui_update_submit_buttons()
+  TRACE("ui_update_submit_buttons()")
+
+  if not vb then return end
+
+  local input_submit = vb.views["ui_input_submit"]
+  local output_to_selection = vb.views["ui_output_to_selection"]
+  local output_to_track = vb.views["ui_output_to_track"]
+
+  if (options.active_tab_index.value == UI_TABS.INPUT) then
+    input_submit.text = process_slicer and process_slicer:running()
+      and ("Collecting %s [Cancel]"):format(UI_PROGRESS_TXT[progress_txt_count])
+      or "Collect phrases"
+
+  elseif (options.active_tab_index.value == UI_TABS.OUTPUT) then
+    local running = process_slicer and process_slicer:running()
+    output_to_selection.active = not running
+    output_to_track.active = not running
+
+  end
+
+
+end
+
 
 --------------------------------------------------------------------------------
 -- Menu entries & MIDI/Key mappings
@@ -1270,20 +1337,10 @@ function collect_phrases(scope)
     scope = options.input_scope.value
   end
 
-  -- reset variables
-  done_with_capture = false
-  source_target_map = {}
-  collected_phrases = {}
-  ghost_columns = {}
-  initial_instr_states = {}
-  collected_messages = {}
-  source_instr_idx = nil
-  target_instr_idx = nil
+  initialize_variables()
 
   -- set initial source/target instruments
   -- (might change during collection)
-  --target_instr_idx = rns.selected_instrument_index
-  --sync_source_target_instr()
 
   if (options.input_source_instr.value == SOURCE_INSTR.CUSTOM) then
     if vb then
@@ -1292,13 +1349,10 @@ function collect_phrases(scope)
   elseif (options.input_source_instr.value == SOURCE_INSTR.SELECTED) then
     source_instr_idx = rns.selected_instrument_index
   end
-
   if (options.input_target_instr.value == TARGET_INSTR.CUSTOM) then
     if vb then
       target_instr_idx = vb.views["ui_target_popup"].value - #TARGET_INSTR-2
     end
-  --elseif (options.input_target_instr.value == TARGET_INSTR.SAME) then
-  --  target_instr_idx = source_instr_idx
   end
 
   local capture_all = (options.input_source_instr.value == SOURCE_INSTR.CAPTURE_ALL)
@@ -1330,7 +1384,14 @@ function collect_phrases(scope)
   local collected_instruments = {}
   local delete_instruments = {} -- table<[instrument_index]=bool>
   local empty_phrases = {}     -- table<[instrument_index]={phrase_index,...}>
-  local duplicate_phrases = {}  -- table<[instrument_index]={phrase_index,...}>
+
+  -- table<[instrument_index]={
+  --    {
+  --      source_phrase_index=int,
+  --      target_phrase_index=int,
+  --    },
+  --  }>
+  local duplicate_phrases = {}  
 
   --print("*** post-process - collected_phrases",rprint(collected_phrases))
   --print("*** post-process - collected_phrases",rprint(table.keys(collected_phrases)))
@@ -1354,6 +1415,7 @@ function collect_phrases(scope)
           and not duplicate_phrases[v.instrument_index]
         then
           duplicate_phrases[v.instrument_index] = xPhraseManager.find_duplicates(instr)
+          --print(">>> post-process - duplicate_phrases @instr-index",v.instrument_index,rprint(duplicate_phrases[v.instrument_index]))
         end
 
         -- remove instrument when without phrases
@@ -1363,8 +1425,10 @@ function collect_phrases(scope)
           delete_instruments[v.instrument_index] = true
         else
 
+          local phrase_idx = v.phrase_index
+
           collected_instruments[v.instrument_index] = true
-          local phrase = instr.phrases[v.phrase_index]
+          local phrase = instr.phrases[phrase_idx]
             
           -- TODO don't process if we are going to remove 
           -- the (empty,duplicate) phrase anyway
@@ -1382,10 +1446,26 @@ function collect_phrases(scope)
               if not empty_phrases[v.instrument_index] then
                 empty_phrases[v.instrument_index] = {}
               end
-              table.insert(empty_phrases[v.instrument_index],v.phrase_index)
-              --empty_phrases[v.instrument_index][v.phrase_index] = true
+              table.insert(empty_phrases[v.instrument_index],phrase_idx)
+              --print("got here 1")
+
             else
               collected_phrase_count = collected_phrase_count+1
+              --print("got here 2")
+
+              if not options.input_include_duplicate_phrases.value then
+                -- check if phrase is a duplicate and use source instead
+                -- (as duplicates will be removed)
+                if duplicate_phrases[v.instrument_index] then
+                  for k2,v2 in ipairs(duplicate_phrases[v.instrument_index]) do
+                    if (v2.target_phrase_index == phrase_idx) then
+                      --print("This phrase is a duplicate - use source",rprint(v2))
+                      phrase_idx = v2.source_phrase_index
+                      phrase = instr.phrases[phrase_idx]
+                    end
+                  end
+                end
+              end
 
               -- replace notes with phrase trigger 
               -- (if multiple instruments, each is a separate note-column)
@@ -1400,7 +1480,7 @@ function collect_phrases(scope)
                   for k,note_col in ipairs(line.note_columns) do
                     if (note_col.effect_number_string ~= "0Z") then
                       col_idx = k
-                      track.visible_note_columns = k
+                      track.visible_note_columns = math.max(track.visible_note_columns,k)
                       break
                     end
                   end
@@ -1410,7 +1490,7 @@ function collect_phrases(scope)
                   trigger_note_col.instrument_value = v.instrument_index-1
                   trigger_note_col.note_string = "C-4"
                   trigger_note_col.effect_number_string = "0Z"
-                  trigger_note_col.effect_amount_value = v.phrase_index
+                  trigger_note_col.effect_amount_value = phrase_idx
                   track.sample_effects_column_visible = true
                   break
                 end
@@ -1441,7 +1521,10 @@ function collect_phrases(scope)
     end
 
     -- remove from table while maintaining phrase-index order 
-    -- @param t (table<[instrument_index]={phrase_index,...}>)
+    -- @param t - 
+    --  empty_phrases (look for table indices) 
+    --  duplicate_phrases (look for 'target_phrase_index' property)
+    -- @return int, #removed phrases
     local remove_phrases_via_table = function(t)
       --print("remove_phrases_via_table - t",rprint(t))
       local count = 0
@@ -1449,12 +1532,33 @@ function collect_phrases(scope)
         local instr = rns.instruments[instr_idx]
         if instr then
           for __,phrase_idx in pairs(v) do
+            --print("type(phrase_idx)",type(phrase_idx),rprint(phrase_idx))
+            if type(phrase_idx)=="table" then
+              -- special treatment for 'duplicate_phrases'
+              phrase_idx = phrase_idx.target_phrase_index
+            end
+            --print("instr.phrases[phrase_idx]",phrase_idx,instr.phrases[phrase_idx])
             if instr.phrases[phrase_idx] then
               instr:delete_phrase_at(phrase_idx)
               count = count+1
+              -- adjust phrase indices
               for k2,v2 in pairs(v) do
-                if (v2 > phrase_idx) then
-                  v[k2] = v2-1
+                if type(v2)=="table" then
+                  --print(">>> duplicate_phrases")
+                  if (v2.target_phrase_index > phrase_idx) then
+                    v[k2].target_phrase_index = v2.target_phrase_index-1
+                    --print(">>> bring target phrase down")
+                  end
+                  if (v2.source_phrase_index > phrase_idx) then
+                    v[k2].source_phrase_index = v2.source_phrase_index-1
+                    --print(">>> bring source phrase down")
+                  end
+                else
+                  --print(">>> empty_phrases")
+                  if (v2 > phrase_idx) then
+                    v[k2] = v2-1
+                    --print(">>> bring phrase down")
+                  end
                 end
               end
             end
@@ -1544,7 +1648,7 @@ function collect_from_matrix_selection()
         end
       end
       -- display progress
-      if (options.process_slice_mode.value == SLICE_MODE.PATTERN) then
+      if (options.process_slice_mode.value ~= SLICE_MODE.NONE) then
         progress_handler(("Collecting phrases : sequence index = %d"):format(seq_idx))
         coroutine.yield()
       end
@@ -1596,12 +1700,26 @@ end
 -- @param patt_sel (table), specified when doing SELECTION_IN_PATTERN
 
 function do_collect(seq_idx,trk_idx,patt_sel)
+  TRACE("do_collect(seq_idx,trk_idx,patt_sel)",seq_idx,trk_idx,patt_sel)
 
   if not seq_idx then
     seq_idx = rns.selected_sequence_index
   end
   if not trk_idx then
     trk_idx = rns.selected_track_index
+  end
+
+  local track = rns.tracks[trk_idx]
+  local patt_idx = rns.sequencer:pattern(seq_idx)
+
+  -- encountering the same pattern-track can happen when processing
+  -- a song whose sequence contain pattern-aliases
+  if not processed_ptracks[patt_idx] then
+    processed_ptracks[patt_idx] = {}
+  end
+  if processed_ptracks[patt_idx][trk_idx] then
+    LOG("We've already processed this pattern, skip...")
+    return
   end
 
   if not patt_sel then
@@ -1615,8 +1733,6 @@ function do_collect(seq_idx,trk_idx,patt_sel)
   end
 
   -- set up our iterator
-  local track = rns.tracks[trk_idx]
-  local patt_idx = rns.sequencer:pattern(seq_idx)
   local patt_lines = rns.pattern_iterator:lines_in_pattern_track(patt_idx,trk_idx)
 
   -- loop through pattern, create phrases/instruments as needed
@@ -1636,7 +1752,7 @@ function do_collect(seq_idx,trk_idx,patt_sel)
           if (note_col_idx > track.visible_note_columns) then
             --print("*** do_collect - skip hidden note-column",note_col_idx)
           else
-            --print("*** do_collect - note_col_idx,line idx",note_col_idx,pos.line)
+            --print("*** do_collect - seq_idx",seq_idx,"trk_idx",trk_idx,"note_col_idx",note_col_idx,"pos.line",pos.line)
 
             local instr_value = note_col.instrument_value
             local has_instr_value = (instr_value < 255)
@@ -1650,7 +1766,7 @@ function do_collect(seq_idx,trk_idx,patt_sel)
                 and ghost_columns[trk_idx][note_col_idx]
                 and (instr_value+1 ~= ghost_columns[trk_idx][note_col_idx].instrument_index)
               then
-                print("*** do_collect - produce a note-off ('capture_all')")
+                --print("*** do_collect - produce a note-off ('capture_all')")
                 do_note_off = true
                 set_source_instr(ghost_columns[trk_idx][note_col_idx].instrument_index)
                 allocate_target_instr()
@@ -1674,11 +1790,11 @@ function do_collect(seq_idx,trk_idx,patt_sel)
             -- do we need to change source/create instruments on the fly? 
             if capture_all then
               if has_instr_value then
-                print("*** do_collect - switch to source instrument...")
+                --print("*** do_collect - switch to source instrument...")
                 set_source_instr(instr_value+1)
                 target_phrase = nil
               elseif ghost_columns[trk_idx][note_col_idx] then
-                print("*** do_collect - let ghost columns decide source instrument...")
+                --print("*** do_collect - let ghost columns decide source instrument...",rprint(ghost_columns))
                 set_source_instr(ghost_columns[trk_idx][note_col_idx].instrument_index)
                 target_phrase = nil
               end
@@ -1699,21 +1815,17 @@ function do_collect(seq_idx,trk_idx,patt_sel)
               local phrase_col = target_phrase:line(phrase_line_idx).note_columns[note_col_idx]
               --print("phrase_col",phrase_col)
 
-              local maintain_ghost_columns = function ()
-                if not ghost_columns[trk_idx][note_col_idx] then
-                  ghost_columns[trk_idx][note_col_idx] = {}
-                end
-              end
-
+              --print("*** do_collect - ghost_columns PRE",rprint(ghost_columns))
               if (instr_value < 255) then
-                maintain_ghost_columns()
+                ghost_columns[trk_idx][note_col_idx] = {}
                 ghost_columns[trk_idx][note_col_idx].instrument_index = instr_value+1
               end
               if (note_col.note_value == renoise.PatternLine.NOTE_OFF) then
-                maintain_ghost_columns()
-                ghost_columns[trk_idx][note_col_idx].offed = true
+                if ghost_columns[trk_idx][note_col_idx] then
+                  ghost_columns[trk_idx][note_col_idx].offed = true
+                end
               end
-              --print("*** do_collect - ghost_columns",rprint(ghost_columns))
+              --print("*** do_collect - ghost_columns POST",rprint(ghost_columns))
 
               -- copy note-column when we have an active (ghost-)note 
               local do_copy = capture_all and ghost_columns[trk_idx][note_col_idx] or
@@ -1755,6 +1867,8 @@ function do_collect(seq_idx,trk_idx,patt_sel)
       --end
     end
   end
+
+  processed_ptracks[patt_idx][trk_idx] = true
 
   -- display progress
   if (options.process_slice_mode.value == SLICE_MODE.PATTERN_TRACK) then
@@ -2123,14 +2237,6 @@ function zxx_mode_handler()
 
   modified_lines = {}
 
-  --[[
-  if options.zxx_mode.value then
-    attach_to_song()
-  else
-    detach_from_song()
-  end
-  ]]
-
 end
 
 --------------------------------------------------------------------------------
@@ -2255,8 +2361,10 @@ renoise.tool().app_idle_observable:add_notifier(function()
     --print("user_set_program 2",user_set_program)
   end
 
+  -- show progress
   if status_update then
     renoise.app():show_status(status_update)
+    ui_update_submit_buttons()
     status_update = nil
   end
 
@@ -2267,7 +2375,6 @@ end)
 renoise.tool().app_new_document_observable:add_notifier(function()
 
   rns = renoise.song()
-  --zxx_mode_handler()
   attach_to_song()
   ui_update_realtime()
 
