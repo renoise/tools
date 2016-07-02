@@ -535,7 +535,11 @@ end
 --------------------------------------------------------------------------------
 -- locate duplicate phrases within instrument
 -- @param instr
--- @return table containing indices 
+-- @return table, each entry having this form:
+--    {
+--      source_phrase_index=int,
+--      target_phrase_index=int, -- duplicate
+--    }
 
 function xPhraseManager.find_duplicates(instr)
   TRACE("xPhraseManager.find_duplicates(instr)",instr)
@@ -546,9 +550,14 @@ function xPhraseManager.find_duplicates(instr)
   for k,v in ipairs(instr.phrases) do
     local stringified = xPhrase.stringify(v)
     if phrases_map[stringified] then
-      table.insert(duplicates,k)
+      table.insert(duplicates,{
+        source_phrase_index = phrases_map[stringified].phrase_index,
+        target_phrase_index = k,
+      })
     else
-      phrases_map[stringified] = true
+      phrases_map[stringified] = {
+        phrase_index = k,
+      }
     end
   end
 
