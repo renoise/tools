@@ -421,22 +421,91 @@ function xPhraseManager.set_selected_phrase(idx)
 end
 
 --------------------------------------------------------------------------------
--- API5: Using the mapping index to specify the selected phrase
+-- API5: Using the mapping index to retrieve the selected phrase
 
-function xPhraseManager.set_selected_phrase_by_mapping_index(idx)
-  TRACE("xPhraseManager.set_selected_phrase_by_mapping_index(idx)",idx)
+function xPhraseManager.get_phrase_index_by_mapping_index(instr_idx,mapping_idx)
+  TRACE("xPhraseManager.get_phrase_index_by_mapping_index(instr_idx,mapping_idx)",instr_idx,mapping_idx)
 
-  local instr = rns.selected_instrument
-  local mapping = instr.phrase_mappings[idx]
+  local instr = rns.instruments[instr_idx]
+  if not instr then
+    return false,"Could not find the specified instrument"
+  end
+
+  local mapping = instr.phrase_mappings[mapping_idx]
   if not mapping then
     return false,"Could not find the specified phrase mapping"
   end
   
   for k,v in ipairs(instr.phrases) do
     if (rawequal(v,mapping.phrase)) then
-      rns.selected_phrase_index = k
+      return k
     end
   end
+
+end
+
+--------------------------------------------------------------------------------
+-- API5: Using a phrase to retrieve the phrase-mapping index
+
+function xPhraseManager.get_mapping_index_by_phrase_index(instr_idx,phrase_idx)
+
+  local instr = rns.instruments[instr_idx]
+  if not instr then
+    return false,"Could not find the specified instrument"
+  end
+
+  local phrase = instr.phrases[phrase_idx]
+  if not phrase then
+    return false,"Could not find the specified phrase"
+  end
+  
+  for k,v in ipairs(instr.phrase_mappings) do
+    if (rawequal(v,phrase.mapping)) then
+      return v,k
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- API5: Assign a property value to both the phrase and it's mapping (if any)
+-- @param phrase_idx (int)
+-- @param prop_name (string)
+-- @param prop_value (number/string/boolean)
+
+function xPhraseManager.set_universal_phrase_property(instr_idx,phrase_idx,prop_name,prop_value)
+
+  local accepted_prop_names = {
+    "key_tracking",
+    "base_note",
+    "note_range",
+    "looping",
+    "loop_start",
+    "loop_end",
+  }
+
+  if not table.find(accepted_prop_names,prop_name) then
+    return false,"Property name is not allowed for phrase mappings"
+  end
+
+  local instr = rns.instruments[instr_idx]
+  if not instr then
+    return false,"Could not find the specified instrument"
+  end
+
+  local phrase = instr.phrases[phrase_idx]
+  --print("phrase",phrase)
+  if phrase then
+    phrase[prop_name] = prop_value
+  end
+  
+  local mapping,mapping_idx = xPhraseManager.get_mapping_index_by_phrase_index(instr_idx,phrase_idx)
+  --print("mapping,mapping_idx",mapping,mapping_idx)
+  if mapping then
+    mapping[prop_name] = prop_value
+  end
+
+  return true
 
 end
 

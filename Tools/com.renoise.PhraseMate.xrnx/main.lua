@@ -190,6 +190,7 @@ options:add_property("input_include_duplicate_phrases", renoise.Document.Observa
 options:add_property("input_replace_collected", renoise.Document.ObservableBoolean(false))
 options:add_property("input_source_instr", renoise.Document.ObservableNumber(SOURCE_INSTR.CAPTURE_ONCE))
 options:add_property("input_target_instr", renoise.Document.ObservableNumber(TARGET_INSTR.NEW))
+options:add_property("input_loop_phrases", renoise.Document.ObservableBoolean(false))
 options:add_property("input_create_keymappings", renoise.Document.ObservableBoolean(true))
 options:add_property("input_keymap_range", renoise.Document.ObservableNumber(1))
 options:add_property("input_keymap_offset", renoise.Document.ObservableNumber(0))
@@ -436,7 +437,12 @@ function show_preferences()
           margin = 6,
           width = "100%",
           vb:row{
-            tooltip = "Decide how often to give time back to Renoise while processing",
+            tooltip = "Decide how often to create undo points while processing:"
+                  .."\nDisabled - perform processing in a single step"
+                  .."\nPattern - create an undo point once per pattern"
+                  .."\nPattern-Track - create undo point per track in pattern"
+                  .."\n\nEnable this feature if you experience warning dialogs"
+                  .."\ncomplaining that 'script is taking too long'",
             vb:text{
               text = "Sliced processing",
               width = UI_KEYMAP_LABEL_W,
@@ -474,6 +480,15 @@ function show_preferences()
             },
             vb:text{
               text = "Replace notes with phrase"
+            },
+          },
+          vb:row{
+            tooltip = "Choose whether to loop collected phrases",
+            vb:checkbox{
+              bind = options.input_loop_phrases,
+            },
+            vb:text{
+              text = "Loop collected phrases"
             },
           },
           vb:row{
@@ -1318,6 +1333,12 @@ function allocate_phrase(track,seq_idx,trk_idx,selection)
         phrase.visible_note_columns = track.visible_note_columns
       end
       phrase.visible_effect_columns = track.visible_effect_columns
+
+      local looping_set,err = xPhraseManager.set_universal_phrase_property(target_instr_idx,phrase_idx,"looping",options.input_loop_phrases.value)
+      if not looping_set then
+        LOG(err)
+      end
+
     end
 
   end
