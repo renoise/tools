@@ -1201,6 +1201,8 @@ function set_source_instr(instr_idx)
   save_instr_state(instr_idx)
   sync_source_target_instr()
 
+  print("*** set_source_instr - source_instr_idx",source_instr_idx)
+
 end
 
 --------------------------------------------------------------------------------
@@ -1313,13 +1315,14 @@ function allocate_phrase(track,seq_idx,trk_idx,selection)
     if not collected_phrases[source_instr_idx] then
       collected_phrases[source_instr_idx] = {}
     end
-    table.insert(collected_phrases[source_instr_idx],{
+    local t = {
       instrument_index = target_instr_idx,
       track_index = trk_idx,
       sequence_index = seq_idx,
       phrase_index = phrase_idx,
-    })
-    --print(">>> allocate_phrase - collected_phrases...",#collected_phrases,rprint(collected_phrases))
+    }
+    table.insert(collected_phrases[source_instr_idx],t)
+    print(">>> allocate_phrase - t...",#collected_phrases,rprint(t))
 
     -- name & configure the phrase
     if phrase then
@@ -1418,7 +1421,7 @@ function collect_phrases(scope)
   --  }>
   local duplicate_phrases = {}  
 
-  --print("*** post-process - collected_phrases",rprint(collected_phrases))
+  print("*** post-process - collected_phrases",rprint(collected_phrases))
   --print("*** post-process - collected_phrases",rprint(table.keys(collected_phrases)))
   if (#table.keys(collected_phrases) == 0) then
 
@@ -1736,6 +1739,8 @@ function do_collect(seq_idx,trk_idx,patt_sel)
 
   local track = rns.tracks[trk_idx]
   local patt_idx = rns.sequencer:pattern(seq_idx)
+  local patt = rns.patterns[patt_idx]
+  local ptrack = patt:track(trk_idx)
 
   -- encountering the same pattern-track can happen when processing
   -- a song whose sequence contain pattern-aliases
@@ -1760,6 +1765,7 @@ function do_collect(seq_idx,trk_idx,patt_sel)
 
   -- set up our iterator
   local patt_lines = rns.pattern_iterator:lines_in_pattern_track(patt_idx,trk_idx)
+
 
   -- loop through pattern, create phrases/instruments as needed
 
@@ -1792,7 +1798,7 @@ function do_collect(seq_idx,trk_idx,patt_sel)
                 and ghost_columns[trk_idx][note_col_idx]
                 and (instr_value+1 ~= ghost_columns[trk_idx][note_col_idx].instrument_index)
               then
-                --print("*** do_collect - produce a note-off ('capture_all')")
+                print("*** do_collect - produce a note-off ('capture_all')")
                 do_note_off = true
                 set_source_instr(ghost_columns[trk_idx][note_col_idx].instrument_index)
                 allocate_target_instr()
@@ -1815,12 +1821,13 @@ function do_collect(seq_idx,trk_idx,patt_sel)
 
             -- do we need to change source/create instruments on the fly? 
             if capture_all then
+              source_instr_idx = nil
               if has_instr_value then
-                --print("*** do_collect - switch to source instrument...")
+                print("*** do_collect - has_instr_value - switch to source instrument...")
                 set_source_instr(instr_value+1)
                 target_phrase = nil
               elseif ghost_columns[trk_idx][note_col_idx] then
-                --print("*** do_collect - let ghost columns decide source instrument...",rprint(ghost_columns))
+                print("*** do_collect - let ghost columns decide source instrument...trk_idx,note_col_idx",trk_idx,rprint(ghost_columns))
                 set_source_instr(ghost_columns[trk_idx][note_col_idx].instrument_index)
                 target_phrase = nil
               end
@@ -1830,6 +1837,7 @@ function do_collect(seq_idx,trk_idx,patt_sel)
             -- will work only when we have an active voice (ghost_columns)
             if not target_phrase 
               and source_instr_idx
+              and not ptrack.is_empty
             then
               allocate_target_instr()
               target_phrase,target_phrase_idx = allocate_phrase(track,seq_idx,trk_idx,patt_sel)
@@ -1845,6 +1853,7 @@ function do_collect(seq_idx,trk_idx,patt_sel)
               if (instr_value < 255) then
                 ghost_columns[trk_idx][note_col_idx] = {}
                 ghost_columns[trk_idx][note_col_idx].instrument_index = instr_value+1
+                print("*** added ghost_columns",rprint(ghost_columns))
               end
               if (note_col.note_value == renoise.PatternLine.NOTE_OFF) then
                 if ghost_columns[trk_idx][note_col_idx] then
@@ -1865,7 +1874,7 @@ function do_collect(seq_idx,trk_idx,patt_sel)
                   collected_messages[msg] = true
                 else
                   phrase_col:copy_from(note_col)                
-                  --print("*** do_collect - copied this column",note_col)
+                  print("*** do_collect - copied this column",note_col)
                   if options.input_replace_collected.value then
                     note_col:clear()
                   end
