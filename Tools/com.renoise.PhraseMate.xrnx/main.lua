@@ -140,7 +140,9 @@ local initial_instr_states = {}
 
 --- table<[instr_idx]{
 --  {
+--    instrument_index = int,
 --    sequence_index = int,
+--    track_index = int,
 --    phrase_index = int,
 --  }
 local collected_phrases = {}
@@ -1269,7 +1271,9 @@ function allocate_phrase(track,seq_idx,trk_idx,selection)
   -- continue existing
   if collected_phrases[source_instr_idx] then
     for k,v in ipairs(collected_phrases[source_instr_idx]) do
-      if (v.sequence_index == seq_idx) then
+      if (v.sequence_index == seq_idx) 
+        and (v.track_index == trk_idx) 
+      then
         local instr = rns.instruments[target_instr_idx]
         phrase,phrase_idx = instr.phrases[v.phrase_index],v.phrase_index
         --print(">>> reusing phrase in seq,trk",seq_idx,trk_idx,"for source/target",source_instr_idx,target_instr_idx,phrase_idx,phrase)
@@ -1718,7 +1722,8 @@ function do_collect(seq_idx,trk_idx,patt_sel)
     processed_ptracks[patt_idx] = {}
   end
   if processed_ptracks[patt_idx][trk_idx] then
-    LOG("We've already processed this pattern, skip...")
+    local msg = "(At sequence #%.2d: We've already processed this pattern, skip..."
+    LOG(msg:format(seq_idx))
     return
   end
 
