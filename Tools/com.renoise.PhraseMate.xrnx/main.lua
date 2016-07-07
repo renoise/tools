@@ -1295,13 +1295,13 @@ end
 -- continue existing phrase, take over empty phrase or create as needed
 
 function allocate_phrase(track,seq_idx,trk_idx,selection)
-  print("allocate_phrase(track,seq_idx,trk_idx,selection)",track,seq_idx,trk_idx,selection)
+  TRACE("allocate_phrase(track,seq_idx,trk_idx,selection)",track,seq_idx,trk_idx,selection)
 
   local phrase,phrase_idx_or_err
 
   -- only add when instrument exists
   local instr = rns.instruments[target_instr_idx]
-  print("*** allocate_phrase - target_instr_idx",target_instr_idx,instr)
+  --print("*** allocate_phrase - target_instr_idx",target_instr_idx,instr)
   if not instr then
     return false,"Could not locate instrument, unable to allocate phrase"
   end
@@ -1458,7 +1458,7 @@ function collect_phrases(scope)
 
         local instr = rns.instruments[v.instrument_index]
         if not instr then
-          LOG("Skip collected phrase - instrument not found...",rprint(v))
+          --LOG("Skip collected phrase - instrument not found...",rprint(v))
         else
           -- check for duplicates 
           if not options.input_include_duplicate_phrases.value 
@@ -1925,7 +1925,7 @@ function do_collect(seq_idx,trk_idx,patt_sel)
               and (first_digit > 0))
             then
               do_copy = false
-              LOG("*** do_collect - skip track/global command",fx_col)
+              --LOG("*** do_collect - skip track/global command",fx_col)
             end
 
             if do_copy then
