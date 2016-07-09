@@ -8,18 +8,6 @@ This is the core xLib class, containing a bunch of static helper methods
 .
 #
 
-### About xLib
-
-The xLib library is a suite of classes that extend the standard Renoise API. Each class aims to be implemented with static methods as widely as possible -  this should make xLib compatible with most programming styles. 
-
-### How to use 
-
-If you are planning to use xLib in your own project, you need to include this file or define the TRACE/LOG methods yourself (note: including xDebug will replace them with a more sophisticated version). 
-
-The recommended practice is to require any classes you need in the main.lua of your tool (as this also documents the exact requirements). Only interdependent classes are automatically resolved when you include them. To document this, they are located in their own folder - this keeps the project tidy.
-
-Finally, to improve the performance of xLib, the entire library is using a single variable to reference the Renoise song object - called "rns". You will need to define/maintain this variable yourself (see below)
-
 
 ]]
 
@@ -29,11 +17,11 @@ Finally, to improve the performance of xLib, the entire library is using a singl
 
 -- reference to song document 
 -- rns = renoise.song()
-TRACE = function(...)
-  --print(...)
+function TRACE(...)
+  print(...)
 end
 
-LOG = function(...)
+function LOG(...)
   print(...)
 end
 
@@ -185,6 +173,15 @@ function xLib.trim(s)
 end
 
 -------------------------------------------------------------------------------
+-- capitalize first letter of every word
+-- @param s (string)
+-- @return string
+
+function xLib.capitalize(s)
+  return string.gsub(" "..s, "%W%l", string.upper):sub(2)
+end
+
+-------------------------------------------------------------------------------
 -- insert return code whenever we encounter dashes or spaces in a string
 -- TODO keep dashes, and allow a certain length per line
 -- @param str (string)
@@ -195,6 +192,19 @@ function xLib.soft_wrap(str)
   local t = xLib.split(str,"[-%s]")
   return table.concat(t,"\n")  
 
+end
+
+-------------------------------------------------------------------------------
+-- detect counter in string (used for incrementing, unique names)
+
+function xLib.detect_counter_in_str(str)
+  local count = string.match(str,"%((%d)%)$")
+  if count then 
+    str = string.gsub(str,"%s*%(%d%)$","")
+  else
+    count = 1
+  end
+  return count
 end
 
 -------------------------------------------------------------------------------
@@ -222,13 +232,15 @@ end
 -- take a table and convert into strings - useful e.g. for viewbuilder popup 
 -- (if table is associative, will use values)
 -- @param t (table)
+-- @param prefix (string) insert before each entry
+-- @param suffix (string) insert after each entry
 -- @return table<string>
 
-function xLib.stringify_table(t)
+function xLib.stringify_table(t,prefix,suffix)
 
   local rslt = {}
   for k,v in ipairs(table.values(t)) do
-    table.insert(rslt,tostring(v))
+    table.insert(rslt,("%s%s%s"):format(prefix or "",tostring(v),suffix or ""))
   end
   return rslt
 

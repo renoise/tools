@@ -34,12 +34,12 @@ fn = function()
     end
   end
 
-  -----------------------------------------------------------------------------
   -- test steps (in reverse order)
   -----------------------------------------------------------------------------
 
-  local test_step_4 = function()
-    print("test_step_4 - voices...",rprint(voicemgr.voices))
+  --[[
+  local test_step_5 = function()
+    print("test_step_5 - voices...",rprint(voicemgr.voices))
     assert(#voicemgr.voices==0,"Expected #voices to be 0")
 
     -- TODO test polyphonic limits
@@ -95,6 +95,93 @@ fn = function()
     local idx = voicemgr:get_voice_index(xmsg)
     assert(idx==nil,"Expected idx to be nil")
 
+
+    scheduled_fn = nil
+    print(">>> xVoiceManager: OK - passed all tests")
+
+  end
+  ]]
+
+  -- test column allocation
+  local test_step_4 = function()
+    print("test_step_4 - voices...",rprint(voicemgr.voices))
+
+    -- release leftover voices
+    voicemgr:release_all()
+    assert(#voicemgr.voices==0,"Expected #voices to be 0")
+
+    voicemgr.column_allocation = true
+
+    -- trigger twice in same column, second will be raised
+    local rslt,idx = voicemgr:input_message(xMidiMessage{
+      message_type = xMidiMessage.TYPE.NOTE_ON,
+      channel = 1,
+      track_index = 1,
+      instrument_index = 1,
+      note_column_index = 1,
+      values = {0x60,0x7F},
+    })
+    local rslt,idx = voicemgr:input_message(xMidiMessage{
+      message_type = xMidiMessage.TYPE.NOTE_ON,
+      channel = 1,
+      track_index = 1,
+      instrument_index = 2,
+      note_column_index = 1,
+      values = {0x60,0x7F},
+    })
+    assert(#voicemgr.voices==2,"Expected #voices to be 2")
+    assert(voicemgr.voices[1].note_column_index==1,"Expected note_column_index to be 2")
+    assert(voicemgr.voices[2].note_column_index==2,"Expected note_column_index to be 2")
+
+    voicemgr:release_all()
+
+    -- trigger twice in column 1 and 3, third should occupy 2
+    local rslt,idx = voicemgr:input_message(xMidiMessage{
+      message_type = xMidiMessage.TYPE.NOTE_ON,
+      channel = 1,
+      track_index = 1,
+      instrument_index = 1,
+      note_column_index = 1,
+      values = {0x60,0x7F},
+    })
+    local rslt,idx = voicemgr:input_message(xMidiMessage{
+      message_type = xMidiMessage.TYPE.NOTE_ON,
+      channel = 1,
+      track_index = 1,
+      instrument_index = 2,
+      note_column_index = 3,
+      values = {0x60,0x7F},
+    })
+    local rslt,idx = voicemgr:input_message(xMidiMessage{
+      message_type = xMidiMessage.TYPE.NOTE_ON,
+      channel = 1,
+      track_index = 1,
+      instrument_index = 3,
+      note_column_index = nil,
+      values = {0x60,0x7F},
+    })
+    assert(#voicemgr.voices==3,"Expected #voices to be 3")
+    assert(voicemgr.voices[1].note_column_index==1,"Expected note_column_index to be 2")
+    assert(voicemgr.voices[2].note_column_index==3,"Expected note_column_index to be 3")
+    assert(voicemgr.voices[3].note_column_index==2,"Expected note_column_index to be 2")
+
+    voicemgr:release_all()
+
+    -- trigger voices until we reach the last column
+    -- (then, we will start 
+    for k = 1,14 do
+      local rslt,idx = voicemgr:input_message(xMidiMessage{
+        message_type = xMidiMessage.TYPE.NOTE_ON,
+        channel = 1,
+        track_index = 1,
+        instrument_index = k,
+        --note_column_index = 1,
+        values = {0x60,0x7F},
+      })
+    end
+    assert(#voicemgr.voices==12,"Expected #voices to be 12")
+
+    voicemgr:release_all()
 
     scheduled_fn = nil
     print(">>> xVoiceManager: OK - passed all tests")
@@ -313,7 +400,6 @@ fn = function()
 
   end
 
-  -----------------------------------------------------------------------------
   -- execute steps via idle notifier
   -----------------------------------------------------------------------------
 

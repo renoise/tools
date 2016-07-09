@@ -16,6 +16,22 @@ This class is used to describe a single line in the song
 
 class 'xLine'
 
+xLine.EMPTY_NOTE_COLUMNS = {
+  {},{},{},{},
+  {},{},{},{},
+  {},{},{},{},
+}
+
+xLine.EMPTY_EFFECT_COLUMNS = {
+  {},{},{},{},
+  {},{},{},{},
+}
+
+xLine.EMPTY_XLINE = {
+  note_columns = xLine.EMPTY_NOTE_COLUMNS,
+  effect_columns = xLine.EMPTY_EFFECT_COLUMNS,
+} 
+
 -------------------------------------------------------------------------------
 -- constructor method
 -- @param args (table)
@@ -44,7 +60,7 @@ function xLine:__init(args)
     self.automation = xLineAutomation(args.automation)
   end
 
-  --print("created xLine...")
+  --print("created xLine...",self)
 
 end
 
@@ -55,22 +71,18 @@ end
 -- @return xLine 
 
 function xLine.apply_descriptor(xline)
-
-  --print("xLine.apply_descriptor - PRE",rprint(xline.note_columns))
+  --TRACE("xLine.apply_descriptor(xline)",xline)
 
   if (type(xline) == "table") then -- entire xline redefined
     xline = xLine(xline)
   elseif (type(xline) == "xLine") then -- check xLine content
     xline.pattern_line:apply_descriptor(xline.note_columns,xline.effect_columns)
-    -- TODO automation
-    --xline.automation:apply_descriptor(xline.automation)
-    xline.automation = xLineAutomation(xline.automation)
-
+    if not table.is_empty(xline.automation) then
+      xline.automation = xLineAutomation(xline.automation)
+    end
   else
     error("Unexpected xline type")
   end
-
-  --print("xLine.apply_descriptor - POST",rprint(xline.note_columns))
 
   return xline
 
@@ -257,7 +269,9 @@ end
 
 function xLine:__tostring()
 
-  return "xLine:"..tostring(self.pattern_line)..","..tostring(self.automation)
+  return type(self)
+       ..", line="..tostring(self.pattern_line)
+       ..", automation="..tostring(self.automation)
 
 end
 

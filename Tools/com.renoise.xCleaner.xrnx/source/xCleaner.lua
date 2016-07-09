@@ -5,38 +5,7 @@ xCleaner
 
   Requires xLib
 
-  FIXME
-    - antialiasing always enabled on fixed samples (no API access...)
-    - detect when instrument is gone (deleted, or on new song...)
 
-
-  TODO
-
-  - realtime update when checking fxchains on/off
-
-  - Sliced removal process
-
-  - when sample is sliced, 
-    scanning: ANY matched sample will keep them all
-    removing: just don't - can't "selectively" modify slices
-
-  PLANNED
-
-  Batch Convert Samples
-  - simply implemented as "Batch" button, brings up dialog
-
-    Sample Buffer 
-    [x] Set bit depth to  [xLib.NUM_BITS]
-    [ ] Adjust channels   [xSample.SAMPLE_CONVERT]
-    [ ] Swap phase
-    [ ] Normalize to      [ percentage% ] 
-                          [x] relative to global peak
-
-    Sample Properties
-    set any "key" to value...
-    - list of keys obtained via xLib.collect_object_properties()
-
-    [x] Interpolation     [Cubic]
 
 
 
@@ -49,6 +18,16 @@ class 'xCleaner'
 
 xCleaner.NOT_AVAILABLE = "--"
 xCleaner.SLICED_INSTR_MSG = "Can't process a sliced instrument. Please render the instrument to slices and try again"
+
+xCleaner.SAMPLENAMES = {"Keep current","Shortened","Randomize","Randomize (all)","Rename to..."}
+xCleaner.SAMPLENAME = {
+  KEEP = 1,
+  SHORTEN = 2,
+  RANDOM = 3,
+  RANDOM_ALL = 4,
+  CUSTOM = 5,
+}
+
 
 -- Configuration Settings
 
@@ -77,7 +56,9 @@ xCleaner.skip_empty_samples = true
 function xCleaner:__init()
 
   self._ui = xCleanerUI(self) -- (xCleanerUI)
+
   self.process_slicer = nil -- (ProcessSlicer)
+  self.do_slice = false
 
   self.samples = nil    -- (table)
   self.modsets = nil    -- (table)
@@ -90,11 +71,11 @@ function xCleaner:__init()
 
   self.notifiers = {
     selected_instrument_observable = function()
-      print("selected_instrument_observable fired...")
+      --print("selected_instrument_observable fired...")
       self._ui:update_instr_selector()
     end,
     selected_sample_observable = function()
-      print("selected_sample_observable fired...")
+      --print("selected_sample_observable fired...")
       local instr_idx = renoise.song().selected_instrument_index
       if (instr_idx == self.instr_idx) then
         self.sample_idx = renoise.song().selected_sample_index
@@ -103,7 +84,7 @@ function xCleaner:__init()
       self._ui:update_main_buttons()
     end,
     selected_sample_modulation_set_observable = function()
-      print("selected_sample_modulation_set_observable fired...")
+      --print("selected_sample_modulation_set_observable fired...")
       local instr_idx = renoise.song().selected_instrument_index
       if (instr_idx == self.instr_idx) then
         self.modset_idx = renoise.song().selected_sample_modulation_set_index
@@ -112,7 +93,7 @@ function xCleaner:__init()
       self._ui:update_main_buttons()
     end,
     selected_sample_device_chain_observable = function()
-      print("selected_sample_device_chain_observable fired...")
+      --print("selected_sample_device_chain_observable fired...")
       local instr_idx = renoise.song().selected_instrument_index
       if (instr_idx == self.instr_idx) then
         self.fxchain_idx = renoise.song().selected_sample_device_chain_index
@@ -123,9 +104,23 @@ function xCleaner:__init()
 
   }
 
+  -- string or nil
+  self.user_specified_name = ""
+
+  -- table, (previously) generated names
+  self.generated_names = {}
+
+  self.generated_name = nil
+
+  -- table, load names from external file
+  self.name_pool = loadfile('source/data/cumbria_fells.lua')
+  self.name_pool = self.name_pool()
+  --print(">>> xCleaner.name_pool",self.name_pool,rprint(self.name_pool))
+
   -- set initial prefs --------------
 
   self:set_issue_scanning_pref(xCleaner.find_issues)
+
 
 end
 
@@ -145,7 +140,7 @@ function xCleaner:remove_assets()
   else
     for k,v in ripairs(self.samples) do
       if v.checked then
-        print(("*** about to delete sample at index %X"):format(v.index))
+        --print(("*** about to delete sample at index %X"):format(v.index))
         self.instr:delete_sample_at(v.index)
       end
     end
@@ -153,14 +148,14 @@ function xCleaner:remove_assets()
 
   for k,v in ripairs(self.modsets) do
     if v.checked then
-      print(("*** about to delete mod-set at index %i"):format(v.index)) 
+      --print(("*** about to delete mod-set at index %i"):format(v.index)) 
       self.instr:delete_sample_modulation_set_at(v.index)
     end
   end
 
   for k,v in ripairs(self.fxchains) do
     if v.checked then
-      print(("*** about to delete fx-chain at index %i"):format(v.index)) 
+      --print(("*** about to delete fx-chain at index %i"):format(v.index)) 
       self.instr:delete_sample_device_chain_at(v.index)
     end
   end
@@ -188,11 +183,12 @@ function xCleaner:set_issue_scanning_pref(bool)
   
 end
 
+
 --------------------------------------------------------------------------------
 -- solve the issues that we are able to 
 
 function xCleaner:fix_issues()
-  print("xCleaner:fix_issues()")
+  TRACE("xCleaner:fix_issues()")
 
   if xInstrument.is_sliced(self.instr) then
     renoise.app():show_message(xCleaner.SLICED_INSTR_MSG)
@@ -207,11 +203,17 @@ function xCleaner:fix_issues()
   local str = ("Fixing all known issues for '%s'"):format(instr.name)
   self._ui:add_to_log(str,true)
 
+  -- generate single random name
+  self.generated_name = self:generate_name()
+  self.generated_names = {}
+
   -- processing function
   local process = function(instr_idx,fn_progress,fn_done)
     for k,xsample in ipairs(self.samples) do
-      xCleaner.fix_issue(instr,samples_tab_idx,xsamples,xsample.index,fn_progress)
-      coroutine.yield()
+      self:fix_issue(instr,samples_tab_idx,xsamples,xsample.index,fn_progress)
+      if self.do_slice then
+        coroutine.yield()
+      end
       if (instr_idx == renoise.song().selected_instrument_index) then
         renoise.song().selected_sample_index = xsample.index
       end
@@ -234,8 +236,16 @@ function xCleaner:fix_issues()
   end
 
   -- call the processing function...
-  self.process_slicer = ProcessSlicer(process,self.instr_idx,progress_handler,done_handler)
-  self.process_slicer:start()
+  if self.do_slice then
+    self.process_slicer = ProcessSlicer(process,self.instr_idx,progress_handler,done_handler)
+    self.process_slicer:start()
+  else
+    process(self.instr_idx,progress_handler,done_handler)
+  end
+
+  -- clear temp stuff
+  self.generated_name = nil
+  self.generated_names = {}
 
 end
 --------------------------------------------------------------------------------
@@ -245,11 +255,11 @@ end
 -- @param data (table)
 -- @param item_idx (int)
 
-function xCleaner.fix_issue(instr,tab_idx,data,item_idx,update_callback)
-  print("xCleaner.fix_issue()",instr,tab_idx,data,item_idx,update_callback)
+function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
+  TRACE("xCleaner:fix_issue()",instr,tab_idx,data,item_idx,update_callback)
   
   if not instr then
-    print("*** xCleaner:fix_issue() - no instrument selected")
+    LOG("*** xCleaner:fix_issue() - no instrument selected")
     return false
   end
 
@@ -263,6 +273,58 @@ function xCleaner.fix_issue(instr,tab_idx,data,item_idx,update_callback)
 
     --local xsample = xCleaner.get_data_item(data,"index",item_idx-1)
     local xsample = vVector.match_by_key_value(data,"index",item_idx)
+
+    local sample = instr.samples[item_idx]
+
+    -- sample (re-)naming
+    if sample then
+      local str_name = ""
+      local name_tokens = xSample.get_name_tokens(sample.name)
+      --print(">>> name_tokens...",rprint(name_tokens))
+      if (options.samplename.value == xCleaner.SAMPLENAME.KEEP) then
+        if name_tokens.plugin_type
+          and name_tokens.plugin_name 
+          and name_tokens.preset_name 
+        then
+          str_name = ("%s: %s (%s)"):format(
+            name_tokens.plugin_type,
+            name_tokens.plugin_name,
+            name_tokens.preset_name)
+        elseif name_tokens.sample_name then
+          str_name = name_tokens.sample_name
+        else
+          str_name = sample.name
+        end
+      elseif (options.samplename.value == xCleaner.SAMPLENAME.CUSTOM) then
+        str_name = self.user_specified_name
+      elseif (options.samplename.value == xCleaner.SAMPLENAME.SHORTEN) then
+        if name_tokens.preset_name then
+          str_name = name_tokens.preset_name 
+        elseif name_tokens.sample_name then
+          str_name = name_tokens.sample_name
+        else
+          str_name = sample.name
+        end
+      elseif (options.samplename.value == xCleaner.SAMPLENAME.RANDOM) then
+        str_name = xLib.capitalize(self.generated_name)
+      elseif (options.samplename.value == xCleaner.SAMPLENAME.RANDOM_ALL) then
+        str_name = xLib.capitalize(self:generate_name())
+      end
+
+      -- add velocity/note
+      if options.samplename_add_velocity.value then
+        str_name = str_name .. "_" .. (name_tokens.velocity and 
+          tostring(name_tokens.velocity) or ("0x%.2X"):format(sample.sample_mapping.velocity_range[2]))
+      end
+      if options.samplename_add_note.value then
+        str_name = str_name .. "_" .. (name_tokens.note and 
+          name_tokens.note or xNoteColumn.note_value_to_string(sample.sample_mapping.base_note))
+      end
+
+      sample.name = str_name
+
+    end
+    
 
     if not xCleaner.has_issues(xsample) then
       return
@@ -292,7 +354,6 @@ function xCleaner.fix_issue(instr,tab_idx,data,item_idx,update_callback)
     -- do we have something to fix? 
     if channel_action or bit_depth or xsample.excess_data then
       
-      local sample = instr.samples[item_idx]
       local buffer = sample.sample_buffer
       if not buffer.has_sample_data then
         return false
@@ -327,7 +388,7 @@ function xCleaner.fix_issue(instr,tab_idx,data,item_idx,update_callback)
       end
       
       local issues_fixed = nil
-      xCleaner.collect_sample_info(instr,xsample,item_idx)
+      self:collect_sample_info(instr,xsample,item_idx)
       xsample.excess_data = false
       xsample.summary,issues_fixed = vString.strip_line(xsample.summary,"\^ISSUE:")
       if update_callback then
@@ -345,7 +406,7 @@ end
 --------------------------------------------------------------------------------
 
 function xCleaner:gather()
-  print("xCleaner:gather()")
+  TRACE("xCleaner:gather()")
 
   self.instr = renoise.song().selected_instrument
   self.instr_idx = renoise.song().selected_instrument_index
@@ -363,7 +424,7 @@ end
 -- @param find_issues (bool) when true, check for defined types
 
 function xCleaner:gather_samples(find_issues)
-  print("xCleaner.gather_samples()",find_issues)
+  TRACE("xCleaner.gather_samples()",find_issues)
 
   local instr = self.instr
 
@@ -425,11 +486,13 @@ function xCleaner:gather_samples(find_issues)
         excess_data = false,
         summary = "",
       }
-      xCleaner.collect_sample_info(instr,t[k],k)
+      self:collect_sample_info(instr,t[k],k)
 
       -- display progress
-      fn_progress(("Processed sample #%02X - %s"):format(k-1,sample.name))
-      coroutine.yield()
+      if self.do_slice then
+        fn_progress(("Processed sample #%02X - %s"):format(k-1,sample.name))
+        coroutine.yield()
+      end
     end
 
     -- step 3: cross-reference with samples registered in phrases
@@ -478,7 +541,7 @@ function xCleaner:gather_samples(find_issues)
   end
 
   local done_handler = function(t)
-    print("done_handler(t)",t)
+    --print("done_handler(t)",t)
 
     self.samples = t
     time_elapsed = os.clock()-time_elapsed
@@ -490,13 +553,12 @@ function xCleaner:gather_samples(find_issues)
   end
 
   -- call the processing function...
-  self.process_slicer = ProcessSlicer(gather_process,progress_handler,done_handler)
-  self.process_slicer:start()
-  
-  --[[ 
-  gather_process(progress_handler,done_handler)
-  ]]
-
+  if self.do_slice then
+    self.process_slicer = ProcessSlicer(gather_process,progress_handler,done_handler)
+    self.process_slicer:start()
+  else
+    gather_process(progress_handler,done_handler)
+  end
 
 end
 
@@ -505,11 +567,28 @@ end
 -- @param item (table)
 -- @param sample_idx (int)
 
-function xCleaner.collect_sample_info(instr,item,sample_idx)
-  print("xCleaner.collect_sample_info()")
+function xCleaner:collect_sample_info(instr,item,sample_idx)
+  TRACE("xCleaner:collect_sample_info()")
 
   local sample = instr.samples[sample_idx]
   local buffer = sample.sample_buffer
+
+  -- sample (re-)naming
+  local name_tokens = xSample.get_name_tokens(sample.name) 
+  local short_name = name_tokens.preset_name and name_tokens.preset_name or sample.name
+  --print(">>> short_name",short_name)
+  if (options.samplename.value == xCleaner.SAMPLENAME.CUSTOM) then
+    item.summary = ("%sINFO: Will rename sample-name to %s\n"):format(item.summary,self.user_specified_name)
+  elseif (options.samplename.value == xCleaner.SAMPLENAME.SHORTEN) 
+    and (sample.name ~= short_name) 
+  then
+    item.summary = ("%sINFO: Will shorten sample-name to %s\n"):format(item.summary,short_name)
+  elseif (options.samplename.value == xCleaner.SAMPLENAME.RANDOM) 
+    or (options.samplename.value == xCleaner.SAMPLENAME.RANDOM_ALL) 
+  then
+    item.summary = ("%sINFO: Will assign a random name to this sample\n"):format(item.summary)
+  end
+  
 
   -- check sample rate
   item.sample_rate = (buffer.has_sample_data) and 
@@ -598,7 +677,7 @@ end
 -- collect unused modulation sets
 
 function xCleaner:gather_modulation()
-  print("xCleaner:gather_modulation()")
+  TRACE("xCleaner:gather_modulation()")
 
   local instr = self.instr
   local xsamples = self.samples
@@ -648,7 +727,7 @@ end
 -- this includes checks for linked devices, send devices etc.
 
 function xCleaner:gather_effects()
-  print("xCleaner:gather_effects()")
+  TRACE("xCleaner:gather_effects()")
 
   local instr = self.instr
   local t = table.create()
@@ -734,12 +813,12 @@ function xCleaner:gather_effects()
     local all_devices_unreferenced = true
     for k2,device_link in ipairs(t[k].device_links_in) do
       local xchain = vVector.match_by_key_value(t,"index",device_link.index)
-      print("xchain",xchain.name,"xchain.checked",xchain.checked)
+      --print("xchain",xchain.name,"xchain.checked",xchain.checked)
       if not xchain.checked then
         all_devices_unreferenced = false
       end
     end
-    print("all_devices_unreferenced",all_devices_unreferenced,k,fxchain.name)
+    --print("all_devices_unreferenced",all_devices_unreferenced,k,fxchain.name)
     -- check item when unreferenced
     t[k].checked = (xCleaner.check_unreferenced) and 
       t[k].checked and
@@ -814,11 +893,118 @@ function xCleaner.count_tokens(t,token)
   
 end
 
+--------------------------------------------------------------------------------
+-- random name generator
+
+function xCleaner:generate_name(str,iters,idx,once)
+  TRACE("xCleaner:generate_name(str,iters,idx,once)",str,iters,idx,once)
+
+  local vowels = {"a","e","i","o","u","y"}
+
+  if not str then
+    str = ""
+  end
+
+  local function enough_iters()
+    if once then
+      return true
+    else
+      return ((iters > 1) and (iters < 4)) and true or false
+    end
+  end
+
+  -- perhaps add a vowel at end? 
+  local function maybe_repeat(str)
+    if once then
+      return str
+    else
+      LOG(">>> got here 2",str)
+      once = true
+      return (#str > 5) and str or str .. " " .. self:generate_name(nil,nil,nil,once)
+    end
+  end
+
+  -- perhaps add a vowel at end? 
+  local function maybe_vowel(str)
+    local dice = math.random(1,#vowels)
+    if (math.random(0,1) == 0) then
+      str = str .. vowels[dice]
+    end
+    return str
+  end
+
+
+  local function finalize(str)
+    return maybe_repeat(maybe_vowel(str))
+  end
+
+  --Pick a random word
+  local choice_idx = math.random(1,#self.name_pool)
+  local choice = self.name_pool[choice_idx]
+
+  -- Continue from index, or set to beginning
+  if not idx or (idx > #choice) then
+    idx = 1
+  end
+
+  --One character at a time
+  local grab_consonants = false
+  for k = idx,#choice do
+    local chr = string.sub(choice,k,k)
+    -- 1.continue until vowel
+    local is_vowel = table.find(table.values(vowels),chr)
+    if not is_vowel then
+      str = ("%s%s"):format(str,chr)
+    else -- is vowel  
+      if grab_consonants then          
+        -- 3. done grabbing consonants - switch or finish
+        if not iters then
+          iters = 1
+        elseif enough_iters() then
+          --print("*** 3. done grabbing consonants - finish",str)
+          return finalize(str)
+        end
+        iters = iters + 1
+        --print("*** 3. done grabbing consonants - switch",str,iters,k)
+        return self:generate_name(str,iters,k,once)
+      end
+
+      str = ("%s%s"):format(str,chr)
+      -- 2. grab succeeding consonants 
+      grab_consonants = true
+      --print("*** 2. grab succeeding consonants ")
+    end
+
+  end
+
+  if not iters then
+    iters = 1
+  end
+
+  if enough_iters() then
+    if table.find(self.generated_names,str) then
+      -- avoid duplicate names (start over)
+      --print("*** 5. duplicate name - start over")
+      return self:generate_name(nil,nil,nil,once)
+    end
+    --print("*** 4. done",str)
+    table.insert(self.generated_names,str)
+    return finalize(str)
+  else
+    if once then
+      return str
+    else
+      --print("*** 4. not done yet - ",str,iters)
+      return str .. self:generate_name(str,iters,nil,once)
+    end
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
 function xCleaner:attach_to_song()
-  print("xCleaner:attach_to_song()")
+  TRACE("xCleaner:attach_to_song()")
 
   self.instr = nil
   self.instr_idx = nil

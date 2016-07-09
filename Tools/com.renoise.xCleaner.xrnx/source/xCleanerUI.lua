@@ -67,6 +67,13 @@ function xCleanerUI:__init(xCleaner)
   self.mod_table = nil
   self.fx_table = nil
 
+  -- 
+
+  options.samplename:add_notifier(function()
+    self:update_sample_name_options()
+  end)
+
+
 end
 
 --------------------------------------------------------------------------------
@@ -74,164 +81,218 @@ end
 function xCleanerUI:build()
   TRACE("xCleanerUI:build()")
 
-  local large_button_h = 26
+  local large_button_h = 24
+  local label_w = 90
   local vb = self.vb
 
   local content = vb:column{
     margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
     vb:column{
       spacing = 6,
-      vb:row{
+      width = DIALOG_W,
+      vb:column{
         style = "group",
         margin = 6,
         width = DIALOG_W,
-        vb:column{
-          vb:horizontal_aligner{
-            width = DIALOG_W,
-            vb:text {
-              text = "Instrument",
-              width = 60,
-            },
-            vb:popup {
-              items = {},
-              id = "instr_source_popup",
-              value = 1,
-              width = DIALOG_W - 92,
-              notifier = function(idx)
-                
-              end,
-            },
-            vb:button{
-              text = "↺", --≡
-              id = "bt_sync_source",
-              tooltip = "Focus the last scanned instrument",
-              notifier = function(val)
-                self:focus_instr()
-              end,
-            },
+        vb:horizontal_aligner{
+          --width = DIALOG_W,
+          vb:text {
+            text = "Instr.",
           },
-          vb:horizontal_aligner{
-            mode = "justify",
-            vb:column{
-              vb:text{
-                text = "Scanning options",
-              },
-              vb:row{
-                vb:checkbox{
-                  id = "check_unreferenced",
-                  value = xCleaner.check_unreferenced,
-                  notifier = function()
-                    local elm = self.vb.views.check_unreferenced
-                    xCleaner.check_unreferenced = elm.value
-                  end
-                },
-                vb:text{
-                  text = "Auto-select unreferenced content",
-                },
-              },
-              vb:row{
-                vb:checkbox{
-                  id = "find_issues",
-                  value = self._x.find_issues,
-                  notifier = function()
-                    local elm = self.vb.views.find_issues
-                    self._x:set_issue_scanning_pref(elm.value)
-                  end
-                },
-                vb:text{
-                  text = "Look for issues (increases scanning time!)",
-                },
-              },
-              vb:row{
-                vb:checkbox{
-                  id = "skip_empty",
-                  value = xCleaner.skip_empty_samples,
-                  notifier = function()
-                    local elm = self.vb.views.skip_empty
-                    xCleaner.skip_empty_samples = elm.value
-                  end
-                },
-                vb:text{
-                  text = "Leave empty samples intact",
-                },
-              },            
-            },
-            vb:column{
-              margin = 10,
-              vb:space{
-                height = 10,
-              },
-              vb:button{
-                text = "Scan Instrument",
-                width = 100,
-                height = large_button_h,
-                notifier = function()
-                  self._x:gather()
-                end,
-              },
-            },
-
+          vb:popup {
+            items = {},
+            id = "instr_source_popup",
+            value = 1,
+            width = DIALOG_W - 132,
+            height = large_button_h,
+            notifier = function(idx)
+              
+            end,
           },
-
+          vb:button{
+            text = "↺", --≡
+            id = "bt_sync_source",
+            height = large_button_h,
+            tooltip = "Focus the last scanned instrument",
+            notifier = function(val)
+              self:focus_instr()
+            end,
+          },
+          vb:button{
+            text = "Scan",
+            width = 68,
+            height = large_button_h,
+            notifier = function()
+              self._x:gather()
+            end,
+          },
         },
       },
-      vb:column{
-        id = "tabs",
-        --style = "border",
-      },
-      --[[
       vb:column{
         style = "group",
-        margin = 4,
-      },
-      ]]
-      vb:multiline_textfield{
-        id = "info",
-        text = "",
-        height = 60,
+        margin = 6,
         width = DIALOG_W,
-        font = "mono",
+        vb:row{
+          vb:text{
+            text = "Sample-names",
+            width = label_w,
+          },
+          vb:column{
+            vb:row{
+              vb:popup{
+                id = "check_samples_keep_name",
+                items = xCleaner.SAMPLENAMES,
+                bind = options.samplename,
+                width = 120,
+                --[[
+                notifier = function()
+                  local elm = self.vb.views.check_unreferenced
+                  xCleaner.check_unreferenced = elm.value
+                end
+                ]]
+              },
+              vb:textfield{
+                id = "textfield_sample_name",
+                text = "Enter name...",
+                width = 100,
+              },
+            },
+            vb:row{
+              vb:checkbox{
+                id = "checkbox_sample_add_velocity",
+                bind = options.samplename_add_velocity,
+              },
+              vb:text{
+                text = "Velocity",
+              },
+              vb:checkbox{
+                id = "checkbox_sample_add_note",
+                bind = options.samplename_add_note,
+              },
+              vb:text{
+                text = "Note",
+              },
+            },
+          },
+        },
+        vb:row{
+          vb:text{
+            text = "Scanning options",
+            width = label_w,
+          },
+          vb:column{
+            vb:row{
+              vb:checkbox{
+                id = "check_unreferenced",
+                bind = options.check_unreferenced,
+                --[[
+                value = xCleaner.check_unreferenced,
+                notifier = function()
+                  local elm = self.vb.views.check_unreferenced
+                  xCleaner.check_unreferenced = elm.value
+                end
+                ]]
+              },
+              vb:text{
+                text = "Auto-select unreferenced content",
+              },
+            },
+            vb:row{
+              vb:checkbox{
+                id = "skip_empty",
+                bind = options.skip_empty_samples,
+                --[[
+                value = xCleaner.skip_empty_samples,
+                ]]
+                notifier = function()
+                  local elm = self.vb.views.skip_empty
+                  xCleaner.skip_empty_samples = elm.value
+                end
+              },
+              vb:text{
+                text = "Leave empty samples intact",
+              },
+            },        
+            vb:row{
+              vb:checkbox{
+                id = "find_issues",
+                bind = options.find_issues,
+                --[[
+                value = self._x.find_issues,
+                ]]
+                notifier = function()
+                  local elm = self.vb.views.find_issues
+                  self._x:set_issue_scanning_pref(elm.value)
+                end
+              },
+              vb:text{
+                text = "Detect channel issues (increases scanning time!)",
+              },
+            },
+          },
+        },
+
       },
-      vb:row{
-        vb:button{
-          text = "Remove Selected",
-          id = "bt_remove_selected",
-          height = large_button_h,
-          width = 120,
-          notifier = function()
 
-            local choice = renoise.app():show_prompt("",
-              "Are you sure you want to remove the selected assets?", 
-              {"OK","Cancel"})
-
-            if (choice == "OK") then
-              self._x:remove_assets()
-            end
-
-          end,
-        },
-        vb:button{
-          text = "Fix Issue",
-          id = "bt_fix_issue",
-          height = large_button_h,
-          width = 70,
-          notifier = function()
-            self:fix_selected_item()
-          end,
-        },
-        vb:button{
-          text = "Fix All Issues",
-          id = "bt_fix_all_issues",
-          height = large_button_h,
-          width = 100,
-          notifier = function()
-            --renoise.app():show_message("Not yet implemented")
-            self._x:fix_issues()
-
-          end,
-        },
-      }
     },
+    vb:column{
+      id = "tabs",
+      --style = "border",
+    },
+    --[[
+    vb:column{
+      style = "group",
+      margin = 4,
+    },
+    ]]
+    vb:multiline_textfield{
+      id = "info",
+      text = "",
+      height = 60,
+      width = DIALOG_W,
+      font = "mono",
+    },
+    vb:row{
+      vb:button{
+        text = "Remove Checked",
+        id = "bt_remove_selected",
+        height = large_button_h,
+        width = 120,
+        notifier = function()
+
+          local choice = renoise.app():show_prompt("",
+            "Are you sure you want to remove the selected assets?", 
+            {"OK","Cancel"})
+
+          if (choice == "OK") then
+            self._x:remove_assets()
+          end
+
+        end,
+      },
+      vb:button{
+        text = "Process Selected",
+        id = "bt_fix_issue",
+        height = large_button_h,
+        width = 120,
+        notifier = function()
+          --self._x:prepare_fix()
+          self:fix_selected_item()
+        end,
+      },
+      vb:button{
+        text = "Process All",
+        id = "bt_fix_all_issues",
+        height = large_button_h,
+        width = 100,
+        notifier = function()
+          --renoise.app():show_message("Not yet implemented")
+          
+          self._x:fix_issues()
+
+        end,
+      },
+    }
   }
 
   -- add tabs ---------------------------------------------
@@ -265,6 +326,8 @@ function xCleanerUI:build()
   self:build_fx_table()
   self:build_mod_table()
   self:build_samples_table()
+
+  self:update_sample_name_options()
 
   return content
 
@@ -402,7 +465,7 @@ function xCleanerUI:build_samples_table()
   end
 
   local checkbox_handler = function(cell,checked)
-    print("checkbox_handler(cell,checked)",cell,checked)
+    --print("checkbox_handler(cell,checked)",cell,checked)
     --self._x.samples[cell.item_id].checked = checked
     local item = cell.owner.dataprovider:get(cell.item_id)
     item.checked = checked
@@ -412,16 +475,14 @@ function xCleanerUI:build_samples_table()
   end
 
   local action_handler = function(cell,value)
-    print("action_handler(cell,checked)",cell,value)
+    --print("action_handler(cell,checked)",cell,value)
     local item = cell.owner.dataprovider:get(cell.item_id)
     item.action = value
   end
 
   local select_sample_handler = function(cell,do_focus)
-    print("select_sample_handler",cell,do_focus)
-    print("cell",rprint(cell))
+    --print("select_sample_handler",cell,do_focus)
     local item,item_index = cell.owner.dataprovider:get(cell.item_id)
-    print("item,item_index",item,item_index)
     if item then
       if do_focus then
         self:focus_to_sample(item_index)
@@ -438,18 +499,18 @@ function xCleanerUI:build_samples_table()
   end
 
   local focus_sample_handler = function(idx)
-    print("focus_sample_handler",idx)
+    --print("focus_sample_handler",idx)
     select_sample_handler(idx,true)
   end
 
   local valuebox_handler = function(idx,value)
-    print("focus_sample_handler",idx,value)
+    --print("focus_sample_handler",idx,value)
     local item = cell.owner.dataprovider:get(cell.item_id)
     item.valuebox = value
   end
 
   local zero_indexed = function(val)
-    print("zero_indexed",val)
+    --print("zero_indexed",val)
     return val-1
   end
 
@@ -502,7 +563,7 @@ end
 -- @param time_elapsed (number), the time it took to scan
 
 function xCleanerUI:show_results(time_elapsed)
-  print("xCleanerUI:show_results(time_elapsed)",time_elapsed)
+  TRACE("xCleanerUI:show_results(time_elapsed)",time_elapsed)
 
   self:populate_table(self.sample_table,self._x.samples,self._x.instr.samples)
   --self:populate_table(self.sample_table,self._x.samples,self._x.instr.sample_modulation_sets)
@@ -538,7 +599,7 @@ function xCleanerUI:show_results(time_elapsed)
   self:update_mod_fx_tables()
   self:update_tab_labels()
   self:update_main_buttons()
-  print("got here - self.tabs.index",self.tabs.index)
+  --print("got here - self.tabs.index",self.tabs.index)
   self:highlight_row(self.tabs.index)
 
 end
@@ -551,7 +612,7 @@ end
 -- @param maintain_offset (bool), maintain the table row - when possible 
 
 function xCleanerUI:populate_table(vtable,xdata,rns_table,maintain_offset)
-  print("xCleanerUI:populate_table(vtable,xdata,rns_table,maintain_offset)",vtable,xdata,rns_table,maintain_offset)
+  TRACE("xCleanerUI:populate_table(vtable,xdata,rns_table,maintain_offset)",vtable,xdata,rns_table,maintain_offset)
 
   for i = 1, #rns_table do
     local item = xdata[i]
@@ -562,6 +623,7 @@ function xCleanerUI:populate_table(vtable,xdata,rns_table,maintain_offset)
       item.show_summary = ("%s%s"):format(str_unreferenced,str_issues)
       item.highlighted = false
       item.show = "Icons/Sample_Autoselect.bmp"
+      item.name = rns_table[i].name
     end
   end
   -- TODO feature gone
@@ -577,7 +639,7 @@ end
 -- when checking samples on and off, modulation/fx might change
 
 function xCleanerUI:update_mod_fx_tables()
-  print("xCleanerUI:update_mod_fx_tables()")
+  TRACE("xCleanerUI:update_mod_fx_tables()")
 
   local instr = self._x.instr
 
@@ -592,7 +654,7 @@ end
 --------------------------------------------------------------------------------
 
 function xCleanerUI:show()
-  print("xCleanerUI:show()")
+  TRACE("xCleanerUI:show()")
 
   self._x:attach_to_song()
 
@@ -629,7 +691,7 @@ end
 -- @param tab_idx (xCleanerUI.TAB)
 
 function xCleanerUI:highlight_row(tab_idx)
-  print("xCleanerUI:highlight_row(tab_idx)",tab_idx)
+  TRACE("xCleanerUI:highlight_row(tab_idx)",tab_idx)
 
   --[[
   local instr_idx = renoise.song().selected_instrument_index
@@ -755,7 +817,7 @@ end
 -- enable/disable buttons, based on program state
 
 function xCleanerUI:update_main_buttons()
-  print("xCleanerUI:update_main_buttons()")
+  TRACE("xCleanerUI:update_main_buttons()")
 
   local bt_remove_selected = self.vb.views.bt_remove_selected
   local bt_fix_issue = self.vb.views.bt_fix_issue
@@ -803,10 +865,31 @@ function xCleanerUI:display_item_summary(item)
 end
 
 --------------------------------------------------------------------------------
+-- invoked when the samplename option has changed
+
+function xCleanerUI:update_sample_name_options()
+  TRACE("xCleanerUI:update_sample_name_options()")
+
+  local custom_name = (options.samplename.value == xCleaner.SAMPLENAME.CUSTOM) 
+  local create_name = (options.samplename.value > xCleaner.SAMPLENAME.SHORTEN) 
+  --local vb_ctrl = self.vb.views["check_samples_keep_name"]
+  local vb_textfield = self.vb.views["textfield_sample_name"]
+  --local vb_velocity = self.vb.views["checkbox_sample_add_velocity"]
+  --local vb_note = self.vb.views["checkbox_sample_add_note"]
+
+  vb_textfield.visible = custom_name 
+  --vb_velocity.active = create_name
+  --vb_note.active = create_name
+
+
+
+end
+
+--------------------------------------------------------------------------------
 -- 
 
 function xCleanerUI:update_item(item,tab_idx)
-  print("xCleanerUI:update_item(item,tab_idx)",item,tab_idx)
+  TRACE("xCleanerUI:update_item(item,tab_idx)",item,tab_idx)
 
   
   self:display_item_summary(item)
@@ -875,7 +958,7 @@ function xCleanerUI:fix_selected_item()
   local instr = self._x.instr
   local tab_idx = self.tabs.index
   local item_idx,data = self:get_selected()
-  print("item_idx,data",item_idx,data)
+  --print("item_idx,data",item_idx,data)
   
   local update_callback = function(item,tab_idx)
     self:update_item(item,tab_idx)
@@ -954,7 +1037,7 @@ function xCleanerUI:focus_instr()
 
   local instr = renoise.song().instruments[self._x.instr_idx]
   if not instr then
-    print("could not find instrument with index",self._x.instr_idx)
+    LOG("could not find instrument with index",self._x.instr_idx)
     return false
   else
     renoise.song().selected_instrument_index = self._x.instr_idx
@@ -969,7 +1052,7 @@ function xCleanerUI:focus_to_sample(idx)
   TRACE("xCleanerUI:focus_to_sample(idx)",idx)
 
   if not self:focus_instr() then
-    print("couldn't focus")
+    LOG("*** Couldn't bring focus to sample")
     return
   end
 

@@ -2,10 +2,13 @@
 main.lua
 ============================================================================]]--
 
---_trace_filters = nil
-_trace_filters = {".*"}
+_trace_filters = nil
+--_trace_filters = {".*"}
 
+
+--------------------------------------------------------------------------------
 -- includes
+--------------------------------------------------------------------------------
 
 _xlibroot = "source/xLib/classes/"
 require (_xlibroot.."xLib")
@@ -14,6 +17,7 @@ require (_xlibroot.."xReflection")
 require (_xlibroot.."xPhrase")
 require (_xlibroot.."xSample")
 require (_xlibroot.."xSampleMapping")
+require (_xlibroot.."xNoteColumn")
 require (_xlibroot.."xInstrument")
 require (_xlibroot.."xAudioDevice")
 
@@ -27,6 +31,20 @@ require (_vlibroot.."vTabs")
 require ("source/ProcessSlicer")
 require ("source/xCleaner")
 require ("source/xCleanerUI")
+
+--------------------------------------------------------------------------------
+-- preferences
+--------------------------------------------------------------------------------
+
+options = renoise.Document.create("ScriptingToolPreferences"){}
+options:add_property("samplename",renoise.Document.ObservableNumber(xCleaner.SAMPLENAME.SHORTEN))
+options:add_property("samplename_add_velocity",renoise.Document.ObservableBoolean(true))
+options:add_property("samplename_add_note",renoise.Document.ObservableBoolean(true))
+options:add_property("check_unreferenced",renoise.Document.ObservableBoolean(true))
+options:add_property("find_issues",renoise.Document.ObservableBoolean(true))
+options:add_property("skip_empty_samples",renoise.Document.ObservableBoolean(true))
+
+renoise.tool().preferences = options
 
 
 --------------------------------------------------------------------------------

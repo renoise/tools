@@ -64,8 +64,8 @@ function vCompositeControl:register_views(t)
 end
 
 --------------------------------------------------------------------------------
+-- @param view (View)
 -- @param vb_owner (Viewbuilder)
--- @param view ()
 
 function vCompositeControl:add_view(view,vb_owner)
   TRACE("vCompositeControl:add_view(view,vb_owner)",view,vb_owner)
@@ -83,7 +83,7 @@ end
 
 --------------------------------------------------------------------------------
 -- @param vb_owner (Viewbuilder)
--- @param view ()
+-- @param view (View)
 
 function vCompositeControl:remove_view(vb_owner,view)
   TRACE("vCompositeControl:remove_view(vb_owner,view)",vb_owner,view)

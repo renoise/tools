@@ -12,6 +12,7 @@ Requires
 @{xReflection}
 @{xSampleMapping}
 @{xPhrase}
+@{xNoteColumn}
 
 ]]
 
@@ -330,6 +331,97 @@ function xSample.sample_buffer_is_silent(buffer,channels)
   end
 
   return true
+
+end
+
+--------------------------------------------------------------------------------
+-- extract tokens from a sample name 
+-- @param string, e.g. "VST: Synth1 VST (Honky Piano)_0x7F_C-5" 
+-- @return table, {
+--    sample_name = string ("Recorded sample 01"),
+--    plugin_type = string ("VST" or "AU"),
+--    plugin_name = string ("Synth1 VST"),
+--    preset_name = string ("Honky Piano"),
+--    velocity = string ("0x7F"),
+--    note = string ("C-5")
+--  }
+
+function xSample.get_name_tokens(str)
+
+  -- start by assuming it's a plugin
+  local matches = str:gmatch("(.*): (.*) %((.*)%)[_%s]?([^_%s]*)[_%s]?([A-Z]*-?[%d]*)")  
+  local arg1,arg2,arg3,arg4,arg5 = matches()
+
+  -- from end 
+  local arg5_is_note = arg5 and xNoteColumn.note_string_to_value(arg5)
+  local arg4_is_note = arg4 and xNoteColumn.note_string_to_value(arg4)
+  local arg4_is_velocity = arg4 and tonumber(arg4)
+  if arg5_is_note then
+    return {
+      plugin_type = arg1,
+      plugin_name = arg2,
+      preset_name = arg3,
+      velocity = arg4,
+      note = (arg5 ~= "") and arg5 or nil,
+    }
+  elseif arg4_is_velocity then
+    return {
+      plugin_type = arg1,
+      plugin_name = arg2,
+      preset_name = arg3,
+      velocity = arg4
+    }
+  elseif arg4_is_note then
+    return {
+      plugin_type = arg1,
+      plugin_name = arg2,
+      preset_name = arg3,
+      note = (arg4 ~= "") and arg4 or nil,
+    }
+  elseif arg3 then
+    return {
+      plugin_type = arg1,
+      plugin_name = arg2,
+      preset_name = arg3,
+    }
+  else
+    -- does not seem to be a plugin
+    local matches = str:gmatch("(.-)[_%s]?([^_%s]*)[_%s]?([A-Z]*-?[%d]*)$") 
+    local arg1,arg2,arg3 = matches()
+    --print("*** get_name_tokens - not a plugin - arg1,arg2,arg3",arg1,arg2,arg3)
+    local arg3_is_note = arg3 and xNoteColumn.note_string_to_value(arg3)
+    local arg2_is_note = arg2 and xNoteColumn.note_string_to_value(arg2)
+    local arg2_is_velocity = arg2 and tonumber(arg2)
+    if (arg1 == "") then
+      return {
+        sample_name = arg2,
+      }
+    elseif arg3_is_note then
+      return {
+        sample_name = arg1,
+        velocity = arg2,
+        note = (arg3 ~= "") and arg3 or nil,
+      }
+    elseif arg2_is_velocity then
+      return {
+        sample_name = arg1,
+        velocity = arg2,
+      }
+    elseif arg2_is_note then
+      return {
+        sample_name = arg1,
+        note = (arg2 ~= "") and arg2 or nil,
+      }
+    else 
+      return {
+        sample_name = arg1,
+      }
+    end
+  end
+
+  return {
+    --sample_name = str
+  }
 
 end
 

@@ -227,6 +227,7 @@ end
 -- @return int (octave) or nil
 
 function xNoteColumn.note_string_to_value(str_val)
+  --TRACE("xNoteColumn.note_string_to_value(str_val)",str_val,type(str_val))
 
   str_val = string.upper(str_val)
 
@@ -249,6 +250,9 @@ function xNoteColumn.note_string_to_value(str_val)
   end
   octave = tonumber((str_val):sub(3))
   if not octave then
+    LOG("WARNING: xNoteColumn - Trying to write invalid note-string:",str_val)
+    return xNoteColumn.EMPTY_NOTE_VALUE
+  elseif not note then
     LOG("WARNING: xNoteColumn - Trying to write invalid note-string:",str_val)
     return xNoteColumn.EMPTY_NOTE_VALUE
   else
@@ -495,9 +499,12 @@ end
 -------------------------------------------------------------------------------
 
 function xNoteColumn:__tostring()
-  return note_string
-  ..instrument_string
-  ..volume_string
-  ..panning_string
-  ..delay_string
+
+  return type(self)
+    ..", note="..tostring(self.note_string)
+    ..", instrument="..self.instrument_string
+    ..", volume_string="..self.volume_string
+    ..", panning="..self.panning_string
+    ..", delay="..self.delay_string
+
 end

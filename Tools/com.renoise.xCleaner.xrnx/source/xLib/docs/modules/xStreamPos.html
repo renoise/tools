@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>ldoc</h1>
+<h1>xLib</h1>
 
 <ul>
   <li><a href="../index.html">Index</a></li>
@@ -40,6 +40,7 @@
 <h2>Modules</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="../modules/xAudioDevice.html">xAudioDevice</a></li>
+  <li><a href="../modules/xAutomation.html">xAutomation</a></li>
   <li><a href="../modules/xBlockLoop.html">xBlockLoop</a></li>
   <li><a href="../modules/xDebug.html">xDebug</a></li>
   <li><a href="../modules/xDocument.html">xDocument</a></li>
@@ -52,6 +53,7 @@
   <li><a href="../modules/xLinePattern.html">xLinePattern</a></li>
   <li><a href="../modules/xMessage.html">xMessage</a></li>
   <li><a href="../modules/xMidiInput.html">xMidiInput</a></li>
+  <li><a href="../modules/xMidiIO.html">xMidiIO</a></li>
   <li><a href="../modules/xMidiMessage.html">xMidiMessage</a></li>
   <li><a href="../modules/xNoteColumn.html">xNoteColumn</a></li>
   <li><a href="../modules/xObservable.html">xObservable</a></li>
@@ -61,9 +63,11 @@
   <li><a href="../modules/xOscPattern.html">xOscPattern</a></li>
   <li><a href="../modules/xOscRouter.html">xOscRouter</a></li>
   <li><a href="../modules/xOscValue.html">xOscValue</a></li>
+  <li><a href="../modules/xParameter.html">xParameter</a></li>
   <li><a href="../modules/xParseXML.html">xParseXML</a></li>
   <li><a href="../modules/xPhrase.html">xPhrase</a></li>
-  <li><a href="../modules/xPhraseMgr.html">xPhraseMgr</a></li>
+  <li><a href="../modules/xPhraseManager.html">xPhraseManager</a></li>
+  <li><a href="../modules/xPlayPos.html">xPlayPos</a></li>
   <li><a href="../modules/xPreferences.html">xPreferences</a></li>
   <li><a href="../modules/xReflection.html">xReflection</a></li>
   <li><a href="../modules/xRule.html">xRule</a></li>
@@ -76,8 +80,8 @@
   <li><a href="../modules/xSongPos.html">xSongPos</a></li>
   <li><strong>xStreamPos</strong></li>
   <li><a href="../modules/xTrack.html">xTrack</a></li>
+  <li><a href="../modules/xTransport.html">xTransport</a></li>
   <li><a href="../modules/xValue.html">xValue</a></li>
-  <li><a href="../modules/xVoice.html">xVoice</a></li>
   <li><a href="../modules/xVoiceManager.html">xVoiceManager</a></li>
 </ul>
 
@@ -95,6 +99,11 @@
 <h3>How to use</h3>
 
 <p>Create an instance, and supply it with a steady flow of song-position changes (idle loop). </p>
+
+<h3>Requires</h3>
+<p><a href="../modules/xPlayPos.html#">xPlayPos</a>
+<a href="../modules/xSongPos.html#">xSongPos</a>
+<a href="../modules/xBlockLoop.html#">xBlockLoop</a></p>
 
 </p>
 
@@ -118,19 +127,20 @@
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#self.playpos">self.playpos</a></td>
-	<td class="summary">(renoise.SongPos) monitor changes to playback</td>
+	<td class="summary">(xPlayPos) monitor changes to playback
+self.playpos = rns.transport.playback_pos</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.writepos">self.writepos</a></td>
 	<td class="summary">(xSongPos) overall progression of the stream</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#self.xblock">self.xblock</a></td>
-	<td class="summary">(xBlockLoop)</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#self.readpos">self.readpos</a></td>
 	<td class="summary">(xSongPos) where we most recently read from the pattern</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.xblock">self.xblock</a></td>
+	<td class="summary">(xBlockLoop)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#self.block_enabled">self.block_enabled</a></td>
@@ -227,7 +237,8 @@
     <strong>self.playpos</strong>
     </dt>
     <dd>
-    (renoise.SongPos) monitor changes to playback
+    (xPlayPos) monitor changes to playback
+self.playpos = rns.transport.playback_pos
 
 
 
@@ -251,11 +262,11 @@
 
 </dd>
     <dt>
-    <a name = "self.xblock"></a>
-    <strong>self.xblock</strong>
+    <a name = "self.readpos"></a>
+    <strong>self.readpos</strong>
     </dt>
     <dd>
-    (xBlockLoop)
+    (xSongPos) where we most recently read from the pattern
 
 
 
@@ -265,11 +276,11 @@
 
 </dd>
     <dt>
-    <a name = "self.readpos"></a>
-    <strong>self.readpos</strong>
+    <a name = "self.xblock"></a>
+    <strong>self.xblock</strong>
     </dt>
     <dd>
-    (xSongPos) where we most recently read from the pattern
+    (xBlockLoop)
 
 
 
