@@ -24,3 +24,15 @@ Here is the complete list of issues that the tool is aware of:
   * Automatic shortening “VST: Synth1 VST (Honky Piano)” → Honky Piano
   * Automatic (random) name generator 
   * Custom name (batch renamer)
+
+## Installation
+
+Download the most recent stable release from the [Renoise tools page](http://renoise.com/tools/xcleaner).  
+Drag and drop the .xrnx file on a Renoise window to install
+
+Launch the tool by right-clicking an instrument in the instruments list (-> xCleaner)
+
+## How to use
+
+TODO
+
