@@ -9,6 +9,7 @@ xCleanerUI
 ]]
 
 local DIALOG_W = 390
+local MARGIN = 6
 
 
 local function zero_pad(str,count)
@@ -73,6 +74,12 @@ function xCleanerUI:__init(xCleaner)
     self:update_sample_name_options()
   end)
 
+  options.find_issues:add_notifier(function()
+    local elm = self.vb.views.find_issues
+    self._x:set_issue_scanning_pref(elm.value)
+  end)
+
+  self._x:set_issue_scanning_pref(options.find_issues.value)
 
 end
 
@@ -87,51 +94,59 @@ function xCleanerUI:build()
 
   local content = vb:column{
     margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
+    spacing = MARGIN,
     vb:column{
-      spacing = 6,
+      style = "group",
+      margin = MARGIN,
       width = DIALOG_W,
-      vb:column{
-        style = "group",
-        margin = 6,
-        width = DIALOG_W,
-        vb:horizontal_aligner{
-          --width = DIALOG_W,
+      vb:horizontal_aligner{
+        vb:column{
+          vb:space{
+            height = 3,
+          },
           vb:text {
             text = "Instr.",
           },
-          vb:popup {
-            items = {},
-            id = "instr_source_popup",
-            value = 1,
-            width = DIALOG_W - 132,
-            height = large_button_h,
-            notifier = function(idx)
-              
-            end,
-          },
-          vb:button{
-            text = "↺", --≡
-            id = "bt_sync_source",
-            height = large_button_h,
-            tooltip = "Focus the last scanned instrument",
-            notifier = function(val)
-              self:focus_instr()
-            end,
-          },
-          vb:button{
-            text = "Scan",
-            width = 68,
-            height = large_button_h,
-            notifier = function()
-              self._x:gather()
-            end,
-          },
+        },
+        vb:popup {
+          items = {},
+          id = "instr_source_popup",
+          value = 1,
+          width = DIALOG_W - 132,
+          height = large_button_h,
+          notifier = function(idx)
+            
+          end,
+        },
+        vb:button{
+          text = "↺", --≡
+          id = "bt_sync_source",
+          height = large_button_h,
+          width = large_button_h,
+          tooltip = "Focus the last scanned instrument",
+          notifier = function(val)
+            self:focus_instr()
+          end,
+        },
+        vb:button{
+          text = "Scan",
+          width = 67,
+          height = large_button_h,
+          notifier = function()
+            self._x:gather()
+          end,
         },
       },
+    },
+    vb:column{
+      --width = DIALOG_W,
       vb:column{
         style = "group",
-        margin = 6,
-        width = DIALOG_W,
+        margin = MARGIN,
+        vb:space{
+          width = DIALOG_W-(MARGIN*2),
+          height = 1,
+        },
         vb:row{
           vb:text{
             text = "Sample-names",
@@ -174,6 +189,9 @@ function xCleanerUI:build()
               },
             },
           },
+        },
+        vb:space{
+          height = MARGIN,
         },
         vb:row{
           vb:text{
@@ -219,11 +237,11 @@ function xCleanerUI:build()
                 bind = options.find_issues,
                 --[[
                 value = self._x.find_issues,
-                ]]
                 notifier = function()
                   local elm = self.vb.views.find_issues
                   self._x:set_issue_scanning_pref(elm.value)
                 end
+                ]]
               },
               vb:text{
                 text = "Detect channel issues (increases scanning time!)",
@@ -304,7 +322,7 @@ function xCleanerUI:build()
     labels = xCleanerUI.TAB_LABELS,
     --width = DIALOG_W,
     height = nil,
-    switcher_width = 300,
+    switcher_width = DIALOG_W,
     tabs ={
       vb:row{
         id = "tab_sample_table",

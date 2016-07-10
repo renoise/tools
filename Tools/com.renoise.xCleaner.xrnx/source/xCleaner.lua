@@ -58,7 +58,7 @@ function xCleaner:__init()
   self._ui = xCleanerUI(self) -- (xCleanerUI)
 
   self.process_slicer = nil -- (ProcessSlicer)
-  self.do_slice = false
+  self.do_slice = true
 
   self.samples = nil    -- (table)
   self.modsets = nil    -- (table)
@@ -174,7 +174,7 @@ end
 -- "all in one" enabling of the various issue scanners
 
 function xCleaner:set_issue_scanning_pref(bool)
-  --print("xCleaner:set_issue_scanning_pref(bool)",bool)
+  TRACE("xCleaner:set_issue_scanning_pref(bool)",bool)
 
   xCleaner.find_issues = bool
   xCleaner.find_actual_bit_depth = bool
@@ -918,7 +918,6 @@ function xCleaner:generate_name(str,iters,idx,once)
     if once then
       return str
     else
-      LOG(">>> got here 2",str)
       once = true
       return (#str > 5) and str or str .. " " .. self:generate_name(nil,nil,nil,once)
     end
