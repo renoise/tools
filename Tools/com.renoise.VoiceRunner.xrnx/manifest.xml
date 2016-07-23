@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>5</ApiVersion>
+  <AutoUpgraded>true</AutoUpgraded>
+  <Id>com.renoise.VoiceRunner</Id>
+  <Version>1.0</Version>
+  <Author>danoise [bjorn.nesby@gmail.com]</Author>
+  <Name>VoiceRunner</Name>
+  <Category>Pattern</Category>
+  <Description>A tool for recording and sorting notes in pattern-tracks </Description>
+  <Homepage></Homepage>
+</RenoiseScriptingTool>
