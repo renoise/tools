@@ -76,18 +76,13 @@ function xLine.apply_descriptor(xline)
   if (type(xline) == "table") then -- entire xline redefined
     xline = xLine(xline)
   elseif (type(xline) == "xLine") then -- check xLine content
-
     xline.pattern_line:apply_descriptor(xline.note_columns,xline.effect_columns)
-
     if not table.is_empty(xline.automation) then
       xline.automation = xLineAutomation(xline.automation)
     end
-
   else
     error("Unexpected xline type")
   end
-
-  --print("xLine.apply_descriptor - POST",rprint(xline.note_columns))
 
   return xline
 

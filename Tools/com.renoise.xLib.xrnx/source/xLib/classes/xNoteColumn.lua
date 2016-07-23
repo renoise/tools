@@ -32,6 +32,8 @@ xNoteColumn.tokens = {
     "volume_value","volume_string",
     "panning_value","panning_string",
     "delay_value","delay_string",
+    "effect_number_value","effect_number_string",
+    "effect_amount_value","effect_amount_string",
 }
 
 xNoteColumn.output_tokens = {
@@ -40,6 +42,8 @@ xNoteColumn.output_tokens = {
     "volume_value",
     "panning_value",
     "delay_value",
+    "effect_number_value",
+    "effect_amount_value",
 }
 
 xNoteColumn.NOTE_ARRAY = {
@@ -101,6 +105,22 @@ function xNoteColumn:__init(args)
   --- delay_string [string, '00'-'FF' or '..']
   self.delay_string = property(self.get_delay_string,self.set_delay_string)
   self._delay_string = nil
+
+  --- effect_number_value [number, 0-255]
+  self.effect_number_value = property(self.get_effect_number_value,self.set_effect_number_value)
+  self._effect_number_value = nil
+
+  --- effect_number_string [string, '00'-'FF' or '..']
+  self.effect_number_string = property(self.get_effect_number_string,self.set_effect_number_string)
+  self._effect_number_string = nil
+
+  --- effect_amount_value [number, 0-255]
+  self.effect_amount_value = property(self.get_effect_amount_value,self.set_effect_amount_value)
+  self._effect_amount_value = nil
+
+  --- effect_amount_string [string, '00'-'FF' or '..']
+  self.effect_amount_string = property(self.get_effect_amount_string,self.set_effect_amount_string)
+  self._effect_amount_string = nil
 
   
   -- initialize (apply values) ----------------------------
@@ -218,6 +238,46 @@ function xNoteColumn:set_delay_string(str)
 end
 
 -------------------------------------------------------------------------------
+
+function xNoteColumn:get_effect_number_value()
+  return self._effect_number_value
+end
+
+function xNoteColumn:set_effect_number_value(val)
+  self._effect_number_value = val
+  self._effect_number_string = xEffectColumn.number_value_to_string(val)
+end
+
+function xNoteColumn:get_effect_number_string()
+  return self._effect_number_string
+end
+
+function xNoteColumn:set_effect_number_string(str)
+  self._effect_number_string = str
+  self._effect_number_value = xEffectColumn.number_string_to_value(str)
+end
+
+-------------------------------------------------------------------------------
+
+function xNoteColumn:get_effect_amount_value()
+  return self._effect_amount_value
+end
+
+function xNoteColumn:set_effect_amount_value(val)
+  self._effect_amount_value = val
+  self._effect_amount_string = xEffectColumn.amount_value_to_string(val)
+end
+
+function xNoteColumn:get_effect_amount_string()
+  return self._effect_amount_string
+end
+
+function xNoteColumn:set_effect_amount_string(str)
+  self._effect_amount_string = str
+  self._effect_amount_value = xEffectColumn.amount_string_to_value(str)
+end
+
+-------------------------------------------------------------------------------
 -- Converter methods (static implementation)
 -------------------------------------------------------------------------------
 -- convert note_string into a numeric value
@@ -227,6 +287,7 @@ end
 -- @return int (octave) or nil
 
 function xNoteColumn.note_string_to_value(str_val)
+  --TRACE("xNoteColumn.note_string_to_value(str_val)",str_val,type(str_val))
 
   str_val = string.upper(str_val)
 
@@ -249,7 +310,10 @@ function xNoteColumn.note_string_to_value(str_val)
   end
   octave = tonumber((str_val):sub(3))
   if not octave then
-    LOG("WARNING: xNoteColumn - Trying to write invalid note-string:",str_val)
+    --LOG("WARNING: xNoteColumn - Trying to write invalid note-string:",str_val)
+    return xNoteColumn.EMPTY_NOTE_VALUE
+  elseif not note then
+    --LOG("WARNING: xNoteColumn - Trying to write invalid note-string:",str_val)
     return xNoteColumn.EMPTY_NOTE_VALUE
   else
     return note+(octave*12),note,octave
@@ -417,6 +481,8 @@ function xNoteColumn:do_write(note_col,tokens,clear_undefined)
 
 end
 
+-------------------------------------------------------------------------------
+
 function xNoteColumn:do_write_note_value(note_col,clear_undefined)
   if self.note_value then 
     note_col.note_value = self.note_value
@@ -431,6 +497,8 @@ function xNoteColumn:do_write_note_string(note_col,clear_undefined)
     note_col.note_string = xNoteColumn.EMPTY_NOTE_STRING
   end
 end
+
+-------------------------------------------------------------------------------
 
 function xNoteColumn:do_write_instrument_value(note_col,clear_undefined)
   if self.instrument_value then 
@@ -447,6 +515,8 @@ function xNoteColumn:do_write_instrument_string(note_col,clear_undefined)
   end
 end
 
+-------------------------------------------------------------------------------
+
 function xNoteColumn:do_write_volume_value(note_col,clear_undefined)
   if self.volume_value then 
     note_col.volume_value = self.volume_value
@@ -461,6 +531,8 @@ function xNoteColumn:do_write_volume_string(note_col,clear_undefined)
     note_col.volume_string = xNoteColumn.EMPTY_COLUMN_STRING
   end
 end
+
+-------------------------------------------------------------------------------
 
 function xNoteColumn:do_write_panning_value(note_col,clear_undefined)
   if self.panning_value then 
@@ -477,6 +549,8 @@ function xNoteColumn:do_write_panning_string(note_col,clear_undefined)
   end
 end
 
+-------------------------------------------------------------------------------
+
 function xNoteColumn:do_write_delay_value(note_col,clear_undefined)
   if self.delay_value then 
     note_col.delay_value = self.delay_value
@@ -488,7 +562,42 @@ function xNoteColumn:do_write_delay_string(note_col,clear_undefined)
   if self.delay_string then 
     note_col.delay_string = self.delay_string
   elseif clear_undefined then
-    note_col.delay_string = xxNoteColumn.EMPTY_COLUMN_STRING
+    note_col.delay_string = xNoteColumn.EMPTY_COLUMN_STRING
+  end
+end
+
+-------------------------------------------------------------------------------
+
+function xNoteColumn:do_write_effect_number_value(note_col,clear_undefined)
+  if self.effect_number_value then 
+    note_col.effect_number_value = self.effect_number_value
+  elseif clear_undefined then
+    note_col.effect_number_value = 0
+  end
+end
+function xNoteColumn:do_write_effect_number_string(note_col,clear_undefined)
+  if self.effect_number_string then 
+    note_col.effect_number_string = self.effect_number_string
+  elseif clear_undefined then
+    note_col.effect_number_string = xLinePattern.EMPTY_STRING
+  end
+end
+
+-------------------------------------------------------------------------------
+
+function xNoteColumn:do_write_effect_amount_value(note_col,clear_undefined)
+  if self.effect_amount_value then 
+    note_col.effect_amount_value = self.effect_amount_value
+  elseif clear_undefined then
+    note_col.effect_amount_value = 0
+  end
+end
+
+function xNoteColumn:do_write_effect_amount_string(note_col,clear_undefined)
+  if self.effect_amount_string then 
+    note_col.effect_amount_string = self.effect_amount_string
+  elseif clear_undefined then
+    note_col.effect_amount_string = xLinePattern.EMPTY_STRING
   end
 end
 
@@ -498,9 +607,11 @@ function xNoteColumn:__tostring()
 
   return type(self)
     ..", note="..tostring(self.note_string)
-    ..", instrument="..self.instrument_string
-    ..", volume_string="..self.volume_string
-    ..", panning="..self.panning_string
-    ..", delay="..self.delay_string
+    ..", instrument="..tostring(self.instrument_string)
+    ..", volume_string="..tostring(self.volume_string)
+    ..", panning="..tostring(self.panning_string)
+    ..", delay="..tostring(self.delay_string)
+    ..", effect_number="..tostring(self.effect_number_string)
+    ..", effect_amount="..tostring(self.effect_amount_string)
 
 end

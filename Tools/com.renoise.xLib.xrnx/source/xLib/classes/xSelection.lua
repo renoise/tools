@@ -1,0 +1,173 @@
+--[[============================================================================
+xPatternSelection
+============================================================================]]--
+
+--[[--
+
+Static methods for working with pattern/phrase/matrix/sequence-selections
+.
+#
+
+### Pattern-selection 
+
+  {
+    start_line,     -- Start pattern line index
+    start_track,    -- Start track index
+    start_column,   -- Start column index within start_track   
+    end_line,       -- End pattern line index
+    end_track,      -- End track index
+    end_column      -- End column index within end_track
+  }
+
+
+### Matrix-selection
+
+  {
+    [sequence_index] = {
+      [track_index] = true,
+      [track_index] = true,
+    },
+    [sequence_index] = {
+      [track_index] = true,
+      [track_index] = true,
+    },
+  }
+
+]]
+
+class 'xSelection'
+
+-------------------------------------------------------------------------------
+-- retrieve selection spanning an entire pattern-track
+-- @param seq_idx (int)
+-- @param trk_idx (int)
+-- @return table (pattern-selection) or bool (false, on error)
+-- @return string (error message when failed)
+
+function xSelection.get_pattern_track(seq_idx,trk_idx)
+  TRACE("xSelection.get_pattern_track(seq_idx,trk_idx)",seq_idx,trk_idx)
+  
+  local patt_idx = rns.sequencer:pattern(seq_idx)
+  local patt = rns.patterns[patt_idx]
+  local track = rns.tracks[trk_idx]
+  if not patt or not track then
+    return false, "Could not locate track or pattern"
+  end
+
+  local note_cols = track.visible_note_columns
+  local fx_cols = track.visible_effect_columns
+  local total_cols = note_cols+fx_cols
+
+  return {
+    start_line = 1,
+    start_track = trk_idx,
+    start_column = 1, 
+    end_line = patt.number_of_lines,
+    end_track = trk_idx,
+    end_column = total_cols,
+  }
+
+end
+
+-------------------------------------------------------------------------------
+-- retrieve the existing pattern selection when valid for a single track
+-- @return table (pattern-selection) or bool (false, on error)
+-- @return string (error message when failed)
+
+function xSelection.get_pattern_if_single_track()
+  TRACE("xSelection.get_pattern_if_single_track()")
+
+  local sel = rns.selection_in_pattern
+
+  if not sel then
+    return false, "No selection is defined in the pattern"
+  end
+  
+  if (sel.start_track ~= sel.end_track) then
+    return false, "The selection needs to fit within a single track"
+  end
+
+  return sel
+
+end
+
+
+-------------------------------------------------------------------------------
+--[[
+function xSelection.get_pattern_if_single_column()
+  TRACE("xSelection.get_pattern_if_single_column()")
+
+  -- TODO
+
+end
+]]
+
+-------------------------------------------------------------------------------
+-- return a selection spanning an entire column in a pattern-track
+-- @param seq_idx (int)
+-- @param trk_idx (int)
+-- @param col_idx (int)
+-- @return table (pattern-selection) or bool (false, on error)
+-- @return string (error message when failed)
+
+function xSelection.get_column_in_track(seq_idx,trk_idx,col_idx)
+  TRACE("xSelection.get_column_in_track(seq_idx,trk_idx,col_idx)",seq_idx,trk_idx,col_idx)
+
+  local sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+  if not sel then
+    return false, "Could not create selection for the pattern-track"
+  end
+
+  sel.start_column = col_idx
+  sel.end_column = col_idx
+
+  return sel
+
+end
+
+-------------------------------------------------------------------------------
+-- retrieve the matrix selection 
+-- @return table<[sequence_index][track_index]>
+
+function xSelection.get_matrix_selection()
+  TRACE("xSelection.get_matrix_selection()")
+
+  local sel = {}
+  for k,v in ipairs(rns.sequencer.pattern_sequence) do
+    sel[k] = {}
+    for k2,v2 in ipairs(rns.tracks) do
+      if rns.sequencer:track_sequence_slot_is_selected(k2,k) then
+        sel[k][k2] = true
+      end
+    end
+    if table.is_empty(sel[k]) then
+      sel[k] = nil
+    end
+  end
+  return sel
+
+end
+
+-------------------------------------------------------------------------------
+-- create a selection encompassing an entire pattern-track
+-- @param trk_idx, int
+-- @param patt_idx, int
+--[[
+function xSelection.get_whole_track_selection(trk_idx,patt_idx)
+  TRACE("xSelection.get_whole_track_selection(trk_idx,patt_idx)",trk_idx,patt_idx)
+
+  local track = rns.tracks[trk_idx]
+  local total_column_count = track.visible_note_columns + 
+    track.visible_effect_columns
+
+  return {
+    start_line = 1,
+    start_track = trk_idx,
+    start_column = 1,
+    end_line = 512,
+    end_track = trk_idx,
+    end_column = total_column_count,
+  }
+
+end
+]]

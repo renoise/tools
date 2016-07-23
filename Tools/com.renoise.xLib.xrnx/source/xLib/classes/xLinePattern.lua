@@ -117,6 +117,7 @@ end
 
 function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hidden,expand_columns,clear_undefined)
 
+  --print("xLinePattern:do_write - tokens",rprint(tokens))
   --print("xLinePattern:do_write - self.note_columns",rprint(self.note_columns))
 
   local rns_line,patt_idx,rns_patt,rns_track,rns_ptrack
@@ -139,8 +140,6 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
   --print("visible_note_cols",visible_note_cols)
 
   -- figure out which sub-columns to display (VOL/PAN/DLY)
-  -- TODO optimize by moving this into a one-time track preparation
-  -- (after the tokens have been extracted and streaming is active)
   if is_seq_track and expand_columns and not table.is_empty(self.note_columns) then
     rns_track_or_phrase.volume_column_visible = rns_track_or_phrase.volume_column_visible or 
       (type(table.find(tokens,"volume_value") or table.find(tokens,"volume_string")) ~= 'nil')
@@ -216,13 +215,13 @@ function xLinePattern:process_columns(
     
     if col then
 
-      if expand_columns --and
-        --(type(col)=="xNoteColumn") or 
-        --(type(col)=="xEffectColumn") 
+      if expand_columns 
+        and ((type(col)=="xNoteColumn") or (type(col)=="xEffectColumn"))
+        or ((type(col) == "table") and not table.is_empty(col))
       then
         if (k > visible_cols) then
           visible_cols = k
-          --print("expand cols to",k)
+          --print(">>> xLinePattern:process_columns - expand cols to",k)
         end
       end
 
@@ -292,6 +291,58 @@ end
 function xLinePattern:__tostring()
 
   return type(self)
-    ..", column#1="..tostring(self.note_columns[1])
+    ..":column#1="..tostring(self.note_columns[1])
 
 end
+
+-------------------------------------------------------------------------------
+-- get midi command from line
+-- (look in last note-column, panning + first effect column)
+-- @return xMidiCommand or nil if not found
+
+function xLinePattern.get_midi_command(track,line)
+  --TRACE("xLinePattern.get_midi_command(track,line)",track,line)
+
+  assert(type(track)=="Track","Expected renoise.Track as argument")
+  assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
+
+  local note_col = line.note_columns[track.visible_note_columns]
+  local fx_col = line.effect_columns[1]
+
+  if (note_col.instrument_value < 255) 
+    and (note_col.panning_string:sub(1,1) == "M")
+  then
+    local msg_type = tonumber(note_col.panning_string:sub(2,2))
+    return xMidiCommand{
+      instrument_index = note_col.instrument_value+1,
+      message_type = msg_type,
+      number_value = fx_col.number_value,
+      amount_value = fx_col.amount_value,
+    }
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- set midi command (write to pattern)
+-- @param track renoise.Track
+-- @param line renoise.PatternLine
+-- @param cmd xMidiCommand
+
+function xLinePattern.set_midi_command(track,line,cmd)
+
+  assert(type(track)=="Track","Expected renoise.Track as argument")
+  assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
+
+  local note_col = line.note_columns[#track.visible_note_columns]
+  --[[
+  if not note_col then
+    LOG("*** Could not locate note-column")
+  end
+  ]]
+  
+  -- TODO
+
+
+end
+

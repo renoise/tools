@@ -17,11 +17,11 @@ This is the core xLib class, containing a bunch of static helper methods
 
 -- reference to song document 
 -- rns = renoise.song()
-TRACE = function(...)
-  --print(...)
+function TRACE(...)
+  print(...)
 end
 
-LOG = function(...)
+function LOG(...)
   print(...)
 end
 
@@ -62,6 +62,8 @@ function xLib.is_song_available()
 end
 
 --------------------------------------------------------------------------------
+-- Array/table methods
+--------------------------------------------------------------------------------
 -- Match item(s) in an associative array (provide key)
 -- @param t (table) 
 -- @param key (string) 
@@ -75,6 +77,66 @@ function xLib.match_table_key(t,key)
   end
   return rslt
 
+end
+
+--------------------------------------------------------------------------------
+-- expand a multi-dimensional array with given keys
+-- @param t (table) 
+-- @param k1-k4 (string) 
+-- @return table
+
+function xLib.expand_table(t,k1,k2,k3,k4)
+  --print("xLib.expand_table(t,k1,k2,k3,k4)",t,k1,k2,k3,k4)
+
+  if not t[k1] then
+    t[k1] = {}
+  end
+  if k2 then
+    t = xLib.expand_table(t[k1],k2,k3,k4)
+  end
+
+  return t
+
+end
+
+--------------------------------------------------------------------------------
+-- Find the highest/lowest numeric key (index) in a sparsely populated table
+-- @return lowest,highest
+
+function xLib.get_table_bounds(t)
+  
+  local lowest,highest = nil,nil
+  for k,v in ipairs(table.keys(t)) do
+    if (type(v)=="number") then
+      if not highest then highest = v end
+      if not lowest then lowest = v end
+      highest = math.max(highest,v)
+      lowest = math.min(lowest,v)
+    end
+  end
+  return lowest,highest 
+
+end
+
+--------------------------------------------------------------------------------
+-- Merge two tables into one (recursive)
+-- @param t1 (table)
+-- @param t2 (table)
+-- @return table
+
+function xLib.merge_tables(t1,t2)
+  for k,v in pairs(t2) do
+    if type(v) == "table" then
+      if type(t1[k] or false) == "table" then
+        xLib.merge_tables(t1[k] or {}, t2[k] or {})
+      else
+        t1[k] = v
+      end
+    else
+      t1[k] = v
+    end
+  end
+  return t1
 end
 
 --------------------------------------------------------------------------------
@@ -170,6 +232,15 @@ end
 
 function xLib.trim(s)
   return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
+-------------------------------------------------------------------------------
+-- capitalize first letter of every word
+-- @param s (string)
+-- @return string
+
+function xLib.capitalize(s)
+  return string.gsub(" "..s, "%W%l", string.upper):sub(2)
 end
 
 -------------------------------------------------------------------------------

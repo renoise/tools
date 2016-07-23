@@ -30,6 +30,7 @@ class 'xPlayPos'
 
 
 function xPlayPos:__init()
+  TRACE("xPlayPos:__init()")
 
   -- internal --
 
@@ -41,19 +42,21 @@ function xPlayPos:__init()
 
   -- properties --
 
-  --- int
-  self.line = property(self.get_line,self.set_line)
+  --- int, read-only
+  self.line = property(self.get_line)
   self._line = nil
 
-  --- int
-  self.sequence = property(self.get_sequence,self.set_sequence)
+  --- int, read-only
+  self.sequence = property(self.get_sequence)
   self._sequence = nil
 
   -- initialize --
 
-  local pos = rns.transport.playback_pos
-  self.line = pos.line
-  self.sequence = pos.sequence
+  local pos = rns.transport.playing and
+    rns.transport.playback_pos or rns.transport.edit_pos
+
+  self._line = pos.line
+  self._sequence = pos.sequence
 
 
 end
@@ -66,20 +69,10 @@ function xPlayPos:get_line()
   return self._line
 end
 
-function xPlayPos:set_line(val)
-  assert(type(val)=="number","Expected line to be a number")
-  self._line = val
-end
-
 -------------------------------------------------------------------------------
 
 function xPlayPos:get_sequence()
   return self._sequence
-end
-
-function xPlayPos:set_sequence(val)
-  assert(type(val)=="number","Expected sequence to be a number")
-  self._sequence = val
 end
 
 -------------------------------------------------------------------------------
@@ -95,13 +88,14 @@ end
 -- @param pos (SongPos)
 
 function xPlayPos:set(pos)
+  TRACE("xPlayPos:set(pos)",pos.sequence,pos.line)
 
   if self:has_changed(pos) then
     self:maintain_position(pos)
   end
 
-  self.line = pos.line
-  self.sequence = pos.sequence
+  self._line = pos.line
+  self._sequence = pos.sequence
 
 end
 
@@ -121,9 +115,6 @@ end
 
 function xPlayPos:get_fractional()
 
-  self.line = rns.transport.playback_pos.line
-  self.sequence = rns.transport.playback_pos.sequence
-
   local beats = xLib.fraction(rns.transport.playback_pos_beats)
   local beats_scaled = beats * rns.transport.lpb
   local line_in_beat = math.floor(beats_scaled)
@@ -131,8 +122,8 @@ function xPlayPos:get_fractional()
   --print("fraction",rns.transport.playback_pos,fraction)
 
   return {
-    line = self.line,
-    sequence = self.sequence,
+    line = self._line,
+    sequence = self._sequence,
     fraction = fraction,
   }
 
@@ -143,8 +134,8 @@ end
 -- @return boolean
 
 function xPlayPos:has_changed(pos)
-  return not ((self.line == pos.line)
-    and (self.sequence == pos.sequence))
+  return not ((self._line == pos.line)
+    and (self._sequence == pos.sequence))
 end
 
 -------------------------------------------------------------------------------
@@ -180,42 +171,11 @@ function xPlayPos:maintain_position(pos)
 end
 
 -------------------------------------------------------------------------------
--- Metamethods - see also @{xSongPos}
--------------------------------------------------------------------------------
---[[
--- __eq sets handler for '==', '~='
-function xPlayPos:__eq(other)
-	return ((self.line == other.line)
-    and (self.sequence == other.sequence))
-end
-
--- __le sets handler for '<=', '>='
-function xPlayPos:__le(other)
-  if (self.sequence == other.sequence) then
-    if (self.line == other.line) then
-      return true
-    else
-      return (self.line < other.line)
-    end
-  else
-    return (self.sequence < other.sequence)
-  end
-end
-
--- __lt sets handler for '<', '>' 
-function xPlayPos:__lt(other)
-  if (self.sequence == other.sequence) then
-    return (self.line < other.line)
-  else
-    return (self.sequence < other.sequence)
-  end
-end
-]]
 
 function xPlayPos:__tostring()
   return type(self)
-    .. ", sequence = " .. tostring(self.sequence)
-    .. ", line = " .. tostring(self.line)
-    .. ", fraction " .. tostring(self.fraction)
+    .. ":sequence=" .. tostring(self._sequence)
+    .. ",line=" .. tostring(self._line)
+    --.. ", fraction " .. tostring(self.fraction)
 
 end

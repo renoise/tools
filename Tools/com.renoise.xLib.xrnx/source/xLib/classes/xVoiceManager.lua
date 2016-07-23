@@ -10,26 +10,42 @@ This class keeps track of active, playing voices as they are triggered.
 
 ### In more detail
 
-This class understands some of the more advanced aspects of triggering and releasing voices in Renoise. This includes the ability to trigger and release specific instruments in specific tracks, while preserving the ability to freely move around in Renoise while doing so. 
+This class offers advanced voice-management for your own applications. This includes the ability to trigger and release specific instruments in specific tracks, while preserving the ability to freely move around in Renoise while doing so. 
 
 Without voice-management it would be too easy to create hanging notes. Everything from switching track, instrument or octave while playing, to having multiple MIDI sources could cause trouble. A good voice-manager will understand this and be able to determine the originating 'place' where the voice got triggered. 
 
-Also the class is able to assist with automatic note-column allocation while recording. It's a basic approach, but close enough to how Renoise usually works to feel familiar. 
+### Column allocation
+
+The class is able to assist with automatic note-column allocation while recording. It's a basic approach, but close enough to how Renoise usually works to feel familiar. 
 
   * Recordings start from the currently selected note column 
   * New note columns (voices) are allocated as new notes arrive
-  * Voices stay with their column as other voices are released/removed
+  * Voices stay within their column as other voices are released/removed
+
+### Polyphony limits
+
+In Renoise, you can play a maximum of 12 voices in a single track (equal to the maximum number of note-columns). 
+
+If you are familiar with MIDI recording in Renoise, you probably have noticed that there exist a monophonic trigger option. Enabling this option will restrict the number of possible voices (and note-columns) during a recording session. xVoiceManager has no "monophonic" mode as such, but setting the voice_limit to 1 will yield the same result. 
+
+### Column allocation
+
+When automatic column-allocation is enabled, new note columns are allocated as the need arises. When this feature is enabled, the polyphonic limit can never be larger than the number of available columns, starting from the column_index of the first voice. So if you start recording while in note-column 11, you have a maximum polyphony of 2 voices before voice stealing kicks in.
+
+### Voice stealing
+
+Voice stealing takes effect the moment you feed a xVoiceManager with more voices than the current polyphony limit allows. xVoiceManager is using a simple heuristic which will replace the oldest voice with the new one (just like how Renoise does it). 
 
 ### Observable events 
 
-Attach notifiers to detect when messages are triggered or released:
+Attach notifiers to detect when voices are triggered or released. 
 
 `triggered_observable` -> fired right *after* a voice starts playing  
 `released_observable` -> fired right *before* a voice is released  
 
 After you have attached a notifier, you will receive a 'bang', but no argument. Instead, you should look for the `triggered/released_index` properties - they will contain the value you need.
 
-### Example
+### Usage example
 
 How to instantiate a copy of this class, and feed xMidiMessages into it:
 	
@@ -38,10 +54,10 @@ How to instantiate a copy of this class, and feed xMidiMessages into it:
     }
     
     voicemgr.triggered_observable:add_notifier(function()
-      print(voicemgr.triggered_index)
+      -- use 'voicemgr.triggered_index' 
     end)
     voicemgr.released_observable:add_notifier(function()
-      print(voicemgr.released_index)
+      -- use 'voicemgr.released_index'
     end)
     
     local xmsg = some_note_on_message -- provide your own message
@@ -55,11 +71,12 @@ How to instantiate a copy of this class, and feed xMidiMessages into it:
 
 class 'xVoiceManager'
 
-xVoiceManager.EVENTS = {"released","triggered"}
+xVoiceManager.EVENTS = {"released","triggered","stolen"}
 
 xVoiceManager.EVENT = {
   RELEASED = "released",
   TRIGGERED = "triggered",
+  STOLEN = "stolen",
 }
 
 function xVoiceManager:__init(...)
@@ -67,7 +84,6 @@ function xVoiceManager:__init(...)
   local args = xLib.unpack_args(...)
 
   --- the maximum number of voices (0 = 'unlimited')
-  -- TODO not yet implemented
   self.voice_limit = property(self.get_voice_limit,self.set_voice_limit)
   self.voice_limit_observable = renoise.Document.ObservableNumber(args.voice_limit or 0)
 
@@ -101,17 +117,15 @@ function xVoiceManager:__init(...)
   self.triggered_index = 0
   self.triggered_observable = renoise.Document.ObservableBang()
 
+  --- when voice got stolen (refer to released_index)
+  self.stolen_index = 0
+  self.stolen_observable = renoise.Document.ObservableBang()
+
   -- internal --
 
   --- table<xMidiMessage>, active voices
   self.voices = {}
   self.voices_observable = renoise.Document.ObservableNumberList()
-
-  --- TODO table<xMidiMessage>, voice messages (such as aftertouch)
-  --self.voice_msgs = {}
-
-  --- TODO table<xMidiMessage>, channel messages (such as pitchbend)
-  --self.channel_msgs = {}
 
   -- initialize
 
@@ -201,26 +215,12 @@ function xVoiceManager:set_follow_octave(val)
   self.follow_octave_observable.value = val
 end
 
--------------------------------------------------------------------------------
---- @return table<int> containing all active MIDI-pitches
---[[
-function xVoiceManager:get_active_notes()
-  TRACE("xVoiceManager:get_active_notes()")
-
-  local rslt = {}
-  for k,v in ipairs(self.voices) do
-    table.insert(rslt,v.values[2])
-  end
-  return rslt
-
-end
-]]
 
 --==============================================================================
 -- Class Methods
 --==============================================================================
 -- @param xmsg (xMidiMessage)
--- @return xMidiMessage, bool or nil (added/removed,ignored/active or invalid)
+-- @return xMidiMessage (added/removed), false (ignored/active) or nil (invalid)
 -- @return int (voice index), when added or active
 
 function xVoiceManager:input_message(xmsg)
@@ -231,7 +231,7 @@ function xVoiceManager:input_message(xmsg)
   if (xmsg.message_type ~= xMidiMessage.TYPE.NOTE_ON) 
     and (xmsg.message_type ~= xMidiMessage.TYPE.NOTE_OFF) 
   then
-    LOG("xVoiceManager accepts note messages only ")
+    --LOG("xVoiceManager - input_message() accepts note messages only ")
     return
   end
 
@@ -249,6 +249,11 @@ function xVoiceManager:input_message(xmsg)
     end
   end
 
+  if (xmsg.message_type == xMidiMessage.TYPE.NOTE_OFF) then
+    -- can end up here when releasing 'stolen' key 
+    return 
+  end
+
   -- add 'originating' properties? 
 
   if self.follow_track then
@@ -258,11 +263,44 @@ function xVoiceManager:input_message(xmsg)
     xmsg._originating_instrument_index = xmsg.instrument_index
   end
   if self.follow_octave then
-    xmsg._originating_octave = xmsg.octave_index
+    xmsg._originating_octave = xmsg.octave
   end
 
   self:register(xmsg)
   return xmsg,#self.voices
+
+end
+
+-------------------------------------------------------------------------------
+-- alternative input method, convert notecol to xmsg (when possible)
+-- and invoke input_message
+-- @param xnotecol, xNoteColumn
+
+function xVoiceManager:input_note_column(xnotecol,col_idx,line_index)
+  print("xVoiceManager:input_note_column(xnotecol,col_idx,line_index)",xnotecol,col_idx,line_index)
+
+  local values = {xnotecol.note_value,xnotecol.volume_value}
+  local instr_idx = xnotecol.instrument_value+1
+
+  local xmsg = xMidiMessage{
+    --message_type = xMidiMessage.TYPE.NOTE_ON,
+    values = values,
+    instrument_index = instr_idx,
+    note_column_index = col_idx,
+    line_index = line_index,
+  }
+  if (xnotecol.note_value < renoise.PatternLine.NOTE_OFF) then
+    xmsg.message_type = xMidiMessage.TYPE.NOTE_ON
+  elseif (xnotecol.note_value == renoise.PatternLine.NOTE_OFF) then
+    xmsg.message_type = xMidiMessage.TYPE.NOTE_OFF
+  else
+    LOG("Nothing to do here...")
+    xmsg = nil
+  end
+  
+  if xmsg then
+    self:input_message(xmsg)
+  end
 
 end
 
@@ -274,7 +312,17 @@ function xVoiceManager:register(xmsg)
 
   --print("self.column_allocation",self.column_allocation)
 
-  if self.column_allocation then
+  if (self.voice_limit > 0) 
+    and (#self.voices == self.voice_limit)
+  then
+
+    LOG("Steal the oldest voice and re-use that column")
+    local steal_column_idx = self.voices[1].note_column_index
+    self:steal_voice()
+    xmsg.note_column_index = steal_column_idx
+
+  elseif self.column_allocation then
+
     --print(">>> register - xmsg.note_column_index PRE",xmsg.note_column_index)
     local available_columns = self:get_available_columns(xmsg.track_index)
     --print("available_columns",rprint(available_columns))
@@ -296,6 +344,7 @@ function xVoiceManager:register(xmsg)
       end
     else
       LOG("No more note columns available, using the last one")
+      self:steal_voice()
       xmsg.note_column_index = 12
     end
     --print(">>> register - xmsg.note_column_index POST",xmsg.note_column_index)
@@ -307,7 +356,6 @@ function xVoiceManager:register(xmsg)
   -- trigger observable after adding
   self.triggered_index = #self.voices
   self.triggered_observable:bang()
-
 
 end
 
@@ -391,6 +439,7 @@ end
 function xVoiceManager:get_voice_index(xmsg)
   TRACE("xVoiceManager:get_voice_index(xmsg)",xmsg)
 
+  -- key events 
   if xmsg.message_type 
     and (xmsg.message_type ~= xMidiMessage.TYPE.NOTE_ON
     and xmsg.message_type ~= xMidiMessage.TYPE.NOTE_OFF
@@ -471,6 +520,24 @@ function xVoiceManager:get_available_columns(track_idx)
 end
 
 -------------------------------------------------------------------------------
+-- Release the oldest voice (release, then trigger stolen_observable)
+
+function xVoiceManager:steal_voice()
+
+  if (#self.voices < 0) then
+    LOG("No active voice, nothing to steal...")
+    return
+  end
+
+  self.stolen_index = 1
+  self.stolen_observable:bang()
+
+  self:release(self.stolen_index)
+
+
+end
+
+-------------------------------------------------------------------------------
 -- Monitor changes to tracks and instruments
 
 function xVoiceManager:attach_to_song()
@@ -513,3 +580,117 @@ function xVoiceManager:attach_to_song()
 
 end
 
+-------------------------------------------------------------------------------
+-- Get a voice with a specific pitch
+-- @return xMidiMessage or nil
+-- @return int or nil
+
+function xVoiceManager:get_by_pitch(pitch)
+  TRACE("xVoiceManager:get_by_pitch(pitch)",pitch)
+
+  for k,v in ipairs(self.voices) do
+    if (v.values[1] == pitch) then
+      return v,k
+    end
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- Get a voice which has a higher pitch than the provided one
+-- @return xMidiMessage or nil
+-- @return int or nil
+
+function xVoiceManager:get_higher(idx)
+  TRACE("xVoiceManager:get_higher(idx)",idx)
+
+  local voice = self.voices[idx]
+  if not voice then
+    return
+  end
+  local base_pitch = voice.values[1]
+  local pitch = nil
+  for k,v in ipairs(self.voices) do
+    --print("v.values[1]",v.values[1])
+    if (v.values[1] > base_pitch) then
+      if not pitch then
+        pitch = v.values[1]
+      end
+      pitch = math.min(pitch,v.values[1])
+    end
+  end
+  --print("pitch,base_pitch",pitch,base_pitch)
+  if pitch then
+    return self:get_by_pitch(pitch)
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- Get the voice with the highest pitch 
+-- @return xMidiMessage or nil
+-- @return int or nil
+
+function xVoiceManager:get_highest()
+  TRACE("xVoiceManager:get_highest()")
+
+  local rslt,idx 
+  local pitch = 0
+  for k,v in ipairs(self.voices) do
+    --print("v.values[1]",v.values[1])
+    if (v.values[1] > pitch) then
+      rslt = v
+      pitch = v.values[1]
+      idx = k
+    end
+  end
+  return rslt,idx
+
+end
+
+-------------------------------------------------------------------------------
+-- Get a voice which has a lower pitch than the provided one
+-- @return xMidiMessage or nil
+
+function xVoiceManager:get_lower(idx)
+  TRACE("xVoiceManager:get_lower(idx)",idx)
+
+  local voice = self.voices[idx]
+  if not voice then
+    return
+  end
+  local base_pitch = voice.values[1]
+  local pitch = nil
+  for k,v in ipairs(self.voices) do
+    if (v.values[1] < base_pitch) then
+      if not pitch then
+        pitch = v.values[1]
+      end
+      pitch = math.max(pitch,v.values[1])
+    end
+  end
+  if pitch then
+    return self:get_by_pitch(pitch)
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- Get the voice with the lowest pitch 
+-- @return xMidiMessage or nil
+
+function xVoiceManager:get_lowest()
+  TRACE("xVoiceManager:get_lowest()")
+
+  local rslt,idx 
+  local pitch = 999
+  for k,v in ipairs(self.voices) do
+    if (v.values[1] < pitch) then
+      rslt = v
+      pitch = v.values[1]
+      idx = k
+    end
+  end
+  return rslt,idx
+
+end
