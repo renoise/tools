@@ -78,7 +78,7 @@ end
 
 --------------------------------------------------------------------------------
 -- convert hexadecimal string to value 
--- @param str (string), e.g. "5FEC99", "#5FEC99" or "0x5FEC99"
+-- @param str_val (string), e.g. "5FEC99", "#5FEC99" or "0x5FEC99"
 -- @return int or nil if unable to convert
 
 function vColor.hex_string_to_value(str_val)
