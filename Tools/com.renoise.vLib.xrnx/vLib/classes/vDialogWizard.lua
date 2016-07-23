@@ -61,7 +61,8 @@ end
 function vDialogWizard:create_dialog()
 
   local content = vDialog.create_dialog(self)
-  
+  local vb = self.vb 
+
   return vb:column{
     content,
     self:build_navigation(),
