@@ -447,12 +447,17 @@ end
 -- Read method (static implementation)
 -------------------------------------------------------------------------------
 -- @param note_col (renoise.NoteColumn)
+-- @param tokens (table), xStreamModel.tokens
 -- @return table 
 
-function xNoteColumn.do_read(note_col)
+function xNoteColumn.do_read(note_col,tokens)
+
+  if not tokens then
+    tokens = xNoteColumn.tokens
+  end
 
   local rslt = {}
-  for _,v in ipairs(xNoteColumn.tokens) do
+  for _,v in ipairs(tokens) do
     rslt[v] = note_col[v]
   end
   return rslt
@@ -463,10 +468,14 @@ end
 -- Write methods
 -------------------------------------------------------------------------------
 -- @param note_col (renoise.NoteColumn), 
--- @param tokens (table<xStreamModel.output_tokens>)
+-- @param tokens (table), xStreamModel.output_tokens
 -- @param clear_undefined (bool) clear existing data when ours is nil
 
 function xNoteColumn:do_write(note_col,tokens,clear_undefined)
+
+  if not tokens then
+    tokens = xNoteColumn.output_tokens
+  end
 
   for _,token in ipairs(tokens) do
     if self["do_write_"..token] then
