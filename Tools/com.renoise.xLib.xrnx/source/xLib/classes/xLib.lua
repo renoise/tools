@@ -80,7 +80,7 @@ function xLib.match_table_key(t,key)
 end
 
 --------------------------------------------------------------------------------
--- expand a multi-dimensional array with given keys
+-- Expand a multi-dimensional array with given keys
 -- @param t (table) 
 -- @param k1-k4 (string) 
 -- @return table
@@ -140,6 +140,39 @@ function xLib.merge_tables(t1,t2)
 end
 
 --------------------------------------------------------------------------------
+-- Convert a sparsely populated table into a compact one
+-- @param t (table)
+-- @return table
+
+function xLib.compact_table(t)
+
+  if table.is_empty(t) then
+    return t
+  end
+
+  local cols = table.keys(t)
+  table.sort(cols)
+  for k,v in ipairs(cols) do
+    t[k] = t[v]
+  end
+  local low,high = xLib.get_table_bounds(t)
+  for k = high,#cols+1,-1 do
+    t[k] = nil
+  end
+
+end
+
+--------------------------------------------------------------------------------
+--- quick'n'dirty table compare (values in first level only)
+-- @param t1 (table)
+-- @param t2 (table)
+-- @return boolean, true if identical
+
+function xLib.table_compare(t1,t2)
+  return (table.concat(t1,",")==table.concat(t2,","))
+end
+
+--------------------------------------------------------------------------------
 -- Number methods
 --------------------------------------------------------------------------------
 -- scale_value: scale a value to a range within a range
@@ -194,6 +227,37 @@ function xLib.least_common(t)
   end
   return cm
 end
+
+--------------------------------------------------------------------------------
+-- round_value (from http://lua-users.org/wiki/SimpleRound)
+
+function xLib.round_value(num) 
+  if num >= 0 then return math.floor(num+.5) 
+  else return math.ceil(num-.5) end
+end
+
+--------------------------------------------------------------------------------
+-- compare two numbers with variable precision
+-- @param val1 
+-- @param val2 
+-- @param precision
+-- @return boolean
+
+function xLib.float_compare(val1,val2,precision)
+  val1 = xLib.round_value(val1 * precision)
+  val2 = xLib.round_value(val2 * precision)
+  return val1 == val2 
+end
+
+--------------------------------------------------------------------------------
+--- return the fractional part of a number
+-- @param val 
+-- @return number
+
+function xLib.fraction(val)
+  return val-math.floor(val)
+end
+
 
 --------------------------------------------------------------------------------
 -- String methods
@@ -328,46 +392,6 @@ function xLib.parse_str(str)
   end
 
 
-end
-
---------------------------------------------------------------------------------
--- round_value (from http://lua-users.org/wiki/SimpleRound)
-
-function xLib.round_value(num) 
-  if num >= 0 then return math.floor(num+.5) 
-  else return math.ceil(num-.5) end
-end
-
---------------------------------------------------------------------------------
--- compare two numbers with variable precision
--- @param val1 
--- @param val2 
--- @param precision
--- @return boolean
-
-function xLib.float_compare(val1,val2,precision)
-  val1 = xLib.round_value(val1 * precision)
-  val2 = xLib.round_value(val2 * precision)
-  return val1 == val2 
-end
-
---------------------------------------------------------------------------------
---- return the fractional part of a number
--- @param val 
--- @return number
-
-function xLib.fraction(val)
-  return val-math.floor(val)
-end
-
---------------------------------------------------------------------------------
---- quick'n'dirty table compare (values in first level only)
--- @param t1 (table)
--- @param t2 (table)
--- @return boolean, true if identical
-
-function xLib.table_compare(t1,t2)
-  return (table.concat(t1,",")==table.concat(t2,","))
 end
 
 --------------------------------------------------------------------------------
