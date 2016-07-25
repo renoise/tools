@@ -18,22 +18,13 @@ A tool for sorting notes in pattern-tracks
 rns = nil
 _xlibroot = 'source/xLib/classes/'
 _vlibroot = 'source/vLib/classes/'
-_trace_filters = nil
---_trace_filters = {".*"}
+--_trace_filters = nil
+_trace_filters = {".*"}
 
 require (_vlibroot..'vLib')
---require (_vlibroot..'vPrompt')
---require (_vlibroot..'vDialogWizard')
---require (_vlibroot..'vTable')
---require (_vlibroot..'helpers/vColor')
 require (_vlibroot..'vDialog')
 
 require (_xlibroot..'xLib')
---require (_xlibroot..'xPatternTrack')
---require (_xlibroot..'xMessage')
---require (_xlibroot..'xMidiMessage')
---require (_xlibroot..'xVoiceRun') 
---require (_xlibroot..'xVoiceManager')
 require (_xlibroot..'xDebug')
 require (_xlibroot..'xEffectColumn') 
 require (_xlibroot..'xFilesystem')
