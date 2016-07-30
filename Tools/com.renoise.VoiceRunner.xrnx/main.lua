@@ -18,8 +18,8 @@ A tool for sorting notes in pattern-tracks
 rns = nil
 _xlibroot = 'source/xLib/classes/'
 _vlibroot = 'source/vLib/classes/'
---_trace_filters = nil
-_trace_filters = {".*"}
+_trace_filters = nil
+--_trace_filters = {".*"}
 
 require (_vlibroot..'vLib')
 require (_vlibroot..'vDialog')

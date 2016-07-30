@@ -17,23 +17,23 @@ class 'VR'
 
 VR.SCOPES = {
   "Selection in Pattern",
-  --"Selection in Matrix",
   "Track in Pattern",
-  --"Track in Song",
   "Group in Pattern",
-  --"Group in Song",
   "Whole Pattern",
+  --"Selection in Matrix",
+  --"Track in Song",
+  --"Group in Song",
   --"Whole Song",
 }
 
 VR.SCOPE = {
   SELECTION_IN_PATTERN = 1,
+  TRACK_IN_PATTERN = 2,
+  GROUP_IN_PATTERN = 3,
+  WHOLE_PATTERN = 4,
   --SELECTION_IN_MATRIX = 2,
-  TRACK_IN_PATTERN = 3,
   --TRACK_IN_SONG = 4,
-  GROUP_IN_PATTERN = 5,
   --GROUP_IN_SONG = 6,
-  WHOLE_PATTERN = 7,
   --WHOLE_SONG = 8,
 }
 
@@ -59,9 +59,12 @@ function VR:__init(...)
 
   -- xVoiceRunner
   self.runner = xVoiceRunner{
-    split_at_note = args.split_at_note,
-    --split_at_instrument = args.split_at_instrument,
-    stop_at_note_off = args.stop_at_note_off,
+    split_at_note = self.prefs.split_at_note.value,
+    split_at_note_change = self.prefs.split_at_note_change.value,
+    split_at_instrument_change = self.prefs.split_at_instrument_change.value,
+    stop_at_note_off = self.prefs.stop_at_note_off.value,
+    stop_at_note_cut = self.prefs.stop_at_note_cut.value,
+    remove_orphans = self.prefs.remove_orphans.value,
   }
 
   --- xVoiceSorter
@@ -69,6 +72,7 @@ function VR:__init(...)
     sort_mode = self.prefs.sort_mode.value,
     runner = self.runner,
   }
+
   --- configure user-interface
   self.ui = VR_UI{
     dialog_title = self.app_display_name,
@@ -92,41 +96,37 @@ function VR:__init(...)
   end)
 
   self.prefs.sort_mode:add_notifier(function()
-    --print("self.prefs.sort_mode fired...",self.prefs.sort_mode.value)
     self.xsorter.sort_mode = self.prefs.sort_mode.value
   end)
 
-  --[[
-
-  self.prefs.compact_mode:add_notifier(function()
-    --print("self.prefs.compact_mode fired...",self.prefs.compact_mode.value)
-    self.xsorter.compact_mode = self.prefs.compact_mode.value
+  self.prefs.remove_orphans:add_notifier(function()
+    self.runner.remove_orphans = self.prefs.remove_orphans.value
   end)
-
-  self.prefs.split_at_instrument:add_notifier(function()
-    --print("self.prefs.split_at_instrument fired...",self.prefs.split_at_instrument.value)
-    self.runner.split_at_instrument = self.prefs.split_at_instrument.value
-  end)
-
-  ]]
 
   self.prefs.split_at_note:add_notifier(function()
-    --print("self.prefs.split_at_note fired...",self.prefs.split_at_note.value)
     self.runner.split_at_note = self.prefs.split_at_note.value
   end)
 
+  self.prefs.split_at_note_change:add_notifier(function()
+    self.runner.split_at_note_change = self.prefs.split_at_note_change.value
+  end)
+
+  self.prefs.split_at_instrument_change:add_notifier(function()
+    self.runner.split_at_instrument_change = self.prefs.split_at_instrument_change.value
+  end)
+
   self.prefs.stop_at_note_off:add_notifier(function()
-    --print("self.prefs.stop_at_note_off fired...",self.prefs.stop_at_note_off.value)
     self.runner.stop_at_note_off = self.prefs.stop_at_note_off.value
   end)
 
+  self.prefs.stop_at_note_cut:add_notifier(function()
+    self.runner.stop_at_note_cut = self.prefs.stop_at_note_cut.value
+  end)
 
   -- initialize --
 
   self.template.vb = self.ui.vb
   self.ui:build()
-
-  --self.template:load(self.prefs.selected_template.value)
 
   self:attach_to_song()
 
