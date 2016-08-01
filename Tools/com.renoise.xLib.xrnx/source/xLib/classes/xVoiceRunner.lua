@@ -4,18 +4,20 @@ xVoiceRunner
 
 --[[--
 
-This class reads pattern data and converts it into instances of xVoiceRun
+This class converts pattern-tracks into 'voice-runs' - small note sequences
 .
 #
 
 ## About
 
-This class provides a foundation for advanced pattern manipulation by treating pattern data as small sequences - voice runs. 
+This class provides a foundation for advanced pattern manipulation 
+Voices are tracked and captured, including pattern-commands and note-offs
 
-## Features
+## How to use
 
-* Voices are tracked and captured, including pattern-commands and note-offs
-* Options for finetuning how notes are split or chained together
+TODO
+
+See also: xVoiceSorter
 
 ]]
 
@@ -33,35 +35,44 @@ function xVoiceRunner:__init(...)
 
 	local args = xLib.unpack_args(...)
 
-  --- bool, split a voice-run when note switches
-  self.split_at_note = args.split_at_note or true
+  print("type(args.split_at_note)",type(args.split_at_note),args.split_at_note)
 
   --- bool, split a voice-run when note switches
-  self.split_at_note_change = args.split_at_note_change or true
+  self.split_at_note = (type(args.split_at_note)~="boolean") 
+    and true or args.split_at_note 
+
+  --- bool, split a voice-run when note switches
+  self.split_at_note_change = (type(args.split_at_note_change)~="boolean") 
+    and true or args.split_at_note_change 
 
   --- bool, split a voice-run when instrument switches
-  self.split_at_instrument_change = args.split_at_instrument_change or true
+  self.split_at_instrument_change = (type(args.split_at_instrument_change)~="boolean") 
+    and true or args.split_at_instrument_change 
 
   --- bool, stop voice-run when encountering a NOTE-OFF
-  self.stop_at_note_off = args.stop_at_note_off or false
+  self.stop_at_note_off = (type(args.stop_at_note_off)~="boolean") 
+    and false or args.stop_at_note_off 
 
   --- bool, stop voice-run when encountering a NOTE-OFF
-  self.stop_at_note_cut = args.stop_at_note_cut or false
+  self.stop_at_note_cut = (type(args.stop_at_note_cut)~="boolean") 
+    and false or args.stop_at_note_cut 
 
   --- bool, remove orphaned runs as they are encountered
-  self.remove_orphans = args.remove_orphans or false
+  self.remove_orphans = (type(args.remove_orphans)~="boolean") 
+    and false or args.remove_orphans 
 
   print("split_at_note",self.split_at_note)
   print("split_at_note_change",self.split_at_note_change)
   print("split_at_instrument_change",self.split_at_instrument_change)
   print("stop_at_note_off",self.stop_at_note_off)
+  print("stop_at_note_cut",self.stop_at_note_cut)
   print("remove_orphans",self.remove_orphans)
 
   -- internal --
 
   -- table, represents the active voices as we progress through song
-  --  [track_index][column_index] {
-  --    instrument_index = int, -- '0' is special case (orphaned data)
+  --  [column_index] {
+  --    instrument_index = int, -- '0' is orphaned data, 256 is empty (ghost note)
   --    note_value = int,
   --    offed = bool,
   --  } 
@@ -71,12 +82,13 @@ function xVoiceRunner:__init(...)
   -- table = {
   --  [column_index] = {                  -- pairs
   --    [voice_run_index] = {             -- pairs
-  --      [number_of_lines] = int or nil  -- including trailing blank space
+  --      [number_of_lines] = int or nil  -- always set, including trailing blank space
   --      [implied_noteoff] = bool or nil -- set when switching note/instr while having an active (non-offed) voice - see also split_on_note_xx options
   --      [open_ended] = bool or nil      -- set when voice extends beyond pattern boundary
   --      [orphaned] = bool or nil        -- set on data with no prior voice (such as when we stop at note-off, note-cut...)
-  --      [actual_noteoff_col] = xNoteColumn -- set when note-off/cut is explicit 
+  --      [actual_noteoff_col] = xNoteColumn or nil -- set when note-off/cut is explicit 
   --      [single_line_trigger] = bool or nil -- set when Cx on same line as note (only possible when stop_at_note_cut is true)
+  --      [__replaced] = bool or nil      -- temporarily set when replacing entries (TODO clear when done with line)
   --      [line_idx] =                    -- xNoteColumn
   --      [line_idx] =                    -- xNoteColumn
   --      [line_idx] =                    -- etc...
@@ -84,6 +96,15 @@ function xVoiceRunner:__init(...)
   --   }
   -- }
   self.voice_runs = {}
+
+  --- table, defines the high/low note values in each column
+  -- (see also set_high_low_column/get_high_low_column)
+  --  {
+  --    column_index = int,
+  --    low_note = int,
+  --    high_note = int,
+  --  }
+  self.high_low_columns = {}
 
   self.voice_runs_remove_column_observable = renoise.Document.ObservableBang()
   self.removed_column_index = nil
@@ -99,7 +120,7 @@ function xVoiceRunner:__init(...)
   self.low_column = nil
   self.high_column = nil
 
-  -- bool, compact runs when collecting 
+  -- bool, compact runs when collecting (remove empty columns)
   self.compact_columns = true
 
 end
@@ -138,19 +159,33 @@ function xVoiceRunner:remove_voice_column(col_idx)
   self.removed_column_index = col_idx
   self.voice_runs_remove_column_observable:bang()
 
+  for k,v in ripairs(self.high_low_columns) do
+    if (v.column_index == col_idx) then table.remove(self.high_low_columns,k) end
+    if (v.column_index > col_idx) then v.column_index = v.column_index-1 end
+  end
+
 end
 
 
 
 -------------------------------------------------------------------------------
 
-function xVoiceRunner:insert_voice_column(col_idx,voice_run,line_idx)
-  print("xVoiceRunner:insert_voice_column(col_idx,voice_run,line_idx)",col_idx,voice_run,line_idx)
+function xVoiceRunner:insert_voice_column(col_idx,voice_run)
+  print("xVoiceRunner:insert_voice_column(col_idx,voice_run)",col_idx,voice_run)
+
+  --error(voice_run)
 
   table.insert(self.voice_runs,col_idx,{voice_run})
 
   self.inserted_column_index = col_idx
   self.voice_runs_insert_column_observable:bang()
+
+  -- update high_low_columns
+  for k,v in ipairs(self.high_low_columns) do
+    if (v.column_index >= col_idx) then v.column_index = v.column_index+1 end
+  end
+  local high_note,low_note = xVoiceRunner.get_high_low_note_values(self.voice_runs[col_idx])
+  self:set_high_low_column(col_idx,high_note,low_note)
 
 end
 
@@ -188,7 +223,7 @@ function xVoiceRunner:collect_from_pattern(ptrack,collect_mode,trk_idx,seq_idx,p
   --print("patt_sel",rprint(patt_sel))
   --print("trk_idx",trk_idx)
 
-  xLib.expand_table(self.voice_columns,trk_idx)
+  --xLib.expand_table(self.voice_columns,trk_idx)
 
   local line_rng = ptrack:lines_in_range(patt_sel.start_line,patt_sel.end_line)
   local track = rns.tracks[trk_idx]
@@ -239,20 +274,20 @@ function xVoiceRunner:collect_from_pattern(ptrack,collect_mode,trk_idx,seq_idx,p
             then -- note-off/cut *after* triggering note
               prnt("*** note-off/cut *after* triggering note")
               prnt("*** has_note_off,has_note_cut",has_note_off,has_note_cut)
-              if self.voice_columns[trk_idx][col_idx] then
+              if self.voice_columns[col_idx] then
                 if (self.stop_at_note_off and has_note_off)
                   or (self.stop_at_note_cut and has_note_cut)
                 then
                   actual_noteoff_col = xNoteColumn(xNoteColumn.do_read(notecol))
                   --print("actual_noteoff_col",notecol)
                   stop_voice_run = true
-                  instr_idx = self.voice_columns[trk_idx][col_idx].instrument_index
-                  self.voice_columns[trk_idx][col_idx] = nil
+                  instr_idx = self.voice_columns[col_idx].instrument_index
+                  self.voice_columns[col_idx] = nil
                   prnt(">>> process_pattern_track - stop voice run")
                 else
                   -- continue collecting from column, but set as 'offed'
-                  self.voice_columns[trk_idx][col_idx].offed = true
-                  instr_idx = self.voice_columns[trk_idx][col_idx].instrument_index
+                  self.voice_columns[col_idx].offed = true
+                  instr_idx = self.voice_columns[col_idx].instrument_index
                   prnt(">>> process_pattern_track - voice offed")
                 end
               end
@@ -263,48 +298,56 @@ function xVoiceRunner:collect_from_pattern(ptrack,collect_mode,trk_idx,seq_idx,p
               instr_idx = has_instr_val and instr_idx or 0
               note_val = has_note_on and note_val or nil
 
-              --print("*** collect - trk_idx,self.voice_columns[trk_idx]...",trk_idx,rprint(self.voice_columns[trk_idx]))
+              --print("*** collect - trk_idx,self.voice_columns...",trk_idx,rprint(self.voice_columns))
 
-              if not self.voice_columns[trk_idx][col_idx] then
+              if not self.voice_columns[col_idx] then
                 -- create voice run 
                 prnt(">>> process_pattern_track - create voice run")
                 begin_voice_run = true
-                self.voice_columns[trk_idx][col_idx] = {
-                  instrument_index = has_instr_val and instr_idx or 0,
+                self.voice_columns[col_idx] = {
+                  instrument_index = has_instr_val and instr_idx or 256,
                   note_value = note_val,
                 }
               elseif has_note_on 
                 and (self.split_at_note
                   or (self.split_at_note_change
-                    and (note_val ~= self.voice_columns[trk_idx][col_idx].note_value)))
+                    and (note_val ~= self.voice_columns[col_idx].note_value)))
               then
                 -- changed note
                 prnt(">>> process_pattern_track - changed note, create voice run")
-                implied_noteoff = not self.voice_columns[trk_idx][col_idx].offed and true or false
+                implied_noteoff = not self.voice_columns[col_idx].offed and true or false
                 begin_voice_run = true
-                self.voice_columns[trk_idx][col_idx] = {
+                self.voice_columns[col_idx] = {
                   instrument_index = instr_idx, 
                   note_value = note_val,
                 }
 
               elseif has_instr_val 
                 and self.split_at_instrument_change
-                and (instr_idx ~= self.voice_columns[trk_idx][col_idx].instrument_index)
+                and (instr_idx ~= self.voice_columns[col_idx].instrument_index)
               then
                 -- changed instrument
                 prnt(">>> process_pattern_track - changed instrument, create voice run")
-                implied_noteoff = not self.voice_columns[trk_idx][col_idx].offed and true or false 
+                implied_noteoff = not self.voice_columns[col_idx].offed and true or false 
                 begin_voice_run = true
-                self.voice_columns[trk_idx][col_idx] = {
+                self.voice_columns[col_idx] = {
+                  instrument_index = instr_idx,
+                  note_value = note_val,
+                }
+              elseif (self.voice_columns[col_idx].instrument_index == 0) 
+                and has_note_on or has_instr_val
+              then
+                prnt(">>> process_pattern_track - orphaned run")
+                begin_voice_run = true
+                self.voice_columns[col_idx] = {
                   instrument_index = instr_idx,
                   note_value = note_val,
                 }
               end
 
-            elseif not notecol.is_empty 
-            then
-              if self.voice_columns[trk_idx][col_idx] then
-                instr_idx = self.voice_columns[trk_idx][col_idx].instrument_index
+            elseif not notecol.is_empty then
+              if self.voice_columns[col_idx] then
+                instr_idx = self.voice_columns[col_idx].instrument_index
                 prnt(">>> process_pattern_track - continue voice run")
               else
                 -- capture 'orphaned' data and assign to instrument 0 
@@ -312,7 +355,7 @@ function xVoiceRunner:collect_from_pattern(ptrack,collect_mode,trk_idx,seq_idx,p
                 begin_voice_run = true
                 orphaned = true
                 instr_idx = 0
-                self.voice_columns[trk_idx][col_idx] = {
+                self.voice_columns[col_idx] = {
                   instrument_index = instr_idx,
                 }
 
@@ -383,10 +426,10 @@ function xVoiceRunner:collect_from_pattern(ptrack,collect_mode,trk_idx,seq_idx,p
                 if (self.stop_at_note_off and has_note_off)
                   or (self.stop_at_note_cut and has_note_cut)
                 then
-                  self.voice_columns[trk_idx][col_idx] = nil
+                  self.voice_columns[col_idx] = nil
                   print("*** collect - has_note_cut or has_note_off - nullify voice",col_idx)
                 else
-                  self.voice_columns[trk_idx][col_idx].offed = true
+                  self.voice_columns[col_idx].offed = true
                   print("*** collect - has_note_cut or has_note_off - set voice as offed",col_idx)
                 end
               end
@@ -430,7 +473,7 @@ function xVoiceRunner:collect_from_pattern(ptrack,collect_mode,trk_idx,seq_idx,p
         local low_line,high_line = xLib.get_table_bounds(run)
         print(">>> low_line,high_line",low_line,high_line)
         if not (run.number_of_lines) then
-          local voice = self.voice_columns[trk_idx][col_idx]
+          local voice = self.voice_columns[col_idx]
           if voice then -- still open
 
             local final_on,final_off,final_cut = xVoiceRunner.get_final_notecol_info(run)
@@ -466,33 +509,27 @@ function xVoiceRunner:collect_from_pattern(ptrack,collect_mode,trk_idx,seq_idx,p
     xLib.compact_table(self.voice_runs)
   end
 
-  --print("*** sort - unique_notes",rprint(self.runner.unique_notes))
+  --print("*** sort - unique_notes",rprint(self.unique_notes))
 
 end
 
 -------------------------------------------------------------------------------
--- select the voice-run below the current cursor position
--- @return table (pattern-selection, see xSelection) or nil 
+-- select the voice-run directly below the cursor position
+-- @return table, pattern-selection or nil
 
-function xVoiceRunner:select_voice_run()
-  TRACE("xVoiceRunner:select_voice_run()")
+function xVoiceRunner:collect_at_cursor()
+  TRACE("xVoiceRunner:collect_at_cursor()")
 
   local ptrack = rns.selected_pattern_track
-  local trk_idx = rns.selected_track_index
-  --local seq_idx = rns.selected_sequence_index
   local col_idx = rns.selected_note_column_index
   local line_idx = rns.selected_line_index
 
   self:reset()
-  local collect_mode = xVoiceRunner.COLLECT_MODE.CURSOR
 
-  -- disable compact for this operation
+  -- temporarily disable compact_columns while collecting
   local cached_compact = self.compact_columns
   self.compact_columns = false
-
-  self:collect_from_pattern(ptrack,collect_mode)
-  --print("voice_runs",rprint(self.voice_runs))
-
+  self:collect_from_pattern(ptrack,xVoiceRunner.COLLECT_MODE.CURSOR)
   self.compact_columns = cached_compact
 
   local in_range = xVoiceRunner.in_range(self.voice_runs,line_idx,line_idx,{
@@ -501,29 +538,7 @@ function xVoiceRunner:select_voice_run()
     include_after = true,
   })
 
-  --print("in_range",rprint(in_range))
-
-  if not table.is_empty(in_range) then
-    local low,high = xLib.get_table_bounds(in_range[col_idx])
-    --print("low,high",low,high)
-    local vrun = in_range[col_idx][low]
-    --print("vrun.number_of_lines",vrun.number_of_lines)
-    local low,high = xLib.get_table_bounds(vrun)
-    local end_line = low + vrun.number_of_lines - 1
-    end_line = (vrun.implied_noteoff  
-        or vrun.open_ended  
-        or not vrun.actual_noteoff_col
-        or vrun.single_line_trigger) and end_line 
-      or end_line+1
-    return {
-      start_line = low,
-      start_track = trk_idx,
-      start_column = col_idx,
-      end_line = end_line,
-      end_track = trk_idx,
-      end_column = col_idx,
-    }
-  end
+  return in_range
 
 end
 
@@ -613,13 +628,13 @@ function xVoiceRunner:has_room(line_start,col_idx,num_lines)
   })
   --print("*** has_room - in_range",line_start,line_end,rprint(in_range))
   local has_room = (#table.keys(in_range) == 0)
-  --print("*** has_room",has_room,"line_start,line_end",line_start,line_end,"col_idx",col_idx)
+  print("*** has_room",has_room,"line_start,line_end",line_start,line_end,"col_idx",col_idx)
   return has_room,in_range
 
 end
 
 -------------------------------------------------------------------------------
--- helper function to get a specific note-column (and its index)
+-- get a specific note-column and its index
 -- @param col_idx (int)
 -- @param line_idx (int)
 -- @return xNoteColumn or nil
@@ -636,6 +651,281 @@ function xVoiceRunner:resolve_notecol(col_idx,line_idx)
     --print("*** resolve_notecol - run",run)
     if run then
       return run[line_idx],run_idx
+    end
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- look for previous notes which are equal or higher, insert in new column
+-- testcases: Complex II 
+-- return bool, true when shifting took place
+
+function xVoiceRunner:shift_runs(v,target_col_idx,line_idx,shift_upwards)
+  print("xVoiceRunner:shift_runs(v,target_col_idx,line_idx,shift_upwards)",v,target_col_idx,line_idx,shift_upwards)
+
+  print(">>> shift_runs - v...",rprint(v))
+
+  local assign_notecol = v.voice_run[line_idx]
+  local target_run_col = self.voice_runs[target_col_idx]
+  local higher_runs = xVoiceRunner.get_higher_notes_in_column(self.voice_runs[target_col_idx],assign_notecol.note_value-1)
+  print(">>> shift_runs - higher_runs...",rprint(higher_runs))
+  local insert_col_idx = nil
+  local highest_run_idx = 1
+  if not table.is_empty(higher_runs) then
+    local higher_run = target_run_col[higher_runs[1].run_idx]
+    print(">>> shift - higher_run: ",higher_run)
+    insert_col_idx = shift_upwards and target_col_idx+1 or target_col_idx
+    highest_run_idx = 1
+    print(">>> shift higher run into new column - clear: ",target_col_idx,higher_runs[1].run_idx)
+    print(">>> shift higher run into new column - insert: ",insert_col_idx)
+    if self:clear_in_column(target_col_idx,higher_runs[1].run_idx,line_idx) then
+      if (target_col_idx < insert_col_idx) then
+        insert_col_idx = insert_col_idx -1
+        print(">>> adjusted insert_col_idx",insert_col_idx)
+      end
+    end
+    self:insert_voice_column(insert_col_idx,higher_run)
+    if (insert_col_idx <= target_col_idx) then
+      target_col_idx = target_col_idx+1
+      print(">>> adjusted target_col_idx",target_col_idx)
+    end
+    -- column is created, set remaining runs 
+    for k = 2,#higher_runs do
+      higher_run = target_run_col[higher_runs[k].run_idx]
+      highest_run_idx = k
+      print(">>> shift higher run into new column - clear: ",target_col_idx,higher_runs[k].run_idx)
+      print(">>> shift higher run into new column - set: ",insert_col_idx,k,higher_run)
+      print(">>> shift higher run into new column - run: ",rprint(higher_run))
+      table.insert(self.voice_runs[insert_col_idx],k,higher_run)
+      self:clear_in_column(target_col_idx,higher_runs[k].run_idx,higher_runs[k].line_idx)
+    end
+    self:set_high_low_column(target_col_idx,nil,nil,nil,line_idx)
+  end
+  -- now bring our run into target column
+  if insert_col_idx then
+    local high_note,low_note = xVoiceRunner.get_high_low_note_values(self.voice_runs[insert_col_idx])
+    print("*** high_note,low_note",high_note,low_note)
+
+    local assigned = false
+    if (high_note == assign_notecol.note_value)
+      and (low_note == assign_notecol.note_value)
+    then
+      -- prefer same notes in same column if possible
+      print(">>> shift_runs - shifted notes are strictly equal, attempt to assign")
+      assigned = self:assign_if_room(v,insert_col_idx,line_idx,highest_run_idx+1)
+    end
+    if not assigned then
+      print(">>> shift_runs - shifted column not same note, or no room - attempt assign")
+      assigned = self:assign_if_room(v,target_col_idx,line_idx) 
+    end
+    if not assigned then
+      print(">>> shift_runs, try shifted/inserted column (perhaps for the 2nd time)")
+      assigned = self:assign_if_room(v,insert_col_idx,line_idx,highest_run_idx+1)
+    end
+    if not assigned then
+      print(">>> no room found anywhere, insert between inserted and target")
+      self:insert_voice_column(insert_col_idx,v.voice_run)
+    end
+
+    return true
+
+  end 
+end
+
+-------------------------------------------------------------------------------
+-- replace run in target column when
+-- + begin on this line
+-- + has a different note value 
+--   or: + range occupied by that entry is equal to/smaller than ours
+-- return bool, true when replace took place
+
+function xVoiceRunner:replace_run(v,target_col_idx,target_run_idx,notecol,line_idx)
+  print("xVoiceRunner:replace_run(v,target_col_idx,target_run_idx,notecol,line_idx)",v,target_col_idx,target_run_idx,notecol,line_idx)
+  print("v",rprint(v))
+
+  local target_run_col = self.voice_runs[target_col_idx]
+  local target_notecol = v.voice_run[line_idx]
+
+  --print("in_range...",#in_range[target_col_idx],rprint(in_range))
+  local replaceable = true
+  if target_run_idx then
+    local target_run = target_run_col[target_run_idx]
+    local start_line,end_line = xLib.get_table_bounds(target_run)
+    if (start_line ~= line_idx) then
+      replaceable = false
+      print(">>> not replaceable, no run on this line")
+    end
+    print("*** replace_run - notecol.note_value",notecol.note_value)
+    if (notecol.note_value == target_notecol.note_value) then
+      replaceable = false
+      print(">>> replace_run - not replaceable, source and target note is the same")
+    end
+  else
+    for k2,v2 in pairs(in_range[target_col_idx]) do
+      if (v2.number_of_lines > v.voice_run.number_of_lines) then
+        replaceable = false
+        print(">>> replace_run - not replaceable, entry cover a greater range than ours...")
+        break
+      end
+    end
+  end
+  if replaceable then
+    print(">>> replace_run - replaceable - clear:",v.col_idx,v.run_idx,"set:",target_col_idx,target_run_idx,v.voice_run)
+    target_run_col[target_run_idx] = v.voice_run
+    target_run_col[target_run_idx].__replaced = true -- avoid clearing when replaced entry is processed
+    self:clear_in_column(v.col_idx,v.run_idx,line_idx)
+    return true
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- @return bool, true when there was room
+
+function xVoiceRunner:assign_if_room(v,col_idx,line_idx,assign_run_idx)
+  print("xVoiceRunner:assign_if_room(v,col_idx,line_idx,assign_run_idx)",v,col_idx,line_idx,assign_run_idx)
+
+  local has_room,in_range = self:has_room(line_idx,col_idx,v.voice_run.number_of_lines)
+  print(">>> assign_if_room - has_room",has_room)
+  if has_room then
+    print(">>> clear:",v.col_idx,v.run_idx,assign_run_idx)
+    print(">>> set:",col_idx,assign_run_idx,v.voice_run)
+    -- TODO ensure col_idx is kept in sync (see xVoiceSorter:insert_or_assign)
+    self:clear_in_column(v.col_idx,v.run_idx,line_idx)
+    if assign_run_idx then
+      if self.voice_runs[col_idx][assign_run_idx] then
+        print("*** assigning where a run already exists",col_idx,assign_run_idx)
+        error("...")
+      end
+      table.insert(self.voice_runs[col_idx],assign_run_idx,v.voice_run)
+    else
+      table.insert(self.voice_runs[col_idx],v.voice_run)
+    end
+    --local high_note,low_note = xVoiceRunner.get_high_low_note_values(self.voice_runs[col_idx],start_line,line_idx)
+    self:set_high_low_column(col_idx,nil,nil,nil,line_idx)
+    return true
+  end
+end
+
+-------------------------------------------------------------------------------
+-- clear a voice-run from a column + remove column if empty
+-- @return bool, true when column was removed as well
+
+function xVoiceRunner:clear_in_column(col_idx,run_idx,line_idx) 
+  print("xVoiceRunner:clear_in_column(col_idx,run_idx,line_idx)",col_idx,run_idx,line_idx)
+
+  local run_col = self.voice_runs[col_idx]
+  if not run_col[run_idx] then
+    print("*** clear_in_column - voice-run not found")
+    return
+  end
+
+  if not run_col[run_idx].__replaced then
+    --print("run_col PRE...",rprint(run_col))
+    --print("*** clear_in_column - run indices",rprint(table.keys(run_col)))
+    run_col[run_idx] = nil
+    if table.is_empty(run_col) then
+      self:remove_voice_column(col_idx)
+      return true
+    else
+      -- update high/low from prior lines
+      self:set_high_low_column(col_idx,nil,nil,nil,line_idx)
+    end
+  else
+    print("*** clear_in_column - this voice-run was __replaced (protected from being cleared)")
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- merge columns: move all runs from source into target column
+-- any later runs will replace newer ones as they appear
+-- @param source_col_idx (int)
+-- @param target_col_idx (int)
+-- @param remove_source (bool)
+
+function xVoiceRunner:merge_columns(source_col_idx,target_col_idx,remove_source)
+
+  -- TODO
+
+end
+
+-------------------------------------------------------------------------------
+-- maintain high/low note-values in column
+-- @param col_idx (int)
+-- @param high_note (int)
+-- @param low_note (int)
+-- @param force (bool), if defined the high/low values are explicitly set 
+--  (otherwise they will expand the already existing range)
+-- @param line_idx (int), set to high/low of existing runs until this line
+
+function xVoiceRunner:set_high_low_column(col_idx,high_note,low_note,force,line_idx)
+  print("xVoiceRunner:set_high_low_column(col_idx,high_note,low_note,force,line_idx)",col_idx,high_note,low_note,force,line_idx)
+
+  assert(type(col_idx)=="number")
+
+  if line_idx then
+    local run_col = self.voice_runs[col_idx]
+    local start_line,end_line = xVoiceRunner.get_column_start_end_line(run_col)
+    print("*** set_high_low_column - start_line,end_line,line_idx",start_line,end_line,line_idx)
+    if start_line and (start_line < line_idx) then
+      local high_note,low_note = xVoiceRunner.get_high_low_note_values(run_col,start_line,line_idx)
+      print("*** set_high_low_column - refresh low/high note",low_note,high_note)
+      self:set_high_low_column(col_idx,high_note,low_note,true)
+    else
+      print("*** set_high_low_column - clear low/high notes",start_line,line_idx)
+      self:set_high_low_column(col_idx,nil,nil,true)
+    end
+    return
+  end
+
+  local t,k = self:get_high_low_column(col_idx)
+  if t then
+    print("*** set_high_low_column - updating existing entry")
+  
+    if force then
+      self.high_low_columns[k].high_note = high_note
+      self.high_low_columns[k].low_note = low_note
+    else
+      -- if defined, expand range of existing value 
+      -- else set to provided value
+      if t.high_note then
+        t.high_note = high_note and math.max(high_note,t.high_note) or nil
+      else
+        t.high_note = high_note 
+      end
+      if t.low_note then
+        t.low_note = low_note and math.min(low_note,t.low_note) or nil
+      else
+        t.low_note = low_note
+      end
+    end
+  else
+    print("*** set_high_low_column - inserting new entry")
+    table.insert(self.high_low_columns,{
+      column_index = col_idx,
+      low_note = low_note,
+      high_note = high_note,
+    })
+  end
+
+  table.sort(self.high_low_columns,function(e1,e2)
+    return e1.column_index < e2.column_index
+  end)
+
+  print("*** set_high_low_column...",rprint(self.high_low_columns))
+
+end
+
+-------------------------------------------------------------------------------
+
+function xVoiceRunner:get_high_low_column(col_idx)
+  TRACE("xVoiceRunner:get_high_low_column(col_idx)",col_idx)
+
+  for k,v in ipairs(self.high_low_columns) do
+    if (v.column_index == col_idx) then
+      return v,k
     end
   end
 
@@ -680,7 +970,9 @@ function xVoiceRunner:write_to_pattern(ptrack,trk_idx,patt_sel)
           print("write scheduled noteoff - line_idx,col_idx,run_idx",line_idx,col_idx,run_idx)
           if run.actual_noteoff_col then
             run.actual_noteoff_col:do_write(notecol) 
-          elseif not run.single_line_trigger then
+          elseif not run.single_line_trigger 
+            and not run.orphaned
+          then
             notecol.note_value = renoise.PatternLine.NOTE_OFF
           end
           scheduled_noteoffs[col_idx] = nil
@@ -714,6 +1006,30 @@ end
 -------------------------------------------------------------------------------
 -- Static Methods
 -------------------------------------------------------------------------------
+-- @return table, pattern selection spanning the provided voice-run
+
+function xVoiceRunner.get_voice_run_selection(vrun,trk_idx,col_idx)
+  TRACE("xVoiceRunner.get_voice_run_selection(vrun,trk_idx,col_idx)",vrun,trk_idx,col_idx)
+
+  local low,high = xLib.get_table_bounds(vrun)
+  local end_line = low + vrun.number_of_lines - 1
+  end_line = (vrun.implied_noteoff  
+      or vrun.open_ended  
+      or not vrun.actual_noteoff_col
+      or vrun.single_line_trigger) and end_line 
+    or end_line+1
+  return {
+    start_line = low,
+    start_track = trk_idx,
+    start_column = col_idx,
+    end_line = end_line,
+    end_track = trk_idx,
+    end_column = col_idx,
+  }
+
+end
+
+-------------------------------------------------------------------------------
 -- collect runs that are triggered during a particular range of lines
 -- @param t (voice_runs)
 -- @param line_start (int)
@@ -728,7 +1044,7 @@ end
 -- @return matched_columns
 
 function xVoiceRunner.in_range(voice_runs,line_start,line_end,args)
-  print("xVoiceRunner.in_range(voice_runs,line_start,line_end,args)",voice_runs,line_start,line_end,args)
+  TRACE("xVoiceRunner.in_range(voice_runs,line_start,line_end,args)",voice_runs,line_start,line_end,args)
   --rprint(args)
 
   local rslt = {}
@@ -808,6 +1124,38 @@ function xVoiceRunner.in_range(voice_runs,line_start,line_end,args)
   end
 
   return rslt,matched_columns
+
+end
+
+-------------------------------------------------------------------------------
+-- collect runs that begin on a specific line 
+-- @param line_idx (int)
+-- @return table {
+--    voice_run = table,
+--    col_idx = int,
+--    run_idx = int,
+--    line_idx = int,
+--  }
+
+function xVoiceRunner.get_runs_on_line(voice_runs,line_idx)
+  TRACE("xVoiceRunner.get_runs_on_line(voice_runs,line_idx)",voice_runs,line_idx)
+
+  local line_runs = {}
+  for col_idx,v in pairs(voice_runs) do
+    for run_idx,v2 in pairs(v) do
+      local low,high = xLib.get_table_bounds(v2)
+      if (low == line_idx) then
+        table.insert(line_runs,{
+          voice_run = v2,
+          col_idx = col_idx,
+          run_idx = run_idx,
+          line_idx = low,
+        })
+      end
+    end
+  end
+
+  return line_runs
 
 end
 
@@ -893,7 +1241,7 @@ function xVoiceRunner.get_most_recent_run_index(run_col,line_idx)
   if not is_empty then
     for run_idx,run in pairs(run_col) do
       local low,high = xLib.get_table_bounds(run)
-      --print("*** get_most_recent_run_index - low,high",low,high)
+      print("*** get_most_recent_run_index - low,high",low,high)
       for k = 1,math.min(line_idx,high) do
         --print("*** get_most_recent_run_index - k",k)
         if run[k] then
@@ -912,7 +1260,7 @@ end
 
 -------------------------------------------------------------------------------
 -- check the lowest/highest note-values for a given column
--- @param run_col (table)
+-- @param run_col (table), required
 -- @param line_start (int)
 -- @param line_end (int) 
 -- @return int, low note-value or nil
@@ -921,20 +1269,24 @@ end
 function xVoiceRunner.get_high_low_note_values(run_col,line_start,line_end)
   print("xVoiceRunner.get_high_low_note_values(run_col,line_start,line_end)",run_col,line_start,line_end)
 
+  assert(type(run_col)=="table")
+
+  print("*** get_high_low_note_values - run_col...",rprint(run_col))
   local restrict_to_lines = (line_start and line_end) and true or false
   local low_note,high_note = 1000,-1000
   local matched = false
   local within_range = false
   for run_idx,run in pairs(run_col) do
-    print("run_idx,run",run_idx,run)
+    --print("*** get_high_low_note_values - run_idx,run...",run_idx,rprint(run))
     for line_idx,v3 in pairs(run) do
-      print("restrict_to_lines,line_idx,line_start,line_end",restrict_to_lines,line_idx,line_start,line_end)
+      --print("*** get_high_low_note_values - restrict_to_lines,line_idx,line_start,line_end",restrict_to_lines,line_idx,line_start,line_end)
       if (type(v3)=="table") then 
         within_range = (restrict_to_lines 
           and (line_idx >= line_start)
-          and (line_idx <= line_end))
+          and (line_idx <= line_end)) 
         if (v3.note_value < renoise.PatternLine.NOTE_OFF)
-          and (not restrict_to_lines or within_range)
+          and not restrict_to_lines 
+            or (restrict_to_lines and within_range)
         then
           print("*** get_high_low_note_values - line_idx,note_val",line_idx,xNoteColumn.note_value_to_string(v3.note_value))
           low_note = math.min(low_note,v3.note_value)
@@ -944,7 +1296,7 @@ function xVoiceRunner.get_high_low_note_values(run_col,line_start,line_end)
       end
     end
     if matched and not within_range then
-      print("break")
+      --print("break")
       break
     end    
   end
@@ -959,7 +1311,7 @@ end
 -- retrieve the first and last line in column
 
 function xVoiceRunner.get_column_start_end_line(run_col)
-  print("xVoiceRunner.get_column_start_end_line(run_col)",run_col)
+  TRACE("xVoiceRunner.get_column_start_end_line(run_col)",run_col)
 
   if table.is_empty(table.keys(run_col)) then
     --print("*** get_column_start_end_line - no runs",rprint(run_col))
@@ -984,7 +1336,7 @@ end
 -- @param notecol, renoise.NoteColumn or xNoteColumn
 
 function xVoiceRunner.get_notecol_info(notecol)
-  print("xVoiceRunner.get_notecol_info(notecol)",notecol)
+  TRACE("xVoiceRunner.get_notecol_info(notecol)",notecol)
 
   local has_instr_val = (notecol.instrument_value < 255) 
 
