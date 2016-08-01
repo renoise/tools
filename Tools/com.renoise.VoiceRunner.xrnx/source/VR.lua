@@ -7,7 +7,9 @@ VoiceRunner application
 .
 #
 
-An implementation of the xVoiceSorter class
+Manage a pool of xVoiceRunner class instances (one for each pattern-track), and provide iterators for going through patterns, matrix slots etc.
+
+Supporting classes provide GUI and preferences. 
 
 ]]
 
@@ -333,7 +335,19 @@ end
 function VR:select_voice_run()
   TRACE("VR:select_voice_run()")
 
-  local patt_sel = self.runner:select_voice_run()
+  local patt_sel = {}
+  local trk_idx = rns.selected_track_index
+  local col_idx = rns.selected_note_column_index
+  local in_range = self.runner:collect_at_cursor()
+  print("in_range",rprint(in_range))
+
+  if not table.is_empty(in_range) then
+    local low,high = xLib.get_table_bounds(in_range[col_idx])
+    --print("low,high",low,high)
+    local vrun = in_range[col_idx][low]
+    patt_sel = xVoiceRunner.get_voice_run_selection(vrun,trk_idx,col_idx)
+  end
+
   --print("patt_sel",rprint(patt_sel))
 
   if not table.is_empty(patt_sel) then
@@ -341,6 +355,29 @@ function VR:select_voice_run()
   end
 
 end
+
+-------------------------------------------------------------------------------
+-- select the next voice-run relative to the cursor position
+-- @return table, pattern-selection or nil
+
+function VR:select_next_voice_run()
+  TRACE("VR:select_next_voice_run()")
+
+  -- TODO
+
+end
+
+-------------------------------------------------------------------------------
+-- select the previous voice-run relative to the cursor position
+-- @return table, pattern-selection or nil
+
+function VR:select_previous_voice_run()
+  TRACE("VR:select_previous_voice_run()")
+
+  -- TODO
+
+end
+
 
 --------------------------------------------------------------------------------
 -- for testing...

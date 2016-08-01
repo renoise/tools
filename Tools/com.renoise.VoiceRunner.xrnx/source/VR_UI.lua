@@ -171,7 +171,7 @@ function VR_UI:build()
   local SPACING = 4
   local LEFT_PANEL_W = 150
   local RIGHT_PANEL_W = 150
-  local LARGE_BUTTON_H = 26
+  local LARGE_BUTTON_H = 28
   local HALF_BUTTON_W = LEFT_PANEL_W/2
   local QUARTER_BUTTON_W = LEFT_PANEL_W/4 -2
   local PITCH_COLUMN_COL = 48
@@ -224,55 +224,36 @@ function VR_UI:build()
 
         vb:button{
           text = "Select",
-          tooltip = "Select the voice-run below the pattern cursor",
-          width = HALF_BUTTON_W,
+          tooltip = "Select the voice-run at the cursor position",
+          width = HALF_BUTTON_W-20,
           height = LARGE_BUTTON_H,
           notifier = function()
             self.owner:select_voice_run()
           end
         },
-      },
-      --[[
-      vb:row{
-        width = LEFT_PANEL_W,
-        vb:button{
-          text = "Clean Notes",
-          width = HALF_BUTTON_W,
-          height = LARGE_BUTTON_H,
-          notifier = function()
-            self.owner:process()
-          end
-        },
-        vb:row{
+        vb:column{
           vb:button{
-            text = "Up",
-            tooltip = "Nudge the selection",
-            width = QUARTER_BUTTON_W,
-            height = LARGE_BUTTON_H,
+            bitmap = "Icons/ArrowUp.bmp",
+            tooltip = "Select the previous voice-run relative to the cursor position",
+            width = 20,
+            height = 14,
             notifier = function()
-              self.owner:select_voice_run()
+              self.owner:select_previous_voice_run()
             end
           },
           vb:button{
-            text = "Down",
-            tooltip = "Nudge the selection",
-            width = QUARTER_BUTTON_W,
-            height = LARGE_BUTTON_H,
+            bitmap = "Icons/ArrowDown.bmp",
+            tooltip = "Select the next voice-run relative to the cursor position",
+            width = 20,
+            height = 14,
             notifier = function()
-              self.owner:select_voice_run()
+              self.owner:select_next_voice_run()
             end
           },
+        
         },
       },
-      vb:button{
-        text = "Print selection info...",
-        width = LEFT_PANEL_W,
-        height = LARGE_BUTTON_H,
-        notifier = function()
-          self.owner:test_list_info()
-        end
-      },
-      ]]
+
       vb:row{
         vb:checkbox{
           bind = self.owner.prefs.advanced_settings,
