@@ -15,7 +15,7 @@ Static Methods for working with renoise.Tracks objects
 class 'xTrack'
 
 --------------------------------------------------------------------------------
---- get_master_track
+--- get_master_track_index
 
 function xTrack.get_master_track_index()
   for i,v in pairs(rns.tracks) do
@@ -26,7 +26,7 @@ function xTrack.get_master_track_index()
 end
 
 --------------------------------------------------------------------------------
---- get_master_track_index
+--- get_master_track
 
 function xTrack.get_master_track()
   for i,v in pairs(rns.tracks) do
@@ -71,10 +71,11 @@ end
 
 function xTrack.determine_track_type(track_index)
 
-  local master_idx = get_master_track_index()
+  local master_idx = xTrack.get_master_track_index()
   local tracks = rns.tracks
   if (track_index < master_idx) then
-    return renoise.Track.TRACK_TYPE_SEQUENCER
+    local track = rns.tracks[track_index]
+    return track.type -- renoise.Track.TRACK_TYPE_SEQUENCER
   elseif (track_index == master_idx) then
     return renoise.Track.TRACK_TYPE_MASTER
   elseif (track_index <= #tracks) then
@@ -82,4 +83,73 @@ function xTrack.determine_track_type(track_index)
   end
 
 end
+
+--------------------------------------------------------------------------------
+-- navigate to the next sequencer track (skip other types)
+-- @param wrap_pattern
+
+function xTrack.next_sequencer_track(wrap_pattern)
+  print("xTrack.next_sequencer_track(wrap_pattern)",wrap_pattern)
+
+  local track_index = rns.selected_track_index
+  local master_idx = xTrack.get_master_track_index()
+  local matched = false
+
+  repeat
+    track_index = track_index+1
+    --local track = rns.tracks[track_index]
+
+    if (track_index >= master_idx) then
+      print("*** master or send track",track_index)
+      if wrap_pattern then
+        track_index = 1
+      else
+        return
+      end
+    end
+    local track_type = xTrack.determine_track_type(track_index)
+    if (track_type == renoise.Track.TRACK_TYPE_SEQUENCER) then
+      matched = true
+    end
+  until matched
+  print("*** next_sequencer_track - set track_index",track_index)
+  rns.selected_track_index = track_index
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+-- navigate to the previous sequencer track (skip other types)
+-- @param wrap_pattern
+
+function xTrack.previous_sequencer_track(wrap_pattern)
+  print("xTrack.previous_sequencer_track(wrap_pattern)",wrap_pattern)
+
+  local track_index = rns.selected_track_index
+  local matched = false
+
+  repeat
+    track_index = track_index-1
+    --local track = rns.tracks[track_index]
+    if (track_index == 0) then
+      if wrap_pattern then
+        track_index = xTrack.get_master_track_index()
+      else
+        return false
+      end
+    end
+    local track_type = xTrack.determine_track_type(track_index)
+    print("*** track_index,track_type",track_index,track_type)
+    if (track_type == renoise.Track.TRACK_TYPE_SEQUENCER) then
+      matched = true
+    end
+  until matched
+
+  print("*** previous_sequencer_track - selected_track_index",rns.selected_track_index)
+  print("*** previous_sequencer_track - selected_note_column_index",rns.selected_note_column_index)
+  rns.selected_track_index = track_index
+  return true
+
+end
+
 
