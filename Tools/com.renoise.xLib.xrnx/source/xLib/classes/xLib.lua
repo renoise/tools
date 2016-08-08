@@ -163,13 +163,66 @@ function xLib.compact_table(t)
 end
 
 --------------------------------------------------------------------------------
---- quick'n'dirty table compare (values in first level only)
+-- quick'n'dirty table compare (values in first level only)
 -- @param t1 (table)
 -- @param t2 (table)
 -- @return boolean, true if identical
 
 function xLib.table_compare(t1,t2)
   return (table.concat(t1,",")==table.concat(t2,","))
+end
+
+--------------------------------------------------------------------------------
+-- detect if table is sparsely populated (consider numeric keys only)
+-- @return true if sparse, false if not - or empty
+
+function xLib.is_sparse_table(t)
+  print("xLib.is_sparse_table(t)",rprint(t))
+
+  if table.is_empty(t) then
+    return false
+  end
+
+  local low,high = xLib.get_table_bounds(t)
+  if (low > 1) then
+    return true
+  end
+  for k = low,high do
+    if not t[k] then
+      return true
+    end
+  end
+
+  return false
+
+end
+
+--------------------------------------------------------------------------------
+-- insert into table, supporting sparse indices
+
+function xLib.sparse_table_insert(t,idx,val)
+
+  local is_sparse = xLib.is_sparse_table(t)
+  if is_sparse and not t[idx] then
+    t[idx] = val
+  elseif not is_sparse then
+    table.insert(t,idx,val)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- remove from table, supporting sparse indices
+
+function xLib.sparse_table_remove(t,idx)
+
+  local is_sparse = xLib.is_sparse_table(t)
+  if is_sparse then
+    t[idx] = nil
+  else
+    table.remove(t,idx)
+  end
+
 end
 
 --------------------------------------------------------------------------------
