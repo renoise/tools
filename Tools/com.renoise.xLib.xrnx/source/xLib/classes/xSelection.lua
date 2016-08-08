@@ -19,6 +19,15 @@ Static methods for working with pattern/phrase/matrix/sequence-selections
     end_column      -- End column index within end_track
   }
 
+### Phrase-selection 
+
+  {
+    start_line,     -- Start pattern line index
+    start_column,   -- Start column index within start_track   
+    end_line,       -- End pattern line index
+    end_column      -- End column index within end_track
+  }
+
 
 ### Matrix-selection
 
@@ -93,16 +102,6 @@ end
 
 
 -------------------------------------------------------------------------------
---[[
-function xSelection.get_pattern_if_single_column()
-  TRACE("xSelection.get_pattern_if_single_column()")
-
-  -- TODO
-
-end
-]]
-
--------------------------------------------------------------------------------
 -- return a selection spanning an entire column in a pattern-track
 -- @param seq_idx (int)
 -- @param trk_idx (int)
@@ -126,11 +125,45 @@ function xSelection.get_column_in_track(seq_idx,trk_idx,col_idx)
 end
 
 -------------------------------------------------------------------------------
+-- return a selection spanning an entire group in a pattern-track
+-- @param seq_idx (int)
+-- @param trk_idx (int)
+-- @return table (pattern-selection) or bool (false, on error)
+-- @return string (error message when failed)
+
+function xSelection.get_group_in_pattern(seq_idx,trk_idx)
+  TRACE("xSelection.get_group_in_pattern(seq_idx,trk_idx)",seq_idx,trk_idx)
+
+  -- TODO
+
+end
+
+-------------------------------------------------------------------------------
+-- return a selection spanning the entire selected phrase
+
+function xSelection.get_phrase()
+
+  local phrase = rns.selected_phrase
+
+  if not phrase then
+    return false,"Could not retrieve selection, no phrase selected"
+  end
+
+  return {
+    start_line = 1,    
+    start_column = 1,  
+    end_line = phrase.number_of_lines,      
+    end_column = phrase.visible_note_columns+phrase.visible_effect_columns      
+  }
+
+end
+
+-------------------------------------------------------------------------------
 -- retrieve the matrix selection 
 -- @return table<[sequence_index][track_index]>
 
 function xSelection.get_matrix_selection()
-  TRACE("xSelection.get_matrix_selection()")
+  print("xSelection.get_matrix_selection()")
 
   local sel = {}
   for k,v in ipairs(rns.sequencer.pattern_sequence) do
@@ -149,25 +182,49 @@ function xSelection.get_matrix_selection()
 end
 
 -------------------------------------------------------------------------------
--- create a selection encompassing an entire pattern-track
--- @param trk_idx, int
--- @param patt_idx, int
---[[
-function xSelection.get_whole_track_selection(trk_idx,patt_idx)
-  TRACE("xSelection.get_whole_track_selection(trk_idx,patt_idx)",trk_idx,patt_idx)
+-- @param patt_sel (table ) 
+-- @return bool
 
-  local track = rns.tracks[trk_idx]
-  local total_column_count = track.visible_note_columns + 
-    track.visible_effect_columns
+function xSelection.is_single_column(patt_sel)
+  print("xSelection.is_single_column(patt_sel)",patt_sel)
 
-  return {
-    start_line = 1,
-    start_track = trk_idx,
-    start_column = 1,
-    end_line = 512,
-    end_track = trk_idx,
-    end_column = total_column_count,
-  }
+  return xSelection.is_single_track(patt_sel)
+    and (patt_sel.start_column == patt_sel.end_column)
 
 end
-]]
+
+-------------------------------------------------------------------------------
+-- @param patt_sel (table ) 
+-- @return bool
+
+function xSelection.is_single_track(patt_sel)
+  print("xSelection.is_single_track(patt_sel)",patt_sel)
+
+  return (patt_sel.start_track == patt_sel.end_track)
+
+end
+
+-------------------------------------------------------------------------------
+-- TODO support track-spanning selections
+-- @param patt_sel (table ) 
+-- @return bool
+
+function xSelection.includes_note_columns(patt_sel)
+
+  local track = rns.tracks[patt_sel.start_track]
+  print("patt_sel.start_column > track.visible_note_columns",patt_sel.start_column,track.visible_note_columns,patt_sel.start_column > track.visible_note_columns)
+  return (patt_sel.start_column <= track.visible_note_columns)
+
+end
+
+-------------------------------------------------------------------------------
+-- @param patt_sel (table ) 
+-- @return bool
+
+function xSelection.spans_entire_line(patt_sel,number_of_columns)
+  print("xSelection.spans_entire_line(patt_sel,number_of_columns)",patt_sel,number_of_columns)
+
+  -- TODO
+
+end
+
