@@ -7,6 +7,20 @@ User interface for VoiceRunner
 
 ]]
 
+local MARGIN = 4
+local SPACING = 4
+local LABEL_W = 50
+local LEFT_PANEL_W = 150
+local LARGE_BUTTON_H = 28
+local HALF_BUTTON_W = LEFT_PANEL_W/2
+local QUARTER_BUTTON_W = LEFT_PANEL_W/4 -2
+local PITCH_COLUMN_COL = 48
+local PITCH_NAME_COL = 80
+local PITCH_NOTE_COL = 60
+local PITCH_NOTE_COL = 60
+local SORT_COLOR = {0xA0,0xA0,0xA0}
+local SELECT_COLOR = {0xDA,0x60,0x2D}
+
 class 'VR_UI' (vDialog)
 
 -------------------------------------------------------------------------------
@@ -29,11 +43,6 @@ function VR_UI:show()
 
   vDialog.show(self)
 
-  --[[
-  if self.xstream.prefs.favorites_pinned.value then
-    self.favorites:show()
-  end
-  ]]
 
 end
 
@@ -43,8 +52,42 @@ end
 
 function VR_UI:__init(...)
 
+  self.dialog_too_many_cols = nil
+
   local args = xLib.unpack_args(...)
   assert(type(args.owner)=="VR","Expected 'owner' to be a class instance")
+
+  args.dialog_keyhandler = function(dlg,key)
+    print("dlg,key",dlg,rprint(key))
+    print("key.modifiers",type(key.modifiers),key.modifiers)
+    
+    if (key.modifiers == "") then
+      local handlers = {
+        ["up"] = function()
+          self.owner:select_previous_voice_run()
+        end,
+        ["down"] = function()
+          self.owner:select_next_voice_run(nil,nil,true)
+        end,
+        ["left"] = function()
+          self.owner:select_previous_note_column()
+        end,
+        ["right"] = function()
+          self.owner:select_next_note_column()
+        end,
+      }
+
+      if handlers[key.name] then
+        handlers[key.name]()
+        return
+      end
+    end
+        print("got here")
+    return key
+
+  end
+
+
   vDialog.__init(self,...)
 
   -- variables --
@@ -55,9 +98,8 @@ function VR_UI:__init(...)
   -- VR (main application)
   self.owner = args.owner
 
-  --self.prefs =  TODO
-
   self.active_tab = renoise.Document.ObservableNumber(2)
+
 
   -- notifiers --
 
@@ -167,19 +209,8 @@ function VR_UI:build()
   
   local vb = self.vb
   --local DIALOG_W = 150
-  local MARGIN = 4
-  local SPACING = 4
-  local LEFT_PANEL_W = 150
-  local RIGHT_PANEL_W = 150
-  local LARGE_BUTTON_H = 28
-  local HALF_BUTTON_W = LEFT_PANEL_W/2
-  local QUARTER_BUTTON_W = LEFT_PANEL_W/4 -2
-  local PITCH_COLUMN_COL = 48
-  local PITCH_NAME_COL = 80
-  local PITCH_NOTE_COL = 60
-  local PITCH_NOTE_COL = 60
 
-  local vb_content = vb:column{
+  local vb_content = vb:row{
     margin = MARGIN,
     spacing = SPACING,
     vb:column{
@@ -198,178 +229,319 @@ function VR_UI:build()
         style = "group",
         margin = MARGIN,
         width = LEFT_PANEL_W,
-        vb:row{
-          vb:text{
-            text = "Sorting",
-            font = "bold",
+        vb:column{
+          vb:row{
+            vb:text{
+              text = "Sorting",
+              width = LABEL_W,
+              --font = "bold",
+            },
+            vb:popup{
+              width = LEFT_PANEL_W-56,
+              items = xVoiceSorter.SORT_MODES,
+              bind = self.owner.prefs.sort_mode,
+            },
           },
-          vb:popup{
-            width = LEFT_PANEL_W-56,
-            items = xVoiceSorter.SORT_MODES,
-            bind = self.owner.prefs.sort_mode,
+          vb:row{
+            vb:text{
+              text = "Method",
+              width = LABEL_W,
+              --font = "bold",
+            },
+            vb:popup{
+              width = LEFT_PANEL_W-56,
+              items = xVoiceSorter.SORT_METHODS,
+              bind = self.owner.prefs.sort_method,
+            },
           },
         },
        
       },
       vb:row{
         width = LEFT_PANEL_W,
-        vb:button{
-          text = "Sort Notes",
-          width = HALF_BUTTON_W,
-          height = LARGE_BUTTON_H,
-          notifier = function()
-            self.owner:process()
-          end
-        },
+        vb:column{
+          vb:button{
+            text = "Sort",
+            --color = SORT_COLOR,
+            midi_mapping = VR.MIDI_MAPPING.SORT_NOTES,
+            width = HALF_BUTTON_W,
+            height = LARGE_BUTTON_H,
+            notifier = function()
+              self.owner:do_sort()
+            end
+          },
 
-        vb:button{
-          text = "Select",
-          tooltip = "Select the voice-run at the cursor position",
-          width = HALF_BUTTON_W-20,
-          height = LARGE_BUTTON_H,
-          notifier = function()
-            self.owner:select_voice_run()
-          end
+          vb:button{
+            text = "Select",
+            color = vColor.adjust_brightness(SELECT_COLOR,0.1),
+            tooltip = "Select the voice-run at the cursor position",
+            midi_mapping = VR.MIDI_MAPPING.SELECT_RUN,
+            width = HALF_BUTTON_W,
+            height = LARGE_BUTTON_H,
+            notifier = function()
+              self.owner:select_voice_run()
+            end
+          },
         },
         vb:column{
           vb:button{
-            bitmap = "Icons/ArrowUp.bmp",
-            tooltip = "Select the previous voice-run relative to the cursor position",
-            width = 20,
-            height = 14,
+            text = "Merge",
+            --color = SORT_COLOR,
+            tooltip = "Merge note-columns in selected scope",
+            midi_mapping = VR.MIDI_MAPPING.SELECT_RUN,
+            width = HALF_BUTTON_W,
+            height = LARGE_BUTTON_H,
             notifier = function()
-              self.owner:select_previous_voice_run()
+              -- TODO
+              self.owner:do_merge()
             end
           },
-          vb:button{
-            bitmap = "Icons/ArrowDown.bmp",
-            tooltip = "Select the next voice-run relative to the cursor position",
-            width = 20,
-            height = 14,
-            notifier = function()
-              self.owner:select_next_voice_run()
-            end
+
+          vb:row{
+            vb:column{
+              --vb:space{
+                --height = LARGE_BUTTON_H/2
+              --},
+              vb:button{
+                bitmap = "Icons/ArrowLeft.bmp",
+                color = SELECT_COLOR,
+                tooltip = "Select the previous note-column in the pattern",
+                midi_mapping = VR.MIDI_MAPPING.SELECT_PREV_PATT_NOTECOL,
+                width = LARGE_BUTTON_H-5,
+                height = LARGE_BUTTON_H,
+                notifier = function()
+                  self.owner:select_previous_note_column()
+                end
+              },
+            },
+            vb:column{
+              vb:button{
+                bitmap = "Icons/ArrowUp.bmp",
+                color = SELECT_COLOR,
+                tooltip = "Select the previous voice-run relative to the cursor position",
+                midi_mapping = VR.MIDI_MAPPING.SELECT_PREV_RUN,
+                width = LARGE_BUTTON_H,
+                height = LARGE_BUTTON_H/2,
+                notifier = function()
+                  self.owner:select_previous_voice_run()
+                end
+              },
+              vb:button{
+                bitmap = "Icons/ArrowDown.bmp",
+                color = SELECT_COLOR,
+                tooltip = "Select the next voice-run relative to the cursor position",
+                midi_mapping = VR.MIDI_MAPPING.SELECT_NEXT_RUN,
+                width = LARGE_BUTTON_H,
+                height = LARGE_BUTTON_H/2,
+                notifier = function()                  
+                  self.owner:select_next_voice_run()
+                end
+              },
+            },
+            vb:column{
+              --vb:space{
+                --height = LARGE_BUTTON_H/2
+              --},
+              vb:button{
+                bitmap = "Icons/ArrowRight.bmp",
+                color = SELECT_COLOR,
+                tooltip = "Select the next note-column in the pattern",
+                midi_mapping = VR.MIDI_MAPPING.SELECT_NEXT_PATT_NOTECOL,
+                width = LARGE_BUTTON_H-5,
+                height = LARGE_BUTTON_H,
+                notifier = function()
+                  self.owner:select_next_note_column()
+                end
+              },
+            },
           },
-        
         },
       },
 
       vb:row{
-        vb:checkbox{
-          bind = self.owner.prefs.advanced_settings,
-        },
-        vb:text{
-          text = "Advanced settings",
-        },
+        vb:checkbox{bind = self.owner.prefs.advanced_settings},
+        vb:text{text = "Advanced settings"},
       },
-      vb:column{
-        id = "advanced_settings",
-        width = LEFT_PANEL_W,
-        --style = "panel",
+
+    },
+    vb:column{
+      id = "advanced_settings",
+      --style = "panel",
+      spacing = SPACING,
+
+      vb:row{
         spacing = SPACING,
         vb:column{
-          style = "group",
-          width = "100%",
-          margin = 4,
-          vb:row{
-            vb:text{
-              text = "Sorting & Collection",
-              font = "bold",
+          width = LEFT_PANEL_W,
+          spacing = SPACING,
+          vb:column{ -- tool options
+            style = "group",
+            width = "100%",
+            margin = MARGIN,
+            --[[
+            vb:row{
+              vb:text{
+                text = "Tool Settings",
+                font = "bold",
+              },
+            },
+            ]]
+            vb:row{
+              vb:checkbox{
+                bind = self.owner.prefs.autostart,
+              },  
+              vb:text{
+                text = "Display GUI on startup",
+              },
+            },
+            vb:row{
+              --width = "100%",
+              vb:button{
+                width = LEFT_PANEL_W-10,
+                text = "Restore default settings",
+                notifier = function()
+                  local msg = "Are you sure you want to reset the tool to its original settings? This will include all sorting options and warning dialogs"
+                  local choice = renoise.app():show_prompt("Reset settings?", msg, {"OK","Cancel"})
+                  if (choice == "OK") then
+                    self.owner.prefs:reset()
+                  end
+                end,
+              },
             },
           },
-          --[[
-          vb:row{
-            vb:checkbox{
-              bind = self.owner.prefs.compact_mode,
+          vb:column{
+            style = "group",
+            width = "100%",
+            margin = 4,
+            vb:row{
+              vb:text{
+                text = "Voice Collection",
+                font = "bold",
+              },
             },
-            vb:text{
-              text = "Compact columns",
+            --[[
+            vb:row{
+              vb:checkbox{
+                bind = self.owner.prefs.compact_mode,
+              },
+              vb:text{
+                text = "Compact columns",
+              },
             },
-          },
-          vb:row{
-            vb:checkbox{
-              bind = self.owner.prefs.update_visible_columns,
+            vb:row{
+              vb:checkbox{
+                bind = self.owner.prefs.update_visible_columns,
+              },
+              vb:text{
+                text = "Match visible cols.",
+              },
             },
-            vb:text{
-              text = "Match visible cols.",
+            ]]
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.split_at_note},
+              vb:text{text = "Split at note"},
             },
-          },
-          ]]
-          vb:row{
-            vb:checkbox{
-              bind = self.owner.prefs.split_at_note,
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.split_at_note_change},
+              vb:text{text = "Split at note-change"},
             },
-            vb:text{
-              text = "Split at note",
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.split_at_instrument_change},
+              vb:text{text = "Split at instr-change"},
             },
-          },
-          vb:row{
-            vb:checkbox{
-              bind = self.owner.prefs.split_at_note_change,
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.link_ghost_notes},
+              vb:text{text = "Link ghost-notes"},
             },
-            vb:text{
-              text = "Split at note-change",
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.link_glide_notes},
+              vb:text{text = "Link glide-notes"},
             },
-          },
-          vb:row{
-            vb:checkbox{
-              bind = self.owner.prefs.split_at_instrument_change,
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.stop_at_note_off},
+              vb:text{text = "Stop at note-off"},
             },
-            vb:text{
-              text = "Split at instr-change",
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.stop_at_note_cut},
+              vb:text{text = "Stop at note-cut"},
             },
-          },
-          vb:row{
-            vb:checkbox{
-              bind = self.owner.prefs.stop_at_note_off,
-            },
-            vb:text{
-              text = "Stop at note-off",
-            },
-          },
-          vb:row{
-            vb:checkbox{
-              bind = self.owner.prefs.stop_at_note_cut,
-            },
-            vb:text{
-              text = "Stop at note-cut",
-            },
-          },
-          vb:row{
-            vb:checkbox{
-              bind = self.owner.prefs.remove_orphans,
-            },
-            vb:text{
-              text = "Remove orphans",
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.remove_orphans},
+              vb:text{text = "Remove orphans"},
             },
           },
-
+              
         },
-
         vb:column{
-          style = "group",
-          width = "100%",
-          margin = MARGIN,
-          --[[
-          vb:row{
-            vb:text{
-              text = "Tool Settings",
-              font = "bold",
+          width = LEFT_PANEL_W,
+          spacing = SPACING,
+          vb:column{ -- sort options
+            style = "group",
+            width = "100%",
+            margin = 4,
+            vb:row{
+              vb:text{
+                text = "Sort options",
+                font = "bold",
+              },
+            },
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.unique_instrument},
+              vb:text{text = "Sort instrument too"},
+            },
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.safe_mode},
+              vb:text{text = "Safe mode"},
             },
           },
-          ]]
-          vb:row{
-            vb:checkbox{
-              bind = self.owner.prefs.autostart,
-            },  
-            vb:text{
-              text = "Display GUI on startup",
+          vb:column{ -- select options
+            style = "group",
+            width = "100%",
+            margin = 4,
+            vb:row{
+              vb:text{
+                text = "Select options",
+                font = "bold",
+              },
+            },
+            --vb:row{
+              --vb:checkbox{bind = self.owner.prefs.maintain_selected_columns},
+              --vb:text{text = "Maintain columns"},
+            --},
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.select_all_columns},
+              vb:text{text = "Select entire line"},
+            },
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.toggle_line_selection},
+              vb:text{text = "Toggling line-select"},
+            },
+          },
+          vb:column{ -- output options
+            style = "group",
+            width = "100%",
+            margin = 4,
+            vb:row{
+              vb:text{
+                text = "Output options",
+                font = "bold",
+              },
+            },
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.create_noteoffs},
+              vb:text{text = "Create note-offs"},
+            },
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.close_open_notes},
+              vb:text{text = "Close open notes"},
+            },
+            vb:row{
+              vb:checkbox{bind = self.owner.prefs.reveal_subcolumns},
+              vb:text{text = "Reveal sub-columns"},
             },
           },
         },
-
-      },
-
+      }
     },
   }
 
@@ -379,5 +551,108 @@ function VR_UI:build()
   --self:update_template_popup()  
   self:update_advanced_settings()
   --self:update_tabs()
+
+end
+
+-------------------------------------------------------------------------------
+-- prompt user for which note-columns to keep (when too many...)
+-- @param callback_fn, function to invoke - using VR_Template as argument
+
+function VR_UI:show_too_many_cols_dialog(callback_fn)
+  print("VR_UI:show_too_many_cols_dialog(callback_fn)",callback_fn)
+
+  if self.dialog_too_many_cols 
+    and self.dialog_too_many_cols.visible
+  then
+    self.dialog_too_many_cols:show()
+    return
+  end
+
+  local required_cols = self.owner.xsorter.required_cols
+  local template = VR_Template()
+  template:set(required_cols)
+  for k = 1,#template.entries do
+    template.entries[k].active = (k <= 12) and true or false
+  end
+
+  print("self.owner.safe_mode",self.owner.safe_mode)
+  if not self.owner.safe_mode then
+    callback_fn(template)
+    return
+  end
+
+  local vb = self.vb
+  local vb_template = vb:column{
+    margin = 6,
+    style = "group",
+    width = "100%",
+  }
+
+  for k,v in ipairs(required_cols) do
+    local instr = rns.instruments[v.instrument_value+1]
+    local active = (k <= 12) and true or false
+    vb_template:add_child(vb:row{
+      vb:checkbox{
+        value = active,
+        notifier = function(val)
+          local entries,indices = template:get_entries({
+            note_value = v.note_value,
+            instrument_value = v.instrument_value,
+          })
+          if not table.is_empty(indices) then
+            for k,v in ipairs(indices) do
+              template.entries[v].active = val
+            end
+          end
+        end
+      },
+      vb:text{
+        width = 50,
+        text = ("%.2d - %s"):format(k,xNoteColumn.note_value_to_string(v.note_value))
+      },
+      vb:text{
+        text = instr and instr.name or "N/A"
+      },
+    })
+  end
+
+  local content_view = vb:column{
+    margin = 6,
+    spacing = 6,
+    vb:text{
+      text =  "It's not possible to create more "
+          .."\nthan 12 note-columns per track."
+          .."\nPlease select which notes to keep:"
+    },
+    vb_template,
+    vb:row{
+      vb:button{
+        height = LARGE_BUTTON_H,
+        width = HALF_BUTTON_W,
+        text = "OK",
+        notifier = function()
+          local entries,indices = template:get_entries({
+            active = true,
+          })
+          if (#indices > 12) then
+            renoise.app():show_warning("Please select no more than 12 columns")     
+          else
+            callback_fn(template)
+            self.dialog_too_many_cols:close()
+          end
+        end
+      },
+      vb:button{
+        height = LARGE_BUTTON_H,
+        width = HALF_BUTTON_W,
+        text = "Cancel",
+        notifier = function()
+          self.dialog_too_many_cols:close()
+        end
+      }
+    }
+  }
+
+  self.dialog_too_many_cols = renoise.app():show_custom_dialog("VoiceRunner", content_view)
 
 end
