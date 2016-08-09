@@ -4,7 +4,7 @@ This tool adds highly configurable pattern-data sorting to Renoise.
 
 ## Quickstart
 
-Download the tool from the [Renoise tool page](http://www.renoise.com/tools/voicerunner), and double-click or drag the xrnx file on top of the Renoise window to install.
+Download the tool and double-click or drag the xrnx file on top of the Renoise window to install.
 
 The tool can be triggered in a number of ways:  
 
@@ -14,7 +14,7 @@ The tool can be triggered in a number of ways:
 
 ## Discussion & Feedback
 
-This tool is a work in progress. If you encounter a bug or have suggestions, use Renoise forum (the tool has a dedicated topic, located here) or send me a mail (as specified in the [manifest](/manifest.xml) file).   
+This tool is a work in progress. If you encounter a bug or have suggestions, use Renoise forum (the tool has a dedicated topic, located [here](http://forum.renoise.com/index.php/topic/48372-new-tool-31-voicerunner/)) or send me a mail (as specified in the [manifest](./manifest.xml) file).   
 
 ## Screenshot
 
