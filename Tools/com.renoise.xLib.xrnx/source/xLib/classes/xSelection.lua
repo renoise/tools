@@ -28,7 +28,6 @@ Static methods for working with pattern/phrase/matrix/sequence-selections
     end_column      -- End column index within end_track
   }
 
-
 ### Matrix-selection
 
   {
@@ -63,18 +62,27 @@ function xSelection.get_pattern_track(seq_idx,trk_idx)
     return false, "Could not locate track or pattern"
   end
 
-  local note_cols = track.visible_note_columns
-  local fx_cols = track.visible_effect_columns
-  local total_cols = note_cols+fx_cols
-
   return {
     start_line = 1,
     start_track = trk_idx,
     start_column = 1, 
     end_line = patt.number_of_lines,
     end_track = trk_idx,
-    end_column = total_cols,
+    end_column = 12 --total_cols,
   }
+
+end
+
+-------------------------------------------------------------------------------
+
+function xSelection.get_pattern_column(seq_idx,trk_idx,col_idx)
+  TRACE("xSelection.get_pattern_column(seq_idx,trk_idx,col_idx)",seq_idx,trk_idx,col_idx)
+  
+  local sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+  sel.start_column = col_idx
+  sel.end_column = col_idx
+
+  return sel
 
 end
 
@@ -163,7 +171,7 @@ end
 -- @return table<[sequence_index][track_index]>
 
 function xSelection.get_matrix_selection()
-  print("xSelection.get_matrix_selection()")
+  TRACE("xSelection.get_matrix_selection()")
 
   local sel = {}
   for k,v in ipairs(rns.sequencer.pattern_sequence) do
@@ -186,7 +194,7 @@ end
 -- @return bool
 
 function xSelection.is_single_column(patt_sel)
-  print("xSelection.is_single_column(patt_sel)",patt_sel)
+  TRACE("xSelection.is_single_column(patt_sel)",patt_sel)
 
   return xSelection.is_single_track(patt_sel)
     and (patt_sel.start_column == patt_sel.end_column)
@@ -198,7 +206,7 @@ end
 -- @return bool
 
 function xSelection.is_single_track(patt_sel)
-  print("xSelection.is_single_track(patt_sel)",patt_sel)
+  TRACE("xSelection.is_single_track(patt_sel)",patt_sel)
 
   return (patt_sel.start_track == patt_sel.end_track)
 
@@ -212,7 +220,7 @@ end
 function xSelection.includes_note_columns(patt_sel)
 
   local track = rns.tracks[patt_sel.start_track]
-  print("patt_sel.start_column > track.visible_note_columns",patt_sel.start_column,track.visible_note_columns,patt_sel.start_column > track.visible_note_columns)
+  --print("patt_sel.start_column > track.visible_note_columns",patt_sel.start_column,track.visible_note_columns,patt_sel.start_column > track.visible_note_columns)
   return (patt_sel.start_column <= track.visible_note_columns)
 
 end
@@ -222,7 +230,7 @@ end
 -- @return bool
 
 function xSelection.spans_entire_line(patt_sel,number_of_columns)
-  print("xSelection.spans_entire_line(patt_sel,number_of_columns)",patt_sel,number_of_columns)
+  TRACE("xSelection.spans_entire_line(patt_sel,number_of_columns)",patt_sel,number_of_columns)
 
   -- TODO
 
