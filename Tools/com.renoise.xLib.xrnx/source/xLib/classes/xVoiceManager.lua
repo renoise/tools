@@ -277,7 +277,7 @@ end
 -- @param xnotecol, xNoteColumn
 
 function xVoiceManager:input_note_column(xnotecol,col_idx,line_index)
-  print("xVoiceManager:input_note_column(xnotecol,col_idx,line_index)",xnotecol,col_idx,line_index)
+  TRACE("xVoiceManager:input_note_column(xnotecol,col_idx,line_index)",xnotecol,col_idx,line_index)
 
   local values = {xnotecol.note_value,xnotecol.volume_value}
   local instr_idx = xnotecol.instrument_value+1
