@@ -8,6 +8,9 @@ A tool for sorting notes in pattern-tracks
 .
 #
 
+This file is mostly registering key-bindings and midi mappings.
+
+@See: VR (main application)
 
 ]]
 
@@ -68,7 +71,7 @@ renoise.tool():add_menu_entry {
   end
 } 
 renoise.tool():add_keybinding {
-  name = "Global:"..APP_DISPLAY_NAME..":Show preferences...",
+  name = "Global:"..APP_DISPLAY_NAME..":Show dialog...",
   invoke = function(repeated)
     if (not repeated) then 
       show() 
@@ -76,20 +79,38 @@ renoise.tool():add_keybinding {
   end
 }
 
--- sorting ----------------------------
+-- sort/merge ----------------------------
 
+--[[
+]]
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Sort Notes ("..APP_DISPLAY_NAME..")",
+  name = "Global:"..APP_DISPLAY_NAME..":Sort Notes (auto)",
   invoke = function(repeated)
     if (not repeated) then 
       voicerunner:do_sort() 
     end
   end
 }
+renoise.tool():add_keybinding {
+  name = "Global:"..APP_DISPLAY_NAME..":Merge Notes (auto)",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge() 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.SORT_NOTES,
   invoke = function(msg)
+    print("SORT_NOTES msg",rprint(msg))
     voicerunner:do_sort() 
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = VR.MIDI_MAPPING.MERGE_NOTES,
+  invoke = function(msg)
+    print("MERGE_NOTES msg",rprint(msg))
+    voicerunner:do_merge() 
   end
 }
 
@@ -101,10 +122,24 @@ renoise.tool():add_keybinding {
     end
   end
 }
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.SELECTION_IN_PATTERN.." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PATTERN) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.SORT_SELECTION_IN_PATTERN,
   invoke = function(msg)
     voicerunner:do_sort(VR.SCOPE.SELECTION_IN_PATTERN) 
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = VR.MIDI_MAPPING.MERGE_SELECTION_IN_PATTERN,
+  invoke = function(msg)
+    voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PATTERN) 
   end
 }
 renoise.tool():add_keybinding {
@@ -115,10 +150,24 @@ renoise.tool():add_keybinding {
     end
   end
 }
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.SELECTION_IN_PHRASE.." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PHRASE) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.SORT_SELECTION_IN_PHRASE,
   invoke = function(msg)
     voicerunner:do_sort(VR.SCOPE.SELECTION_IN_PHRASE) 
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = VR.MIDI_MAPPING.MERGE_SELECTION_IN_PHRASE,
+  invoke = function(msg)
+    voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PHRASE) 
   end
 }
 renoise.tool():add_keybinding {
@@ -129,10 +178,24 @@ renoise.tool():add_keybinding {
     end
   end
 }
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.TRACK_IN_PATTERN.." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.TRACK_IN_PATTERN) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.SORT_TRACK_IN_PATTERN,
   invoke = function(msg)
     voicerunner:do_sort(VR.SCOPE.TRACK_IN_PATTERN) 
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = VR.MIDI_MAPPING.MERGE_TRACK_IN_PATTERN,
+  invoke = function(msg)
+    voicerunner:do_merge(VR.SCOPE.TRACK_IN_PATTERN) 
   end
 }
 renoise.tool():add_keybinding {
@@ -143,10 +206,24 @@ renoise.tool():add_keybinding {
     end
   end
 }
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.GROUP_IN_PATTERN.." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.GROUP_IN_PATTERN) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.SORT_GROUP_IN_PATTERN,
   invoke = function(msg)
     voicerunner:do_sort(VR.SCOPE.GROUP_IN_PATTERN) 
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = VR.MIDI_MAPPING.MERGE_GROUP_IN_PATTERN,
+  invoke = function(msg)
+    voicerunner:do_merge(VR.SCOPE.GROUP_IN_PATTERN) 
   end
 }
 renoise.tool():add_keybinding {
@@ -157,10 +234,24 @@ renoise.tool():add_keybinding {
     end
   end
 }
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.WHOLE_PATTERN.." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.WHOLE_PATTERN) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.SORT_WHOLE_PATTERN,
   invoke = function(msg)
     voicerunner:do_sort(VR.SCOPE.WHOLE_PATTERN) 
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = VR.MIDI_MAPPING.MERGE_WHOLE_PATTERN,
+  invoke = function(msg)
+    voicerunner:do_merge(VR.SCOPE.WHOLE_PATTERN) 
   end
 }
 renoise.tool():add_keybinding {
@@ -171,17 +262,31 @@ renoise.tool():add_keybinding {
     end
   end
 }
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.WHOLE_PHRASE.." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.WHOLE_PHRASE) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.SORT_WHOLE_PHRASE,
   invoke = function(msg)
     voicerunner:do_sort(VR.SCOPE.WHOLE_PHRASE) 
   end
 }
+renoise.tool():add_midi_mapping {
+  name = VR.MIDI_MAPPING.MERGE_WHOLE_PHRASE,
+  invoke = function(msg)
+    voicerunner:do_merge(VR.SCOPE.WHOLE_PHRASE) 
+  end
+}
 
 -- selection/navigation ---------------
 
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Select voice-run ("..APP_DISPLAY_NAME..")",
+  name = "Pattern Editor:Selection:Select voice-run at cursor position ("..APP_DISPLAY_NAME..")",
   invoke = function(repeated)
     if (not repeated) then 
       voicerunner:select_voice_run() 
@@ -196,7 +301,7 @@ renoise.tool():add_midi_mapping {
 }
 
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Navigation:Jump to next voice-run ("..APP_DISPLAY_NAME..")",
+  name = "Pattern Editor:Navigation:Jump to next voice-run in pattern ("..APP_DISPLAY_NAME..")",
   invoke = function(repeated)
     voicerunner:select_next_voice_run() 
   end
@@ -228,7 +333,7 @@ renoise.tool():add_keybinding {
   end
 }
 renoise.tool():add_midi_mapping {
-  name = VR.MIDI_MAPPING.SELECT_NEXT_PATT_NOTECOL,
+  name = VR.MIDI_MAPPING.SELECT_NEXT_NOTECOL,
   invoke = function(msg)
     voicerunner:select_next_note_column()
   end
@@ -241,7 +346,7 @@ renoise.tool():add_keybinding {
   end
 }
 renoise.tool():add_midi_mapping {
-  name = VR.MIDI_MAPPING.SELECT_PREV_PATT_NOTECOL,
+  name = VR.MIDI_MAPPING.SELECT_PREV_NOTECOL,
   invoke = function(msg)
     voicerunner:select_previous_note_column()
   end
