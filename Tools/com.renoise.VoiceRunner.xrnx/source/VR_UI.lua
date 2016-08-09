@@ -19,7 +19,7 @@ local PITCH_NAME_COL = 80
 local PITCH_NOTE_COL = 60
 local PITCH_NOTE_COL = 60
 local SORT_COLOR = {0xA0,0xA0,0xA0}
-local SELECT_COLOR = {0xDA,0x60,0x2D}
+local SELECT_COLOR = nil --{0xDA,0x60,0x2D}
 
 class 'VR_UI' (vDialog)
 
@@ -58,8 +58,8 @@ function VR_UI:__init(...)
   assert(type(args.owner)=="VR","Expected 'owner' to be a class instance")
 
   args.dialog_keyhandler = function(dlg,key)
-    print("dlg,key",dlg,rprint(key))
-    print("key.modifiers",type(key.modifiers),key.modifiers)
+    --print("dlg,key",dlg,rprint(key))
+    --print("key.modifiers",type(key.modifiers),key.modifiers)
     
     if (key.modifiers == "") then
       local handlers = {
@@ -82,7 +82,6 @@ function VR_UI:__init(...)
         return
       end
     end
-        print("got here")
     return key
 
   end
@@ -273,7 +272,7 @@ function VR_UI:build()
 
           vb:button{
             text = "Select",
-            color = vColor.adjust_brightness(SELECT_COLOR,0.1),
+            --color = vColor.adjust_brightness(SELECT_COLOR,0.1),
             tooltip = "Select the voice-run at the cursor position",
             midi_mapping = VR.MIDI_MAPPING.SELECT_RUN,
             width = HALF_BUTTON_W,
@@ -288,7 +287,7 @@ function VR_UI:build()
             text = "Merge",
             --color = SORT_COLOR,
             tooltip = "Merge note-columns in selected scope",
-            midi_mapping = VR.MIDI_MAPPING.SELECT_RUN,
+            midi_mapping = VR.MIDI_MAPPING.MERGE_NOTES,
             width = HALF_BUTTON_W,
             height = LARGE_BUTTON_H,
             notifier = function()
@@ -304,9 +303,9 @@ function VR_UI:build()
               --},
               vb:button{
                 bitmap = "Icons/ArrowLeft.bmp",
-                color = SELECT_COLOR,
+                --color = SELECT_COLOR,
                 tooltip = "Select the previous note-column in the pattern",
-                midi_mapping = VR.MIDI_MAPPING.SELECT_PREV_PATT_NOTECOL,
+                midi_mapping = VR.MIDI_MAPPING.SELECT_PREV_NOTECOL,
                 width = LARGE_BUTTON_H-5,
                 height = LARGE_BUTTON_H,
                 notifier = function()
@@ -317,7 +316,7 @@ function VR_UI:build()
             vb:column{
               vb:button{
                 bitmap = "Icons/ArrowUp.bmp",
-                color = SELECT_COLOR,
+                --color = SELECT_COLOR,
                 tooltip = "Select the previous voice-run relative to the cursor position",
                 midi_mapping = VR.MIDI_MAPPING.SELECT_PREV_RUN,
                 width = LARGE_BUTTON_H,
@@ -328,7 +327,7 @@ function VR_UI:build()
               },
               vb:button{
                 bitmap = "Icons/ArrowDown.bmp",
-                color = SELECT_COLOR,
+                --color = SELECT_COLOR,
                 tooltip = "Select the next voice-run relative to the cursor position",
                 midi_mapping = VR.MIDI_MAPPING.SELECT_NEXT_RUN,
                 width = LARGE_BUTTON_H,
@@ -344,9 +343,9 @@ function VR_UI:build()
               --},
               vb:button{
                 bitmap = "Icons/ArrowRight.bmp",
-                color = SELECT_COLOR,
+                --color = SELECT_COLOR,
                 tooltip = "Select the next note-column in the pattern",
-                midi_mapping = VR.MIDI_MAPPING.SELECT_NEXT_PATT_NOTECOL,
+                midi_mapping = VR.MIDI_MAPPING.SELECT_NEXT_NOTECOL,
                 width = LARGE_BUTTON_H-5,
                 height = LARGE_BUTTON_H,
                 notifier = function()
@@ -559,7 +558,7 @@ end
 -- @param callback_fn, function to invoke - using VR_Template as argument
 
 function VR_UI:show_too_many_cols_dialog(callback_fn)
-  print("VR_UI:show_too_many_cols_dialog(callback_fn)",callback_fn)
+  TRACE("VR_UI:show_too_many_cols_dialog(callback_fn)",callback_fn)
 
   if self.dialog_too_many_cols 
     and self.dialog_too_many_cols.visible
@@ -575,7 +574,7 @@ function VR_UI:show_too_many_cols_dialog(callback_fn)
     template.entries[k].active = (k <= 12) and true or false
   end
 
-  print("self.owner.safe_mode",self.owner.safe_mode)
+  --print("self.owner.safe_mode",self.owner.safe_mode)
   if not self.owner.safe_mode then
     callback_fn(template)
     return
