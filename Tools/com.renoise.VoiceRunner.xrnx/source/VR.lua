@@ -17,6 +17,7 @@ VR.SCOPES = {
   "Selection in Pattern",
   "Selection in Phrase",
   "Column in Pattern",
+  --"Column in Phrase",
   "Track in Pattern",
   "Group in Pattern",
   "Whole Pattern",
@@ -31,6 +32,7 @@ VR.SCOPE = {
   SELECTION_IN_PATTERN = 1,
   SELECTION_IN_PHRASE = 2,
   COLUMN_IN_PATTERN = 3,
+  --COLUMN_IN_PHRASE = 4,
   TRACK_IN_PATTERN = 4,
   GROUP_IN_PATTERN = 5,
   WHOLE_PATTERN = 6,
@@ -45,26 +47,27 @@ VR.MSG_FROM_VOICE_RUNNER = "Message from VoiceRunner: "
 VR.MSG_NO_RUN_AVAILABLE = "Not able to select voice-run (N/A)"
 
 VR.MIDI_MAPPING = {
-  SELECT_RUN = "Tools:VoiceRunner:Select At Cursor Position [Trigger]",
-  SELECT_NEXT_RUN = "Tools:VoiceRunner:Select Next Run [Trigger]",
-  SELECT_PREV_RUN = "Tools:VoiceRunner:Select Previous Run [Trigger]",
-  SELECT_PATT_RUN = "Tools:VoiceRunner:Select At Cursor Position In Pattern [Trigger]",
-  SELECT_NEXT_PATT_RUN = "Tools:VoiceRunner:Select Next Run In Pattern [Trigger]",
-  SELECT_PREV_PATT_RUN = "Tools:VoiceRunner:Select Previous Run In Pattern [Trigger]",
-  SELECT_PHRASE_RUN = "Tools:VoiceRunner:Select At Cursor Position In Phrase [Trigger]",
-  SELECT_NEXT_PHRASE_RUN = "Tools:VoiceRunner:Select Next Run In Phrase [Trigger]",
-  SELECT_PREV_PHRASE_RUN = "Tools:VoiceRunner:Select Previous Run In Phrase [Trigger]",
-  SELECT_NEXT_PATT_NOTECOL = "Tools:VoiceRunner:Select Next NoteColumn In Pattern [Trigger]",
-  SELECT_PREV_PATT_NOTECOL = "Tools:VoiceRunner:Select Previous NoteColumn In Pattern [Trigger]",
-  SELECT_NEXT_PHRASE_NOTECOL = "Tools:VoiceRunner:Select Next NoteColumn In Phrase [Trigger]",
-  SELECT_PREV_PHRASE_NOTECOL = "Tools:VoiceRunner:Select Previous NoteColumn In Phrase [Trigger]",
+  SELECT_RUN = "Tools:VoiceRunner:Select at cursor position (Pattern) [Trigger]",
+  SELECT_NEXT_RUN = "Tools:VoiceRunner:Jump to next voice-run (Pattern) [Trigger]",
+  SELECT_PREV_RUN = "Tools:VoiceRunner:Jump to previous voice-run (Pattern) [Trigger]",
+  SELECT_NEXT_NOTECOL = "Tools:VoiceRunner:Jump to next note-column (Pattern) [Trigger]",
+  SELECT_PREV_NOTECOL = "Tools:VoiceRunner:Jump to previous note-column (Pattern) [Trigger]",
   SORT_NOTES = "Tools:VoiceRunner:Sort Notes [Trigger]",
   SORT_SELECTION_IN_PATTERN = "Tools:VoiceRunner:Sort Notes (Selection in Pattern) [Trigger]",
   SORT_SELECTION_IN_PHRASE = "Tools:VoiceRunner:Sort Notes (Selection in Phrase) [Trigger]",
+  SORT_COLUMN_IN_PATTERN = "Tools:VoiceRunner:Sort Notes (Column in Pattern) [Trigger]",
   SORT_TRACK_IN_PATTERN = "Tools:VoiceRunner:Sort Notes (Track in Pattern) [Trigger]",
   SORT_GROUP_IN_PATTERN = "Tools:VoiceRunner:Sort Notes (Group in Pattern) [Trigger]",
   SORT_WHOLE_PATTERN = "Tools:VoiceRunner:Sort Notes (Whole Pattern) [Trigger]",
   SORT_WHOLE_PHRASE = "Tools:VoiceRunner:Sort Notes (Whole Phrase) [Trigger]",
+  MERGE_NOTES = "Tools:VoiceRunner:Merge Notes [Trigger]",
+  MERGE_SELECTION_IN_PATTERN = "Tools:VoiceRunner:Merge Notes (Selection in Pattern) [Trigger]",
+  MERGE_SELECTION_IN_PHRASE = "Tools:VoiceRunner:Merge Notes (Selection in Phrase) [Trigger]",
+  MERGE_COLUMN_IN_PATTERN = "Tools:VoiceRunner:Merge Notes (Column in Pattern) [Trigger]",
+  MERGE_TRACK_IN_PATTERN = "Tools:VoiceRunner:Merge Notes (Track in Pattern) [Trigger]",
+  MERGE_GROUP_IN_PATTERN = "Tools:VoiceRunner:Merge Notes (Group in Pattern) [Trigger]",
+  MERGE_WHOLE_PATTERN = "Tools:VoiceRunner:Merge Notes (Whole Pattern) [Trigger]",
+  MERGE_WHOLE_PHRASE = "Tools:VoiceRunner:Merge Notes (Whole Phrase) [Trigger]",
 }
 
 VR.PROCESS_MODE = {
@@ -251,18 +254,21 @@ end
 
 function VR:do_merge(scope)
 
+  if not scope then
+    scope = self.prefs.selected_scope.value
+  end
+
   self.process_mode = VR.PROCESS_MODE.MERGE
 
-  -- TODO
   self.runner:reset()
   self.xsorter:reset()
-
-  self.runner.template = template
 
   local rslt,err = nil,nil
 
   if (scope == VR.SCOPE.SELECTION_IN_PATTERN) then    rslt,err = self:process_pattern_selection()
   elseif (scope == VR.SCOPE.SELECTION_IN_PHRASE) then rslt,err = self:process_phrase_selection()
+  elseif (scope == VR.SCOPE.COLUMN_IN_PATTERN) then rslt,err = self:process_column_in_pattern()
+  --elseif (scope == VR.SCOPE.COLUMN_IN_PHRASE) then rslt,err = self:process_column_in_phrase()
   elseif (scope == VR.SCOPE.TRACK_IN_PATTERN) then    rslt,err = self:process_track_in_pattern()
   elseif (scope == VR.SCOPE.GROUP_IN_PATTERN) then    rslt,err = self:process_group_in_pattern()
   elseif (scope == VR.SCOPE.WHOLE_PATTERN) then       rslt,err = self:process_whole_pattern()
@@ -275,7 +281,7 @@ function VR:do_merge(scope)
     error("Unexpected scope")
   end
 
-  print("*** VR:do_merge - rslt,err",rslt,err)
+  --print("*** VR:do_merge - rslt,err",rslt,err)
 
   if err then
     renoise.app():show_warning(err)
@@ -314,6 +320,8 @@ function VR:do_sort(scope,template)
 
   if (scope == VR.SCOPE.SELECTION_IN_PATTERN) then    rslt,err = self:process_pattern_selection()
   elseif (scope == VR.SCOPE.SELECTION_IN_PHRASE) then rslt,err = self:process_phrase_selection()
+  elseif (scope == VR.SCOPE.COLUMN_IN_PATTERN) then rslt,err = self:process_column_in_pattern()
+  --elseif (scope == VR.SCOPE.COLUMN_IN_PHRASE) then rslt,err = self:process_column_in_phrase()
   elseif (scope == VR.SCOPE.TRACK_IN_PATTERN) then    rslt,err = self:process_track_in_pattern()
   elseif (scope == VR.SCOPE.GROUP_IN_PATTERN) then    rslt,err = self:process_group_in_pattern()
   elseif (scope == VR.SCOPE.WHOLE_PATTERN) then       rslt,err = self:process_whole_pattern()
@@ -326,12 +334,12 @@ function VR:do_sort(scope,template)
     error("Unexpected scope")
   end
 
-  print("*** VR:do_sort - rslt,err",rslt,err)
+  --print("*** VR:do_sort - rslt,err",rslt,err)
 
   if err then
     if (err == xVoiceSorter.ERROR_CODE.TOO_MANY_COLS) then
       self.ui:show_too_many_cols_dialog(function(template)
-        print("triggered callback - template",rprint(template.entries))
+        --print("triggered callback - template",rprint(template.entries))
         self:do_sort(scope,template)
       end)
     elseif (err == xVoiceSorter.ERROR_CODE.CANT_PRESERVE_EXISTING) then
@@ -341,6 +349,79 @@ function VR:do_sort(scope,template)
     end
 
   end
+
+end
+
+--------------------------------------------------------------------------------
+-- process (sort/merge) selection in pattern-track 
+-- @param scope (VR.SCOPE)
+-- @param sel (table), supply when SELECTION_IN_PATTERN/PHRASE
+-- @param seq_idx (int), if not provided, use selected
+-- @param trk_idx (int), if not provided, use selected
+-- @return bool, true if processed
+-- @return string, error message when failed
+
+function VR:do_process(scope,sel,seq_idx,trk_idx)
+  TRACE("VR:do_process(scope,sel,seq_idx,trk_idx)",scope,sel,seq_idx,trk_idx)
+
+  local ptrack_or_phrase = nil
+
+  if (scope == VR.SCOPE.SELECTION_IN_PHRASE)
+    or (scope == VR.SCOPE.COLUMN_IN_PHRASE)
+    or (scope == VR.SCOPE.WHOLE_PHRASE)
+  then -- instrument-phrase
+    ptrack_or_phrase = rns.selected_phrase
+    if not sel then
+      --if (scope == VR.SCOPE.COLUMN_IN_PHRASE) then
+        --sel = xSelection.get_phrase()
+      --else
+      if (scope == VR.SCOPE.WHOLE_PHRASE) then
+        sel = xSelection.get_phrase_column(sel)
+      end
+    end
+    if not ptrack_or_phrase then
+      return false,"Unable to process: no phrase is selected"
+    end
+  else -- pattern-track
+    if not seq_idx then seq_idx = rns.selected_sequence_index end
+    if not trk_idx then trk_idx = rns.selected_track_index end
+    if not sel then
+      if (scope == VR.SCOPE.WHOLE_PATTERN) then
+        error("TODO")
+      elseif (scope == VR.SCOPE.TRACK_IN_PATTERN) then
+        sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+      elseif (scope == VR.SCOPE.COLUMN_IN_PATTERN) then
+        local col_idx = rns.selected_note_column_index
+        sel = xSelection.get_pattern_column(seq_idx,trk_idx,col_idx)
+      end
+    else
+      trk_idx = sel.start_track
+    end
+    local patt_idx = rns.sequencer:pattern(seq_idx)
+    local patt = rns.patterns[patt_idx]
+    if not patt then
+      return false,"Unable to process: couldn't locate pattern"
+    end
+    ptrack_or_phrase = patt.tracks[trk_idx]
+    if not ptrack_or_phrase then
+      return false,"Unable to process: couldn't locate pattern-track"
+    end
+    --print("*** do_process - pattern track: trk_idx,seq_idx",trk_idx,seq_idx)
+    --print("*** do_process - pattern track: sel...",rprint(sel))
+  end
+  
+  local rslt,err 
+  if (self.process_mode == VR.PROCESS_MODE.SORT) then
+    rslt,err = self.xsorter:sort(ptrack_or_phrase,sel,trk_idx,seq_idx)
+  elseif (self.process_mode == VR.PROCESS_MODE.MERGE) then
+    rslt,err = self.runner:merge_columns(ptrack_or_phrase,sel,trk_idx,seq_idx)
+  end
+
+  if err then
+    return false,err
+  end
+
+  return true
 
 end
 
@@ -458,6 +539,37 @@ end
 
 --------------------------------------------------------------------------------
 
+function VR:process_column_in_pattern()
+  TRACE("VR:process_column_in_pattern()")
+
+  if not self:pattern_editor_visible() then
+    return false,"Unable to process: pattern editor is not visible"
+  end
+
+  return self:do_process(VR.SCOPE.COLUMN_IN_PATTERN)
+
+end
+
+--------------------------------------------------------------------------------
+--[[
+function VR:process_column_in_phrase()
+  TRACE("VR:process_column_in_phrase()")
+
+  if not rns.selected_phrase then
+    return false,"Unable to process: no phrase is selected"
+  end
+
+  if not self:phrase_editor_visible() then
+    return false,"Unable to process: phrase editor is not visible"
+  end
+
+  return self:do_process(VR.SCOPE.COLUMN_IN_PHRASE)
+
+end
+]]
+
+--------------------------------------------------------------------------------
+
 function VR:process_track_in_pattern()
   TRACE("VR:process_track_in_pattern()")
 
@@ -465,8 +577,6 @@ function VR:process_track_in_pattern()
     return false,"Unable to process: pattern editor is not visible"
   end
 
-  --local trk_idx = rns.selected_track_index
-  --local seq_idx = rns.selected_sequence_index
   return self:do_process(VR.SCOPE.TRACK_IN_PATTERN)
 
 end
@@ -480,6 +590,39 @@ function VR:process_group_in_pattern()
     return false,"Unable to process: pattern editor is not visible"
   end
 
+  -- iterate through sequencer tracks in group
+  local group_track_index = xTrack.get_group_track_index(rns.selected_track_index)
+  --print("group_track_index",group_track_index)
+
+  if not group_track_index then
+    return false,"Unable to process: track is not part of a group"
+  end
+
+  local seq_idx = rns.selected_sequence_index
+
+  for trk_idx = group_track_index-1,1,-1 do
+    local track = rns.tracks[trk_idx]
+    if (track.type == renoise.Track.TRACK_TYPE_GROUP) then
+      --print("*** encountered group track, abort...",trk_idx)
+      break
+    elseif (track.type == renoise.Track.TRACK_TYPE_SEQUENCER) then
+
+      self.runner:reset()
+      self.xsorter:reset()
+
+      --print("*** encountered sequencer track, process...",trk_idx)
+      local sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+      --print("*** encountered sequencer track, sel",rprint(sel))
+
+      local rslt,err = self:do_process(VR.SCOPE.TRACK_IN_PATTERN,sel,seq_idx,trk_idx)
+      if not rslt then
+        --print("*** rslt,err",rslt,err)
+        return false,err
+      end 
+    end
+
+  end
+
 end
 
 --------------------------------------------------------------------------------
@@ -489,6 +632,25 @@ function VR:process_whole_pattern()
 
   if not self:pattern_editor_visible() then
     return false,"Unable to process: pattern editor is not visible"
+  end
+
+  if not self:pattern_editor_visible() then
+    return false,"Unable to process: pattern editor is not visible"
+  end
+
+  -- iterate through sequencer tracks in group
+  local seq_idx = rns.selected_sequence_index
+  for trk_idx = 1,#rns.tracks do
+    local track = rns.tracks[trk_idx]
+    if (track.type == renoise.Track.TRACK_TYPE_SEQUENCER) then
+      self.runner:reset()
+      self.xsorter:reset()
+      local sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+      local rslt,err = self:do_process(VR.SCOPE.TRACK_IN_PATTERN,sel,seq_idx,trk_idx)
+      if not rslt then
+        return false,err
+      end 
+    end
   end
 
 end
@@ -507,62 +669,6 @@ function VR:process_whole_phrase()
   end
 
   return self:do_process(VR.SCOPE.WHOLE_PHRASE)
-
-end
-
---------------------------------------------------------------------------------
--- process (sort/merge) selection in pattern-track 
--- @param scope (VR.SCOPE)
--- @param sel (table), supply when SELECTION_IN_PATTERN/PHRASE
--- @param seq_idx (int), if not provided, use selected
--- @param trk_idx (int), if not provided, use selected
--- @return bool, true if processed
--- @return string, error message when failed
-
-function VR:do_process(scope,sel,seq_idx,trk_idx)
-  print("VR:do_process(scope,sel,seq_idx,trk_idx,sel)",sel,seq_idx,trk_idx)
-
-  local ptrack_or_phrase = nil
-
-  if (scope == VR.SCOPE.SELECTION_IN_PHRASE)
-    or (scope == VR.SCOPE.WHOLE_PHRASE)
-  then -- instrument-phrase
-    ptrack_or_phrase = rns.selected_phrase
-    if not sel then
-      sel = xSelection.get_phrase(seq_idx,trk_idx)
-    end
-    if not ptrack_or_phrase then
-      return false,"Unable to process: no phrase is selected"
-    end
-  else -- pattern-track
-    if not seq_idx then seq_idx = rns.selected_sequence_index end
-    if not trk_idx then trk_idx = rns.selected_track_index end
-    if not sel then
-      sel = xSelection.get_pattern_track(seq_idx,trk_idx)
-    else
-      trk_idx = sel.start_track
-    end
-    local patt_idx = rns.sequencer:pattern(seq_idx)
-    local patt = rns.patterns[patt_idx]
-    if not patt then
-      return false,"Unable to process: couldn't locate pattern"
-    end
-    ptrack_or_phrase = patt.tracks[trk_idx]
-    if not ptrack_or_phrase then
-      return false,"Unable to process: couldn't locate pattern-track"
-    end
-  end
-  
-  local rslt,err 
-  if (self.process_mode == VR.PROCESS_MODE.SORT) then
-    self.xsorter:sort(ptrack_or_phrase,sel,trk_idx,seq_idx)
-  elseif (self.process_mode == VR.PROCESS_MODE.MERGE) then
-    xColumns.merge_note_columns(ptrack_or_phrase,sel,seq_idx)
-  end
-
-  if err then
-    return false,err
-  end
 
 end
 
@@ -594,20 +700,20 @@ end
 --------------------------------------------------------------------------------
 -- select the voice-run below the cursor position
 
-function VR:select_voice_run()
+function VR:select_voice_run(prevent_toggle)
   TRACE("VR:select_voice_run()")
 
   local trk_idx = rns.selected_track_index
   local col_idx = rns.selected_note_column_index
   local voice_run = self.runner:collect_at_cursor()
-  print("*** select_voice_run - voice_run...",rprint(voice_run))
+  --print("*** select_voice_run - voice_run...",rprint(voice_run))
 
   if voice_run then
-    if self.toggle_line_selection then
+    if self.toggle_line_selection and not prevent_toggle then
       self.select_all_columns = not self.select_all_columns
     end
     local patt_sel = xVoiceRunner.get_voice_run_selection(voice_run,trk_idx,col_idx)
-    print("*** select_voice_run - patt_sel",rprint(patt_sel))
+    --print("*** select_voice_run - patt_sel",rprint(patt_sel))
     self:select_in_pattern(patt_sel)
   else
     renoise.app():show_status(
@@ -629,7 +735,7 @@ function VR:select_next_voice_run()
   local col_idx = rns.selected_note_column_index
 
   local voice_run = self.runner:collect_below_cursor()
-  print("*** select_next_voice_run - voice_run",voice_run)
+  --print("*** select_next_voice_run - voice_run",voice_run)
   if voice_run then
     local patt_sel = xVoiceRunner.get_voice_run_selection(voice_run,trk_idx,col_idx)
     self:select_in_pattern(patt_sel)
@@ -654,7 +760,7 @@ function VR:select_previous_voice_run()
   local col_idx = rns.selected_note_column_index
 
   local voice_run = self.runner:collect_above_cursor()
-  print("*** select_previous_voice_run - voice_run",voice_run)
+  --print("*** select_previous_voice_run - voice_run",voice_run)
   if voice_run then
     local patt_sel = xVoiceRunner.get_voice_run_selection(voice_run,trk_idx,col_idx)
     self:select_in_pattern(patt_sel)
@@ -671,7 +777,7 @@ end
 
 function VR:select_next_note_column()
   xColumns.next_note_column(true)
-  self:select_voice_run()
+  self:select_voice_run(true)
 end
 
 --------------------------------------------------------------------------------
@@ -682,7 +788,7 @@ function VR:select_previous_note_column()
     renoise.app():show_status("[VoiceRunner] setting the position in the pattern editor")
   end
   xColumns.previous_note_column(true)
-  self:select_voice_run()
+  self:select_voice_run(true)
 
 end
 
@@ -694,7 +800,7 @@ function VR:test_list_info()
 
   local patt_sel = rns.selection_in_pattern
   if not patt_sel then
-    print("*** No selection in pattern")
+    --print("*** No selection in pattern")
     return false
   end
 
