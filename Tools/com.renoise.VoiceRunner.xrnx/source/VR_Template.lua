@@ -59,13 +59,10 @@ end
 function VR_Template:set(t)
 
   self.entries = {}
-
   for k,v in ipairs(t) do
     table.insert(self.entries,v)
   end
-
-  print("VR_Template:set - self.entries...",rprint(self.entries))
-
+  --print("VR_Template:set - self.entries...",rprint(self.entries))
 
 end
 
@@ -104,7 +101,7 @@ end
 -- set entries 
 
 function VR_Template:set_entries(t)
-  print("VR_Template:set_entries(t)",t)
+  TRACE("VR_Template:set_entries(t)",t)
 
 end
 
