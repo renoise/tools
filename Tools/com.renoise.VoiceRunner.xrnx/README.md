@@ -1,8 +1,6 @@
 # VoiceRunner
 
-
 This tool adds highly configurable pattern-data sorting to Renoise. 
-
 
 ## Quickstart
 
@@ -14,42 +12,31 @@ The tool can be triggered in a number of ways:
 * From the supplied MIDI and keyboard shortcuts (search for 'VoiceRunner') 
 * By right-clicking the pattern editor
 
-## How sorting works
+## Discussion & Feedback
 
-
-Technically the tool understands a pattern as being made up from several smaller 'voice-runs'. 
-
-[ ILLUSTRATION ]
-
-The illustration shows how each voice-run is limited to a single note-column, but includes any volume/panning/delay/effect-commands. The idea is that sorting can be done much more efficiently when the pattern data is understood as a events (pressing a key on a piano, releasing it) instead of just raw line-by-line data.  
-
-So, obviously it matters a great deal how those data are collected in the first place. Luckily, this is highly configurable! For example, if the tool has all options enabled, collection works on the most fine-grained level possible. 
-
-In the following illustration, selecting various parts of a pattern causes a very small selection to be created: 
-
-[ TODO ]
-
-The opposite is true as well - if all options are disabled, the collection will capture entire pattern-tracks at a time, ignoring individual notes and even note-offs. 
-
-[ TODO ]
+This tool is a work in progress. If you encounter a bug or have suggestions, use Renoise forum (the tool has a dedicated topic, located here) or send me a mail (as specified in the [manifest](/manifest.xml) file).   
 
 ## Screenshot
 
-If you launch the tool, the main dialog will look something like this:
+If you launch the tool, the main dialog could look something like this:
 
-[SCREENSHOT]
+<img src="./manual/screenshot.png"> 
 
+_Hint: while the dialog is visible and focused, you can use the arrow keys to navigate between voice-runs in the pattern._  
 
 ## Features
 
 ### Available scopes
 
-**Selection in Pattern** - Sort the selected range in the pattern  
-**Track in Pattern** - Sort the current track  
-**Group in Pattern** - Sort all tracks in the current group  
-**Whole Pattern** - Sort every track in the pattern  
+**Selection in Pattern** - operate on the pattern-selection   
+**Selection in Phrase** - operate on the phrase-selection  
+**Column in Pattern** - operate on the selected (note-)column in the selected track    
+**Track in Pattern** - operate on the selected track  
+**Group in Pattern** - operate on tracks in selected group, or group that track is contained within   
+**Whole Pattern** - operate on every track in the selected pattern   
+**Whole Phrase** - operate on the selected phrase   
 
-The selected scope applies to _Merge_ and _Sort_ operations.    
+The selected scope applies to both _Merge_ and _Sort_ operations.    
 
 
 ### Sorting mode
@@ -59,29 +46,31 @@ The selected mode affects all sorting operations. Low and high are referring to 
 
 ### Sorting method
 
-**Method [Normal]**  
+**Normal Method**  
 Should give results that are both _readable_ (columns generally sorted by low-to-high or high-to-low) and _compact_ (note columns packed together as long as this doesn’t conflict with the sort mode). This is the default sorting mode. 
-
-**Method [Compact]**  
-This method allows general sorting from low-to-high and high-to-low, packing together note-columns whenever possible. Use this method when you need to minimize the number of required note columns.  
---> See also: Merge (to reduce the number of note-columns even further).
  
-**Method [Unique]**    
+**Unique Method**    
 The unique sorting method will examine the pattern and fit every note it encounters within a dedicated note-column. Use this mode to sort e.g. drum-tracks, where each note-column can represent a unique sound in the drumkit. 
 
---> Note: this sorting mode does not support open notes across pattern boundaries.  
---> Unique sorting can be further configured. See Options > Overlapping notes
+**Custom Method**   
+This mode is planned and will allow custom note/instrument combinations + column names. 
 
-## Other features
+### Buttons
 
-**Select**  
-Clicking `Select` will (attempt to) capture the voice-run below the current cursor position. This is not only handy for selection, it also makes it clear how the tool is configured to collect data from the pattern. 
-
-**Up/Down**   
-Pressing these buttons will attempt to select the voice-run immediately before or after the cursor position. 
+**Sort**  
+Press this button to sort notes in the pattern or phrase, using the selected scope. 
 
 **Merge**  
-Press this button to merge pattern-data in the selected scope. Currently selected merge options apply. 
+Press this button to merge notes in the pattern or phrase, using the selected scope.  
+
+**Select**  
+Clicking _Select_ will (attempt to) capture the voice-run below the current cursor position. 
+
+**Up/Down**   
+Pressing these buttons will attempt to select the voice-run immediately before or after the cursor position.
+
+**Left/Right**   
+Pressing these buttons will select the voice-run (if any) in the previous/next note-column. 
 
 
 ## Options
@@ -92,97 +81,116 @@ Press this button to merge pattern-data in the selected scope. Currently selecte
 **Launch on startup**  
 Show the tool GUI when Renoise starts.
   
-**Reset to defaults**  
+**Restore default settings**  
 Reset to default settings, including user prompts.
 
 ### Collection options 
 
---> See also: How sorting works  
-
 **Split at note**  
-The most fine-grained option available - will create a split point for every note encountered.
+Enable this option to create a new voice-run for every note that is encountered.
       
 **Split at note-change**  
-Treat every change in pitch as a split point. For pitch sorting, it's recommended to leave this on.
+Enable this option to create a new voice-run when notes with a new/changed note-value is encountered. 
+
+**Split at note-change**  
+Enable this option to create a new voice-run when a note with a new/changed instrument-number is encountered. 
+
+**Link at ghost notes**  
+Enable this option to include notes that does not have an instrument number, into the current voice-run.  
    
+**Link at glide notes**  
+Enable this option to include notes that are affected by a glide (Gx) command, into the current voice-run.   
+
 **Stop at note-off**  
 If enabled, the tool stops collecting data once a note-off command is reached. Usually this is safe option to enable, but since Renoise allows you to manipulate voices also after they have been released, you might want to leave it unchecked. 
 
 **Stop at note-cut**  
-Same as note-off, but applies to the Cx command  
+Same as note-off, but applies to the Cx command.  
 
-### Sorting options 
+**Remove orphans**  
+Enable this option to remove voice-runs that doesn't begin with a note. 
 
-#### Overlapping notes
+### Sort options
 
-Decide what should happen when the pattern contains simultaneous/overlapping notes
+**Sort instruments too**  
+Mostly relevant for unique sorting. Enable to split tracks by instrument _as well as_ the selected sorting mode. When disabled, only the sorting mode (high-low, low-high) is applied. 
 
-**Always create**   
-Create new note-columns when overlapping notes are detected.
-   
-**First only**  
-Ignore additional notes after the first one.
-   
-**Merge into column**  
-Force overlapping notes to be merged into the original note-column.     
+**Safe mode**  
+When disabled, sort operations are always carried out even when notes are lost as a result. When enabled, and there is not enough available note-columns to complete a sort operation, a popup dialog is shown which will allow hand-picking of notes to keep.  
+
+### Select options 
+
+**Select entire line**  
+Determines how wide a selection is created by the 'Select' button. When enabled, selections are spanning the entire set of note-columns. When disabled, only the current note-column (or sub-column) is selected. 
+
+**Toggling line-select**  
+Enabling this feature makes the 'Select' button toggle between entire line and note-column each time it is pressed.    
 
 ### Output options 
 
 **Create note-offs**  
-When enabled, notes will receive a terminating note-offs or note-cuts as required.  
-When disabled, no such thing. Use this e.g. for 'clean looking' drum tracks.  
+When enabled, notes will receive a terminating note-offs or note-cuts as required. When disabled, no such thing. Use this e.g. for 'clean looking' drum tracks.  
 
 **Close open notes**  
-When enabled, notes that cross the selection/pattern boundary will be terminated.  
-When disabled, notes are allowed to cross the pattern boundary.   
-   
+When enabled, notes that cross the selection/pattern boundary will be terminated. When disabled, notes are allowed to cross the pattern boundary.  
+--> Note: this option applies to both _Merge_ and _Sort_ operations
 
-## Known issues/problems 
+**Use sub-columns**  
+When enabled, output can make use of sub-columns for terminating notes. For example, we could use the volume/panning column to insert Cx commands, and the delay column to make a note-off arrive as late as possible.  
 
-* This tool does not change Renoise from having a maximum of 12 note-columns per track.   
-* Sorting large amounts of pattern-data can be quite slow  
-
-## API (for tool authors)
-
-### Iterating across patterns
-
-To preserve voice information across patterns, call reset only once (to begin with), and then invoke sort() as many times as needed. Note that for this to work, you need to move ahead in the song sequence one step at a time. 
-
-### How to use
-
-First, create and configure an instance of this class:
-
-xVoiceSorter{
-  sort_mode = xVoiceSorter.SORT_MODE.UNIQUE
-}
-
-Then call reset() once, followed by sort() 
-
-
-
-
-
-## Keyboard Shortcuts
-
-	Global : VoiceRunner : Show dialog...
-	Global : VoiceRunner : Select Voice-Run...
-	Global : PhraseMate : Sort Selection In Pattern
-	Global : PhraseMate : Sort Track in Pattern
-	Global : PhraseMate : Sort Group in Pattern
-	Global : PhraseMate : Sort Whole Pattern
 
 ## Menu Entries
 
 	Main Menu : Tools : VoiceRunner...
-	Pattern Editor : VoiceRunner : Select Voice-Run
-	Pattern Editor : VoiceRunner : Select Voice-Run (Toggle)
-	Pattern Editor : VoiceRunner : Sort Selection In Pattern
-	Pattern Editor : VoiceRunner : Sort Track in Pattern
-	Pattern Editor : VoiceRunner : Sort Group in Pattern
-	Pattern Editor : VoiceRunner : Sort Whole Pattern
 
+## Keyboard Shortcuts
+
+	Global : VoiceRunner : Show dialog...
+	Global : VoiceRunner : Sort Notes (auto)
+	Global : VoiceRunner : Merge Notes (auto)
+	Pattern Editor : VoiceRunner : Select voice-run at cursor position
+	Pattern Editor : VoiceRunner : Jump to next voice-run
+	Pattern Editor : VoiceRunner : Jump to previous voice-run
+	Pattern Editor : VoiceRunner : Jump to next note-column
+	Pattern Editor : VoiceRunner : Jump to previous note-column
+	Pattern Editor : VoiceRunner : Sort Notes (Selection In Pattern)
+	Pattern Editor : VoiceRunner : Sort Notes (Track in Pattern)
+	Pattern Editor : VoiceRunner : Sort Notes (Column in Pattern)
+	Pattern Editor : VoiceRunner : Sort Notes (Group in Pattern)
+	Pattern Editor : VoiceRunner : Sort Notes (Whole Pattern)
+	Pattern Editor : VoiceRunner : Merge Notes (Selection In Pattern)
+	Pattern Editor : VoiceRunner : Merge Notes (Track in Pattern)
+	Pattern Editor : VoiceRunner : Merge Notes (Column in Pattern)
+	Pattern Editor : VoiceRunner : Merge Notes (Group in Pattern)
+	Pattern Editor : VoiceRunner : Merge Notes (Whole Pattern)
+	Phrase Editor : VoiceRunner : Sort Notes (Selection in Phrase)
+	Phrase Editor : VoiceRunner : Sort Notes (Column in Phrase)
+	Phrase Editor : VoiceRunner : Sort Notes (Whole Phrase)
+	Phrase Editor : VoiceRunner : Merge Notes (Selection in Phrase)
+	Phrase Editor : VoiceRunner : Merge Notes (Column in Phrase)
+	Phrase Editor : VoiceRunner : Merge Notes (Whole Phrase)
 
 ## MIDI Mappings
 
-	Tools : VoiceRunner : Create Phrase from Selection in Pattern [Trigger]
+	Tools:VoiceRunner:Select voice-run at cursor position (Pattern) [Trigger]
+	Tools:VoiceRunner:Jump to next voice-run (Pattern) [Trigger]
+	Tools:VoiceRunner:Jump to previous voice-run (Pattern) [Trigger]
+	Tools:VoiceRunner:Jump to next note-column (Pattern) [Trigger]
+	Tools:VoiceRunner:Jump to previous note-column (Pattern) [Trigger]
+	Tools:VoiceRunner:Sort Notes (auto) [Trigger]
+	Tools:VoiceRunner:Sort Notes (Selection in Pattern) [Trigger]
+	Tools:VoiceRunner:Sort Notes (Selection in Phrase) [Trigger]
+	Tools:VoiceRunner:Sort Notes (Column in Pattern) [Trigger]
+	Tools:VoiceRunner:Sort Notes (Track in Pattern) [Trigger]
+	Tools:VoiceRunner:Sort Notes (Group in Pattern) [Trigger]
+	Tools:VoiceRunner:Sort Notes (Whole Pattern) [Trigger]
+	Tools:VoiceRunner:Sort Notes (Whole Phrase) [Trigger]
+	Tools:VoiceRunner:Merge Notes (auto) [Trigger]
+	Tools:VoiceRunner:Merge Notes (Selection in Pattern) [Trigger]
+	Tools:VoiceRunner:Merge Notes (Selection in Phrase) [Trigger]
+	Tools:VoiceRunner:Merge Notes (Column in Pattern) [Trigger]
+	Tools:VoiceRunner:Merge Notes (Track in Pattern) [Trigger]
+	Tools:VoiceRunner:Merge Notes (Group in Pattern) [Trigger]
+	Tools:VoiceRunner:Merge Notes (Whole Pattern) [Trigger]
+	Tools:VoiceRunner:Merge Notes (Whole Phrase) [Trigger]
 
