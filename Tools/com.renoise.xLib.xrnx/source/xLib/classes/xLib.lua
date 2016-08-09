@@ -177,7 +177,7 @@ end
 -- @return true if sparse, false if not - or empty
 
 function xLib.is_sparse_table(t)
-  print("xLib.is_sparse_table(t)",rprint(t))
+  --TRACE("xLib.is_sparse_table(t)",rprint(t))
 
   if table.is_empty(t) then
     return false
