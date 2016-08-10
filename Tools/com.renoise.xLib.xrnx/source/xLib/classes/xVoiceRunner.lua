@@ -348,9 +348,9 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
             local actual_noteoff_col = nil
 
             local run_condition,has_note_on,has_note_off,has_note_cut,has_instr_val,note_val,instr_idx,has_glide_cmd
-              = self:detect_run_condition(notecol,col_idx,vol_visible,pan_visible)
+              = self:detect_run_condition(notecol,col_idx,vol_visible,pan_visible,collecting_from_pattern)
 
-            --print("instr_idx,note_val",instr_idx,note_val)
+            --print(">>> instr_idx,note_val",instr_idx,note_val)
 
             local assign_instr_and_note = function()
               instr_idx = has_instr_val and instr_idx or xVoiceRunner.GHOST_NOTE
@@ -742,9 +742,10 @@ end
 
 -------------------------------------------------------------------------------
 -- detect what action to take on a given note-column
+-- @return xVoiceRunner.CONDITIONS.XX
 
-function xVoiceRunner:detect_run_condition(notecol,col_idx,vol_visible,pan_visible)
-  TRACE("xVoiceRunner:detect_run_condition(notecol,col_idx,vol_visible,pan_visible)",notecol,col_idx,vol_visible,pan_visible)
+function xVoiceRunner:detect_run_condition(notecol,col_idx,vol_visible,pan_visible,from_pattern)
+  TRACE("xVoiceRunner:detect_run_condition(notecol,col_idx,vol_visible,pan_visible,from_pattern)",notecol,col_idx,vol_visible,pan_visible,from_pattern)
 
   assert(type(notecol)=="NoteColumn" or type(notecol)=="xNoteColumn")
   assert(type(col_idx)=="number")
@@ -784,6 +785,7 @@ function xVoiceRunner:detect_run_condition(notecol,col_idx,vol_visible,pan_visib
     then
       if self.link_ghost_notes 
         and not has_instr_val
+        and from_pattern
       then
         condition = xVoiceRunner.CONDITIONS.CONTINUE_GHOST_NOTE
       elseif self.link_glide_notes 
@@ -846,6 +848,8 @@ function xVoiceRunner:detect_run_length(ptrack_or_phrase,col_idx,start_line,num_
     return 0
   end
 
+  local from_pattern = (type(ptrack_or_phrase)=="PatternTrack")
+
   local line_rng = ptrack_or_phrase:lines_in_range(start_line,num_lines)
   for k,line in ipairs(line_rng) do
     local line_idx = k + start_line - 1
@@ -854,7 +858,7 @@ function xVoiceRunner:detect_run_length(ptrack_or_phrase,col_idx,start_line,num_
         if not notecol.is_empty 
           and (col_idx == notecol_idx)
         then
-          local run_condition = self:detect_run_condition(notecol,col_idx,vol_visible,pan_visible)
+          local run_condition = self:detect_run_condition(notecol,col_idx,vol_visible,pan_visible,from_pattern)
           if (run_condition == xVoiceRunner.CONDITIONS.STOP_AT_NOTE_OFF)
            or (run_condition == xVoiceRunner.CONDITIONS.STOP_AT_NOTE_CUT)
            or (run_condition == xVoiceRunner.CONDITIONS.SPLIT_AT_INSTR_CHANGE)
@@ -1102,7 +1106,7 @@ function xVoiceRunner:merge_columns(ptrack_or_phrase,selection,trk_idx,seq_idx)
         if not has_room then
           if (most_recent_line_idx == line_idx) then
             -- replace when column contains a run which start on this line
-            temp_runs[1][run_idx] = voice.voice_run
+            temp_runs[1][most_recent_run_idx] = voice.voice_run
           elseif (most_recent_line_idx < line_idx) then
             -- the previous run was started prior to this line
             -- shorten it to make room for this one

@@ -157,10 +157,12 @@ function xVoiceSorter:sort(ptrack_or_phrase,selection,trk_idx,seq_idx)
   assert(type(ptrack_or_phrase)=="PatternTrack" or type(ptrack_or_phrase)=="InstrumentPhrase")
   assert(type(selection)=="table")
 
+  local track = nil
   local is_sorting_pattern = (type(ptrack_or_phrase)=="PatternTrack")
   if is_sorting_pattern then
     assert(type(trk_idx)=="number")
     assert(type(seq_idx)=="number")
+    track = rns.tracks[trk_idx]
   end
 
   self.selection = selection
@@ -201,6 +203,7 @@ function xVoiceSorter:sort(ptrack_or_phrase,selection,trk_idx,seq_idx)
       self.required_cols = table.rcopy(self.unique_map)
       return false,xVoiceSorter.ERROR_CODE.TOO_MANY_COLS
     end
+    --[[
     table.sort(self.unique_map,function(e1,e2)
       if (self.sort_mode == xVoiceSorter.SORT_MODE.LOW_TO_HIGH) then
         return e1.note_value < e2.note_value
@@ -208,6 +211,31 @@ function xVoiceSorter:sort(ptrack_or_phrase,selection,trk_idx,seq_idx)
         return e1.note_value > e2.note_value
       end
     end)
+    ]]
+    table.sort(self.unique_map,function(e1,e2)
+      if (self.sort_mode == xVoiceSorter.SORT_MODE.LOW_TO_HIGH) then
+        if (e1.note_value == e2.note_value) 
+          and (e1.instrument_value)
+          and (e2.instrument_value)
+        then
+          return e1.instrument_value < e2.instrument_value
+        else
+          return e1.note_value < e2.note_value
+        end
+      elseif (self.sort_mode == xVoiceSorter.SORT_MODE.HIGH_TO_LOW) then
+        if (e1.note_value == e2.note_value) 
+          and (e1.instrument_value)
+          and (e2.instrument_value)
+        then
+          return e1.instrument_value > e2.instrument_value
+        else
+          return e1.note_value > e2.note_value
+        end
+      end
+    end)
+
+    --print("*** sort - initial unique_map",rprint(self.unique_map))
+
   end
 
   -- sort - iterate through lines...
@@ -234,15 +262,14 @@ function xVoiceSorter:sort(ptrack_or_phrase,selection,trk_idx,seq_idx)
     end
   end
 
+  --print("self.temp_runs POST-SORT",rprint(self.temp_runs))
+
   -- check which columns to merge into the result
   -- (unselected columns on either side)
-
-  --print("self.temp_runs POST-SORT",rprint(self.temp_runs))
   local low_col,high_col = xLib.get_table_bounds(voice_runs)
   --print("low_col,high_col",low_col,high_col)
   local num_sorted_cols = #table.keys(self.temp_runs)
   --print("num_sorted_cols",num_sorted_cols)
-  local track = rns.tracks[trk_idx]
   local unsorted_cols = {}
   local sorted_count = 0
   local column_shift = 0
@@ -315,7 +342,7 @@ function xVoiceSorter:sort(ptrack_or_phrase,selection,trk_idx,seq_idx)
     if is_sorting_pattern then
       track.visible_note_columns = math.min(12,math.max(num_cols,track.visible_note_columns))
     else
-      track_or_phrase.visible_note_columns = math.min(12,math.max(num_cols,track_or_phrase.visible_note_columns))
+      ptrack_or_phrase.visible_note_columns = math.min(12,math.max(num_cols,ptrack_or_phrase.visible_note_columns))
     end
   end
 
@@ -717,7 +744,7 @@ function xVoiceSorter:sort_unique(line_runs,line_idx)
   -- insert 
   for k,voice in ipairs(self.sorted) do
     local notecol = xVoiceRunner.get_initial_notecol(voice.voice_run)
-    --print("PROCESSING ----------------------------- ",notecol.note_string)
+    --print("PROCESSING ----------------------------- ",notecol.note_string,notecol.instrument_value)
     local num_lines = voice.voice_run.number_of_lines
     local found_room,col_idx,in_range = self:find_unique_column(notecol,line_idx,num_lines)
     if not found_room then
@@ -730,6 +757,7 @@ function xVoiceSorter:sort_unique(line_runs,line_idx)
         instrument_value = notecol.instrument_value
       })
     else
+      --print("*** sort_unique - insert run into this column",col_idx)
       xLib.expand_table(self.temp_runs,col_idx)
       table.insert(self.temp_runs[col_idx],voice.voice_run)
       -- update the map with the instrument number - this will 
@@ -757,18 +785,21 @@ function xVoiceSorter:matches_unique_column(notecol,col_idx)
     --print("*** matches_unique_column - unable to match unmapped column")
     return false
   end
-  --print("got here - map",rprint(map))
+  --print("*** matches_unique_column - map",rprint(map))
+  --print("*** matches_unique_column - notecol",rprint(notecol))
 
   local can_sort_by_instr = function()
     return self.unique_instrument 
       and map.instrument_value
-      and (map.instrument_value < 255)
-      and (notecol.instrument_value < 255)
+      and (notecol.instrument_value)
+      --and (map.instrument_value < 255)
+      --and (notecol.instrument_value < 255)
       and (notecol.note_value == map.note_value)
   end
 
-  if can_sort_by_instr() then
-    --print("got here - notecol",rprint(notecol))
+  local sort_by_instr = can_sort_by_instr()
+  --print("*** matches_unique_column - sort_by_instr",sort_by_instr)
+  if sort_by_instr then
     return (notecol.instrument_value == map.instrument_value)
   else
     return (notecol.note_value == map.note_value)
@@ -823,9 +854,12 @@ function xVoiceSorter:find_unique_column(notecol,line_idx,num_lines)
     end
   until not self:matches_unique_column(notecol,col_idx)
 
+  --print("*** find_unique_column - col_idx #B",col_idx)
+
   if not found_room then
     col_idx = col_idx-1
   end
+  --print("*** find_unique_column - col_idx #C",col_idx)
 
   return found_room,col_idx,in_range
 

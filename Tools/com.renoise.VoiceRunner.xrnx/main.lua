@@ -81,8 +81,6 @@ renoise.tool():add_keybinding {
 
 -- sort/merge ----------------------------
 
---[[
-]]
 renoise.tool():add_keybinding {
   name = "Global:"..APP_DISPLAY_NAME..":Sort Notes (auto)",
   invoke = function(repeated)
@@ -102,31 +100,113 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.SORT_NOTES,
   invoke = function(msg)
-    print("SORT_NOTES msg",rprint(msg))
     voicerunner:do_sort() 
   end
 }
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.MERGE_NOTES,
   invoke = function(msg)
-    print("MERGE_NOTES msg",rprint(msg))
     voicerunner:do_merge() 
   end
 }
 
+-- menu entries: pattern editor
+
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:"..APP_DISPLAY_NAME..":Sort Notes - "..VR.SCOPES[VR.SCOPE.SELECTION_IN_PATTERN],
+  invoke = function() 
+    voicerunner:do_sort(VR.SCOPE.SELECTION_IN_PATTERN) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:"..APP_DISPLAY_NAME..":Sort Notes - "..VR.SCOPES[VR.SCOPE.TRACK_IN_PATTERN],
+  invoke = function() 
+    voicerunner:do_sort(VR.SCOPE.TRACK_IN_PATTERN) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:"..APP_DISPLAY_NAME..":Sort Notes - "..VR.SCOPES[VR.SCOPE.GROUP_IN_PATTERN],
+  invoke = function() 
+    voicerunner:do_sort(VR.SCOPE.GROUP_IN_PATTERN) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:"..APP_DISPLAY_NAME..":Sort Notes - "..VR.SCOPES[VR.SCOPE.WHOLE_PATTERN],
+  invoke = function() 
+    voicerunner:do_sort(VR.SCOPE.WHOLE_PATTERN) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "--Pattern Editor:"..APP_DISPLAY_NAME..":Merge Notes - "..VR.SCOPES[VR.SCOPE.SELECTION_IN_PATTERN],
+  invoke = function() 
+    voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PATTERN) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:"..APP_DISPLAY_NAME..":Merge Notes - "..VR.SCOPES[VR.SCOPE.TRACK_IN_PATTERN],
+  invoke = function() 
+    voicerunner:do_merge(VR.SCOPE.TRACK_IN_PATTERN) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:"..APP_DISPLAY_NAME..":Merge Notes - "..VR.SCOPES[VR.SCOPE.GROUP_IN_PATTERN],
+  invoke = function() 
+    voicerunner:do_merge(VR.SCOPE.GROUP_IN_PATTERN) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "Pattern Editor:"..APP_DISPLAY_NAME..":Merge Notes - "..VR.SCOPES[VR.SCOPE.WHOLE_PATTERN],
+  invoke = function() 
+    voicerunner:do_merge(VR.SCOPE.WHOLE_PATTERN) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "--Pattern Editor:"..APP_DISPLAY_NAME..":Adjust settings...",
+  invoke = function() 
+    show() 
+  end
+} 
+
+-- menu entries: phrase editor 
+
+renoise.tool():add_menu_entry {
+  name = "Phrase Editor:"..APP_DISPLAY_NAME..":Sort Notes - "..VR.SCOPES[VR.SCOPE.SELECTION_IN_PHRASE],
+  invoke = function() 
+    voicerunner:do_sort(VR.SCOPE.SELECTION_IN_PHRASE) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "Phrase Editor:"..APP_DISPLAY_NAME..":Sort Notes - "..VR.SCOPES[VR.SCOPE.WHOLE_PHRASE],
+  invoke = function() 
+    voicerunner:do_sort(VR.SCOPE.WHOLE_PHRASE) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "--Phrase Editor:"..APP_DISPLAY_NAME..":Merge Notes - "..VR.SCOPES[VR.SCOPE.SELECTION_IN_PHRASE],
+  invoke = function() 
+    voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PHRASE) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "Phrase Editor:"..APP_DISPLAY_NAME..":Merge Notes - "..VR.SCOPES[VR.SCOPE.WHOLE_PHRASE],
+  invoke = function() 
+    voicerunner:do_merge(VR.SCOPE.WHOLE_PHRASE) 
+  end
+} 
+renoise.tool():add_menu_entry {
+  name = "--Phrase Editor:"..APP_DISPLAY_NAME..":Adjust settings...",
+  invoke = function() 
+    show() 
+  end
+} 
+
+-- keybindings: pattern editor
+
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Sort Notes - "..VR.SCOPE.SELECTION_IN_PATTERN.." ("..APP_DISPLAY_NAME..")",
+  name = "Pattern Editor:Selection:Sort Notes - "..VR.SCOPES[VR.SCOPE.SELECTION_IN_PATTERN].." ("..APP_DISPLAY_NAME..")",
   invoke = function(repeated)
     if (not repeated) then 
       voicerunner:do_sort(VR.SCOPE.SELECTION_IN_PATTERN) 
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.SELECTION_IN_PATTERN.." ("..APP_DISPLAY_NAME..")",
-  invoke = function(repeated)
-    if (not repeated) then 
-      voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PATTERN) 
     end
   end
 }
@@ -136,25 +216,26 @@ renoise.tool():add_midi_mapping {
     voicerunner:do_sort(VR.SCOPE.SELECTION_IN_PATTERN) 
   end
 }
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPES[VR.SCOPE.SELECTION_IN_PATTERN].." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PATTERN) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.MERGE_SELECTION_IN_PATTERN,
   invoke = function(msg)
     voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PATTERN) 
   end
 }
+
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Sort Notes - "..VR.SCOPE.SELECTION_IN_PHRASE.." ("..APP_DISPLAY_NAME..")",
+  name = "Phrase Editor:Selection:Sort Notes - "..VR.SCOPES[VR.SCOPE.SELECTION_IN_PHRASE].." ("..APP_DISPLAY_NAME..")",
   invoke = function(repeated)
     if (not repeated) then 
       voicerunner:do_sort(VR.SCOPE.SELECTION_IN_PHRASE) 
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.SELECTION_IN_PHRASE.." ("..APP_DISPLAY_NAME..")",
-  invoke = function(repeated)
-    if (not repeated) then 
-      voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PHRASE) 
     end
   end
 }
@@ -164,25 +245,29 @@ renoise.tool():add_midi_mapping {
     voicerunner:do_sort(VR.SCOPE.SELECTION_IN_PHRASE) 
   end
 }
+
+renoise.tool():add_keybinding {
+  name = "Phrase Editor:Selection:Merge Notes - "..VR.SCOPES[VR.SCOPE.SELECTION_IN_PHRASE].." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PHRASE) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.MERGE_SELECTION_IN_PHRASE,
   invoke = function(msg)
     voicerunner:do_merge(VR.SCOPE.SELECTION_IN_PHRASE) 
   end
 }
+
+-- TRACK_IN_PATTERN
+
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Sort Notes - "..VR.SCOPE.TRACK_IN_PATTERN.." ("..APP_DISPLAY_NAME..")",
+  name = "Pattern Editor:Selection:Sort Notes - "..VR.SCOPES[VR.SCOPE.TRACK_IN_PATTERN].." ("..APP_DISPLAY_NAME..")",
   invoke = function(repeated)
     if (not repeated) then 
       voicerunner:do_sort(VR.SCOPE.TRACK_IN_PATTERN) 
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.TRACK_IN_PATTERN.." ("..APP_DISPLAY_NAME..")",
-  invoke = function(repeated)
-    if (not repeated) then 
-      voicerunner:do_merge(VR.SCOPE.TRACK_IN_PATTERN) 
     end
   end
 }
@@ -192,25 +277,29 @@ renoise.tool():add_midi_mapping {
     voicerunner:do_sort(VR.SCOPE.TRACK_IN_PATTERN) 
   end
 }
+
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPES[VR.SCOPE.TRACK_IN_PATTERN].." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.TRACK_IN_PATTERN) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.MERGE_TRACK_IN_PATTERN,
   invoke = function(msg)
     voicerunner:do_merge(VR.SCOPE.TRACK_IN_PATTERN) 
   end
 }
+
+-- GROUP_IN_PATTERN
+
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Sort Notes - "..VR.SCOPE.GROUP_IN_PATTERN.." ("..APP_DISPLAY_NAME..")",
+  name = "Pattern Editor:Selection:Sort Notes - "..VR.SCOPES[VR.SCOPE.GROUP_IN_PATTERN].." ("..APP_DISPLAY_NAME..")",
   invoke = function(repeated)
     if (not repeated) then 
       voicerunner:do_sort(VR.SCOPE.GROUP_IN_PATTERN) 
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.GROUP_IN_PATTERN.." ("..APP_DISPLAY_NAME..")",
-  invoke = function(repeated)
-    if (not repeated) then 
-      voicerunner:do_merge(VR.SCOPE.GROUP_IN_PATTERN) 
     end
   end
 }
@@ -220,25 +309,29 @@ renoise.tool():add_midi_mapping {
     voicerunner:do_sort(VR.SCOPE.GROUP_IN_PATTERN) 
   end
 }
+
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPES[VR.SCOPE.GROUP_IN_PATTERN].." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.GROUP_IN_PATTERN) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.MERGE_GROUP_IN_PATTERN,
   invoke = function(msg)
     voicerunner:do_merge(VR.SCOPE.GROUP_IN_PATTERN) 
   end
 }
+
+-- WHOLE_PATTERN
+
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Sort Notes - "..VR.SCOPE.WHOLE_PATTERN.." ("..APP_DISPLAY_NAME..")",
+  name = "Pattern Editor:Selection:Sort Notes - "..VR.SCOPES[VR.SCOPE.WHOLE_PATTERN].." ("..APP_DISPLAY_NAME..")",
   invoke = function(repeated)
     if (not repeated) then 
       voicerunner:do_sort(VR.SCOPE.WHOLE_PATTERN) 
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.WHOLE_PATTERN.." ("..APP_DISPLAY_NAME..")",
-  invoke = function(repeated)
-    if (not repeated) then 
-      voicerunner:do_merge(VR.SCOPE.WHOLE_PATTERN) 
     end
   end
 }
@@ -248,25 +341,29 @@ renoise.tool():add_midi_mapping {
     voicerunner:do_sort(VR.SCOPE.WHOLE_PATTERN) 
   end
 }
+
+renoise.tool():add_keybinding {
+  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPES[VR.SCOPE.WHOLE_PATTERN].." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.WHOLE_PATTERN) 
+    end
+  end
+}
 renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.MERGE_WHOLE_PATTERN,
   invoke = function(msg)
     voicerunner:do_merge(VR.SCOPE.WHOLE_PATTERN) 
   end
 }
+
+-- WHOLE_PHRASE
+
 renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Sort Notes - "..VR.SCOPE.WHOLE_PHRASE.." ("..APP_DISPLAY_NAME..")",
+  name = "Phrase Editor:Selection:Sort Notes - "..VR.SCOPES[VR.SCOPE.WHOLE_PHRASE].." ("..APP_DISPLAY_NAME..")",
   invoke = function(repeated)
     if (not repeated) then 
       voicerunner:do_sort(VR.SCOPE.WHOLE_PHRASE) 
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Pattern Editor:Selection:Merge Notes - "..VR.SCOPE.WHOLE_PHRASE.." ("..APP_DISPLAY_NAME..")",
-  invoke = function(repeated)
-    if (not repeated) then 
-      voicerunner:do_merge(VR.SCOPE.WHOLE_PHRASE) 
     end
   end
 }
@@ -274,6 +371,15 @@ renoise.tool():add_midi_mapping {
   name = VR.MIDI_MAPPING.SORT_WHOLE_PHRASE,
   invoke = function(msg)
     voicerunner:do_sort(VR.SCOPE.WHOLE_PHRASE) 
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Phrase Editor:Selection:Merge Notes - "..VR.SCOPES[VR.SCOPE.WHOLE_PHRASE].." ("..APP_DISPLAY_NAME..")",
+  invoke = function(repeated)
+    if (not repeated) then 
+      voicerunner:do_merge(VR.SCOPE.WHOLE_PHRASE) 
+    end
   end
 }
 renoise.tool():add_midi_mapping {

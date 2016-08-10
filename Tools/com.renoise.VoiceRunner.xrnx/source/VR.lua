@@ -376,7 +376,7 @@ function VR:do_process(scope,sel,seq_idx,trk_idx)
         --sel = xSelection.get_phrase()
       --else
       if (scope == VR.SCOPE.WHOLE_PHRASE) then
-        sel = xSelection.get_phrase_column(sel)
+        sel = xSelection.get_phrase()
       end
     end
     if not ptrack_or_phrase then

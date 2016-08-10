@@ -4,7 +4,7 @@ This tool adds highly configurable pattern-data sorting to Renoise.
 
 ## Quickstart
 
-Download the tool and double-click or drag the xrnx file on top of the Renoise window to install.
+[Download the tool](http://forum.renoise.com/index.php/topic/48372-new-tool-31-voicerunner/) and double-click or drag the xrnx file on top of the Renoise window to install.
 
 The tool can be triggered in a number of ways:  
 
@@ -18,11 +18,23 @@ This tool is a work in progress. If you encounter a bug or have suggestions, use
 
 ## Screenshot
 
-If you launch the tool, the main dialog could look something like this:
+If you launch the tool, the main dialog could look something like this (with all options shown)
 
 <img src="./manual/screenshot.png"> 
 
 _Hint: while the dialog is visible and focused, you can use the arrow keys to navigate between voice-runs in the pattern._  
+
+Here's a GIF showing how unique notes can "unfold" a column and squash it together again
+
+<img src="./manual/voice-runner-demo.gif"> 
+
+Another GIF showing how the built-in navigation between voice-runs works
+(it selects anything matching the current collection options beneath the cursor position)
+
+<img src="./manual/voice-runner-navigation.gif"> 
+
+To use navigation, assign keybindings/MIDI mappings, or press arrow keys while the tool dialog is focused...
+
 
 ## Features
 
@@ -142,6 +154,22 @@ When enabled, output can make use of sub-columns for terminating notes. For exam
 ## Menu Entries
 
 	Main Menu : Tools : VoiceRunner...
+	Pattern Editor : VoiceRunner : Sort Notes (Selection In Pattern)
+	Pattern Editor : VoiceRunner : Sort Notes (Track in Pattern)
+	Pattern Editor : VoiceRunner : Sort Notes (Column in Pattern)
+	Pattern Editor : VoiceRunner : Sort Notes (Group in Pattern)
+	Pattern Editor : VoiceRunner : Sort Notes (Whole Pattern)
+	Pattern Editor : VoiceRunner : Merge Notes (Selection In Pattern)
+	Pattern Editor : VoiceRunner : Merge Notes (Track in Pattern)
+	Pattern Editor : VoiceRunner : Merge Notes (Column in Pattern)
+	Pattern Editor : VoiceRunner : Merge Notes (Group in Pattern)
+	Pattern Editor : VoiceRunner : Merge Notes (Whole Pattern)
+	Phrase Editor : VoiceRunner : Sort Notes (Selection in Phrase)
+	Phrase Editor : VoiceRunner : Sort Notes (Column in Phrase)
+	Phrase Editor : VoiceRunner : Sort Notes (Whole Phrase)
+	Phrase Editor : VoiceRunner : Merge Notes (Selection in Phrase)
+	Phrase Editor : VoiceRunner : Merge Notes (Column in Phrase)
+	Phrase Editor : VoiceRunner : Merge Notes (Whole Phrase)
 
 ## Keyboard Shortcuts
 
