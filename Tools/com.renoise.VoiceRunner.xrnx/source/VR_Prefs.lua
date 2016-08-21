@@ -12,11 +12,6 @@ Preferences for VoiceRunner
 
 class 'VR_Prefs'(renoise.Document.DocumentNode)
 
-
-
--------------------------------------------------------------------------------
--- constructor, initialize with default values
-
 function VR_Prefs:__init()
 
   renoise.Document.DocumentNode.__init(self)
@@ -48,7 +43,7 @@ function VR_Prefs:__init()
   self:add_property("stop_at_note_cut", renoise.Document.ObservableBoolean(true))
   self:add_property("remove_orphans", renoise.Document.ObservableBoolean(true))
   self:add_property("create_noteoffs", renoise.Document.ObservableBoolean(true))
-  self:add_property("close_open_notes", renoise.Document.ObservableBoolean(true))
+  self:add_property("close_open_notes", renoise.Document.ObservableBoolean(false))
   self:add_property("reveal_subcolumns", renoise.Document.ObservableBoolean(true))
 
   self:reset()
@@ -79,7 +74,7 @@ function VR_Prefs:reset()
   self.stop_at_note_cut.value = true
   self.remove_orphans.value = true
   self.create_noteoffs.value = true
-  self.close_open_notes.value = true
+  self.close_open_notes.value = false
   self.reveal_subcolumns.value = true
 
 end
