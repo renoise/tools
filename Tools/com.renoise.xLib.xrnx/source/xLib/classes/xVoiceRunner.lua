@@ -1367,15 +1367,17 @@ end
 function xVoiceRunner.get_column_start_end_line(run_col)
   TRACE("xVoiceRunner.get_column_start_end_line(run_col)",run_col)
 
-  if table.is_empty(table.keys(run_col)) then
-    --print("*** get_column_start_end_line - no runs",rprint(run_col))
+  --print("*** get_column_start_end_line - run_col...",rprint(run_col))
+
+  if not run_col or table.is_empty(table.keys(run_col)) then
+    --print("*** get_column_start_end_line - no runs")
     return
   end
 
   local start_line,end_line = 513,0
   for run_idx,run in pairs(run_col) do
     local low,high = xLib.get_table_bounds(run_col[run_idx])
-    --print("*** get_column_start_end_line - high,low",high,low)
+    print("*** get_column_start_end_line - high,low",high,low)
     end_line = math.max(end_line,high) 
     start_line = math.min(start_line,low) 
   end
