@@ -1340,8 +1340,8 @@ function xVoiceRunner.get_high_low_note_values(run_col,line_start,line_end)
           and (line_idx >= line_start)
           and (line_idx <= line_end)) 
         if (v3.note_value < renoise.PatternLine.NOTE_OFF)
-          and not restrict_to_lines 
-            or (restrict_to_lines and within_range)
+          and (not restrict_to_lines 
+            or (restrict_to_lines and within_range))
         then
           low_note = math.min(low_note,v3.note_value)
           high_note = math.max(high_note,v3.note_value)
