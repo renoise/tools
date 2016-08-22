@@ -353,14 +353,13 @@ function xVoiceSorter:sort_by_note(line_runs,line_idx)
 
   for k,voice in ipairs(self.sorted) do
 
-    local run_col = self.temp_runs[k]
     local num_lines = voice.voice_run.number_of_lines
     local notecol = xVoiceRunner.get_initial_notecol(voice.voice_run)
 
     print("*** processing sorted note...",k,notecol.note_string,notecol.note_value,"==============================")
 
-    local found_room,col_idx = self:find_note_column(notecol,line_idx,num_lines)
-    print("found_room,col_idx",found_room,col_idx)
+    local found_room,col_idx,upwards = self:find_note_column(notecol,line_idx,num_lines)
+    print("found_room,col_idx,upwards",found_room,col_idx,upwards)
 
     if found_room then
       print(">>> sort_unique - insert run into this column",col_idx)
@@ -380,27 +379,27 @@ function xVoiceSorter:sort_by_note(line_runs,line_idx)
             and (notecol.note_value == v.high_note)
         end
       end
-      print("*** sort_by_note - exact_match",exact_match)
-
-      --col_idx = (self.sort_mode == xVoiceSorter.SORT_MODE.LOW_TO_HIGH)
-        --and col_idx+1 or col_idx
+      print("*** sort_by_note - exact_match,initial_column",exact_match,initial_column)
 
       -- create column (but wait with assign...)
       self:insert_temp_column(col_idx)
 
       -- shift existing notes?
       if not initial_column and not exact_match then
-        local shifted = self:shift_runs(notecol.note_value,col_idx+1,line_idx) 
+        local source_col_idx = upwards and col_idx-1 or col_idx
+        local target_col_idx = upwards and col_idx or col_idx+1
+        local shifted = self:shift_runs(notecol.note_value,source_col_idx,target_col_idx,line_idx-1) 
         print("*** sort_by_note - shifted, line_idx,notecol.note_value",shifted,line_idx,notecol.note_value)
         if shifted then -- check where we've got room 
           found_room,col_idx = self:find_note_column(notecol,line_idx,num_lines)
           print("*** sort_by_note - post-shift - found_room,col_idx",found_room,col_idx)
-          print("*** sort_by_note - self.temp_runs (post-shift)...",rprint(self.temp_runs))
+          --print("*** sort_by_note - self.temp_runs (post-shift)...",rprint(self.temp_runs))
         end
       end
 
       -- assign to column
       print(">>> sort_by_note - assign to new column",col_idx)
+      xLib.expand_table(self.temp_runs,col_idx)
       table.insert(self.temp_runs[col_idx],voice.voice_run)
       self:set_high_low_column(col_idx,nil,nil,nil,line_idx+1)
 
@@ -416,6 +415,7 @@ end
 -- look for a matching note column (with or without available space)
 -- @return bool, true when column has space 
 -- @return int, column index (when no space, "where to create column")
+-- @return bool, when true, column is 'after'
 
 function xVoiceSorter:find_note_column(notecol,line_idx,num_lines)
   print("xVoiceSorter:find_note_column(notecol,line_idx,num_lines)",notecol,line_idx,num_lines)
@@ -431,10 +431,9 @@ function xVoiceSorter:find_note_column(notecol,line_idx,num_lines)
 
   local low_col,high_col = xLib.get_table_bounds(self.temp_runs)
 
-  -- mark column, maintain previous marks
+  -- mark column, while maintaining previous marks
   local do_mark_column = function(col_idx)
-    print("do_mark_column(col_idx)",col_idx)
-    --print("*** do_mark_column - marked_cols",rprint(marked_cols))
+    --print("do_mark_column(col_idx)",col_idx)
 
     local clear_to = nil
     local clear_from = nil
@@ -450,24 +449,60 @@ function xVoiceSorter:find_note_column(notecol,line_idx,num_lines)
           if prev_low and (prev_low > v.low_note) 
             and (notecol.note_value <= v.low_note)
           then
-            --print("*** do_mark_column - clear_to",k)
+            -- better match than previous column
+            print("*** do_mark_column - clear_to",k)
+            clear_to = k-1
+          end
+          --[[
+          ]]
+          if prev_low and (prev_low > v.high_note)
+            and (notecol.note_value <= v.high_note)
+          then
+            -- better match than previous column
+            print("*** do_mark_column - clear_to #B",k)
             clear_to = k-1
           end
           if prev_high and (prev_high < notecol.note_value) then
-            --print("*** do_mark_column - clear_from",k)
+            -- previous column a better match
+            print("*** do_mark_column - clear_from #A",k)
             clear_from = k
           end
+          --[[
+          if prev_low and (prev_low < notecol.note_value) then
+            -- previous column a better match
+            print("*** do_mark_column - clear_from #B",k)
+            clear_from = k
+          end
+          ]]
+
         elseif (self.sort_mode == xVoiceSorter.SORT_MODE.LOW_TO_HIGH) then
           if prev_high and (prev_high < v.low_note) 
             and (notecol.note_value >= v.low_note)
-          then
-            --print("*** do_mark_column - clear_to",k)
+          then 
+            -- better match than previous column
+            print("*** do_mark_column - clear_to",k-1)
             clear_to = k-1
           end
+            
+          if prev_high and (prev_high < v.high_note) 
+            and (notecol.note_value >= v.low_note)
+          then
+            -- better match than previous column
+            print("*** do_mark_column - clear_to",k-1)
+            clear_to = k-1
+          end
+
           if prev_low and (prev_low > notecol.note_value) then
-            --print("*** do_mark_column - clear_from",k)
+            -- previous column a better match
+            print("*** do_mark_column - clear_from #A",k)
             clear_from = k
           end
+          if prev_high and (prev_high > notecol.note_value) then
+            -- previous column a better match
+            print("*** do_mark_column - clear_from #B",k)
+            clear_from = k
+          end
+
         end
         prev_high = v.high_note
         prev_low = v.low_note
@@ -492,6 +527,8 @@ function xVoiceSorter:find_note_column(notecol,line_idx,num_lines)
       end
     end
 
+    --print("*** do_mark_column - marked_cols POST",rprint(marked_cols))
+
   end
 
   -- go through high/low columns, mark appropriate ones
@@ -502,14 +539,14 @@ function xVoiceSorter:find_note_column(notecol,line_idx,num_lines)
     then
       has_room = xVoiceRunner.has_room(self.temp_runs,line_idx,col_idx,num_lines)
       if has_room then
-        --print(">>> find_note_column - exact match (has room)",col_idx,notecol.note_string)
+        print(">>> find_note_column - exact match (has room)",col_idx,notecol.note_string)
         return true,col_idx
       else
-        --print("*** find_note_column - exact match (no room)",col_idx,notecol.note_string)
+        print("*** find_note_column - exact match (no room)",col_idx,notecol.note_string)
         do_mark_column(col_idx)
       end
     else
-      --print("*** find_note_column - mark column",col_idx,notecol.note_string)
+      print("*** find_note_column - mark column",col_idx,notecol.note_string)
       do_mark_column(col_idx)
     end
 
@@ -524,85 +561,121 @@ function xVoiceSorter:find_note_column(notecol,line_idx,num_lines)
     if marked_cols[col_idx] then
       has_room = xVoiceRunner.has_room(self.temp_runs,line_idx,col_idx,num_lines)
       if has_room then
-        --print(">>> find_note_column - found room in marked column",col_idx)
+        print(">>> find_note_column - found room in marked column",col_idx)
         return true,col_idx
       else
-        --print("*** find_note_column - no room in marked column",col_idx)
+        print("*** find_note_column - no room in marked column",col_idx)
       end
     end
   end
 
-  -- if no marked column had room, insert a new one
-  -- using the marked column (if any) as basis
-  for col_idx = high_col,low_col,-1 do
-    if marked_cols[col_idx] then
-      local v = self.high_low_columns[col_idx]
-      --print("*** find_note_column - v...",type(v),rprint(v))
+  local check_columns = function(col_idx)
+    local v = self.high_low_columns[col_idx]
+    if v.high_note then
+      
+      local in_range = (v.low_note <= notecol.note_value) 
+        and (v.high_note >= notecol.note_value)
+
       if (self.sort_mode == xVoiceSorter.SORT_MODE.HIGH_TO_LOW) then
-        if (v.low_note >= notecol.note_value) then
-          -- testcase: Simple III
-          --print(">>> find_note_column - after marked")
-          return false,col_idx+1
+        if in_range then
+          print(">>> find_note_column - in range",col_idx+1)
+          return false,col_idx+1,true
+        elseif (v.low_note >= notecol.note_value) then
+          print(">>> find_note_column - after marked",col_idx+1)
+          return false,col_idx+1,true
         else
-          --print(">>> find_note_column - at/before marked")
+          print(">>> find_note_column - at/before marked",col_idx)
           return false,col_idx
         end
       elseif (self.sort_mode == xVoiceSorter.SORT_MODE.LOW_TO_HIGH) then
-        if (v.high_note <= notecol.note_value) then
-          --print(">>> find_note_column - after marked")
-          return false,col_idx+1
-        else
-          --print(">>> find_note_column - at/before marked")
+        if in_range then
+          print(">>> find_note_column - in range",col_idx+1)
+          return false,col_idx+1,true
+        elseif (v.high_note <= notecol.note_value) then
+          print(">>> find_note_column - after marked",col_idx+1)
+          return false,col_idx+1,true
+        elseif (v.high_note >= notecol.note_value) then
+          print(">>> find_note_column - at/before marked",col_idx)
           return false,col_idx
         end
       end
     end
   end
 
-  -- final option: insert at start/end 
-  -- 
-  if (self.sort_mode == xVoiceSorter.SORT_MODE.HIGH_TO_LOW) then
-    --print(">>> find_note_column - insert new column at start")
-    return false,1
-  elseif (self.sort_mode == xVoiceSorter.SORT_MODE.LOW_TO_HIGH) then
-    --print(">>> find_note_column - insert new column at end")
-    return false,#table.keys(self.temp_runs)+1
+  -- no marked column had room, insert a new column 
+  -- using the markings as basis...
+  for col_idx = low_col,high_col do
+    if marked_cols[col_idx] then
+      local has_room,idx,upwards = check_columns(col_idx)
+      if (type(has_room)=="boolean") then
+        print(">>> find_note_column - #A has_room,idx,upwards",has_room,idx,upwards)
+        return has_room,idx,upwards
+      end
+    end
   end
+
+  -- final option: check columns, marked or not
+  for col_idx = low_col,high_col do
+    local has_room,idx,upwards = check_columns(col_idx)
+    if (type(has_room)=="boolean") then
+      print(">>> find_note_column - #B has_room,idx,upwards",has_room,idx,upwards)
+      return has_room,idx,upwards
+    end
+  end
+
+  error("shouldn't get here - at least one marked column") 
 
 end
 
 
 -------------------------------------------------------------------------------
--- look for previous notes which are equal or higher, move to previous
--- or next column (depends on sorting mode)
--- return int (target column index, defined only when shifting took place)
+-- look for previous notes which are equal/higher, move to target column 
+-- (the index of which depends on the current sorting mode)
+-- return bool (true when shifting took place)
 
-function xVoiceSorter:shift_runs(note_value,source_col_idx,line_idx)
-  print("xVoiceSorter:shift_runs(note_value,source_col_idx,line_idx)",note_value,source_col_idx,line_idx)
+function xVoiceSorter:shift_runs(note_value,source_col_idx,target_col_idx,line_idx)
+  print("xVoiceSorter:shift_runs(note_value,source_col_idx,target_col_idx,line_idx)",note_value,source_col_idx,target_col_idx,line_idx)
 
+  assert(type(note_value)=="number")
   assert(type(source_col_idx)=="number")
+  assert(type(target_col_idx)=="number")
+  assert(type(line_idx)=="number")
 
-  local runs = self.temp_runs
-  local source_run_col = runs[source_col_idx]
+  if (line_idx < 1) then
+    print("*** no shifting, line_idx is too small")
+    return false
+  end
+
+  local source_run_col = self.temp_runs[source_col_idx]
 
   if not source_run_col then
     print("*** no shifting, column is empty")
-    return
+    return false
   end
 
-  -- only shift when note is higher than high+low
   local high_note,low_note = xVoiceRunner.get_high_low_note_values(source_run_col,1,line_idx)
   print("*** shift_runs - high_note,low_note",high_note,low_note)
+
+  if not high_note then
+    print("*** no shifting, source_run_col contains no notes")
+    return false
+  end
+
+  if (note_value == high_note)
+    and (note_value == low_note) 
+  then
+    print("*** no shifting, notes are equal")
+    return false
+  end
+
   if (note_value > high_note) 
     or (note_value < low_note) 
   then
     print("*** no shifting, all notes are higher or lower")
-    return
+    return false
   end
 
-  local shift_upwards = (self.sort_mode == xVoiceSorter.SORT_MODE.LOW_TO_HIGH) 
-  local higher_runs = xVoiceRunner.get_higher_notes_in_column(runs[source_col_idx],note_value-1)
-  local target_col_idx = shift_upwards and source_col_idx+1 or source_col_idx-1
+  local higher_runs = xVoiceRunner.get_higher_notes_in_column(self.temp_runs[source_col_idx],note_value-1)
   local highest_run_idx = 1
   if not table.is_empty(higher_runs) then
     for k = 1,#higher_runs do
@@ -610,13 +683,15 @@ function xVoiceSorter:shift_runs(note_value,source_col_idx,line_idx)
       highest_run_idx = k
       print(">>> shift higher run into new column - clear: ",source_col_idx,higher_runs[k].run_idx)
       print(">>> shift higher run into new column - set: ",target_col_idx,k,higher_run)
-      table.insert(runs[target_col_idx],k,higher_run)
+      table.insert(self.temp_runs[target_col_idx],k,higher_run)
       self:clear_temp_run(source_col_idx,higher_runs[k].run_idx,higher_runs[k].line_idx) 
     end
     self:set_high_low_column(target_col_idx,nil,nil,nil,line_idx)
     self:set_high_low_column(source_col_idx,nil,nil,nil,line_idx) 
-    return target_col_idx
+    return true
   end
+
+  return false
 
 end
 
@@ -666,6 +741,8 @@ function xVoiceSorter:insert_temp_column(col_idx,voice_run)
 
   local high_note,low_note = xVoiceRunner.get_high_low_note_values(self.temp_runs[col_idx])
   self:set_high_low_column(col_idx,high_note,low_note)
+
+  --print("self.temp_runs...",rprint(self.temp_runs))
 
 end
 
