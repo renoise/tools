@@ -1067,7 +1067,7 @@ end
 -- @return table, voice-runs in range
 
 function xVoiceRunner.has_room(voice_runs,line_start,col_idx,num_lines)
-  print("xVoiceRunner:has_room(voice_runs,line_start,col_idx,num_lines)",voice_runs,line_start,col_idx,num_lines)
+  TRACE("xVoiceRunner:has_room(voice_runs,line_start,col_idx,num_lines)",voice_runs,line_start,col_idx,num_lines)
 
   assert(type(line_start)=="number")
   assert(type(col_idx)=="number")
@@ -1377,7 +1377,7 @@ function xVoiceRunner.get_column_start_end_line(run_col)
   local start_line,end_line = 513,0
   for run_idx,run in pairs(run_col) do
     local low,high = xLib.get_table_bounds(run_col[run_idx])
-    print("*** get_column_start_end_line - high,low",high,low)
+    --print("*** get_column_start_end_line - high,low",high,low)
     end_line = math.max(end_line,high) 
     start_line = math.min(start_line,low) 
   end
