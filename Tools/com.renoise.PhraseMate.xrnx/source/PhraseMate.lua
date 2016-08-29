@@ -1,0 +1,1703 @@
+--[[============================================================================
+-- PhraseMate
+============================================================================]]--
+
+--[[--
+
+PhraseMate (main application)
+
+--]]
+
+
+--==============================================================================
+
+
+class 'PhraseMate'
+
+PhraseMate.UI_TABS = {
+  INPUT = 1,
+  OUTPUT = 2,
+  REALTIME = 3,
+}
+
+PhraseMate.UI_SOURCE_ITEMS = {"➜ Autocapture","➜ Capture All Instr.","➜ Selected Instrument"}
+PhraseMate.UI_TARGET_ITEMS = {"➜ Same Instrument","➜ New Instrument(s)"}
+
+PhraseMate.INPUT_SCOPES = {
+  "Selection in Pattern",
+  "Selection in Matrix",
+  "Track in Pattern",
+  "Track in Song",
+}
+PhraseMate.INPUT_SCOPE = {
+  SELECTION_IN_PATTERN = 1,
+  SELECTION_IN_MATRIX = 2,
+  TRACK_IN_PATTERN = 3,
+  TRACK_IN_SONG = 4,
+}
+
+PhraseMate.SOURCE_INSTR = {
+  CAPTURE_ONCE = 1,
+  CAPTURE_ALL = 2,
+  SELECTED = 3,
+  CUSTOM = 4,
+}
+
+PhraseMate.TARGET_INSTR = {
+  SAME = 1,
+  NEW = 2,
+  CUSTOM = 3,
+}
+
+PhraseMate.SLICE_MODES = {"Disabled","Pattern","Patt-track"}
+PhraseMate.SLICE_MODE = {
+  NONE = 1,
+  PATTERN = 2,
+  PATTERN_TRACK = 3,
+}
+
+PhraseMate.PLAYBACK_MODES = {"Off","Prg","Map"}
+PhraseMate.PLAYBACK_MODE = {
+  PHRASES_OFF = 1,
+  PHRASES_PLAY_SELECTIVE = 2,
+  PHRASES_PLAY_KEYMAP = 3,
+}
+
+PhraseMate.MIDI_MAPPING = {
+  PREV_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Previous Phrase in Instrument [Trigger]",
+  NEXT_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Next Phrase in Instrument [Trigger]",
+  SET_PLAYBACK_MODE = "Tools:PhraseMate:Select Playback Mode [Set]",
+}
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:__init(...)
+  TRACE("PhraseMate:__init()")
+
+  self.prefs = renoise.tool().preferences
+
+  local args = xLib.unpack_args(...)
+
+  --- string
+  self.app_display_name = args.app_display_name
+
+  -- internal -------------------------
+
+  --- int, can change during collection when auto-capturing
+  self.source_instr_idx = nil
+
+  --- int, the destination for our collected phrases
+  self.target_instr_idx = nil
+
+  --- bool, true when we have successfully determined the source instr.
+  self.done_with_capture = false
+
+  --- (table) source -> target mappings, when creating new instrument(s)
+  self.source_target_map = {}
+
+  --- keep track of 'ghost notes' when reading note columns
+  -- [track_index][column_index]{
+  --    instrument_index = int,
+  --    offed = bool,
+  --  }
+  self.ghost_columns = {}
+
+  --- keep track of 'initial state' of source before reading note columns
+  --  {
+  --    number_of_phrases = int
+  --    playback_mode = renoise.Instrument.PHRASES_XXX,
+  --  }
+  self.initial_instr_states = {}
+
+  --- table<[instr_idx]{
+  --  {
+  --    instrument_index = int,
+  --    sequence_index = int,
+  --    track_index = int,
+  --    phrase_index = int,
+  --  }
+  self.collected_phrases = {}
+
+  --- table<[string] = bool>
+  self.collected_messages = {}
+
+  --- table<[int] = bool>, remember which patterns we have collected from
+  self.processed_ptracks = {}
+
+  --- table, changed while in realtime mode
+  self.modified_lines = {} 
+
+  --- bool, do not trigger handler while true
+  self.suppress_line_notifier = false 
+
+  --- bool, perform UI update on next idle
+  self.realtime_update_requested = false 
+
+  --- string, scheduled message for status bar
+  self.status_update = nil  
+
+  --- (ProcessSlicer)
+  self.process_slicer = nil 
+
+  --- function, when running as sliced process
+  self.yield_fn = nil
+
+  -- initialize -----------------------
+
+  --- configure user-interface
+  self.ui = PhraseMateUI{
+    dialog_title = self.app_display_name,
+    owner = self,
+    waiting_to_show_dialog = self.prefs.autostart.value,
+  }
+
+  self.ui:build()
+
+
+  -- notifications --------------------
+
+  renoise.tool().app_idle_observable:add_notifier(function()
+
+    if self.realtime_update_requested then
+      self.realtime_update_requested = false
+      self.ui:update_realtime()
+    end
+
+    if (#self.modified_lines > 0) then
+      if rns.transport.edit_mode then
+        for k,v in ipairs(self.modified_lines) do
+          self:handle_modified_line(v)
+        end
+      end
+      self.modified_lines = {}
+    end
+
+    -- show progress
+    if self.status_update then
+      renoise.app():show_status(self.status_update)
+      self.ui:update_submit_buttons()
+      self.status_update = nil
+    end
+
+  end)
+
+
+  renoise.tool().app_new_document_observable:add_notifier(function()
+    rns = renoise.song()
+    self:attach_to_song()
+    self.ui:update_realtime()
+  end)
+
+  self.prefs.zxx_mode:add_notifier(function()
+    self.modified_lines = {}  
+  end)
+
+  -- final steps ----------------------
+
+  self:attach_to_song()
+
+end
+
+--------------------------------------------------------------------------------
+-- helper functions
+--------------------------------------------------------------------------------
+
+function PhraseMate:invoke_task(rslt,err)
+  TRACE("PhraseMate:invoke_task(rslt,err)",rslt,err)
+
+  if (rslt == false and err) then
+    renoise.app():show_status(err)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:progress_handler(msg)
+  TRACE("PhraseMate:progress_handler(msg)",msg)
+
+  self.ui.progress_txt_count = self.ui.progress_txt_count+1
+  if (self.ui.progress_txt_count == #PhraseMateUI.UI_PROGRESS_TXT) then
+    self.ui.progress_txt_count = 1
+  end
+  self.status_update = msg
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:done_handler(msg)
+  TRACE("PhraseMate:done_handler(msg)",msg)
+
+  self.status_update = "(PhraseMate) Done processing!"
+  self:initialize_variables()
+  collectgarbage()
+  --print("Memory used:",collectgarbage("count")*1024)
+
+  self.process_slicer = nil
+
+  self.ui:update_submit_buttons()
+  renoise.app():show_message(msg)
+
+end
+
+--------------------------------------------------------------------------------
+-- reset variables to initial state 
+
+function PhraseMate:initialize_variables()
+  TRACE("PhraseMate:initialize_variables()")
+
+  self.done_with_capture = false
+  self.source_target_map = {}
+  self.collected_phrases = {}
+  self.processed_ptracks = {}
+  self.ghost_columns = {}
+  self.initial_instr_states = {}
+  self.collected_messages = {}
+  self.source_instr_idx = nil
+  self.target_instr_idx = nil
+
+end
+
+
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:invoke_sliced_task(fn,arg)
+  TRACE("PhraseMate:invoke_sliced_task(fn,arg)",fn,arg)
+
+  if (self.prefs.process_slice_mode.value ~= PhraseMate.SLICE_MODE.NONE) then
+    self.process_slicer = ProcessSlicer(fn,arg)
+    self.process_slicer:start()
+  else
+    fn(arg)
+  end
+
+  --fn(arg)
+
+end
+
+
+--------------------------------------------------------------------------------
+-- Input methods
+--------------------------------------------------------------------------------
+
+function PhraseMate:get_source_instr()
+  TRACE("PhraseMate:get_source_instr()")
+
+  local rslt = table.copy(PhraseMate.UI_SOURCE_ITEMS)
+  for k = 1,127 do
+    local instr = rns.instruments[k]
+    local instr_name = instr and instr.name or ""
+    table.insert(rslt,("%.2X %s"):format(k-1,instr_name))
+  end
+  return rslt
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:get_target_instr()
+  TRACE("PhraseMate:get_target_instr()")
+
+  local rslt = table.copy(PhraseMate.UI_TARGET_ITEMS)
+  for k = 1,127 do
+    local instr = rns.instruments[k]
+    local instr_name = instr and instr.name or ""
+    table.insert(rslt,("%.2X %s"):format(k-1,instr_name))
+  end
+  return rslt
+
+end
+
+--------------------------------------------------------------------------------
+-- return pattern name, or "Patt XX" if not defined
+
+function PhraseMate:get_pattern_name(seq_idx)
+  --TRACE("PhraseMate:get_pattern_name(seq_idx)",seq_idx)
+  local name = rns.patterns[rns.sequencer:pattern(seq_idx)].name
+  return (name=="") and ("Pattern %.2d"):format(seq_idx) or "Pattern "..name
+end
+
+--------------------------------------------------------------------------------
+-- return track name, or "Track XX" if not defined
+
+function PhraseMate:get_track_name(trk_idx)
+  local name = rns.tracks[trk_idx].name
+  return (name=="") and ("Track %.2d") or name 
+end
+
+--------------------------------------------------------------------------------
+-- when doing CAPTURE_ONCE, grab the instrument nearest to our cursor 
+
+function PhraseMate:do_capture_once(trk_idx,seq_idx)
+  TRACE("PhraseMate:do_capture_once(trk_idx,seq_idx)",trk_idx,seq_idx)
+
+  if not self.done_with_capture 
+    and (self.prefs.input_source_instr.value == PhraseMate.SOURCE_INSTR.CAPTURE_ONCE) 
+  then
+    local seq_idx,trk_idx = rns.selected_sequence_index,rns.selected_track_index
+    rns.selected_sequence_index = seq_idx
+    rns.selected_track_index = trk_idx
+    --print("*** capture source instrument",source_instr_idx)
+    self:set_source_instr(xInstrument.autocapture())
+    rns.selected_sequence_index,rns.selected_track_index = seq_idx,trk_idx
+    self.done_with_capture = true
+    --print("*** captured instrument",source_instr_idx)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- look for implicit/explicit phrase trigger in the provided patternline
+-- @param line (renoise.PatternLine)
+-- @param note_col_idx (int)
+-- @param instr_idx (int)
+-- @param trk_idx (int)
+-- @return bool
+
+function PhraseMate:note_is_phrase_trigger(line,note_col_idx,instr_idx,trk_idx)
+  TRACE("PhraseMate:note_is_phrase_trigger(line,note_col_idx,instr_idx,trk_idx)",line,note_col_idx,instr_idx,trk_idx)
+
+  -- no note means no triggering 
+  local note_col = line.note_columns[note_col_idx]
+  if (note_col.note_value > renoise.PatternLine.NOTE_OFF) then
+    --print("*** note_is_phrase_trigger - false, no note is present")
+    return false
+  end
+
+  -- no phrases means no triggering 
+  local instr = rns.instruments[instr_idx]
+  if (#instr.phrases == 0) then
+    --print("*** note_is_phrase_trigger - false, no phrases available in instrument")
+    return false
+  end
+
+  local track = rns.tracks[trk_idx]
+  local visible_fx_cols = track.visible_effect_columns
+
+  if (instr.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_SELECTIVE) 
+    and (self.initial_instr_states[instr_idx].number_of_phrases > 0)
+  then
+    return true, "Can't collect phrases while the source instrument contains phrases and is set to phrase playback. Please switch playback mode to 'Off' and try again.\n"
+        
+  elseif (instr.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_KEYMAP) 
+    and (self.initial_instr_states[instr_idx].number_of_phrases > 0)
+    and xPhrase.note_is_keymapped(note_col.note_value,self.initial_instr_states[instr_idx])
+  then
+    return true,"One or more notes in the pattern were triggered using a phrase in keymap mode. To collect these notes, please switch playback mode to 'Off' and try again.\n"
+  else
+    local zxx_index = self:get_zxx_command(line,note_col_idx,visible_fx_cols) 
+    --print("*** note_is_phrase_trigger - zxx_index",zxx_index)
+    if zxx_index and (zxx_index > 0x00) and (zxx_index <= 0x7F) then
+      return true
+    end
+  end
+
+  return false
+
+end
+
+--------------------------------------------------------------------------------
+-- obtain Zxx value from the provided line, if any
+-- (look in both local and master fx-columns)
+-- @param line (renoise.PatternLine)
+-- @param note_col_idx (int)
+-- @param visible_fx_cols (int)
+-- @return int or nil
+
+function PhraseMate:get_zxx_command(line,note_col_idx,visible_fx_cols)
+  TRACE("PhraseMate:get_zxx_command(line,note_col_idx,visible_fx_cols)",line,note_col_idx,visible_fx_cols)
+
+  local note_col = line.note_columns[note_col_idx]
+  if (note_col.effect_number_string == "0Z") then
+    return note_col.effect_amount_value
+  end
+  for k,v in ipairs(line.effect_columns) do
+    if (k > visible_fx_cols) then
+      break
+    elseif (v.number_string == "0Z") then
+      return v.amount_value
+    end
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+-- update source instr by calling this fn 
+
+function PhraseMate:set_source_instr(instr_idx)
+  TRACE("PhraseMate:set_source_instr(instr_idx)",instr_idx)
+
+  assert(type(instr_idx)=="number","Expected instr_idx to be a number")
+
+  self.source_instr_idx = instr_idx
+  self:save_instr_state(instr_idx)
+  self:sync_source_target_instr()
+
+  --print("*** set_source_instr - source_instr_idx",self.source_instr_idx)
+
+end
+
+--------------------------------------------------------------------------------
+-- when collecting phrases into instrument itself, we need to know if the 
+-- instrument originally contained phrases or we won't be able to reliably 
+-- detect notes that trigger phrases later on... 
+
+function PhraseMate:save_instr_state(instr_idx)
+  TRACE("PhraseMate:save_instr_state(instr_idx)",instr_idx)
+
+  local instr = rns.instruments[instr_idx]
+  if not instr then
+    LOG("Could not locate instrument, state was not saved")
+    return
+  end
+  if not self.initial_instr_states[instr_idx] then
+    self.initial_instr_states[instr_idx] = {
+      number_of_phrases = #instr.phrases,
+      playback_mode = instr.phrase_playback_mode,
+      phrase_mappings = table.rcopy(instr.phrase_mappings)
+    }
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- when target is 'same as source', invoke this whenever source is set
+
+function PhraseMate:sync_source_target_instr()
+  TRACE("PhraseMate:sync_source_target_instr()")
+
+  if (self.prefs.input_target_instr.value == PhraseMate.TARGET_INSTR.SAME) then
+    self.target_instr_idx = self.source_instr_idx
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- reuse instrument (via map), take over (when empty) or create as needed
+-- will update self.target_instr_idx ...
+
+function PhraseMate:allocate_target_instr()
+  TRACE("PhraseMate:allocate_target_instr()")
+
+  if (self.prefs.input_target_instr.value == PhraseMate.TARGET_INSTR.NEW) then
+
+    -- attempt to re-use previously created
+    local do_copy = false
+    if self.source_target_map[self.source_instr_idx] then
+      self.target_instr_idx = self.source_target_map[self.source_instr_idx]
+      --print("*** allocate_target_instr - reuse",self.target_instr_idx)
+    else
+      self.target_instr_idx = xInstrument.get_first_available()
+      self.source_target_map[self.source_instr_idx] = self.target_instr_idx
+      --print("*** allocate_target_instr - takeover",self.target_instr_idx)
+      do_copy = true
+    end
+
+    if not self.target_instr_idx then
+      self.target_instr_idx = #rns.instruments+1
+      rns:insert_instrument_at(self.target_instr_idx)
+      self.source_target_map[self.source_instr_idx] = self.target_instr_idx
+      --print("*** allocate_target_instr - create",self.target_instr_idx)
+      do_copy = true
+    end
+
+    if do_copy then
+      local target_instr = rns.instruments[self.target_instr_idx]
+      local source_instr = rns.instruments[self.source_instr_idx]
+      target_instr:copy_from(source_instr)
+      target_instr.name = ("#%s"):format(source_instr.name)
+    end
+
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- continue existing phrase, take over empty phrase or create as needed
+
+function PhraseMate:allocate_phrase(track,seq_idx,trk_idx,selection)
+  TRACE("PhraseMate:allocate_phrase(track,seq_idx,trk_idx,selection)",track,seq_idx,trk_idx,selection)
+
+  local phrase,phrase_idx_or_err
+
+  -- only add when instrument exists
+  local instr = rns.instruments[self.target_instr_idx]
+  --print("*** allocate_phrase - self.target_instr_idx",self.target_instr_idx,instr)
+  if not instr then
+    return false,"Could not locate instrument, unable to allocate phrase"
+  end
+
+  -- continue existing
+  if self.collected_phrases[self.source_instr_idx] then
+    for k,v in ipairs(self.collected_phrases[self.source_instr_idx]) do
+      if (v.sequence_index == seq_idx) 
+        and (v.track_index == trk_idx) 
+      then
+        phrase,phrase_idx_or_err = instr.phrases[v.phrase_index],v.phrase_index
+        --print(">>> reusing phrase in seq,trk",seq_idx,trk_idx,"for source/target",self.source_instr_idx,self.target_instr_idx,phrase_idx_or_err,phrase)
+      end
+    end
+  end
+
+  -- takeover/create
+  if not phrase then
+    
+    local takeover = not self.prefs.input_include_empty_phrases.value 
+    local create_keymap = self.prefs.input_create_keymappings.value
+    local keymap_range = self.prefs.input_keymap_range.value
+    local keymap_offset = self.prefs.input_keymap_offset.value
+    phrase,phrase_idx_or_err = xPhraseManager.auto_insert_phrase(self.target_instr_idx,create_keymap,keymap_range,keymap_offset,takeover)
+    --print("*** allocate_phrase - phrase,phrase_idx_or_err",phrase,phrase_idx_or_err)
+    if not phrase then
+      LOG(phrase_idx_or_err) -- carries error msg
+    end
+
+    -- maintain a record for later
+    if not self.collected_phrases[self.source_instr_idx] then
+      self.collected_phrases[self.source_instr_idx] = {}
+    end
+    local t = {
+      instrument_index = self.target_instr_idx,
+      track_index = trk_idx,
+      sequence_index = seq_idx,
+      phrase_index = phrase_idx_or_err,
+    }
+    table.insert(self.collected_phrases[self.source_instr_idx],t)
+    --print(">>> allocate_phrase - t...",#self.collected_phrases,rprint(t))
+
+    -- name & configure the phrase
+    if phrase then
+      phrase.name = ("%s : %s"):format(self:get_pattern_name(seq_idx),self:get_track_name(trk_idx))
+      phrase.number_of_lines = 1 + selection.end_line - selection.start_line
+      phrase.volume_column_visible = track.volume_column_visible
+      phrase.panning_column_visible = track.panning_column_visible
+      phrase.delay_column_visible = track.delay_column_visible
+      phrase.sample_effects_column_visible = track.sample_effects_column_visible
+      if (track.type == renoise.Track.TRACK_TYPE_SEQUENCER) then
+        phrase.visible_note_columns = track.visible_note_columns
+      end
+      phrase.visible_effect_columns = track.visible_effect_columns
+
+      local looping_set,err = xPhraseManager.set_universal_phrase_property(self.target_instr_idx,phrase_idx_or_err,"looping",self.prefs.input_loop_phrases.value)
+      if not looping_set then
+        LOG(err)
+      end
+
+    end
+
+  end
+
+  if not phrase then
+    return false,"Could not allocate phrase"
+  end
+
+  return phrase,phrase_idx_or_err
+
+end
+
+--------------------------------------------------------------------------------
+-- the yield function, invoked while collecting phrases 
+
+function PhraseMate:yield_fn(seq_idx,trk_idx)
+
+  if (self.prefs.process_slice_mode.value == PhraseMate.SLICE_MODE.PATTERN_TRACK) then
+    self:progress_handler(("Collecting phrases : sequence index = %d, track index = %d"):format(seq_idx,trk_idx))
+  elseif (self.prefs.process_slice_mode.value == PhraseMate.SLICE_MODE.PATTERN) then
+    self:progress_handler(("Collecting phrases : sequence index = %d"):format(seq_idx))
+  end
+
+  if self.process_slicer and self.process_slicer:running() then
+    coroutine.yield()
+  end
+end
+
+--------------------------------------------------------------------------------
+-- invoked through the 'collect phrases' button/shortcuts
+-- @param scope (PhraseMate.INPUT_SCOPE), defined when invoked via shortcut
+-- @return table (created phrase indices)
+
+function PhraseMate:collect_phrases(scope)
+  TRACE("PhraseMate:collect_phrases(scope)",scope)
+
+  if not scope then
+    scope = self.prefs.input_scope.value
+  end
+
+  self:initialize_variables()
+
+  -- set initial source/target instruments
+  -- (might change during collection)
+
+  if (self.prefs.input_source_instr.value == PhraseMate.SOURCE_INSTR.CUSTOM) then
+    if vb then
+      self.source_instr_idx = vb.views["ui_source_popup"].value - #PhraseMate.SOURCE_INSTR-2
+    end
+  elseif (self.prefs.input_source_instr.value == PhraseMate.SOURCE_INSTR.SELECTED) then
+    self.source_instr_idx = rns.selected_instrument_index
+  end
+  if (self.prefs.input_target_instr.value == PhraseMate.TARGET_INSTR.CUSTOM) then
+    if vb then
+      self.target_instr_idx = vb.views["ui_target_popup"].value - #PhraseMate.TARGET_INSTR-2
+    end
+  end
+
+  local capture_all = (self.prefs.input_source_instr.value == PhraseMate.SOURCE_INSTR.CAPTURE_ALL)
+  if not capture_all then
+    self:save_instr_state(self.source_instr_idx)
+  end
+
+  if self.source_instr_idx then
+    self:sync_source_target_instr()
+  end
+
+  -- do collection
+
+  if (scope == PhraseMate.INPUT_SCOPE.SELECTION_IN_PATTERN) then
+    self:invoke_sliced_task(self.collect_from_pattern_selection,self)
+  elseif (scope == PhraseMate.INPUT_SCOPE.SELECTION_IN_MATRIX) then
+    self:invoke_sliced_task(self.collect_from_matrix_selection,self)
+  elseif (scope == PhraseMate.INPUT_SCOPE.TRACK_IN_PATTERN) then
+    self:invoke_sliced_task(self.collect_from_track_in_pattern,self)
+  elseif (scope == PhraseMate.INPUT_SCOPE.TRACK_IN_SONG) then
+    self:invoke_sliced_task(self.collect_from_track_in_song,self)
+  else
+    error("Unexpected output scope")
+  end
+
+  -- note: the various collect_xx methods will call do_finalize()
+  -- which will clean up/create the phrases
+
+end
+
+--------------------------------------------------------------------------------
+-- @return bool
+-- @return string (error message)
+
+function PhraseMate:collect_from_pattern_selection()
+  TRACE("PhraseMate:collect_from_pattern_selection()")
+
+  local patt_sel,err = xSelection.get_pattern_if_single_track()
+  if not patt_sel then
+    return false,err
+  end
+
+  local seq_idx = rns.selected_sequence_index
+  self:do_capture_once(patt_sel.start_track,seq_idx)
+
+  self:do_collect(nil,nil,patt_sel)
+
+end
+
+--------------------------------------------------------------------------------
+-- collect phrases from the matrix selection
+-- @return bool
+-- @return string (error message)
+
+function PhraseMate:collect_from_matrix_selection()
+  TRACE("PhraseMate:collect_from_matrix_selection()")
+
+  local matrix_sel,err = xSelection.get_matrix_selection()
+  if table.is_empty(matrix_sel) then
+    return false,"No selection is defined in the matrix"
+  end
+
+  local create_keymap = self.prefs.input_create_keymappings.value
+  for seq_idx = 1, #rns.sequencer.pattern_sequence do
+    if matrix_sel[seq_idx] then
+      for trk_idx = 1, #rns.tracks do
+        if matrix_sel[seq_idx][trk_idx] then
+          self:do_capture_once(trk_idx,seq_idx)
+          self:do_collect(seq_idx,trk_idx)
+        end
+      end
+      --self:progress_handler(("Collecting phrases : sequence index = %d, track index = %d"):format(seq_idx,trk_idx))
+      self:yield_fn(seq_idx)
+    end
+  end
+
+  self:do_finalize()
+
+end
+
+--------------------------------------------------------------------------------
+-- collect phrases from the selected pattern-track 
+-- @return bool
+-- @return string (error message)
+
+function PhraseMate:collect_from_track_in_pattern()
+  TRACE("PhraseMate:collect_from_track_in_pattern()")
+
+  local trk_idx = rns.selected_track_index
+  local seq_idx = rns.selected_sequence_index
+  self:do_capture_once(trk_idx,seq_idx)
+
+  self:do_collect()
+
+end
+
+--------------------------------------------------------------------------------
+-- collect phrases from the selected track in the song
+-- @return bool
+-- @return string (error message)
+
+function PhraseMate:collect_from_track_in_song()
+  TRACE("PhraseMate:collect_from_track_in_song()")
+
+  local trk_idx = rns.selected_track_index
+
+  for seq_idx = 1, #rns.sequencer.pattern_sequence do
+    self:do_capture_once(trk_idx,seq_idx)
+    self:do_collect(seq_idx)
+    --self:progress_handler(("Collecting phrases : sequence index = %d"):format(seq_idx))
+    self:yield_fn(seq_idx)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- invoked as we travel through pattern-tracks...
+-- @param seq_idx (int)
+-- @param trk_idx (int)
+-- @param patt_sel (table), specified when doing SELECTION_IN_PATTERN
+
+function PhraseMate:do_collect(seq_idx,trk_idx,patt_sel)
+  TRACE("PhraseMate:do_collect(seq_idx,trk_idx,patt_sel)",seq_idx,trk_idx,patt_sel)
+
+  if not seq_idx then
+    seq_idx = rns.selected_sequence_index
+  end
+  if not trk_idx then
+    trk_idx = rns.selected_track_index
+  end
+
+  local track = rns.tracks[trk_idx]
+  local patt_idx = rns.sequencer:pattern(seq_idx)
+  local patt = rns.patterns[patt_idx]
+  local ptrack = patt:track(trk_idx)
+
+  -- encountering the same pattern-track can happen when processing
+  -- a song whose sequence contain pattern-aliases
+  if not self.processed_ptracks[patt_idx] then
+    self.processed_ptracks[patt_idx] = {}
+  end
+  if self.processed_ptracks[patt_idx][trk_idx] then
+    local msg = "(At sequence #%.2d: We've already processed this pattern, skip..."
+    LOG(msg:format(seq_idx))
+    return
+  end
+
+  if not patt_sel then
+    patt_sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+  end
+  --print("*** patt_sel",rprint(patt_sel))
+
+  -- make sure ghost columns are initialized
+  if not self.ghost_columns[trk_idx] then
+    self.ghost_columns[trk_idx] = {}
+  end
+
+  -- set up our iterator
+  local patt_lines = rns.pattern_iterator:lines_in_pattern_track(patt_idx,trk_idx)
+
+
+  -- loop through pattern, create phrases/instruments as needed
+
+  local target_phrase,target_phrase_idx = nil
+
+  for pos, line in patt_lines do
+    if pos.line > patt_sel.end_line then break end
+    if pos.line >= patt_sel.start_line then
+      --if not line.is_empty then
+
+        local phrase_line_idx = pos.line - (patt_sel.start_line-1)
+
+        -- iterate through note-columns
+        for note_col_idx,note_col in ipairs(line.note_columns) do
+
+          if (note_col_idx > track.visible_note_columns) then
+            --print("*** do_collect - skip hidden note-column",note_col_idx)
+          else
+            --print("*** do_collect - seq_idx",seq_idx,"trk_idx",trk_idx,"note_col_idx",note_col_idx,"pos.line",pos.line)
+
+            local instr_value = note_col.instrument_value
+            local has_instr_value = (instr_value < 255)
+            local capture_all = (self.prefs.input_source_instr.value == PhraseMate.SOURCE_INSTR.CAPTURE_ALL)
+
+            -- before switching instrument/phrase, produce a note-off
+            -- (unless a note-off was already detected)
+            if has_instr_value and target_phrase then
+              local do_note_off = false
+              if capture_all 
+                and self.ghost_columns[trk_idx][note_col_idx]
+                and (instr_value+1 ~= self.ghost_columns[trk_idx][note_col_idx].instrument_index)
+              then
+                --print("*** do_collect - produce a note-off ('capture_all')")
+                do_note_off = true
+                self:set_source_instr(self.ghost_columns[trk_idx][note_col_idx].instrument_index)
+                self:allocate_target_instr()
+                target_phrase,target_phrase_idx = self:allocate_phrase(track,seq_idx,trk_idx,patt_sel)
+              elseif (self.source_instr_idx ~= instr_value+1)
+                and self.ghost_columns[trk_idx][note_col_idx]
+                and (self.source_instr_idx == self.ghost_columns[trk_idx][note_col_idx].instrument_index)
+              then
+                --print("*** do_collect - produce a note-off ('fixed' instrument)")
+                do_note_off = true
+              end
+              if do_note_off 
+                and self.ghost_columns[trk_idx][note_col_idx]
+                and not self.ghost_columns[trk_idx][note_col_idx].offed
+              then
+                local phrase_col = target_phrase:line(phrase_line_idx).note_columns[note_col_idx]
+                phrase_col.note_value = renoise.PatternLine.NOTE_OFF
+              end
+            end
+
+            -- do we need to change source/create instruments on the fly? 
+            if capture_all then
+              self.source_instr_idx = nil
+              if has_instr_value then
+                --print("*** do_collect - has_instr_value - switch to source instrument...")
+                self:set_source_instr(instr_value+1)
+                target_phrase = nil
+              elseif self.ghost_columns[trk_idx][note_col_idx] then
+                --print("*** do_collect - let ghost columns decide source instrument...trk_idx,note_col_idx",trk_idx,rprint(self.ghost_columns))
+                self:set_source_instr(self.ghost_columns[trk_idx][note_col_idx].instrument_index)
+                target_phrase = nil
+              end
+            end
+
+            -- initialize the phrase
+            -- will work only when we have an active voice (self.ghost_columns)
+            if not target_phrase 
+              and self.source_instr_idx
+              and not ptrack.is_empty
+            then
+              self:allocate_target_instr()
+              target_phrase,target_phrase_idx = self:allocate_phrase(track,seq_idx,trk_idx,patt_sel)
+              --print("*** do_collect - allocated phrase",target_phrase_idx,target_phrase)
+            end
+
+            if target_phrase then
+
+              local phrase_col = target_phrase:line(phrase_line_idx).note_columns[note_col_idx]
+              --print("phrase_col",phrase_col)
+
+              --print("*** do_collect - self.ghost_columns PRE",rprint(self.ghost_columns))
+              if (instr_value < 255) then
+                self.ghost_columns[trk_idx][note_col_idx] = {}
+                self.ghost_columns[trk_idx][note_col_idx].instrument_index = instr_value+1
+                --print("*** added self.ghost_columns",rprint(self.ghost_columns))
+              end
+              if (note_col.note_value == renoise.PatternLine.NOTE_OFF) then
+                if self.ghost_columns[trk_idx][note_col_idx] then
+                  self.ghost_columns[trk_idx][note_col_idx].offed = true
+                end
+              end
+              --print("*** do_collect - self.ghost_columns POST",rprint(self.ghost_columns))
+
+              -- copy note-column when we have an active (ghost-)note 
+              local do_copy = capture_all and self.ghost_columns[trk_idx][note_col_idx] or
+                (self.ghost_columns[trk_idx][note_col_idx] 
+                and (self.ghost_columns[trk_idx][note_col_idx].instrument_index == self.source_instr_idx))
+  
+              if (do_copy) then
+                local is_trigger,msg = self:note_is_phrase_trigger(line,note_col_idx,self.source_instr_idx,trk_idx)
+                if is_trigger and msg then
+                  --renoise.app():show_message(msg)
+                  self.collected_messages[msg] = true
+                else
+                  phrase_col:copy_from(note_col)                
+                  --print("*** do_collect - copied this column",note_col)
+                  if self.prefs.input_replace_collected.value then
+                    note_col:clear()
+                  end
+                end
+              end
+
+            end
+          
+          end
+
+        end
+
+        -- fx columns are always copied
+        -- TODO allocate phrase here as well (when in group/master/send track)
+        if target_phrase then
+          for fx_col_idx,fx_col in ipairs(line.effect_columns) do
+
+            -- extra check: skip track (Zxxx) and global commands (0xxx-Fxxx)
+            local do_copy = true
+            local first_digit = tonumber(fx_col.number_string:sub(0,1))
+            if (fx_col.number_string:sub(0,1) == "Z")
+              or ((type(first_digit)=="number")
+              and (first_digit > 0))
+            then
+              do_copy = false
+              --LOG("*** do_collect - skip track/global command",fx_col)
+            end
+
+            if do_copy then
+              local phrase_col = target_phrase:line(phrase_line_idx).effect_columns[fx_col_idx]
+              phrase_col:copy_from(fx_col)
+              if self.prefs.input_replace_collected.value then
+                fx_col:clear()
+              end
+            end
+          end
+        end
+
+      --end
+    end
+  end
+
+  self.processed_ptracks[patt_idx][trk_idx] = true
+
+  --self:progress_handler(("Collecting phrases : sequence index = %d, track index = %d"):format(seq_idx,trk_idx))
+  self:yield_fn(seq_idx,trk_idx)
+
+end
+
+--------------------------------------------------------------------------------
+-- collect: post-process / finalize 
+
+function PhraseMate:do_finalize()
+  TRACE("PhraseMate:do_finalize()")
+
+  local collected_phrase_count = 0
+  local collected_instruments = {}
+  local delete_instruments = {} -- table<[instrument_index]=bool>
+  local empty_phrases = {}     -- table<[instrument_index]={phrase_index,...}>
+
+  -- table<[instrument_index]={
+  --    {
+  --      source_phrase_index=int,
+  --      target_phrase_index=int,
+  --    },
+  --  }>
+  local duplicate_phrases = {}  
+
+  --print("*** post-process - self.collected_phrases",rprint(self.collected_phrases))
+  --print("*** post-process - self.collected_phrases",rprint(table.keys(self.collected_phrases)))
+  if (#table.keys(self.collected_phrases) == 0) then
+
+    local msg = "No phrases were collected"
+    self.collected_messages[msg] = true
+
+  else
+
+    local cached_instr_idx = rns.selected_instrument_index
+
+    for instr_idx,collected in pairs(self.collected_phrases) do
+      --print("*** post-process - instr_idx,collected",instr_idx,collected)
+      for __,v in pairs(collected) do
+
+        local instr = rns.instruments[v.instrument_index]
+        if not instr then
+          --LOG("Skip collected phrase - instrument not found...",rprint(v))
+        else
+          -- check for duplicates 
+          if not self.prefs.input_include_duplicate_phrases.value 
+            and not duplicate_phrases[v.instrument_index]
+          then
+            duplicate_phrases[v.instrument_index] = xPhraseManager.find_duplicates(instr)
+            --print(">>> post-process - duplicate_phrases @instr-index",v.instrument_index,rprint(duplicate_phrases[v.instrument_index]))
+          end
+
+          -- remove instrument when without phrases
+          if (self.prefs.input_target_instr.value == PhraseMate.TARGET_INSTR.NEW) 
+            and (#instr.phrases == 0)
+          then
+            delete_instruments[v.instrument_index] = true
+          else
+
+            local phrase_idx = v.phrase_index
+
+            collected_instruments[v.instrument_index] = true
+            local phrase = instr.phrases[phrase_idx]
+              
+            -- TODO don't process if we are going to remove 
+            -- the (empty,duplicate) phrase anyway
+
+            if phrase then
+
+              --print("*** post-process - phrase,instr",phrase.name,instr.name)
+
+              xPhrase.clear_foreign_commands(phrase)
+
+              -- remove empty phrases
+              if phrase.is_empty 
+                and not self.prefs.input_include_empty_phrases.value
+              then
+                if not empty_phrases[v.instrument_index] then
+                  empty_phrases[v.instrument_index] = {}
+                end
+                table.insert(empty_phrases[v.instrument_index],phrase_idx)
+                --print("got here 1")
+
+              else
+                collected_phrase_count = collected_phrase_count+1
+                --print("got here 2")
+
+                if not self.prefs.input_include_duplicate_phrases.value then
+                  -- check if phrase is a duplicate and use source instead
+                  -- (as duplicates will be removed)
+                  if duplicate_phrases[v.instrument_index] then
+                    for k2,v2 in ipairs(duplicate_phrases[v.instrument_index]) do
+                      if (v2.target_phrase_index == phrase_idx) then
+                        --print("This phrase is a duplicate - use source",rprint(v2))
+                        phrase_idx = v2.source_phrase_index
+                        phrase = instr.phrases[phrase_idx]
+                      end
+                    end
+                  end
+                end
+
+                -- replace notes with phrase trigger 
+                -- (if multiple instruments, each is a separate note-column)
+                if self.prefs.input_replace_collected.value then
+                  local track = rns.tracks[v.track_index]
+                  local patt_idx = rns.sequencer:pattern(v.sequence_index)
+                  local patt_lines = rns.pattern_iterator:lines_in_pattern_track(patt_idx,v.track_index)
+                  for ___,line in patt_lines do
+                    
+                    -- allocate column
+                    local col_idx = 1
+                    for k,note_col in ipairs(line.note_columns) do
+                      if (note_col.effect_number_string ~= "0Z") then
+                        col_idx = k
+                        track.visible_note_columns = math.max(track.visible_note_columns,k)
+                        break
+                      end
+                    end
+                    --print("*** replace notes, create trigger in column",col_idx)
+
+                    local trigger_note_col = line.note_columns[col_idx]
+                    trigger_note_col.instrument_value = v.instrument_index-1
+                    trigger_note_col.note_string = "C-4"
+                    trigger_note_col.effect_number_string = "0Z"
+                    trigger_note_col.effect_amount_value = phrase_idx
+                    track.sample_effects_column_visible = true
+                    break
+                  end
+                end
+
+              end
+
+              -- bring the phrase editor to front for all created instruments 
+              instr.phrase_editor_visible = true
+
+              -- switch to the relevant playback mode
+              if self.prefs.input_create_keymappings.value then
+                instr.phrase_playback_mode = renoise.Instrument.PHRASES_PLAY_KEYMAP
+              end
+
+            end
+
+          end
+
+        end
+
+
+      end
+    end
+
+    if (self.prefs.input_target_instr.value == PhraseMate.TARGET_INSTR.NEW) then
+      rns.selected_instrument_index = self.target_instr_idx
+    end
+    if (#rns.selected_instrument.phrases > 0) then
+      rns.selected_phrase_index = #rns.selected_instrument.phrases
+    end
+
+    -- remove from table while maintaining phrase-index order 
+    -- @param t - 
+    --  empty_phrases (look for table indices) 
+    --  duplicate_phrases (look for 'target_phrase_index' property)
+    -- @return int, #removed phrases
+    local remove_phrases_via_table = function(t)
+      --print("remove_phrases_via_table - t",rprint(t))
+      local count = 0
+      for instr_idx,v in pairs(t) do
+        local instr = rns.instruments[instr_idx]
+        if instr then
+          for __,phrase_idx in pairs(v) do
+            --print("type(phrase_idx)",type(phrase_idx),rprint(phrase_idx))
+            if type(phrase_idx)=="table" then
+              -- special treatment for 'duplicate_phrases'
+              phrase_idx = phrase_idx.target_phrase_index
+            end
+            --print("instr.phrases[phrase_idx]",phrase_idx,instr.phrases[phrase_idx])
+            if instr.phrases[phrase_idx] then
+              instr:delete_phrase_at(phrase_idx)
+              count = count+1
+              -- adjust phrase indices
+              for k2,v2 in pairs(v) do
+                if type(v2)=="table" then
+                  --print(">>> duplicate_phrases")
+                  if (v2.target_phrase_index > phrase_idx) then
+                    v[k2].target_phrase_index = v2.target_phrase_index-1
+                    --print(">>> bring target phrase down")
+                  end
+                  if (v2.source_phrase_index > phrase_idx) then
+                    v[k2].source_phrase_index = v2.source_phrase_index-1
+                    --print(">>> bring source phrase down")
+                  end
+                else
+                  --print(">>> empty_phrases")
+                  if (v2 > phrase_idx) then
+                    v[k2] = v2-1
+                    --print(">>> bring phrase down")
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+      return count
+    end
+
+    -- remove duplicate/empty phrases
+    local empty_phrase_count = remove_phrases_via_table(empty_phrases)
+    local duplicate_phrase_count = remove_phrases_via_table(duplicate_phrases)
+
+    collected_phrase_count = collected_phrase_count-
+      (empty_phrase_count+duplicate_phrase_count)
+
+    -- remove newly created instruments without phrases
+    if not table.is_empty(delete_instruments) then
+      for k = 127,1,-1 do
+        if delete_instruments[k] then
+          --print("*** post-process - delete instrument at",k)
+          rns:delete_instrument_at(k)
+          collected_instruments[k] = false
+        end
+      end
+      rns.selected_instrument_index = cached_instr_idx
+    end
+
+    local msg_include_empty = self.prefs.input_include_empty_phrases.value
+      and "" or (#table.keys(empty_phrases) > 0) and ("\nEmpty phrases skipped: %d "):format(empty_phrase_count) or ""
+    --print("msg_include_empty",msg_include_empty)
+
+    local msg_include_duplicates = self.prefs.input_include_duplicate_phrases.value
+      and "" or (#table.keys(duplicate_phrases) > 0) and ("\nDuplicate phrases skipped: %d "):format(duplicate_phrase_count) or ""
+    --print("msg_include_duplicates",msg_include_duplicates)
+
+    local msg = ("Created a total of %d phrase(s) across %d instrument(s)%s%s"):format(
+      collected_phrase_count,#table.keys(collected_instruments),msg_include_empty,msg_include_duplicates)
+    self.collected_messages[msg] = true
+
+  end
+
+  if not table.is_empty(self.collected_messages) then
+    local msg = table.concat(table.keys(self.collected_messages),"\n")
+    self:done_handler(msg)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- Output methods
+--------------------------------------------------------------------------------
+-- @param start_col - note/effect column index
+-- @param end_col - note/effect column index
+-- @param start_line - pattern line
+-- @param end_line - pattern line
+--[[
+function PhraseMate:apply_phrase_to_track(start_col,end_col,start_line,end_line)
+
+  local track_index = rns.selected_track_index
+  local instr_index = rns.selected_instrument_index
+  local phrase = rns.selected_phrase
+
+  if not phrase then
+    return false,"No phrase was selected"
+  end
+
+  suppress_line_notifier = true
+  local track = rns.selected_track
+
+  -- TODO support other track types
+  if (track.type ~= renoise.Track.TRACK_TYPE_SEQUENCER) then
+    return false,"Can only write to sequencer tracks"
+  end
+
+  local ptrack = rns.selected_pattern_track
+  
+  local start_note_col,end_note_col
+  local start_fx_col,end_fx_col
+  local restrict_to_selection = start_col
+
+  if not start_col then
+    start_line = 1
+    start_note_col = 1
+    start_fx_col = 1
+    end_line = #ptrack.lines
+    end_note_col = phrase.visible_note_columns
+    end_fx_col = phrase.visible_effect_columns
+  else
+    if (start_col <= track.visible_note_columns) then
+      start_note_col = start_col
+      start_fx_col = 1
+    else
+      start_note_col = nil
+      start_fx_col = start_col - phrase.visible_note_columns
+    end
+    if (end_col <= phrase.visible_note_columns) then
+      start_fx_col = nil
+      end_note_col = end_col
+    else 
+      end_note_col = start_col + phrase.visible_note_columns - 1
+      end_fx_col = end_col - phrase.visible_note_columns
+    end
+  end
+
+  -- produce output
+  
+  local num_lines = end_line - start_line
+  local phrase_num_lines = phrase.number_of_lines
+
+  for i = 1,num_lines do
+
+    local source_line_idx = i
+
+    if not self.prefs.cont_paste.value then
+      if (i > phrase_num_lines) then
+        break
+      end
+    else
+      if self.prefs.anchor_to_selection.value then
+        source_line_idx = i % phrase_num_lines
+      else
+        source_line_idx = (start_line+i-1) % phrase_num_lines
+      end
+      if (source_line_idx == 0) then
+        source_line_idx = phrase_num_lines
+      end
+    end
+    
+    local source_line = phrase:line(source_line_idx)
+    local target_line = ptrack:line(start_line+i-1)
+   
+    if start_note_col then
+      local col_count = 0
+      for col_idx = 1,renoise.InstrumentPhrase.MAX_NUMBER_OF_NOTE_COLUMNS do
+        if (col_idx >= start_note_col) and
+          (col_idx <= end_note_col) 
+        then
+
+          col_count = col_count + 1
+          local skip_column = (phrase:column_is_muted(col_count)
+            and self.prefs.skip_muted.value) or false
+
+          if not skip_column then
+
+            local source_col = source_line:note_column(col_count)
+            local target_col = target_line:note_column(col_idx)
+
+            -- note
+            if (source_col.note_value < 121) then
+              target_col.note_value = source_col.note_value
+            elseif not self.prefs.mix_paste.value then
+              target_col.note_value = 121
+            end
+
+            -- instrument 
+            if (source_col.note_value < 121) then
+              target_col.instrument_value = instr_index-1
+            elseif not self.prefs.mix_paste.value then
+              target_col.note_value = 121
+            end
+
+            -- volume
+            if phrase.volume_column_visible then
+              if (source_col.volume_value ~= 255) then
+                target_col.volume_value = source_col.volume_value
+                if self.prefs.expand_subcolumns.value then
+                  track.volume_column_visible = true
+                end
+              elseif not self.prefs.mix_paste.value then
+                target_col.volume_value = 255
+              end          
+            end          
+  
+            -- panning
+            if phrase.panning_column_visible then
+              if (source_col.panning_value ~= 255) then
+                target_col.panning_value = source_col.panning_value
+                if self.prefs.expand_subcolumns.value then
+                  track.panning_column_visible = true
+                end
+              elseif not self.prefs.mix_paste.value then
+                target_col.panning_value = 255
+              end      
+            end      
+            
+            -- delay
+            if phrase.delay_column_visible then
+              if (source_col.delay_value > 0) then
+                target_col.delay_value = source_col.delay_value
+                if self.prefs.expand_subcolumns.value then
+                  track.delay_column_visible = true
+                end
+              elseif not self.prefs.mix_paste.value then
+                target_col.delay_value = 0
+              end          
+            end          
+  
+            -- sample effects
+            if phrase.sample_effects_column_visible then
+              if (source_col.effect_amount_value > 0) then
+                target_col.effect_amount_value = source_col.effect_amount_value
+                if self.prefs.expand_subcolumns.value then
+                  track.sample_effects_column_visible = true
+                end
+              elseif not self.prefs.mix_paste.value then
+                target_col.effect_amount_value = 0
+              end          
+              if (source_col.effect_number_value > 0) then
+                target_col.effect_number_value = source_col.effect_number_value
+                if self.prefs.expand_subcolumns.value then
+                  track.sample_effects_column_visible = true
+                end
+              elseif not self.prefs.mix_paste.value then
+                target_col.effect_number_value = 0
+              end  
+            end  
+
+            if self.prefs.expand_columns and 
+              (track.visible_note_columns < col_idx)
+            then
+              track.visible_note_columns = col_idx
+            end
+
+          else
+
+            -- muted: clear when not mix-pasting
+            if not self.prefs.mix_paste.value then
+              local target_col = target_line:note_column(col_idx)
+              target_col:clear()
+            end
+
+          end          
+        
+        end
+      end
+    end
+
+    if start_fx_col then
+    local col_count = 1
+      for col_idx = 1,track.visible_effect_columns do
+        if (col_idx >= start_fx_col) and
+          (col_idx <= end_fx_col) 
+        then
+
+          local source_col = source_line:effect_column(col_count)
+          local target_col = target_line:effect_column(col_idx)
+
+          if (source_col.amount_value > 0) then
+            target_col.amount_value = source_col.amount_value
+          elseif not self.prefs.mix_paste.value then
+            target_col.amount_value = 0
+          end          
+          if (source_col.number_value > 0) then
+            target_col.number_value = source_col.number_value
+          elseif not self.prefs.mix_paste.value then
+            target_col.number_value = 0
+          end 
+
+          col_count = col_count + 1
+
+        end
+      end
+    end
+
+  end
+  
+  suppress_line_notifier = false
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:apply_phrase_to_selection()
+
+  local sel,err = xSelection.get_pattern_if_single_track()
+  if not sel then
+    return false,err
+  end
+
+  return apply_phrase_to_track(sel.start_column,sel.end_column,sel.start_line,sel.end_line)
+
+end
+]]
+
+--------------------------------------------------------------------------------
+-- @param start_col - note/effect column index
+-- @param end_col - note/effect column index
+-- @param start_line - pattern line
+-- @param end_line - pattern line
+
+function PhraseMate:apply_to_track(sel)
+
+  if not rns.selected_phrase then
+    return false,"No phrase was selected"
+  end
+
+  if not sel then
+    sel = xSelection.get_pattern_track(rns.selected_sequence_index,rns.selected_track_index)
+  end
+
+  local options = {
+    instr_index = rns.selected_instrument_index,
+    phrase = rns.selected_phrase,
+    anchor_to_selection = self.prefs.anchor_to_selection.value,
+    expand_subcolumns = self.prefs.expand_subcolumns.value,
+    cont_paste = self.prefs.cont_paste.value,
+    mix_paste = self.prefs.mix_paste.value,
+    selection = sel,
+  }
+
+  self.suppress_line_notifier = true
+  self:invoke_sliced_task(xPhrase.apply_to_track,options)
+  self.suppress_line_notifier = false
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:apply_to_selection()
+  TRACE("PhraseMate:apply_to_selection()")
+
+  local sel,err = xSelection.get_pattern_if_single_track()
+  if not sel then
+    return false,err
+  end
+
+  return self:apply_to_track(sel)
+
+end
+
+--------------------------------------------------------------------------------
+-- Realtime methods
+--------------------------------------------------------------------------------
+
+function PhraseMate:line_notifier_fn(pos)
+  TRACE("PhraseMate:line_notifier_fn(pos)",pos)
+
+  print("self",self)
+
+  if not self.prefs.zxx_mode.value then
+    return
+  end
+
+  if not self.suppress_line_notifier then
+    table.insert(self.modified_lines,pos)
+    --print("modified_lines",#self.modified_lines)
+  end
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:handle_modified_line(pos)
+  TRACE("PhraseMate:handle_modified_line(pos)",pos)
+
+  local patt = rns.patterns[pos.pattern]
+  local ptrack = patt:track(pos.track)
+  local line = ptrack:line(pos.line)
+  local instr = rns.selected_instrument
+  local has_phrases = (#instr.phrases > 0)
+  local program_mode = (instr.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_SELECTIVE)
+
+  local matching_note = nil
+
+  for k,note_col in ipairs(line.note_columns) do
+    if (note_col.instrument_value == rns.selected_instrument_index-1) then
+      matching_note = {
+        note_column_index = k,
+      }
+      break
+    end
+  end
+  --print("matching_note",rprint(matching_note))
+
+  if matching_note and has_phrases and program_mode then
+    --print("add Zxx command")
+    for k,fx_col in ipairs(line.effect_columns) do
+      local has_zxx_command = (fx_col.number_string == "0Z")
+      if has_zxx_command then
+        --print("existing zxx command",fx_col.amount_value)
+        local where_we_were = rns.transport.edit_pos.line - rns.transport.edit_step
+        if (pos.line == where_we_were) then
+          local num_phrases = #rns.selected_instrument.phrases
+          local zxx_command_value = has_zxx_command and fx_col.amount_value or rns.selected_phrase_index
+          fx_col.number_string = "0Z"
+          fx_col.amount_value = zxx_command_value
+        else
+          --print("got here")
+        end
+        break
+      elseif fx_col.is_empty then
+        --print("no zxx - add selected")
+        fx_col.number_string = "0Z"
+        fx_col.amount_value = rns.selected_phrase_index
+        break
+      end
+    end
+
+  elseif not matching_note then
+    --print("clear Zxx command")
+    local zxx_command = nil
+    for k,fx_col in ipairs(line.effect_columns) do
+      if (fx_col.number_string == "0Z") then
+        zxx_command = {
+          effect_column_index = k,
+        }
+        break
+      end
+    end
+    if zxx_command then
+      if zxx_command.note_column_index then
+        --line.note_columns[zxx_command.note_column_index].effect_amount_value = 0
+        --line.note_columns[zxx_command.note_column_index].effect_number_value = 0
+      elseif zxx_command.effect_column_index then
+        line.effect_columns[zxx_command.effect_column_index].amount_value = 0
+        line.effect_columns[zxx_command.effect_column_index].number_value = 0
+      end
+    end
+
+  end
+
+end
+
+--------------------------------------------------------------------------------
+function PhraseMate:phrase_playback_mode_handler()
+  TRACE("PhraseMate:phrase_playback_mode_handler()")
+
+  self.realtime_update_requested = true
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:phrase_index_notifier()
+  TRACE("PhraseMate:phrase_index_notifier()")
+
+  self.realtime_update_requested = true
+
+end
+
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:attach_to_instrument()
+  TRACE("PhraseMate:attach_to_instrument()")
+
+  local instr = rns.selected_instrument
+
+  if not instr.phrase_playback_mode_observable:has_notifier(self.phrase_playback_mode_handler,self) then
+    instr.phrase_playback_mode_observable:add_notifier(self.phrase_playback_mode_handler,self)
+  end
+
+  self.ui:update_realtime()
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:detach_from_instrument()
+  TRACE("PhraseMate:detach_from_instrument()")
+
+  local instr = rns.selected_instrument
+
+  if instr.phrase_playback_mode_observable:has_notifier(self.phrase_playback_mode_handler,self) then
+    instr.phrase_playback_mode_observable:remove_notifier(self.phrase_playback_mode_handler,self)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:attach_to_pattern()
+  TRACE("PhraseMate:attach_to_pattern()")
+
+  self.modified_lines = {}
+  local pattern = rns.selected_pattern
+  if not pattern:has_line_notifier(self.line_notifier_fn,self) then
+    pattern:add_line_notifier(self.line_notifier_fn,self)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:detach_from_pattern()
+  TRACE("PhraseMate:detach_from_pattern()")
+
+  local pattern = rns.selected_pattern
+
+  if pattern:has_line_notifier(self.line_notifier_fn,self) then
+    pattern:remove_line_notifier(self.line_notifier_fn,self)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:detach_from_song()
+  TRACE("PhraseMate:detach_from_song()")
+
+  if rns.selected_pattern_observable:has_notifier(self.attach_to_pattern,self) then
+    rns.selected_pattern_observable:remove_notifier(self.attach_to_pattern,self)
+  end
+  self:detach_from_pattern()
+
+  if rns.selected_instrument_observable:has_notifier(self.attach_to_instrument,self) then
+    rns.selected_instrument_observable:remove_notifier(self.attach_to_instrument,self)
+  end
+  self:detach_from_instrument()
+
+  if rns.selected_phrase_observable:has_notifier(self.phrase_index_notifier,self) then
+    rns.selected_phrase_observable:remove_notifier(self.phrase_index_notifier,self)
+  end
+
+  if rns.instruments_observable:has_notifier(self.ui.update_instruments,self.ui) then
+    rns.instruments_observable:remove_notifier(self.ui.update_instruments,self.ui)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:attach_to_song()
+  TRACE("PhraseMate:attach_to_song()")
+
+  self:detach_from_song()
+
+  if not rns.selected_pattern_observable:has_notifier(self.attach_to_pattern,self) then
+    rns.selected_pattern_observable:add_notifier(self.attach_to_pattern,self)
+  end
+  self:attach_to_pattern()
+  
+  if not rns.selected_instrument_observable:has_notifier(self.attach_to_instrument,self) then
+    rns.selected_instrument_observable:add_notifier(self.attach_to_instrument,self)
+  end
+  self:attach_to_instrument()
+
+  if not rns.selected_phrase_observable:has_notifier(self.phrase_index_notifier,self) then
+    rns.selected_phrase_observable:add_notifier(self.phrase_index_notifier,self)
+  end
+
+  if not rns.instruments_observable:has_notifier(self.ui.update_instruments,self.ui) then
+    rns.instruments_observable:add_notifier(self.ui.update_instruments,self.ui)
+  end
+
+end
+
+
+
