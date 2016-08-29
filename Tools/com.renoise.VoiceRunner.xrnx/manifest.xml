@@ -3,7 +3,7 @@
   <ApiVersion>5</ApiVersion>
   <AutoUpgraded>false</AutoUpgraded>
   <Id>com.renoise.VoiceRunner</Id>
-  <Version>1.01</Version>
+  <Version>1.02</Version>
   <Author>danoise [bjorn.nesby@gmail.com]</Author>
   <Name>VoiceRunner</Name>
   <Category>Pattern</Category>
