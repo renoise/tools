@@ -223,7 +223,7 @@ function xStreamUIOptions:create_dialog()
         vb:button{
           text = "remove trace statements",
           notifier = function()
-            xDebug.remove_trace_statements()
+            cDebug.remove_trace_statements()
           end
         }
         ]]

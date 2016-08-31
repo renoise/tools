@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xStreamFavorites doc_version="0">
   <grid_columns>4</grid_columns>
-  <grid_rows>4</grid_rows>
+  <grid_rows>5</grid_rows>
   <Favorites>
     <Favorite type="lua_model:xStreamFavorite">
-      <model_name>Euclidean Rhythms 2</model_name>
+      <model_name>VoiceMgr - Live</model_name>
+      <preset_index>0.0</preset_index>
+      <preset_bank_name>Default</preset_bank_name>
+      <schedule_mode>2</schedule_mode>
+      <launch_mode>1.0</launch_mode>
+      <apply_mode>1.0</apply_mode>
+    </Favorite>
+    <Favorite type="lua_model:xStreamFavorite">
+      <model_name>VoiceMgr - Live</model_name>
       <preset_index>1.0</preset_index>
       <preset_bank_name>Default</preset_bank_name>
       <schedule_mode>2</schedule_mode>
@@ -12,36 +20,60 @@
       <apply_mode>1.0</apply_mode>
     </Favorite>
     <Favorite type="lua_model:xStreamFavorite">
-      <model_name>Euclidean Rhythms 2</model_name>
-      <preset_index>2</preset_index>
-      <preset_bank_name>Default</preset_bank_name>
-      <schedule_mode>2</schedule_mode>
-      <launch_mode>1.0</launch_mode>
-      <apply_mode>1.0</apply_mode>
+      <model_name/>
+      <preset_index>0.0</preset_index>
+      <preset_bank_name/>
+      <schedule_mode>0.0</schedule_mode>
+      <launch_mode>0.0</launch_mode>
+      <apply_mode>0.0</apply_mode>
     </Favorite>
     <Favorite type="lua_model:xStreamFavorite">
-      <model_name>Euclidean Rhythms 2</model_name>
-      <preset_index>3</preset_index>
-      <preset_bank_name>Default</preset_bank_name>
-      <schedule_mode>2</schedule_mode>
-      <launch_mode>1.0</launch_mode>
-      <apply_mode>1.0</apply_mode>
+      <model_name/>
+      <preset_index>0.0</preset_index>
+      <preset_bank_name/>
+      <schedule_mode>0.0</schedule_mode>
+      <launch_mode>0.0</launch_mode>
+      <apply_mode>0.0</apply_mode>
     </Favorite>
     <Favorite type="lua_model:xStreamFavorite">
-      <model_name>Euclidean Rhythms 2</model_name>
-      <preset_index>4</preset_index>
-      <preset_bank_name>Default</preset_bank_name>
-      <schedule_mode>2</schedule_mode>
-      <launch_mode>1.0</launch_mode>
-      <apply_mode>1.0</apply_mode>
+      <model_name/>
+      <preset_index>0.0</preset_index>
+      <preset_bank_name/>
+      <schedule_mode>0.0</schedule_mode>
+      <launch_mode>0.0</launch_mode>
+      <apply_mode>0.0</apply_mode>
     </Favorite>
     <Favorite type="lua_model:xStreamFavorite">
-      <model_name>Euclidean Rhythms 2</model_name>
-      <preset_index>5</preset_index>
-      <preset_bank_name>Default</preset_bank_name>
-      <schedule_mode>2</schedule_mode>
-      <launch_mode>1.0</launch_mode>
-      <apply_mode>1.0</apply_mode>
+      <model_name/>
+      <preset_index>0.0</preset_index>
+      <preset_bank_name/>
+      <schedule_mode>0.0</schedule_mode>
+      <launch_mode>0.0</launch_mode>
+      <apply_mode>0.0</apply_mode>
+    </Favorite>
+    <Favorite type="lua_model:xStreamFavorite">
+      <model_name/>
+      <preset_index>0.0</preset_index>
+      <preset_bank_name/>
+      <schedule_mode>0.0</schedule_mode>
+      <launch_mode>0.0</launch_mode>
+      <apply_mode>0.0</apply_mode>
+    </Favorite>
+    <Favorite type="lua_model:xStreamFavorite">
+      <model_name/>
+      <preset_index>0.0</preset_index>
+      <preset_bank_name/>
+      <schedule_mode>0.0</schedule_mode>
+      <launch_mode>0.0</launch_mode>
+      <apply_mode>0.0</apply_mode>
+    </Favorite>
+    <Favorite type="lua_model:xStreamFavorite">
+      <model_name/>
+      <preset_index>0.0</preset_index>
+      <preset_bank_name/>
+      <schedule_mode>0.0</schedule_mode>
+      <launch_mode>0.0</launch_mode>
+      <apply_mode>0.0</apply_mode>
     </Favorite>
     <Favorite type="lua_model:xStreamFavorite">
       <model_name/>

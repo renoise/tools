@@ -951,14 +951,14 @@ function xStream:set_selected_model_index(idx)
   local preset_bank_notifier = function()
     TRACE("*** xStream - selected_preset_bank_index_observable fired..")
     local preset_bank = self.selected_model.selected_preset_bank
-    xObservable.attach(preset_bank.presets_observable,preset_observable_notifier)
-    xObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
-    xObservable.attach(preset_bank.selected_preset_index_observable,preset_index_notifier)
+    cObservable.attach(preset_bank.presets_observable,preset_observable_notifier)
+    cObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
+    cObservable.attach(preset_bank.selected_preset_index_observable,preset_index_notifier)
   end
 
   if self.selected_model then
-    xObservable.attach(self.selected_model.args.args_observable,args_observable_notifier)
-    xObservable.attach(self.selected_model.selected_preset_bank_index_observable,preset_bank_notifier)
+    cObservable.attach(self.selected_model.args.args_observable,args_observable_notifier)
+    cObservable.attach(self.selected_model.selected_preset_bank_index_observable,preset_bank_notifier)
     preset_bank_notifier()
     self.selected_model.args:fire_startup_arguments()
   end
@@ -1342,10 +1342,10 @@ function xStream:attach_to_song()
 
   rns.transport.bpm_observable:add_notifier(tempo_notifier)
   rns.transport.lpb_observable:add_notifier(tempo_notifier)
-  xObservable.attach(rns.transport.playing_observable,playing_notifier)
-  xObservable.attach(rns.transport.edit_mode_observable,edit_notifier)
-  xObservable.attach(rns.selected_track_index_observable,selected_track_index_notifier)
-  xObservable.attach(rns.selected_parameter_observable,device_param_notifier) 
+  cObservable.attach(rns.transport.playing_observable,playing_notifier)
+  cObservable.attach(rns.transport.edit_mode_observable,edit_notifier)
+  cObservable.attach(rns.selected_track_index_observable,selected_track_index_notifier)
+  cObservable.attach(rns.selected_parameter_observable,device_param_notifier) 
 
   playing_notifier()
   edit_notifier()

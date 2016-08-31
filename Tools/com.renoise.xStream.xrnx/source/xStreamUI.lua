@@ -596,13 +596,13 @@ function xStreamUI:build()
     self.build_presets_requested = true
     self.update_presets_requested = true
     local preset_bank = self.xstream.selected_model.selected_preset_bank
-    xObservable.attach(preset_bank.presets_observable,presets_modified_notifier)
-    xObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
-    xObservable.attach(preset_bank.selected_preset_index_observable,function()    
+    cObservable.attach(preset_bank.presets_observable,presets_modified_notifier)
+    cObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
+    cObservable.attach(preset_bank.selected_preset_index_observable,function()    
       TRACE("*** xStreamUI - preset_bank.selected_preset_index_observable fired...")
       self.update_presets_requested = true
     end)
-    xObservable.attach(preset_bank.name_observable,preset_bank_notifier)
+    cObservable.attach(preset_bank.name_observable,preset_bank_notifier)
   end
 
   local selected_model_index_notifier = function()
@@ -613,49 +613,49 @@ function xStreamUI:build()
       --print(">>> model.data_observable",model.data_observable)
       --print(">>> model.events_observable",model.events_observable)
 
-      xObservable.attach(model.name_observable,function()
+      cObservable.attach(model.name_observable,function()
         TRACE("*** xStreamUI - model.name_observable fired...")
         self.build_models_requested = true
       end)
-      xObservable.attach(model.modified_observable,function()
+      cObservable.attach(model.modified_observable,function()
         TRACE("*** xStreamUI - model.modified_observable fired...")
         self.update_models_requested = true
       end)
-      xObservable.attach(model.color_observable,function()    
+      cObservable.attach(model.color_observable,function()    
         TRACE("*** xStreamUI - model.color_observable fired...")
         self.update_color_requested = true
       end)
-      xObservable.attach(model.args.selected_index_observable,function()
+      cObservable.attach(model.args.selected_index_observable,function()
         TRACE("*** xStreamUI - selected_arg_notifier fired...")
         self.update_args_requested = true
       end)
-      xObservable.attach(model.args.args_observable,function(arg)
+      cObservable.attach(model.args.args_observable,function(arg)
         TRACE("*** xStreamUI - args_observable_notifier fired...",rprint(arg))
         if (arg.type == "remove") then
           self.args_panel:purge_arg_views()
         end
         self.build_args_requested = true
       end)
-      xObservable.attach(model.args.modified_observable,function()
+      cObservable.attach(model.args.modified_observable,function()
         TRACE("*** xStreamUI - args_modified_notifier fired...")
         self.xstream.selected_model.modified = true
       end)
-      xObservable.attach(model.data_observable,function()
+      cObservable.attach(model.data_observable,function()
         TRACE("*** xStreamUI - data_observable fired...")
         self.update_editor_requested = true
       end)
-      xObservable.attach(model.events_observable,function()
+      cObservable.attach(model.events_observable,function()
         TRACE("*** xStreamUI - events_observable fired...")
         self.update_editor_requested = true
       end)
-      xObservable.attach(model.sandbox.callback_str_observable,function()
+      cObservable.attach(model.sandbox.callback_str_observable,function()
         TRACE("*** xStreamUI - sandbox.callback_notifier fired...")
         if not self.user_modified_callback then
           self.update_editor_requested = true
         end
       end)
-      xObservable.attach(model.preset_banks_observable,preset_bank_notifier)
-      xObservable.attach(model.selected_preset_bank_index_observable,preset_bank_index_notifier)
+      cObservable.attach(model.preset_banks_observable,preset_bank_notifier)
+      cObservable.attach(model.selected_preset_bank_index_observable,preset_bank_index_notifier)
       preset_bank_index_notifier()
       -- select first argument
       if (#model.args.args > 0) then

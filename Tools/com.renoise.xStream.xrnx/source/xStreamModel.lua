@@ -96,12 +96,19 @@ function xStreamModel:__init(xstream)
   --- configure sandbox
   -- (add basic variables and a few utility methods)
 
-  self.sandbox = xSandbox()
+  self.sandbox = cSandbox()
   self.sandbox.compile_at_once = true
   self.sandbox.str_prefix = [[
     xinc = select(1, ...)
     xline = select(2, ...)
     xpos = select(3, ...)
+
+    local get_lfo = function(lfo_instance)
+      if lfo_instance then
+        return lfo_instance(0, 255, 1, nil, nil, nil, xinc)
+      end
+    end
+
   ]]
   self.sandbox.str_suffix = [[
     return xline
@@ -268,6 +275,9 @@ function xStreamModel:__init(xstream)
     ["xPhraseManager"] = {
       access = function(env) return xAudioDevice end,
     },
+    ["LFO"] = {
+      access = function(env) return LFO end,
+    },
 
   }
 
@@ -330,7 +340,7 @@ function xStreamModel:set_callback_str(str_fn)
   --print("self.modified",self.modified,self.name)
 
   -- check if the callback contain any code at all? 
-  self.callback_contains_code = xSandbox.contains_code(str_fn)
+  self.callback_contains_code = cSandbox.contains_code(str_fn)
   --print("self.callback_contains_code",self.callback_contains_code,self.name)
 
   -- live syntax check
@@ -384,7 +394,7 @@ function xStreamModel:set_preset_bank_index(idx)
 
   -- attach_to_preset_bank
   local obs = self.selected_preset_bank.modified_observable
-  xObservable.attach(obs,self,self.handle_preset_changes)
+  cObservable.attach(obs,self,self.handle_preset_changes)
 
 end
 
@@ -427,17 +437,17 @@ function xStreamModel:load_definition(file_path)
 
   if not file_path then
     file_path = renoise.app():prompt_for_filename_to_read({"*.lua"},"Load model definition")
-    file_path = xFilesystem.unixslashes(file_path)
+    file_path = cFilesystem.unixslashes(file_path)
   end
 
   -- use the filename as the name for the model
   local str_folder,str_filename,str_extension = 
-    xFilesystem.get_path_parts(file_path)
-  local name = xFilesystem.file_strip_extension(str_filename,str_extension)
+    cFilesystem.get_path_parts(file_path)
+  local name = cFilesystem.file_strip_extension(str_filename,str_extension)
 
   -- confirm that file is likely a model definition
   -- (without parsing any code)
-  local str_def,err = xFilesystem.load_string(file_path)
+  local str_def,err = cFilesystem.load_string(file_path)
   --print(">>> load_definition - load_string - str_def,err",str_def,err)
   local passed = xStreamModel.looks_like_definition(str_def)
   if not passed then
@@ -625,7 +635,7 @@ function xStreamModel:parse_userdata(data_def)
       if (type(v)=="table") then
         self.data[k] = v -- prior to 1.48
       elseif (type(v)=="string") then
-        local str_fn = xSandbox.insert_return(v)
+        local str_fn = cSandbox.insert_return(v)
         --print(">>> str_fn",str_fn)
         local passed,err = self.sandbox:test_syntax(str_fn)
         --print("userdata - k,str_fn,passed,err",k,str_fn,passed,err)
@@ -670,7 +680,7 @@ function xStreamModel:rename_callback(old_name,new_name,cb_type)
   if (type(new_name)~='string') then
     return false,"The callback '"..new_name.."' needs to be a string value"
   end
-  local is_valid,err = xReflection.is_valid_identifier(new_name) 
+  local is_valid,err = cReflection.is_valid_identifier(new_name) 
   if not is_valid then
     return false,err
   end
@@ -711,7 +721,7 @@ function xStreamModel:rename_token(old_name,new_name,cb_type)
 
   local main_modified = false
   str_old = self.callback_str
-  str_new = xSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
+  str_new = cSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
   if (str_old ~= str_new) then
     self.callback_str = str_new
     main_modified = true
@@ -720,7 +730,7 @@ function xStreamModel:rename_token(old_name,new_name,cb_type)
   local data_modified = false
   for k,v in ipairs(self.data_initial) do
     str_old = v
-    str_new = xSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
+    str_new = cSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
     if (str_old ~= str_new) then
       self.data[k] = str_new
       self.data_initial[k] = str_new
@@ -735,7 +745,7 @@ function xStreamModel:rename_token(old_name,new_name,cb_type)
   local events_modified = false
   for k,v in ipairs(self.events) do
     str_old = v
-    str_new = xSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
+    str_new = cSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
     if (str_old ~= str_new) then
       self.events[k] = str_new
       events_modified = true
@@ -908,7 +918,7 @@ local val = select(1,...)
 
       -- renoise event : add 
       if (parts[1] == "rns") then
-        local attached,err = xObservable.attach(k,self.events_compiled[k])
+        local attached,err = cObservable.attach(k,self.events_compiled[k])
         if not attached then
           LOG("*** Something went wrong while parsing notifier",k,err)
         end
@@ -977,7 +987,7 @@ function xStreamModel:remove_event_notifier(key)
   TRACE("xStreamModel:remove_event_notifier(key)",key)
 
   --print(">>> about to remove notifier",key,"from this model",self.name)
-  local detached,err = xObservable.detach(key,self.events_compiled[key])
+  local detached,err = cObservable.detach(key,self.events_compiled[key])
   if not detached then
     LOG("*** Something went wrong while parsing notifier",key,err)
   end
@@ -1071,7 +1081,7 @@ function xStreamModel:save(as_copy)
     if not file_path then
       return false
     end
-    file_path = xFilesystem.unixslashes(file_path)
+    file_path = cFilesystem.unixslashes(file_path)
   else
     file_path = self.file_path
     name = self.name
@@ -1083,7 +1093,7 @@ function xStreamModel:save(as_copy)
                 .."fixed before you can save it to disk:\n"..err
   end
 
-  local comments = xSandbox.contains_comment_blocks(self.callback_str)
+  local comments = cSandbox.contains_comment_blocks(self.callback_str)
   if comments then
     local str_msg = "Warning: the callback contains [[double brackets]], which need to"
                   .."\nbe removed from the code before the file can be saved"
@@ -1092,7 +1102,7 @@ function xStreamModel:save(as_copy)
     return false
   end
 
-  local got_saved,err = xFilesystem.write_string_to_file(file_path,self:serialize())
+  local got_saved,err = cFilesystem.write_string_to_file(file_path,self:serialize())
   if not got_saved then
     return false,err
   end
@@ -1141,9 +1151,9 @@ function xStreamModel:rename()
   end
 
   local str_from = self.file_path
-  local folder,filename,ext = xFilesystem.get_path_parts(str_from)
+  local folder,filename,ext = cFilesystem.get_path_parts(str_from)
 
-  if not xFilesystem.validate_filename(str_name) then
+  if not cFilesystem.validate_filename(str_name) then
     return false,"Please avoid using special characters in the name"
   end
 
@@ -1196,11 +1206,11 @@ function xStreamModel.prompt_for_location(str_title)
   if (file_path == "") then
     return 
   end
-  file_path = xFilesystem.unixslashes(file_path)
+  file_path = cFilesystem.unixslashes(file_path)
 
   local str_folder,str_filename,str_extension = 
-    xFilesystem.get_path_parts(file_path)
-  local name = xFilesystem.file_strip_extension(str_filename,str_extension)
+    cFilesystem.get_path_parts(file_path)
+  local name = cFilesystem.file_strip_extension(str_filename,str_extension)
   return file_path,name
 
 end
@@ -1267,7 +1277,7 @@ function xStreamModel:load_preset_banks()
   if io.exists(str_folder) then
     for __, filename in pairs(os.filenames(str_folder, "*.xml")) do
       --print("filename",filename)
-      local filename_no_ext = xFilesystem.file_strip_extension(filename,"xml")
+      local filename_no_ext = cFilesystem.file_strip_extension(filename,"xml")
       local success,err = self:load_preset_bank(filename_no_ext)
       if not success then
         LOG("*** Failed while trying to load this preset bank: "..filename..", "..err)
@@ -1322,15 +1332,15 @@ function xStreamModel:add_preset_bank(str_name)
     local prefs = renoise.tool().preferences
     local preset_bank_folder = prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
     local preset_folder = ("%s%s/Untitled.xml"):format(preset_bank_folder,self.name)
-    local str_path = xFilesystem.ensure_unique_filename(preset_folder)
-    str_name = xFilesystem.get_raw_filename(str_path)
+    local str_path = cFilesystem.ensure_unique_filename(preset_folder)
+    str_name = cFilesystem.get_raw_filename(str_path)
 
     str_name = vPrompt.prompt_for_string(str_name,
       "Enter a name for the preset bank","Add Preset Bank")
     if not str_name then
       return false
     end
-    if not xFilesystem.validate_filename(str_name) then
+    if not cFilesystem.validate_filename(str_name) then
       local err = "Please avoid using special characters in the name"
       renoise.app():show_warning(err)
       return false
@@ -1430,8 +1440,8 @@ function xStreamModel.get_suggested_name(str_name)
   TRACE("xStreamModel.get_suggested_name(str_name)",str_name)
 
   local model_file_path = xStreamModel.get_normalized_file_path(str_name)
-  local str_path = xFilesystem.ensure_unique_filename(model_file_path)
-  local suggested_name = xFilesystem.get_raw_filename(str_path)
+  local str_path = cFilesystem.ensure_unique_filename(model_file_path)
+  local suggested_name = cFilesystem.get_raw_filename(str_path)
   return suggested_name
 
 end
@@ -1453,7 +1463,7 @@ function xStreamModel:get_suggested_callback_name(str_name,cb_type)
   end
   --print("get_suggested_callback_name - key_name",key_name)
 
-  local passed,err = xReflection.is_valid_identifier(key_name)
+  local passed,err = cReflection.is_valid_identifier(key_name)
   if not passed then
     -- TODO strip illegal characters
     return false, err

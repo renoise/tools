@@ -21,7 +21,13 @@ local EVENT_TYPE = {
 
 local ARG_TYPES = {"number","table","boolean","string","function"}
 
+--------------------------------------------------------------------------------
+
+require (_clibroot.."cObservable")
+
 class 'xStreamUICallbackCreate' (vDialogWizard)
+
+--------------------------------------------------------------------------------
 
 function xStreamUICallbackCreate:__init(ui)
   TRACE("xStreamUICallbackCreate:__init(ui)",ui)
@@ -258,7 +264,7 @@ function xStreamUICallbackCreate:update_dialog()
   vb_chooser.items = self:get_available_event_names()
 
   local vb_renoise_events = self.vb.views["xStreamDialogRenoiseEvents"]
-  vb_renoise_events.items = xObservable.get_song_names()
+  vb_renoise_events.items = cObservable.get_song_names()
 
   local view_page_1       = vb.views["xStreamNewModelDialogPage1"]
   local view_page_2       = vb.views["xStreamNewModelDialogPage2"]

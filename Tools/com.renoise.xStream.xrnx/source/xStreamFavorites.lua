@@ -608,7 +608,7 @@ function xStreamFavorites:import(file_path)
 
   local str_xml = fhandle:read("*a")
   fhandle:close()
-  local success,rslt = xParseXML.parse(str_xml)
+  local success,rslt = cParseXML.parse(str_xml)
   if not success then
     return false, rslt
   end

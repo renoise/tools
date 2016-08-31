@@ -157,7 +157,7 @@ function xStreamArgs:add(arg,index,do_replace)
   if (type(arg_name)~='string') then
     return false,"Argument name '"..arg_name.."' needs to be a string"
   end
-  local is_valid,err = xReflection.is_valid_identifier(arg_name) 
+  local is_valid,err = cReflection.is_valid_identifier(arg_name) 
   if not is_valid then
     return false,err
   end
@@ -166,7 +166,7 @@ function xStreamArgs:add(arg,index,do_replace)
     if (type(arg_tab_name)~='string') then
       return false,"Argument tab_name '"..arg_tab_name.."' needs to be a string"
     end
-    local is_valid,err = xReflection.is_valid_identifier(arg_tab_name) 
+    local is_valid,err = cReflection.is_valid_identifier(arg_tab_name) 
     if not is_valid then
       return false,err
     end
@@ -210,10 +210,10 @@ function xStreamArgs:add(arg,index,do_replace)
     end
 
     -- when bound, enforce the target min & max 
-    local xobservable = xObservable.get_by_type_and_name(type(arg.value),arg.bind,"rns.")
+    local obs = cObservable.get_by_type_and_name(type(arg.value),arg.bind,"rns.")
     --print("min,max PRE",arg.properties.min,arg.properties.max)
-    arg.properties.min = xobservable.min or arg.properties.min
-    arg.properties.max = xobservable.max or arg.properties.max
+    arg.properties.min = obs.min or arg.properties.min
+    arg.properties.max = obs.max or arg.properties.max
     --print("min,max POST",arg.properties.min,arg.properties.max)
 
     -- (TODO add dummy entries to lists)
@@ -391,9 +391,9 @@ end
 function xStreamArgs:is_valid_bind_value(bind,str_type)
   TRACE("xStreamArgs:is_valid_bind_value(bind,str_type)",bind,str_type)
 
-  local matched = xObservable.get_by_type_and_name(str_type,bind,"rns.")
+  local matched = cObservable.get_by_type_and_name(str_type,bind,"rns.")
   if not matched then
-    local keys = table.concat(xObservable.get_keys_by_type(str_type,"rns."),"\n")
+    local keys = table.concat(cObservable.get_keys_by_type(str_type,"rns."),"\n")
     return false,("Invalid/unsupported observable property '%s', try one of these: \n%s"):format(bind,keys)
   end
   return true
@@ -493,7 +493,7 @@ function xStreamArgs:replace(idx,arg)
     if (choice == "Go ahead!") then
       local str_fn = self.model.callback_str
       local old_name = self.args[idx].full_name
-      self.model.callback_str = xSandbox.rename_string_token(str_fn,old_name,arg.name,"args.")
+      self.model.callback_str = cSandbox.rename_string_token(str_fn,old_name,arg.name,"args.")
     end
   end
 

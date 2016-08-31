@@ -227,7 +227,7 @@ function xStreamArg:bind_notifier(val)
   TRACE("xStreamArg:bind_notifier",val)
 
   if (type(val) ~= "nil") then
-    local success,err = xReflection.set_property(self.bind_str_val,val)
+    local success,err = cReflection.set_property(self.bind_str_val,val)
     --print("*** self.bind_notifier - success,err",success,err)
     if not success then
       LOG("ERROR: xStreamArg.bind_notifier - "..err)

@@ -307,7 +307,7 @@ function xStreamPresets:rename(str_name)
     end
   end
 
-  if not xFilesystem.validate_filename(str_name) then
+  if not cFilesystem.validate_filename(str_name) then
     return false,"Please avoid using special characters in the name"
   end
 
@@ -514,7 +514,7 @@ function xStreamPresets:save()
   --local file_path = ("%s%s/%s.xml"):format(xStream.PRESET_BANK_FOLDER,model_name,self.name)
   local file_path = self:path_to_xml(self.name)
 
-  local success,err = xFilesystem.makedir(file_path)
+  local success,err = cFilesystem.makedir(file_path)
   if not success then
     return false,err
   end
