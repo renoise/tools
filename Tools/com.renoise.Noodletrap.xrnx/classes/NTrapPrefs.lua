@@ -128,6 +128,14 @@ NTrapPrefs.PHRASE_RANGE = {
   "Specify #semitones -->",
 }
 
+NTrapPrefs.PHRASE_OFFSET_DEFAULT = 1
+NTrapPrefs.PHRASE_OFFSET_COPY = 1
+NTrapPrefs.PHRASE_OFFSET_CUSTOM = 2
+NTrapPrefs.PHRASE_OFFSET = {
+  "Base on selected phrase",
+  "Specify note -->",
+}
+
 NTrapPrefs.PHRASE_TRACKING_COPY = 1
 NTrapPrefs.PHRASE_TRACKING_CUSTOM = 2
 NTrapPrefs.PHRASE_TRACKING = {
@@ -174,6 +182,8 @@ function NTrapPrefs:__init()
   self:add_property("phrase_loop_custom",   renoise.Document.ObservableBoolean(NTrapPrefs.LOOP_DEFAULT))
   self:add_property("phrase_range",         renoise.Document.ObservableNumber(1))
   self:add_property("phrase_range_custom",  renoise.Document.ObservableNumber(NTrapPrefs.PHRASE_RANGE_DEFAULT))
+  self:add_property("phrase_offset",         renoise.Document.ObservableNumber(1))
+  self:add_property("phrase_offset_custom",  renoise.Document.ObservableNumber(NTrapPrefs.PHRASE_OFFSET_DEFAULT))
   self:add_property("phrase_tracking",        renoise.Document.ObservableNumber(1))
   self:add_property("phrase_tracking_custom", renoise.Document.ObservableNumber(NTrapPrefs.PHRASE_TRACKING_DEFAULT))
 

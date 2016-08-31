@@ -113,7 +113,7 @@ function NTrap:__init(prefs)
   -- Provide MIDI mappings
 
   renoise.tool():add_midi_mapping({
-    name = "Global:Tools:Noodletrap:Prepare/Record",
+    name = "Tools:Noodletrap:Prepare/Record",
     invoke = function(msg)
       if msg:is_trigger() then
         self:toggle_recording()
@@ -122,7 +122,7 @@ function NTrap:__init(prefs)
   })
 
   renoise.tool():add_midi_mapping({
-    name = "Global:Tools:Noodletrap:Split Recording",
+    name = "Tools:Noodletrap:Split Recording",
     invoke = function(msg)
       if msg:is_trigger() then
         if self._recording then
@@ -135,7 +135,7 @@ function NTrap:__init(prefs)
   })
 
   renoise.tool():add_midi_mapping({
-    name = "Global:Tools:Noodletrap:Cancel Recording",
+    name = "Tools:Noodletrap:Cancel Recording",
     invoke = function(msg)
       if msg:is_trigger() then
         if self._recording or 
@@ -898,7 +898,6 @@ function NTrap:attach_to_phrase_mapping(phrase_mapping)
   TRACE("NTrap:attach_to_phrase_mapping(phrase_mapping)",phrase_mapping)
 
   if not phrase_mapping then
-    --phrase_mapping = self:_get_phrase_mapping()
     phrase_mapping = xPhraseManager.get_selected_mapping()
   end
 
@@ -968,35 +967,7 @@ function NTrap:_obtain_selected_phrase()
 end
 
 --------------------------------------------------------------------------------
--- Set previous/next phrase 
---[[
-
-function NTrap:select_previous_phrase()
-  TRACE("NTrap:select_previous_phrase()")
-
-  local phrase,phrase_idx = xPhraseManager.select_previous_phrase()
-  if phrase and phrase_idx then
-    self:_attach_to_phrase(false,phrase_idx)
-  end
-
-end
-
---------------------------------------------------------------------------------
-
---- Set previous/next phrase 
-function NTrap:select_next_phrase()
-  TRACE("NTrap:select_next_phrase()")
-
-  local phrase,phrase_idx = xPhraseManager.select_next_phrase()
-  if phrase and phrase_idx then
-    self:_attach_to_phrase(false,phrase_idx)
-  end
-
-end
-]]
---------------------------------------------------------------------------------
-
---- Check if we can actually record
+-- Check if we can actually record
 -- (will display an error message when something went wrong)
 -- @return bool, true when ready
 
@@ -1023,8 +994,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- If running as a standalone tool, save the key/value in the persistent
+-- If running as a standalone tool, save the key/value in the persistent
 -- settings. Otherwise, compile a serialized string and hand it over...
 
 function NTrap:_save_setting(key,value)
@@ -1043,8 +1013,7 @@ function NTrap:_save_setting(key,value)
 end
 
 --------------------------------------------------------------------------------
-
---- Open the selected MIDI port
+-- Open the selected MIDI port
 -- @param port_name (string)
 
 function NTrap:_open_midi_port(port_name,store_setting)
@@ -1067,8 +1036,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- Close the MIDI port
+-- Close the MIDI port
 
 function NTrap:_close_midi_port()
   TRACE("NTrap:_close_midi_port()")
@@ -1083,8 +1051,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- Interpret incoming MIDI
+-- Interpret incoming MIDI
 
 function NTrap:_midi_callback(message)
   TRACE(("NTrap: received MIDI %X %X %X"):format(
@@ -1130,13 +1097,11 @@ function NTrap:_midi_callback(message)
 end
 
 --------------------------------------------------------------------------------
-
 -- @return int
 
 function NTrap:_get_phrase_length()
   TRACE("NTrap:_get_phrase_length()")
 
-  --local phrase = self:_get_phrase()
   local phrase = xPhraseManager.get_selected_phrase()
   if phrase then
     return phrase.number_of_lines
@@ -1147,13 +1112,11 @@ function NTrap:_get_phrase_length()
 end
 
 --------------------------------------------------------------------------------
-
 -- @return int
 
 function NTrap:_get_phrase_lpb()
   TRACE("NTrap:_get_phrase_lpb()")
 
-  --local phrase = self:_get_phrase()
   local phrase = xPhraseManager.get_selected_phrase()
   if phrase then
     return phrase.lpb
@@ -1169,7 +1132,6 @@ end
 function NTrap:_get_phrase_loop()
   TRACE("NTrap:_get_phrase_loop()")
 
-  --local phrase_mapping = self:_get_phrase_mapping()
   local phrase_mapping = xPhraseManager.get_selected_mapping()
   if phrase_mapping then
     return phrase_mapping.looping
@@ -1180,13 +1142,11 @@ function NTrap:_get_phrase_loop()
 end
 
 --------------------------------------------------------------------------------
-
 -- @return int
 
 function NTrap:_get_phrase_range()
   TRACE("NTrap:_get_phrase_range()")
 
-  --local phrase_mapping = self:_get_phrase_mapping()
   local phrase_mapping = xPhraseManager.get_selected_mapping()
   if phrase_mapping then
     local range = phrase_mapping.note_range
@@ -1198,13 +1158,27 @@ function NTrap:_get_phrase_range()
 end
 
 --------------------------------------------------------------------------------
+-- @return int
 
+function NTrap:_get_phrase_offset()
+  TRACE("NTrap:_get_phrase_offset()")
+
+  local phrase_mapping = xPhraseManager.get_selected_mapping()
+  if phrase_mapping then
+    local range = phrase_mapping.note_range
+    return range[1]+1
+  end
+  
+  return NTrapPrefs.PHRASE_OFFSET_DEFAULT 
+
+end
+
+--------------------------------------------------------------------------------
 -- @return enum KEY_TRACKING
 
 function NTrap:_get_phrase_tracking()
   TRACE("NTrap:_get_phrase_tracking()")
 
-  --local phrase_mapping = self:_get_phrase_mapping()
   local phrase_mapping = xPhraseManager.get_selected_mapping()
   if phrase_mapping then
     return phrase_mapping.key_tracking
@@ -1348,8 +1322,11 @@ function NTrap:_process_recording(events)
   --local phrase_lps = get_phrase_lps(self._settings)
   local instr = rns.selected_instrument
   local instr_idx = rns.selected_instrument_index
+  local create_keymap = true
+  local insert_range = NTrap:_get_phrase_range()
+  local keymap_offset = NTrap:_get_phrase_offset()
 
-  local phrase,phrase_idx,pmap = xPhraseManager.auto_insert_phrase(instr_idx)
+  local phrase,phrase_idx = xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,keymap_offset)
   if phrase and phrase.mapping then
     self:attach_to_phrase_mapping(phrase.mapping)
   end

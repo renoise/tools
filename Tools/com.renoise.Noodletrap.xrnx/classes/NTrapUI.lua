@@ -300,7 +300,6 @@ function NTrapUI:build()
       self:_build_phrase_bar(),
       self:_build_tabs(),
       vb:column{
-        --style = "group",
         height = OPTION_H,
         vb:column{
           id = 'ntrap_tab_input',
@@ -382,7 +381,6 @@ function NTrapUI:_build_tabs()
 
   local vb = self._vb
   local view = vb:row{
-    --width = CONTENT_W,
     margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
     vb:text{
       width = LEFT_COL_W,
@@ -505,11 +503,7 @@ function NTrapUI:_build_tab_inputs()
           self:_apply_quantize_from_option(idx)
         end,
       },
-      --[[
-      vb:text{
-        text = "TODO",
-      },
-      ]]
+
       vb:popup{
         id = "ntrap_record_quantize_custom",
         items = quantize_items,
@@ -716,7 +710,6 @@ function NTrapUI:_build_tab_phrases()
       },
       vb:valuebox{
         id = "ntrap_phrase_lpb_custom",
-        --value = self._ntrap._settings.phrase_lpb_custom.value,
         width = RIGHT_W,
         min = 1,
         max = 256,
@@ -747,7 +740,6 @@ function NTrapUI:_build_tab_phrases()
       },
       vb:checkbox{
         id = "ntrap_phrase_loop_custom",
-        --value = self._ntrap._settings.phrase_loop_custom.value,
         notifier = function(val)
           self._ntrap:_save_setting("phrase_loop_custom",val)
           local ui_label = self._vb.views.ntrap_phrase_loop_custom_label
@@ -776,10 +768,9 @@ function NTrapUI:_build_tab_phrases()
       },
       vb:valuebox{
         id = "ntrap_phrase_range_custom",
-        --value = self._ntrap._settings.phrase_range_custom.value,
         width = RIGHT_W,
         min = 1,
-        max = 120,
+        max = 119,
         tonumber = function(str)
           return math.floor(tonumber(str))
         end,
@@ -796,12 +787,42 @@ function NTrapUI:_build_tab_phrases()
     vb:row{
       vb:text{
         width = LEFT_COL_W,
+        text = "NoteOffset",
+      },
+      vb:popup{
+        id = "ntrap_phrase_offset",
+        width = MIDDLE_W,
+        items = NTrapPrefs.PHRASE_OFFSET,
+        notifier = function(idx)
+          self._ntrap:_save_setting("phrase_offset",idx)
+          self:_apply_phrase_offset_from_option(idx)
+        end,
+      },
+      vb:valuebox{
+        id = "ntrap_phrase_offset_custom",
+        width = RIGHT_W,
+        min = 0,
+        max = 119,
+        tostring = function(val)
+          return xNoteColumn.note_value_to_string(math.floor(val))
+        end,
+        tonumber = function(str)
+          return xNoteColumn.note_string_to_value(str)
+        end,
+        notifier = function(idx)
+          self._ntrap:_save_setting("phrase_offset_custom",idx)
+          self:update_phrase_bar()
+        end,
+      },
+    },
+    vb:row{
+      vb:text{
+        width = LEFT_COL_W,
         text = "KeyTrack",
       },
       vb:popup{
         id = "ntrap_phrase_tracking",
         width = MIDDLE_W,
-        --value = self._ntrap._settings.phrase_tracking.value,
         items = NTrapPrefs.PHRASE_TRACKING,
         notifier = function(idx)
           self:_apply_phrase_tracking_from_option(idx)
@@ -812,7 +833,6 @@ function NTrapUI:_build_tab_phrases()
       vb:popup{
         id = "ntrap_phrase_tracking_custom",
         width = RIGHT_W,
-        --value = self._ntrap._settings.phrase_tracking_custom.value,
         items = NTrapPrefs.PHRASE_TRACKING_ITEMS,
         notifier = function(idx)
           self._ntrap:_save_setting("phrase_tracking_custom",idx)
@@ -1037,7 +1057,6 @@ end
 
 
 --------------------------------------------------------------------------------
-
 --- Update the entire UI according to current settings
 
 function NTrapUI:update()
@@ -1064,26 +1083,11 @@ function NTrapUI:update()
       break
     end
   end
-  
 
   -- keyboard enabled
   local node = settings:property("keyboard_enabled")
   local ui_widget = self._vb.views.ntrap_keyboard_enabled
   ui_widget.value = node.value
-
-
-  -- follow instrument / specific instrument
-  --[[
-  local node = settings:property("target_instr_custom")
-  local ui_widget = self._vb.views.ntrap_target_instr_custom
-  ui_widget.value = node.value
-
-  local node = settings:property("target_instr")
-  local ui_widget = self._vb.views.ntrap_target_instr
-  ui_widget.value = node.value
-
-  self:_apply_instrument_from_option(node.value)
-  ]]
 
   -- quantize input
   local node = settings:property("record_quantize_custom")
@@ -1170,6 +1174,17 @@ function NTrapUI:update()
 
   self:_apply_phrase_range_from_option(node.value)
 
+  -- phrase offset
+  local node = settings:property("phrase_offset_custom")
+  local ui_widget = self._vb.views.ntrap_phrase_offset_custom
+  ui_widget.value = node.value
+
+  local node = settings:property("phrase_offset")
+  local ui_widget = self._vb.views.ntrap_phrase_offset
+  ui_widget.value = node.value
+
+  self:_apply_phrase_offset_from_option(node.value)
+
 
   -- phrase tracking
   local node = settings:property("phrase_tracking_custom")
@@ -1204,7 +1219,6 @@ end
 
 
 --------------------------------------------------------------------------------
-
 --- Provide some feedback on the current recording status
 
 function NTrapUI:update_record_status()
@@ -1333,7 +1347,6 @@ function NTrapUI:update_record_status()
 end
 
 --------------------------------------------------------------------------------
-
 --- Provide some feedback on the current recording status
 
 function NTrapUI:update_record_slider(val)
@@ -1346,7 +1359,6 @@ end
 
 
 --------------------------------------------------------------------------------
-
 --- Update the phrase preview...
 
 function NTrapUI:update_phrase_bar()
@@ -1362,9 +1374,12 @@ function NTrapUI:update_phrase_bar()
   local instr = rns.selected_instrument
   local instr_idx = rns.selected_instrument_index
   
-  local sel_range = self._ntrap:_get_phrase_range()
+  local phrase_range = self._vb.views["ntrap_phrase_range_custom"].value
+  local phrase_offset = self._vb.views["ntrap_phrase_offset_custom"].value
+    --self._ntrap:_get_phrase_range()
 
-  local vrange = xPhraseManager.get_available_slot(instr_idx,sel_range)
+  local vrange = xPhraseManager.get_available_slot(instr_idx,phrase_range,phrase_offset)
+  print("vrange...",rprint(vrange))
   local instr_name = (instr and instr.name ~= "") and instr.name or "(empty)"
   ui_target_instr.text = string.format(
     "Target instrument: %02d - %.30s", 
@@ -1412,26 +1427,50 @@ function NTrapUI:update_phrase_bar()
 
 
   local function build_empty_or_virtual(from,to)
-    --print("build_empty_or_virtual(from,to)",from,to)
+    print("build_empty_or_virtual(from,to)",from,to)
+  
+    local build_empty = function (empty_from,empty_to)
+      local button = build_button(empty_from,empty_to,COLOR_PHRASE_EMPTY,nil,false)
+      self._phrase_buttons:insert(button)
+    end
 
-    if vrange and (from == vrange[1]) then
-      -- virtual phrase first
-      --local vrange = vphrase.mapping.note_range
+    local build_virtual = function()
       local button = build_button(vrange[1],vrange[2],COLOR_PHRASE_VIRTUAL,"New phrase mapping",false)
       self._phrase_buttons:insert(button)
       self._blink_phrase_button = obtain_button_id_by_index(#self._phrase_buttons)
+    end
 
-      -- trailing empty space 
-      if (vrange[2]+1 < to) then
-        local button = build_button(vrange[2]+1,to,COLOR_PHRASE_EMPTY,nil,false)
-        self._phrase_buttons:insert(button)
+    if vrange 
+      and vrange[1] == from
+      and vrange[2] == to
+    then
+      print("virtual + empty")
+      build_virtual()
+    elseif vrange 
+      and vrange[1] >= from
+      and vrange[2] <= to
+    then -- virtual within empty
+      if (from == vrange[1]) 
+        and (to > vrange[2])
+      then 
+        print("virtual + empty")
+        build_virtual()
+        build_empty(vrange[2]+1,to)
+      elseif (from < vrange[1])
+        and (to == vrange[2]) 
+      then 
+        print("empty + virtual")
+        build_empty(from,vrange[1]-1)
+        build_virtual()  
+      else
+        print("empty + virtual + empty")
+        build_empty(from,vrange[1]-1)
+        build_virtual()
+        build_empty(vrange[2]+1,to)
       end
-
-    else
-
-      local button = build_button(from,to,COLOR_PHRASE_EMPTY,nil,false)
-      self._phrase_buttons:insert(button)
-
+    else -- empty space
+      print(">>> empty")
+      build_empty(from,to)
     end
 
   end
@@ -1476,13 +1515,26 @@ function NTrapUI:update_phrase_bar()
     local button = build_button(v.note_range[1],v.note_range[2],button_color,tooltip,true,k)
     self._phrase_buttons:insert(button)
 
+    -- room after mappings
+    --[[
+    if (k == #instr.phrase_mappings) 
+      and (v.note_range[2] <= vrange[1])
+    then
+      build_empty_or_virtual(v.note_range[2]-1,vrange[1]-1)
+    end
+    ]]
+
     prev_end = v.note_range[2]
+
 
   end
 
   if not prev_end then
     prev_end = -1
   end
+
+  print(">>> phrase_bar - prev_end",prev_end)
+  --print(">>> phrase_bar - self._phrase_buttons",rprint(self._phrase_buttons))
 
   -- trailing space
   if (prev_end < 119) then
@@ -1543,7 +1595,6 @@ function NTrapUI:update_phrase_bar()
 end
 
 --------------------------------------------------------------------------------
-
 --- Update blinking elements...
 
 function NTrapUI:update_blinks()
@@ -1578,7 +1629,6 @@ end
 
 
 --------------------------------------------------------------------------------
-
 --- Show warning for missing instrument
 -- @param val (bool), false to hide warning
 
@@ -1592,7 +1642,6 @@ function NTrapUI:show_instrument_warning(val)
 end
 
 --------------------------------------------------------------------------------
-
 --- Add string to the log window
 
 function NTrapUI:log_string(...)
@@ -1601,7 +1650,7 @@ function NTrapUI:log_string(...)
 
   local ui_widget = self._vb.views.ntrap_log_window
   if ui_widget then
-    local str = xDebug.concat_args(...)
+    local str = cDebug.concat_args(...)
     ui_widget:add_line(str)
     ui_widget:scroll_to_last_line()
   end
@@ -1609,7 +1658,6 @@ function NTrapUI:log_string(...)
 end
 
 --------------------------------------------------------------------------------
-
 --- Add note to the log window
 
 function NTrapUI:dump_note_info(note)
@@ -1627,7 +1675,6 @@ end
 --==============================================================================
 -- Private methods
 --==============================================================================
-
 --- Periodically purge the list of active keys 
 
 function NTrapUI:_purge_live_keys()
@@ -1660,7 +1707,6 @@ function NTrapUI:_purge_live_keys()
 end
 
 --------------------------------------------------------------------------------
-
 --- Convert note-column pitch number into Renoise string value
 -- @param val - NoteColumn note-value, e.g. 120
 -- @return nil or NoteColumn note-string, e.g. "OFF"
@@ -1684,7 +1730,6 @@ function NTrapUI:_pitch_to_string(val)
 end
 
 --------------------------------------------------------------------------------
-
 -- @return table
 
 function NTrapUI:_create_midi_in_list()
@@ -1699,7 +1744,6 @@ function NTrapUI:_create_midi_in_list()
 end
 
 --------------------------------------------------------------------------------
-
 --- Display the options tab 
 
 function NTrapUI:_switch_option_tab(idx)
@@ -1720,7 +1764,6 @@ function NTrapUI:_switch_option_tab(idx)
 end
 
 --------------------------------------------------------------------------------
-
 --- Show the phrase editor UI
 
 function NTrapUI:_toggle_phrase_editor()
@@ -1769,28 +1812,6 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- Determine, based on the chosen option
---[[
-function NTrapUI:_apply_instrument_from_option(idx)
-  TRACE("NTrapUI:_apply_instrument_from_option(idx)",idx)
-
-  local popup_custom = self._vb.views.ntrap_target_instr_custom
-  local val_custom = nil
-  if (idx == NTrapPrefs.INSTR_FOLLOW) then
-    popup_custom.active = false
-    val_custom = rns.selected_instrument_index
-  else 
-    popup_custom.active = true
-    val_custom = popup_custom.value
-  end
-  popup_custom.value = val_custom
-
-end
-]]
-
---------------------------------------------------------------------------------
-
 --- Determine, based on the chosen option
 
 function NTrapUI:_apply_quantize_from_option(idx)
@@ -1893,7 +1914,6 @@ function NTrapUI:_apply_split_recording_from_option(idx)
 end
 
 --------------------------------------------------------------------------------
-
 --- Determine, based on the chosen option
 
 function NTrapUI:_apply_phrase_range_from_option(idx)
@@ -1905,6 +1925,25 @@ function NTrapUI:_apply_phrase_range_from_option(idx)
     popup_custom.active = false
     val_custom = self._ntrap:_get_phrase_range()
   elseif (idx == NTrapPrefs.PHRASE_RANGE_CUSTOM) then
+    popup_custom.active = true
+    val_custom = popup_custom.value
+  end
+  popup_custom.value = val_custom
+
+end
+
+--------------------------------------------------------------------------------
+--- Determine, based on the chosen option
+
+function NTrapUI:_apply_phrase_offset_from_option(idx)
+  TRACE("NTrapUI:_apply_phrase_offset_from_option(idx)",idx)
+
+  local popup_custom = self._vb.views.ntrap_phrase_offset_custom
+  local val_custom = nil
+  if (idx == NTrapPrefs.PHRASE_OFFSET_COPY) then
+    popup_custom.active = false
+    val_custom = self._ntrap:_get_phrase_offset()
+  elseif (idx == NTrapPrefs.PHRASE_OFFSET_CUSTOM) then
     popup_custom.active = true
     val_custom = popup_custom.value
   end
