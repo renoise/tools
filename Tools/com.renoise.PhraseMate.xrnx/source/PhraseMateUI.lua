@@ -14,6 +14,7 @@ PhraseMate (user-interface)
 
 class 'PhraseMateUI' (vDialog)
 
+PhraseMateUI.UI_MARGIN = 4
 PhraseMateUI.UI_WIDTH = 216
 PhraseMateUI.UI_KEYMAP_LABEL_W = 90
 PhraseMateUI.UI_KEYMAP_CTRL_W = 65
@@ -36,7 +37,7 @@ function PhraseMateUI:__init(...)
 
   self.prefs = renoise.tool().preferences
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
   assert(type(args.owner)=="PhraseMate","Expected 'owner' to be a class instance")
 
   --- PhraseMate
@@ -44,6 +45,10 @@ function PhraseMateUI:__init(...)
 
   --- int, position of PhraseMateUI.UI_PROGRESS_TXT
   self.progress_txt_count = 1
+
+  --- table
+  self.default_button_color = nil
+
 
   --- renoise.ViewBuilder
   --self.vb
@@ -55,7 +60,7 @@ function PhraseMateUI:__init(...)
 
   -- notifiers ------------------------
 
-  self.prefs.input_create_keymappings:add_notifier(self.update_keymap)
+  self.prefs.input_create_keymappings:add_notifier(self.update_keymap,self)
 
 
 end
@@ -94,8 +99,29 @@ function PhraseMateUI:build()
   TRACE("PhraseMateUI:build()")
   
   local vb = self.vb
+
+  local collection_toggle = vArrowButton{
+    enabled = self.prefs.input_show_collection_panel.value,
+    vb = vb,
+  }
+  collection_toggle.enabled_observable:add_notifier(function()
+    local val = collection_toggle.enabled
+    vb.views["collection_panel"].visible = val
+    self.prefs.input_show_collection_panel.value = val
+  end)
+
+  local properties_toggle = vArrowButton{
+    enabled = self.prefs.input_show_properties_panel.value,
+    vb = vb,
+  }
+  properties_toggle.enabled_observable:add_notifier(function()
+    local val = properties_toggle.enabled
+    vb.views["properties_panel"].visible = val
+    self.prefs.input_show_collection_panel.value = val
+  end)
+
   self.vb_content = vb:column{
-    margin = 6,
+    margin = PhraseMateUI.UI_MARGIN,
     spacing = 4,
     
     vb:column{
@@ -183,7 +209,7 @@ function PhraseMateUI:build()
       --margin = 6,
       spacing = 3,
       vb:row{
-        margin = 6,
+        margin = PhraseMateUI.UI_MARGIN,
         style = "group",
         width = "100%",
         vb:chooser{
@@ -194,7 +220,7 @@ function PhraseMateUI:build()
       },
       vb:column{
         style = "group",
-        margin = 6,
+        margin = PhraseMateUI.UI_MARGIN,
         width = "100%",
         vb:row{
           vb:text{
@@ -237,133 +263,139 @@ function PhraseMateUI:build()
       },
       vb:column{
         style = "group",
-        margin = 6,
+        margin = PhraseMateUI.UI_MARGIN,
         width = "100%",
         vb:row{
-          vb:button{
-            text = "▾",
-            notifier = function()
-
-            end,
-          },
+          collection_toggle.view,
           vb:text{
             text = "Collection",
             font = "bold",
           },
         },
-        vb:row{
-          tooltip = "Decide how often to create undo points while processing:"
-                .."\nDisabled - perform processing in a single step"
-                .."\nPattern - create an undo point once per pattern"
-                .."\nPattern-Track - create undo point per track in pattern"
-                .."\n\nEnable this feature if you experience warning dialogs"
-                .."\ncomplaining that 'script is taking too long'",
-          vb:text{
-            text = "Sliced processing",
-            width = PhraseMateUI.UI_KEYMAP_LABEL_W,
+        vb:column{
+          id = "collection_panel",
+          visible = self.prefs.input_show_collection_panel.value,
+          vb:row{
+            tooltip = "Decide how often to create undo points while processing:"
+                  .."\nDisabled - perform processing in a single step"
+                  .."\nPattern - create an undo point once per pattern"
+                  .."\nPattern-Track - create undo point per track in pattern"
+                  .."\n\nEnable this feature if you experience warning dialogs"
+                  .."\ncomplaining that 'script is taking too long'",
+            vb:text{
+              text = "Sliced processing",
+              width = PhraseMateUI.UI_KEYMAP_LABEL_W,
+            },
+            vb:popup{
+              width = 80,
+              items = PhraseMate.SLICE_MODES,
+              bind = self.prefs.process_slice_mode,
+            },
           },
-          vb:popup{
-            width = 80,
-            items = PhraseMate.SLICE_MODES,
-            bind = self.prefs.process_slice_mode,
-          },
-        },
 
-        vb:row{
-          tooltip = "During collection of phrases, skip phrases without content",
-          vb:checkbox{
-            bind = self.prefs.input_include_empty_phrases,
+          vb:row{
+            tooltip = "During collection of phrases, skip phrases without content",
+            vb:checkbox{
+              bind = self.prefs.input_include_empty_phrases,
+            },
+            vb:text{
+              text = "Include empty phrases"
+            },
           },
-          vb:text{
-            text = "Include empty phrases"
+          vb:row{
+            tooltip = "During collection of phrases, detect if phrase is duplicate and skip",
+            vb:checkbox{
+              bind = self.prefs.input_include_duplicate_phrases,
+            },
+            vb:text{
+              text = "Include duplicate phrases"
+            },
           },
-        },
-        vb:row{
-          tooltip = "During collection of phrases, detect if phrase is duplicate and skip",
-          vb:checkbox{
-            bind = self.prefs.input_include_duplicate_phrases,
-          },
-          vb:text{
-            text = "Include duplicate phrases"
-          },
-        },
 
-        vb:row{
-          tooltip = "After collecting notes, insert a phrase trigger-note in their place",
-          vb:checkbox{
-            bind = self.prefs.input_replace_collected,
-          },
-          vb:text{
-            text = "Replace notes with phrase"
+          vb:row{
+            tooltip = "After collecting notes, insert a phrase trigger-note in their place",
+            vb:checkbox{
+              bind = self.prefs.input_replace_collected,
+            },
+            vb:text{
+              text = "Replace notes with phrase"
+            },
           },
         },
       },
       vb:column{
         style = "group",
-        margin = 6,
+        margin = PhraseMateUI.UI_MARGIN,
         width = "100%",
-        vb:text{
-          text = "Phrase properties",
-          font = "bold",
-        },
         vb:row{
-          tooltip = "Choose whether to loop collected phrases",
-          vb:checkbox{
-            bind = self.prefs.input_loop_phrases,
-          },
+          properties_toggle.view,
           vb:text{
-            text = "Loop collected phrases"
-          },
-        },
-        vb:row{
-          tooltip = "Choose whether to create keymappings for the new phrases",
-          vb:checkbox{
-            bind = self.prefs.input_create_keymappings,
-          },
-          vb:text{
-            text = "Create keymap"
+            text = "Phrase properties",
+            font = "bold",
           },
         },
         vb:column{
-          id = "keymap_options",
+          id = "properties_panel",
+          visible = self.prefs.input_show_properties_panel.value,
           vb:row{
-            tooltip = "Choose how many semitones each mapping should span",
-            vb:space{
-              width = 20,
+            tooltip = "Choose whether to loop collected phrases",
+            vb:checkbox{
+              bind = self.prefs.input_loop_phrases,
             },
             vb:text{
-              text = "Semitone range",
-              width = PhraseMateUI.UI_KEYMAP_LABEL_W,
+              text = "Loop collected phrases"
             },
-            vb:valuebox{
-              id = "ui_input_keymap_range",
-              width = PhraseMateUI.UI_KEYMAP_CTRL_W,
-              min = 1,
-              max = 119,
-              bind = self.prefs.input_keymap_range,
-            }
           },
           vb:row{
-            tooltip = "Choose starting note for the new mappings",
-            vb:space{
-              width = 20,
+            tooltip = "Choose whether to create keymappings for the new phrases",
+            vb:checkbox{
+              bind = self.prefs.input_create_keymappings,
             },
             vb:text{
-              text = "Starting offset",
-              width = PhraseMateUI.UI_KEYMAP_LABEL_W,
+              text = "Create keymap"
             },
-            vb:valuebox{
-              id = "ui_input_keymap_offset",
-              width = PhraseMateUI.UI_KEYMAP_CTRL_W,
-              min = 0,
-              max = 119,
-              bind = self.prefs.input_keymap_offset,
-              tostring = function(val)
-                return xNoteColumn.note_value_to_string(math.floor(val))
-              end,
-              tonumber = function(str)
-                return xNoteColumn.note_string_to_value(str)
-              end,
+          },
+          vb:column{
+            id = "keymap_options",
+            vb:row{
+              tooltip = "Choose how many semitones each mapping should span",
+              vb:space{
+                width = 20,
+              },
+              vb:text{
+                text = "Semitone range",
+                width = PhraseMateUI.UI_KEYMAP_LABEL_W,
+              },
+              vb:valuebox{
+                id = "ui_input_keymap_range",
+                width = PhraseMateUI.UI_KEYMAP_CTRL_W,
+                min = 1,
+                max = 119,
+                bind = self.prefs.input_keymap_range,
+              }
+            },
+            vb:row{
+              tooltip = "Choose starting note for the new mappings",
+              vb:space{
+                width = 20,
+              },
+              vb:text{
+                text = "Starting offset",
+                width = PhraseMateUI.UI_KEYMAP_LABEL_W,
+              },
+              vb:valuebox{
+                id = "ui_input_keymap_offset",
+                width = PhraseMateUI.UI_KEYMAP_CTRL_W,
+                min = 0,
+                max = 119,
+                bind = self.prefs.input_keymap_offset,
+                tostring = function(val)
+                  return xNoteColumn.note_value_to_string(math.floor(val))
+                end,
+                tonumber = function(str)
+                  return xNoteColumn.note_string_to_value(str)
+                end,
+              },
             },
           },
         },
@@ -478,24 +510,33 @@ function PhraseMateUI:build()
         style = "group",
         margin = 3,
         width = "100%",
-        tooltip = "Insert Zxx commands into the first available effect column when the following conditions are met:"
-                .."\n* Phrase is set to program playback"
-                .."\n* Edit-mode is enabled in Renoise",
         vb:row{
           vb:checkbox{
             bind = self.prefs.zxx_mode
           },
           vb:text{
-            text = "Monitor changes to pattern "
-                .."\nand insert Zxx commands as"
-                .."\nnotes are entered."
+            text = "Monitor changes to pattern",
           },
         },
-        vb:text{
-          text = "Note: realtime is active only while "
-              .."\nEdit Mode is enabled in Renoise, "
-              .."\nand phrase is set to Prg mode...",
-          font = "italic",
+        vb:row{
+          vb:checkbox{
+            bind = self.prefs.zxx_prefer_local
+          },
+          vb:text{
+            text = "Prefer FX in note-column ",
+          },
+        },
+        vb:column{
+          margin = PhraseMateUI.UI_MARGIN,
+          vb:text{
+            text = [[
+Inserts Zxx commands into the first
+available effect column, when the 
+following conditions are met:
+* Phrase is set to program playback
+* Edit-mode is enabled in Renoise]],
+            font = "italic",
+          },
         },
       },
     },
@@ -517,7 +558,7 @@ function PhraseMateUI:build()
     --vb:button{
       --text = "remove trace statements",
       --notifier = function()
-        --xDebug.remove_trace_statements()
+        --cDebug.remove_trace_statements()
       --end
     --}
 

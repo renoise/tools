@@ -76,7 +76,7 @@ function PhraseMate:__init(...)
 
   self.prefs = renoise.tool().preferences
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   --- string
   self.app_display_name = args.app_display_name

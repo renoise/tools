@@ -24,11 +24,18 @@ Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/T
 --------------------------------------------------------------------------------
 
 rns = nil
-_vlibroot = 'source/vLib/classes/'
-_xlibroot = 'source/xLib/classes/'
---_trace_filters = nil
-_trace_filters = {".*"}
+_trace_filters = nil
+--_trace_filters = {".*"}
 
+_clibroot = 'source/cLib/classes/'
+require (_clibroot..'cLib')
+require (_clibroot..'cDebug')
+require (_clibroot.."cConfig")
+require (_clibroot..'cFilesystem')
+require (_clibroot.."cParseXML")
+require (_clibroot.."cProcessSlicer")
+
+_xlibroot = 'source/xLib/classes/'
 require (_xlibroot..'xLib')
 require (_xlibroot.."xPhrase")
 require (_xlibroot..'xLinePattern')
@@ -36,13 +43,12 @@ require (_xlibroot..'xInstrument')
 require (_xlibroot..'xNoteColumn') 
 require (_xlibroot..'xPhraseManager')
 require (_xlibroot..'xSelection')
-require (_xlibroot..'xDebug')
-require (_xlibroot..'xFilesystem')
 
+_vlibroot = 'source/vLib/classes/'
 require (_vlibroot..'vLib')
 require (_vlibroot..'vDialog')
+require (_vlibroot..'vArrowButton')
 
-require ('source/ProcessSlicer')
 require ('source/PhraseMate')
 require ('source/PhraseMateUI')
 require ('source/PhraseMatePrefs')
@@ -51,12 +57,12 @@ require ('source/PhraseMatePrefs')
 -- Variables
 --------------------------------------------------------------------------------
 
-local phrasemate
-local prefs = PhraseMatePrefs()
-renoise.tool().preferences = prefs
-
+rns = nil
+phrasemate = nil
 APP_DISPLAY_NAME = "PhraseMate"
 
+local prefs = PhraseMatePrefs()
+renoise.tool().preferences = prefs
 
 --------------------------------------------------------------------------------
 -- Menu entries & MIDI/Key mappings
@@ -296,7 +302,7 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping {
   name = PhraseMate.MIDI_MAPPING.SET_PLAYBACK_MODE,
   invoke = function(msg)
-    local mode = xLib.clamp_value(msg.int_value,1,3)
+    local mode = cLib.clamp_value(msg.int_value,1,3)
     phrasemate:invoke_task(xPhraseManager.set_playback_mode,renoise.Instrument.PHRASES_PLAY_KEYMAP)
   end
 }
@@ -317,17 +323,26 @@ renoise.tool():add_menu_entry {
 }
 
 --------------------------------------------------------------------------------
+
+renoise.tool().app_new_document_observable:add_notifier(function()
+  rns = renoise.song()
+  phrasemate = PhraseMate{
+    app_display_name = APP_DISPLAY_NAME,
+  }
+end)
+
+--------------------------------------------------------------------------------
 -- invoked by menu entries, autostart - 
 -- first time around, the UI/class instances are created 
 
 function show()
 
-  rns = renoise.song()
-  if not phrasemate then
-    phrasemate = PhraseMate{
-      app_display_name = APP_DISPLAY_NAME,
-    }
-  end
+
+  --if not phrasemate then
+    --phrasemate = PhraseMate{
+      --app_display_name = APP_DISPLAY_NAME,
+    --}
+  --end
 
   phrasemate.ui:show()
 

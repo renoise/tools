@@ -17,10 +17,12 @@ function PhraseMatePrefs:__init()
 
   renoise.Document.DocumentNode.__init(self)
 
-  -- tool options
+  -- tool/ui options
   self:add_property("active_tab_index",renoise.Document.ObservableNumber(PhraseMate.UI_TABS.INPUT))
   self:add_property("autostart", renoise.Document.ObservableBoolean(true))
   self:add_property("output_show_collection_report", renoise.Document.ObservableBoolean(true))
+  self:add_property("input_show_collection_panel", renoise.Document.ObservableBoolean(false))
+  self:add_property("input_show_properties_panel", renoise.Document.ObservableBoolean(false))
 
   -- read (collection) options
   self:add_property("input_scope", renoise.Document.ObservableNumber(PhraseMate.INPUT_SCOPE.SELECTION_IN_PATTERN))
@@ -49,5 +51,6 @@ function PhraseMatePrefs:__init()
 
   -- realtime options
   self:add_property("zxx_mode", renoise.Document.ObservableBoolean(false))
+  self:add_property("zxx_prefer_local", renoise.Document.ObservableBoolean(false))
 
 end
