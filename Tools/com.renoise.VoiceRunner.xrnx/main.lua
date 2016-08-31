@@ -19,20 +19,21 @@ This file is mostly registering key-bindings and midi mappings.
 --------------------------------------------------------------------------------
 
 rns = nil
-_xlibroot = 'source/xLib/classes/'
-_vlibroot = 'source/vLib/classes/'
 _trace_filters = nil
 --_trace_filters = {".*"}
 
-require (_vlibroot..'vLib')
-require (_vlibroot..'helpers/vColor')
-require (_vlibroot..'vDialog')
+_clibroot = 'source/cLib/classes/'
+_xlibroot = 'source/xLib/classes/'
+_vlibroot = 'source/vLib/classes/'
+
+require (_clibroot..'cLib')
+require (_clibroot..'cDebug')
+require (_clibroot..'cFilesystem')
+require (_clibroot..'cProcessSlicer')
 
 require (_xlibroot..'xLib')
 require (_xlibroot..'xColumns') 
-require (_xlibroot..'xDebug')
 require (_xlibroot..'xEffectColumn') 
-require (_xlibroot..'xFilesystem')
 require (_xlibroot..'xInstrument')
 require (_xlibroot..'xLinePattern')
 require (_xlibroot..'xMidiCommand')
@@ -42,11 +43,14 @@ require (_xlibroot..'xTrack')
 require (_xlibroot..'xVoiceRunner') 
 require (_xlibroot..'xVoiceSorter') 
 
+require (_vlibroot..'vLib')
+require (_vlibroot..'helpers/vColor')
+require (_vlibroot..'vDialog')
+
 require ('source/VR')
 require ('source/VR_UI')
 require ('source/VR_Prefs')
 require ('source/VR_Template')
-require ('source/ProcessSlicer')
 
 --------------------------------------------------------------------------------
 -- Variables
