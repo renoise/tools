@@ -23,7 +23,7 @@ class 'xOscMessage' (xMessage)
 function xOscMessage:__init(...)
 
   -- native OSC message
-	local args = xLib.unpack_args(...) 
+	local args = cLib.unpack_args(...) 
 
   --print("args",type(args),rprint(args))
 

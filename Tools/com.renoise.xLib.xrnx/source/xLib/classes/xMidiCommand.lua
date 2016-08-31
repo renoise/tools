@@ -31,7 +31,7 @@ xMidiCommand.TYPE = {
 
 function xMidiCommand:__init(...)
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   self.instrument_index = property(self.get_instrument_index,self.set_instrument_index)
   self._instrument_index = args.instrument_index or 255 -- EMPTY

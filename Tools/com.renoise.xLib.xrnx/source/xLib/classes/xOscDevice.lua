@@ -36,7 +36,7 @@ xOscDevice.DEFAULT_DEVICE_NAME = "Untitled device"
 
 function xOscDevice:__init(...)
 
-	local args = xLib.unpack_args(...) 
+	local args = cLib.unpack_args(...) 
   --print("args",rprint(args))
 
   --- string, the state of the device

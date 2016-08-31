@@ -30,7 +30,7 @@ class 'xMessage' -- (xClass)
 function xMessage:__init(...)
   --print("xMessage:__init(...)")
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   -- args might be a user object - ignore and provide empty table
   if (type(args)~="table") then

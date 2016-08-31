@@ -44,7 +44,7 @@ fn = function()
     assert(x_msg.values[2] == 0x7F)
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0x90,0x3C,0x7F}))
+    assert(cLib.table_compare(midi_msgs[1],{0x90,0x3C,0x7F}))
   end
   x_input:input({0x90,0x3C,0x7F},port_name)
 
@@ -58,7 +58,7 @@ fn = function()
     assert(x_msg.values[2] == 0x7F)
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0x9F,0x3C,0x7F}))
+    assert(cLib.table_compare(midi_msgs[1],{0x9F,0x3C,0x7F}))
   end
   x_input:input({0x9F,0x3C,0x7F},port_name)
 
@@ -72,7 +72,7 @@ fn = function()
     assert(x_msg.values[2] == 0x00)
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0x80,0x3C,0x00}))
+    assert(cLib.table_compare(midi_msgs[1],{0x80,0x3C,0x00}))
   end
   x_input:input({0x90,0x3C,0x00},port_name)
 
@@ -86,7 +86,7 @@ fn = function()
     assert(x_msg.values[2] == 0x20)
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0x80,0x3C,0x20}))
+    assert(cLib.table_compare(midi_msgs[1],{0x80,0x3C,0x20}))
   end
   x_input:input({0x80,0x3C,0x20},port_name)
 
@@ -100,7 +100,7 @@ fn = function()
     assert(x_msg.values[2] == 0x22)
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xA0,0x60,0x22}))
+    assert(cLib.table_compare(midi_msgs[1],{0xA0,0x60,0x22}))
   end
   x_input:input({0xA0,0x60,0x22},port_name)
 
@@ -119,7 +119,7 @@ fn = function()
     assert(x_msg.values[2] == 0x40)
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xB0,0x07,0x40}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB0,0x07,0x40}))
   end
   x_input:input(msg,port_name)
 
@@ -144,7 +144,7 @@ fn = function()
       assert(x_msg.values[2] == 0x40)
       assert(x_msg.bit_depth == 7)
       local midi_msgs = x_msg:create_raw_message()
-      assert(xLib.table_compare(midi_msgs[1],{0xBF,0x07,0x40}))
+      assert(cLib.table_compare(midi_msgs[1],{0xBF,0x07,0x40}))
     elseif (msg_count == 2) then
       assert(x_msg.message_type == xMidiMessage.TYPE.CONTROLLER_CHANGE)
       assert(x_msg.channel == 16)
@@ -152,7 +152,7 @@ fn = function()
       assert(x_msg.values[2] == 0x40)
       assert(x_msg.bit_depth == 7)
       local midi_msgs = x_msg:create_raw_message()
-      assert(xLib.table_compare(midi_msgs[1],{0xBF,0x07,0x40}))
+      assert(cLib.table_compare(midi_msgs[1],{0xBF,0x07,0x40}))
     end
   end
   x_input:input({0xBF,0x07,0x40},port_name)
@@ -167,7 +167,7 @@ fn = function()
     assert(x_msg.values[2] == 0x0F) 
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xB0,0x22,0x0F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB0,0x22,0x0F}))
   end
   x_input:input({0xB0,0x22,0x0F},port_name)
 
@@ -183,7 +183,7 @@ fn = function()
     assert(x_msg.values[2] == 0x00)
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xC0,0x60,0x00}))
+    assert(cLib.table_compare(midi_msgs[1],{0xC0,0x60,0x00}))
   end
   x_input:input({0xC0,0x60,0x00},port_name)
 
@@ -198,7 +198,7 @@ fn = function()
     assert(x_msg.values[2] == 0x00)
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xD0,0x60,0x00}))
+    assert(cLib.table_compare(midi_msgs[1],{0xD0,0x60,0x00}))
   end
   x_input:input({0xD0,0x60,0x22},port_name)
 
@@ -210,7 +210,7 @@ fn = function()
     assert(x_msg.values[1] == 0x06)
     assert(x_msg.values[2] == 0x22)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xF2,0x06,0x22}))
+    assert(cLib.table_compare(midi_msgs[1],{0xF2,0x06,0x22}))
   end
   x_input:input({0xF2,0x06,0x22},port_name)
 
@@ -224,7 +224,7 @@ fn = function()
     assert(x_msg.values[2] == 0x40)
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xE0,0x00,0x40}))
+    assert(cLib.table_compare(midi_msgs[1],{0xE0,0x00,0x40}))
   end
   x_input:input({0xE0,0x00,0x40},port_name) -- middle position
 
@@ -238,7 +238,7 @@ fn = function()
     assert(x_msg.values[2] == 0x7F)
     assert(x_msg.bit_depth == 7)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xE0,0x7F,0x7F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xE0,0x7F,0x7F}))
   end
   x_input:input({0xE0,0x7F,0x7F},port_name) -- max position
 
@@ -258,8 +258,8 @@ fn = function()
     assert(x_msg.values[2] == 0x1F8F) -- 8079
     assert(x_msg.bit_depth == 14)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xB0,0x02,0x3F}))
-    assert(xLib.table_compare(midi_msgs[2],{0xB0,0x22,0x0F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB0,0x02,0x3F}))
+    assert(cLib.table_compare(midi_msgs[2],{0xB0,0x22,0x0F}))
   end
   x_input:input({0xB0,0x22,0x0F},port_name)
 
@@ -281,9 +281,9 @@ fn = function()
     assert(x_msg.values[2] == 0x00)
     assert(x_msg.bit_depth == 14)
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xE0,0x00,0x00}))
-    assert(xLib.table_compare(midi_msgs[2],{0xE0,0x40,0x00}))
-    assert(xLib.table_compare(midi_msgs[3],{0xE0,0x04,0x00}))
+    assert(cLib.table_compare(midi_msgs[1],{0xE0,0x00,0x00}))
+    assert(cLib.table_compare(midi_msgs[2],{0xE0,0x40,0x00}))
+    assert(cLib.table_compare(midi_msgs[3],{0xE0,0x04,0x00}))
   end
   x_input:input({0xE0,0x04,0x00},port_name)
 
@@ -305,10 +305,10 @@ fn = function()
     assert(x_msg.values[1] == 16191) 
     assert(x_msg.values[2] == 827)  -- 780 + 47
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x63,0x7E}))
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x62,0x3F}))
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x06,0x0F}))
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x26,0x2F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x63,0x7E}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x62,0x3F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x06,0x0F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x26,0x2F}))
   end
   x_input:input({0xB1,0x06,0x0F},port_name)
   -- simulate idle time to force the non-terminated message out
@@ -334,10 +334,10 @@ fn = function()
     assert(x_msg.values[1] == 16191) 
     assert(x_msg.values[2] == 827)  -- 780 + 47
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x63,0x7E}))
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x62,0x3F}))
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x06,0x0F}))
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x26,0x2F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x63,0x7E}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x62,0x3F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x06,0x0F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x26,0x2F}))
   end
   x_input:input({0xB1,0x26,0x2F},port_name)
 
@@ -372,10 +372,10 @@ fn = function()
     assert(x_msg.values[1] == 16191) 
     assert(x_msg.values[2] == 827)  -- 780 + 47
     local midi_msgs = x_msg:create_raw_message()
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x63,0x7E}))
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x62,0x3F}))
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x06,0x0F}))
-    assert(xLib.table_compare(midi_msgs[1],{0xB1,0x26,0x2F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x63,0x7E}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x62,0x3F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x06,0x0F}))
+    assert(cLib.table_compare(midi_msgs[1],{0xB1,0x26,0x2F}))
   end
   x_input:input({0xB1,0x64,0x7F},port_name)
   ]]

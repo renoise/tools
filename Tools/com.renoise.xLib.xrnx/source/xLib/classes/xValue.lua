@@ -20,7 +20,7 @@ class 'xValue' (xValue)
 
 function xValue:__init(...)
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   --- variable
   self.value = property(self.get_value,self.set_value)

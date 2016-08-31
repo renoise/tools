@@ -18,7 +18,7 @@ class 'xBlockLoop'
 
 function xBlockLoop:__init(...)
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- properties --
 

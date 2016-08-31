@@ -43,7 +43,7 @@ xOscPattern.uid_counter = 0
 
 function xOscPattern:__init(...)
 
-	local args = xLib.unpack_args(...) 
+	local args = cLib.unpack_args(...) 
   --print("*** args",rprint(args))
 
   --- string, pattern used for matching the input
@@ -219,7 +219,7 @@ function xOscPattern:match(msg)
           local value_match = false
           local val1,val2 = msg.arguments[k].value,arg.value
           if self.precision and (arg.tag == xOscValue.TAG.FLOAT) then
-            value_match = xLib.float_compare(val1,val2,self.precision)
+            value_match = cLib.float_compare(val1,val2,self.precision)
           else
             value_match = (val1 == val2)
           end

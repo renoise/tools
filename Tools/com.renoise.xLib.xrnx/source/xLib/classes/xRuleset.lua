@@ -462,7 +462,7 @@ function xRuleset:serialize()
       .."\nreturn {"
       .."\nosc_enabled = "..tostring(self.osc_enabled).. ","
       .."\nmanage_voices = "..tostring(self.manage_voices).. ","
-      .."\ndescription = \""..xLib.serialize_object(self.description).. "\","
+      .."\ndescription = \""..cLib.serialize_object(self.description).. "\","
       .."\n"
 
   for k,v in ipairs(self.rules) do

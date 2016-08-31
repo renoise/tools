@@ -18,7 +18,7 @@ class 'xOscRouter'
 
 function xOscRouter:__init(...)
 
-	local args = xLib.unpack_args(...) 
+	local args = cLib.unpack_args(...) 
 
   --- table<xOscPattern>
   self.patterns = property(self.get_patterns,self.set_patterns)

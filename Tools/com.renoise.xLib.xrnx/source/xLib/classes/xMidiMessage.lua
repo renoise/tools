@@ -86,7 +86,7 @@ xMidiMessage.DEFAULT_PORT_NAME = "Unknown port"
 
 function xMidiMessage:__init(...)
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
   --print("args",rprint(args))
 
   --- xMidiMessage.TYPE (required)

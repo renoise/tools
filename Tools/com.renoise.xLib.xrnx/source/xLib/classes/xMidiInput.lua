@@ -54,7 +54,7 @@ class 'xMidiInput'
 
 function xMidiInput:__init(...)
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   --assert(args.callback_fn,"You need to provide a callback function")
 
@@ -514,7 +514,7 @@ function xMidiInput:input(msg,port_name)
     msg_values[2] = msg[3] -- MSB
 
   else
-    LOG("Unrecognized MIDI message: "..xLib.serialize_table(msg))
+    LOG("Unrecognized MIDI message: "..cLib.serialize_table(msg))
   end
 
   --print(">>> xMidiInput - msg_values",rprint(msg_values))

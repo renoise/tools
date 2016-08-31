@@ -28,7 +28,7 @@ function xMidiIO:__init(...)
 
   --xApplication.__init(self,...)
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   assert(type(args.midi_callback_fn)=="function",
     "Required argument 'midi_callback_fn' missing")

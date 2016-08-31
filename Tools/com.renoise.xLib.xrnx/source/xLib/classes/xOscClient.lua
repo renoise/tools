@@ -25,7 +25,7 @@ class 'xOscClient'
 function xOscClient:__init(...)
   TRACE("xOscClient:__init(...)")
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- bool, display a message the first time a note message is sent
   self.first_run = property(self.get_first_run,self.set_first_run)

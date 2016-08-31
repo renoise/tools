@@ -53,7 +53,7 @@ xAutomation.PLAYMODE_NAMES = {
 
 function xAutomation:__init(...)
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   --- xAutomation.FOLLOW_MODE
   self.follow_mode = args.follow_mode or xAutomation.FOLLOW_MODE.AUTOMATIC

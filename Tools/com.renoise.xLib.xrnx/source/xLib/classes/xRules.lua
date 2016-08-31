@@ -39,7 +39,7 @@ xRules.OUTPUT_OPTIONS = {
 
 function xRules:__init(...)
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   --- boolean
   self.active = property(self.get_active,self.set_active)

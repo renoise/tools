@@ -81,7 +81,7 @@ xVoiceManager.EVENT = {
 
 function xVoiceManager:__init(...)
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   --- the maximum number of voices (0 = 'unlimited')
   self.voice_limit = property(self.get_voice_limit,self.set_voice_limit)

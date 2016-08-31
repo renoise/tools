@@ -44,7 +44,7 @@ xVoiceSorter.ERROR_CODE = {
 function xVoiceSorter:__init(...)
   TRACE("xVoiceSorter:__init(...)")
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   --- xVoiceRunner
   self.runner = args.runner
@@ -220,7 +220,7 @@ function xVoiceSorter:sort(ptrack_or_phrase,selection,trk_idx,seq_idx)
 
   -- check which columns to merge into the result
   -- (unselected columns on either side)
-  local low_col,high_col = xLib.get_table_bounds(voice_runs)
+  local low_col,high_col = cLib.get_table_bounds(voice_runs)
   --print("low_col,high_col",low_col,high_col)
   local num_sorted_cols = #table.keys(self.temp_runs)
   --print("num_sorted_cols",num_sorted_cols)
@@ -361,7 +361,7 @@ function xVoiceSorter:sort_by_note(line_runs,line_idx)
 
     if found_room then
       --print(">>> sort_by_note - insert run into this column",col_idx)
-      xLib.expand_table(self.temp_runs,col_idx)
+      cLib.expand_table(self.temp_runs,col_idx)
       table.insert(self.temp_runs[col_idx],voice.voice_run)
       self:set_high_low_column(col_idx,notecol.note_value,notecol.note_value)
     else
@@ -423,7 +423,7 @@ function xVoiceSorter:find_note_column(note_value,line_idx,num_lines)
     return false
   end
 
-  local low_col,high_col = xLib.get_table_bounds(self.temp_runs)
+  local low_col,high_col = cLib.get_table_bounds(self.temp_runs)
 
   -- mark column, while maintaining previous marks
   local do_mark_column = function(col_idx)
@@ -830,7 +830,7 @@ function xVoiceSorter:insert_note_run(col_idx,voice_run,line_idx)
   ]]
 
   --print(">>> insert_note_run - assign to new column",col_idx)
-  xLib.expand_table(self.temp_runs,col_idx)
+  cLib.expand_table(self.temp_runs,col_idx)
   table.insert(self.temp_runs[col_idx],voice_run)
   self:set_high_low_column(col_idx,nil,nil,nil,line_idx+1)
 
@@ -866,7 +866,7 @@ function xVoiceSorter:sort_unique(line_runs,line_idx)
       })
     else
       --print("*** sort_unique - insert run into this column",col_idx)
-      xLib.expand_table(self.temp_runs,col_idx)
+      cLib.expand_table(self.temp_runs,col_idx)
       table.insert(self.temp_runs[col_idx],voice.voice_run)
       -- update the map with the instrument number - this will 
       -- cause the next find_unique_column() to be more precise
@@ -996,7 +996,7 @@ function xVoiceSorter:sort_compact(line_runs,line_idx)
       self:insert_temp_column(col_idx,voice.voice_run)
     else
       --print(">>> sort_compact - insert run into column",col_idx)
-      xLib.expand_table(self.temp_runs,col_idx)
+      cLib.expand_table(self.temp_runs,col_idx)
       table.insert(self.temp_runs[col_idx],voice.voice_run)
     end
   end  

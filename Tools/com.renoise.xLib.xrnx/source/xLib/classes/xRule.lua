@@ -59,7 +59,7 @@ xRule.ASPECT_DEFAULTS = {
   CHANNEL = {},
   TRACK_INDEX = {},
   INSTRUMENT_INDEX = {},
-  MESSAGE_TYPE = xLib.stringify_table(xMidiMessage.TYPE),
+  MESSAGE_TYPE = cLib.stringify_table(xMidiMessage.TYPE),
   VALUE_1 = 1,
   VALUE_2 = 1,
   VALUE_3 = 1,
@@ -356,7 +356,7 @@ function xRule:__init(def)
     -- @param precision (number), optional precision factor
     local compare_numbers = function(val1,val2,operator,precision)
       --print("compare_numbers - val1,val2,operator,precision",val1,val2,operator,precision)
-      local is_equal = precision and xLib.float_compare(val1,val2,precision) 
+      local is_equal = precision and cLib.float_compare(val1,val2,precision) 
         or val1 == val2
       local operators_table = {
         ["equal_to"] = function()
@@ -439,7 +439,7 @@ function xRule:__init(def)
     -- @param val (string), "ruleset_name:rule_name"
     local route_message = function(val)
       --print("route_message - val",val)
-      local routing_values = xLib.split(val,":")
+      local routing_values = cString.split(val,":")
       local rule,ruleset,rule_idx,ruleset_idx
       if (routing_values[1] == xRuleset.CURRENT_RULESET) then
         ruleset = __xrules.rulesets[__xruleset_index]
@@ -695,7 +695,7 @@ function xRule:serialize()
     },
   }
   local max_depth,longstring = nil,true
-  return xLib.serialize_table(t,max_depth,longstring)
+  return cLib.serialize_table(t,max_depth,longstring)
 
 end
 
@@ -812,7 +812,7 @@ function xRule:compile()
   local build_sysex_condition = function(k,v)
     --print("build_sysex_condition",k,v)
 
-    local t = xLib.split(v," ")
+    local t = cString.split(v," ")
     --rprint(t)
 
     local str_fn = ""

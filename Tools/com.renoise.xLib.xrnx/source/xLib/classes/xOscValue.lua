@@ -41,7 +41,7 @@ xOscValue.TAG = {
 function xOscValue:__init(...)
 
   xValue.__init(self,...)
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   --- xOscValue.TAG
   self.tag = property(self.get_tag,self.set_tag)

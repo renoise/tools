@@ -115,7 +115,7 @@ end
 
 function xPlayPos:get_fractional()
 
-  local beats = xLib.fraction(rns.transport.playback_pos_beats)
+  local beats = cLib.fraction(rns.transport.playback_pos_beats)
   local beats_scaled = beats * rns.transport.lpb
   local line_in_beat = math.floor(beats_scaled)
   local fraction = cLib.scale_value(beats_scaled,line_in_beat,line_in_beat+1,0,1)
@@ -144,7 +144,7 @@ end
 function xPlayPos:maintain_position(pos)
 
   -- within the first line of a "song beat"?
-  local beats = xLib.fraction(rns.transport.playback_pos_beats)
+  local beats = cLib.fraction(rns.transport.playback_pos_beats)
   local line_in_beat = beats * rns.transport.lpb
   local beat_pos_set = false
   if (line_in_beat < 1) then
