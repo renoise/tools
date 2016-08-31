@@ -73,7 +73,7 @@ xStream.OUTPUT_OPTIONS = {
 
 function xStream:__init(...)
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   assert(type(args.midi_prefix)=="string","Expected argument 'midi_prefix' (string)")
 
@@ -1626,7 +1626,7 @@ function xStream.parse_callback_type(str_name)
     return xStreamModel.CB_TYPE.DATA,key
   elseif (str_name:sub(0,7) == "events.") then
     local key = str_name:sub(8)    
-    local parts = xLib.split(key,"%.") -- split at dot
+    local parts = cString.split(key,"%.") -- split at dot
     return xStreamModel.CB_TYPE.EVENTS,parts[1],parts[2],parts[3]
   end
 

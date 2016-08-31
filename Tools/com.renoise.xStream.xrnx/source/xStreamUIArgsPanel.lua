@@ -232,7 +232,7 @@ function xStreamUIArgsPanel:build_args()
     if display_as == xStreamArg.DISPLAY_AS.HEX then
       integered = true
       fn_tostring = function(val)
-        local hex_digits = xLib.get_hex_digits(arg.properties.max) 
+        local hex_digits = cLib.get_hex_digits(arg.properties.max) 
         val = arg.properties.zero_based and val-1 or val
         return ("%."..tostring(hex_digits).."X"):format(val)
       end 
@@ -549,7 +549,7 @@ function xStreamUIArgsPanel:build_args()
                   -- allow finer control than with absolute 
                   val = arg.value+(a.int_value*(range/0xFF))
                 end
-                arg.value = xLib.clamp_value(val,arg.properties.min,arg.properties.max)
+                arg.value = cLib.clamp_value(val,arg.properties.min,arg.properties.max)
               end
             elseif (type(arg.observable)=="ObservableBoolean") then
               arg.value = a.boolean_value

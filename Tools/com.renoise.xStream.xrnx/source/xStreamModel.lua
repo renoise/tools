@@ -563,7 +563,7 @@ end
 
 function xStreamModel:parse_options(options_def)
 
-  local color = vColor.color_table_to_value(xLib.COLOR_DISABLED)
+  local color = cColor.color_table_to_value(xLib.COLOR_DISABLED)
   if not table.is_empty(options_def) then
     if (options_def.color) then
       --print("options_def.color",options_def.color)
@@ -631,7 +631,7 @@ function xStreamModel:parse_userdata(data_def)
     for k,v in pairs(data_def) do
       -- 1.48+ stores values as serialized string
       self.data_initial[k] = (type(data_def[k])=="table") 
-        and xLib.serialize_table(data_def[k]) or data_def[k]
+        and cLib.serialize_table(data_def[k]) or data_def[k]
       if (type(v)=="table") then
         self.data[k] = v -- prior to 1.48
       elseif (type(v)=="string") then
@@ -814,7 +814,7 @@ function xStreamModel:add_event(str_name,str_fn)
   TRACE("xStreamModel:add_event(str_name,str_fn)",str_name,str_fn)
 
   if not str_fn then
-    local parts = xLib.split(str_name,"%.") -- split at dot
+    local parts = cString.split(str_name,"%.") -- split at dot
     if (parts[1] == "midi") then
       str_fn = [[------------------------------------------------------------------------------
 -- respond to MIDI ']] .. parts[2] .. [[' messages
@@ -880,7 +880,7 @@ function xStreamModel:parse_events(event_def)
   for k,v in pairs(self.events) do
     
     local str_fn = nil
-    local parts = xLib.split(k,"%.") -- split at dot
+    local parts = cString.split(k,"%.") -- split at dot
     --print("parts",rprint(parts))
 
     if (parts[1] == "midi") then
@@ -1016,13 +1016,13 @@ function xStreamModel:serialize()
   ..presets
   ..","
 	.."\ndata = "
-  ..xLib.serialize_table(self.data_initial,max_depth,longstring)
+  ..cLib.serialize_table(self.data_initial,max_depth,longstring)
   ..","
 	.."\nevents = "
-  ..xLib.serialize_table(self.events,max_depth,longstring)
+  ..cLib.serialize_table(self.events,max_depth,longstring)
   ..","
 	.."\noptions = {"
-  .."\n color = "..vColor.value_to_hex_string(self.color)..","
+  .."\n color = "..cColor.value_to_hex_string(self.color)..","
   .."\n},"
 	.."\ncallback = [[\n"
   ..self.callback_str
@@ -1245,7 +1245,7 @@ function xStreamModel:detach_from_song()
   self.args:detach_from_song()
 
   for k,v in pairs(self.events) do
-    local parts = xLib.split(k,"%.") -- split at dot
+    local parts = cString.split(k,"%.") -- split at dot
     if (parts[1] == "rns") and self.events_compiled[k] then
       self:remove_event_notifier(k)
     end
@@ -1458,7 +1458,7 @@ function xStreamModel:get_suggested_callback_name(str_name,cb_type)
   -- for events, check the part after the dot 
   local key_name = str_name
   if (cb_type==xStreamModel.CB_TYPE.EVENTS) then
-    local parts = xLib.split(str_name,"%.") -- split at dot
+    local parts = cString.split(str_name,"%.") -- split at dot
     key_name = parts[1]
   end
   --print("get_suggested_callback_name - key_name",key_name)
@@ -1480,7 +1480,7 @@ function xStreamModel:get_suggested_callback_name(str_name,cb_type)
     end
   end
 
-  local count = xLib.detect_counter_in_str(str_name)
+  local count = cString.detect_counter_in_str(str_name)
   --print("count",count)
 
   local rslt = str_name

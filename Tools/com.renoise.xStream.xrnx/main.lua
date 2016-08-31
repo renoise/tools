@@ -16,6 +16,9 @@ _trace_filters = nil
 --_trace_filters = {"^vDialog"}
 
 _clibroot = 'source/cLib/classes/'
+_vlibroot = 'source/vLib/classes/'
+_xlibroot = 'source/xLib/classes/'
+
 require (_clibroot..'cLib')
 require (_clibroot..'cDebug')
 require (_clibroot..'cDocument')
@@ -24,16 +27,14 @@ require (_clibroot..'cObservable')
 require (_clibroot..'cReflection')
 require (_clibroot..'cParseXML')
 require (_clibroot..'cSandbox')
+require (_clibroot..'cColor')
 
-_vlibroot = 'source/vLib/classes/'
 require (_vlibroot..'vLib')
 require (_vlibroot..'vDialog')
 require (_vlibroot..'vDialogWizard')
 require (_vlibroot..'vPrompt')
 require (_vlibroot..'vTable')
-require (_vlibroot..'helpers/vColor')
 
-_xlibroot = 'source/xLib/classes/'
 require (_xlibroot..'xLib')
 require (_xlibroot..'xAudioDevice')
 require (_xlibroot..'xAutomation')

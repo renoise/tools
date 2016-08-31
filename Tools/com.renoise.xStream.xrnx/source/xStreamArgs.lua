@@ -234,14 +234,14 @@ function xStreamArgs:add(arg,index,do_replace)
   if arg.bind then
     --print("default value for arg.bind",arg.bind)
     local bind_val_no_obs = string.sub(arg.bind,1,#arg.bind-11)
-    parsed_val,err = xLib.parse_str(bind_val_no_obs)
+    parsed_val,err = cLib.parse_str(bind_val_no_obs)
     if not parsed_val and err then
       arg.bind = nil
       LOG("Warning: 'bind' failed to resolve: "..err)
     end
   elseif arg.poll then
     --print("default value for arg.poll",arg.poll)
-    parsed_val,err = xLib.parse_str(arg.poll)
+    parsed_val,err = cLib.parse_str(arg.poll)
     if not parsed_val and err then
       arg.poll = nil
       LOG("Warning: 'poll' failed to resolve: "..err)
@@ -600,7 +600,7 @@ function xStreamArgs:randomize()
               val = math.random(arg.properties.min,arg.properties.max)
             else
               -- float
-              val = xLib.scale_value(math.random(),0,1,arg.properties.min,arg.properties.max)
+              val = cLib.scale_value(math.random(),0,1,arg.properties.min,arg.properties.max)
             end
           end
         end
@@ -808,8 +808,8 @@ function xStreamArgs:serialize()
     end
   end
 
-  local str_args = xLib.serialize_table(args)
-  local str_presets = xLib.serialize_table(presets)
+  local str_args = cLib.serialize_table(args)
+  local str_presets = cLib.serialize_table(presets)
 
   return str_args,str_presets
 

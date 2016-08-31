@@ -537,9 +537,9 @@ function xStreamUIPresetPanel:update_preset_list_row(idx)
   view_bt = self.vb.views["xStreamModelPresetRecall"..idx]
   local preset_color = base_color
   if (model.color > 0) then
-    preset_color = vColor.value_to_color_table(model.color)
+    preset_color = cColor.value_to_color_table(model.color)
     if selected then
-      preset_color = vColor.adjust_brightness(preset_color,xStreamUI.BRIGHTEN_AMOUNT)
+      preset_color = cColor.adjust_brightness(preset_color,xStreamUI.BRIGHTEN_AMOUNT)
     end
   end
   view_bt.color = preset_color

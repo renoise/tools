@@ -109,7 +109,7 @@ xStreamUI.WELCOME_MSG = [[
 function xStreamUI:__init(...)
   TRACE("xStreamUI:__init()")
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   assert(type(args.xstream)=="xStream","Expected 'xStream' to be a class instance")
   assert(type(args.midi_prefix)=="string","Expected 'midi_prefix' to be a string")
@@ -183,7 +183,7 @@ function xStreamUI:__init(...)
   -- valid values are "main", "data.[xStreamArg.full_name]" or "event.[xMidiMessage.TYPE]"
   self.editor_view = "main"
 
-  self.base_color_highlight = vColor.adjust_brightness(xStreamUI.COLOR_BASE,xStreamUI.HIGHLIGHT_AMOUNT)
+  self.base_color_highlight = cColor.adjust_brightness(xStreamUI.COLOR_BASE,xStreamUI.HIGHLIGHT_AMOUNT)
 
 
   -- initialize -----------------------
@@ -321,7 +321,7 @@ function xStreamUI:update_color()
   local model = self.xstream.selected_model
   local view = self.vb.views["xStreamModelColorPreview"]
   if model then
-    view.color = vColor.value_to_color_table(model.color)
+    view.color = cColor.value_to_color_table(model.color)
     view.active = true
   else
     view.color = {0,0,0}
@@ -1051,7 +1051,7 @@ function xStreamUI:set_editor_content()
   -- prevent notifier from firing
   local view = self.vb.views["xStreamCallbackEditor"]
   self.suppress_editor_notifier = true
-  view.text = text --xLib.trim(text).."\n"
+  view.text = text --cString.trim(text).."\n"
   self.suppress_editor_notifier = false
 
 end
@@ -1067,7 +1067,7 @@ function xStreamUI:apply_editor_content()
     --print("*** xStreamUI:on_idle - callback modified")
     local view = self.vb.views["xStreamCallbackEditor"]
     local cb_type,cb_key,cb_subtype_or_tab,cb_arg_name = xStream.parse_callback_type(self.editor_view)
-    local trimmed_text = xLib.trim(view.text)
+    local trimmed_text = cString.trim(view.text)
 
     if (cb_type == "main") then
       model.callback_str = trimmed_text

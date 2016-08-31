@@ -365,7 +365,7 @@ function xStreamPresets:rename_preset(idx,str_name)
     end
   end
 
-  str_name = xLib.sanitize_string(str_name)
+  str_name = cString.sanitize_string(str_name)
 
   self.preset_names[idx] = str_name
   self.modified = true
@@ -413,7 +413,7 @@ function xStreamPresets:import(file_path,clear_existing)
   local str_xml = fhandle:read("*a")
   fhandle:close()
 
-  local success,rslt = xParseXML.parse(str_xml)
+  local success,rslt = cParseXML.parse(str_xml)
   if not success then
     return false, rslt
   end

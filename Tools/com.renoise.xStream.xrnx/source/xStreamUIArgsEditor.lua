@@ -491,7 +491,7 @@ function xStreamUIArgsEditor:create_arg_descriptor(arg_index,arg_value)
           if (v == "") then
             return false, "Error: 'items' should not contain blank lines"
           end
-          table.insert(arg_items,xLib.trim(v))
+          table.insert(arg_items,cString.trim(v))
         end
         arg_props.min = 1
         arg_props.max = #arg_items

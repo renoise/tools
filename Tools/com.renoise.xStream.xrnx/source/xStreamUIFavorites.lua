@@ -650,9 +650,9 @@ function xStreamUIFavorites:update_button(idx,brightness)
       -- Display as 
       -- N/A: Model Name (soft wrapped)
       -- 
-      str_txt = ("%s %s"):format(na_prefix,xLib.soft_wrap(favorite.model_name))
+      str_txt = ("%s %s"):format(na_prefix,cString.soft_wrap(favorite.model_name))
     else
-      color = vColor.value_to_color_table(model.color)
+      color = cColor.value_to_color_table(model.color)
       local str_launch_mode = xStreamFavorites.LAUNCH_MODES_SHORT[favorite.launch_mode]
       --print("favorite.launch_mode",favorite.launch_mode)
       --print("str_launch_mode",str_launch_mode)
@@ -689,7 +689,7 @@ function xStreamUIFavorites:update_button(idx,brightness)
           -- Model Name (soft wrapped)
           -- [Launch]
           str_txt = is_automatic
-            and ("%s"):format(xLib.soft_wrap(favorite.model_name))
+            and ("%s"):format(cString.soft_wrap(favorite.model_name))
             or ("%s\n%s"):format(favorite.model_name,str_launch_mode)
         else
           -- Display as 
@@ -706,12 +706,12 @@ function xStreamUIFavorites:update_button(idx,brightness)
   end
 
   if brightness then
-    color = vColor.adjust_brightness(color,brightness)
+    color = cColor.adjust_brightness(color,brightness)
   else
     if (idx == self.selected_index) then
-      color = vColor.adjust_brightness(color,xStreamUI.SELECTED_COLOR) -- dark
+      color = cColor.adjust_brightness(color,xStreamUI.SELECTED_COLOR) -- dark
     elseif (idx == self.xstream.favorites.last_selected_index) then
-      color = vColor.adjust_brightness(color,xStreamUI.BRIGHTEN_AMOUNT) -- light
+      color = cColor.adjust_brightness(color,xStreamUI.BRIGHTEN_AMOUNT) -- light
     end
   end
 

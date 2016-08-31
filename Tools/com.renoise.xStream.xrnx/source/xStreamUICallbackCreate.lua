@@ -443,8 +443,8 @@ function xStreamUICallbackCreate:get_available_event_names()
 
   local rslt = {}
 
-  local midi_events = xLib.stringify_table(xMidiMessage.TYPE,"midi.")
-  local voice_events = xLib.stringify_table(xVoiceManager.EVENTS,"voice.")
+  local midi_events = cLib.stringify_table(xMidiMessage.TYPE,"midi.")
+  local voice_events = cLib.stringify_table(xVoiceManager.EVENTS,"voice.")
 
   for k,v in pairs(midi_events) do 
     rslt[k] = v 

@@ -181,7 +181,7 @@ function xStreamArg:__init(arg)
 
   -- evaluate string-based properties
   if (type(self.properties.items) == "string") then
-    local items,err = xLib.parse_str(self.properties.items)
+    local items,err = cLib.parse_str(self.properties.items)
     if err then
       LOG(err)
     else
@@ -237,7 +237,7 @@ function xStreamArg:bind_notifier(val)
       return
     end
     -- retrieve from Renoise
-    local new_value,err = xLib.parse_str(self.bind_str_val)
+    local new_value,err = cLib.parse_str(self.bind_str_val)
     if not err then
       -- hackaround: avoid notifier feedback by scheduling the update
       -- note: feedback will occur if we are not able to set the target -
@@ -302,7 +302,7 @@ function xStreamArg.resolve_binding(bind_str)
     return
   end
 
-  local binding,err = xLib.parse_str(bind_str)
+  local binding,err = cLib.parse_str(bind_str)
   if binding then
     return binding
   else
@@ -336,7 +336,7 @@ function xStreamArg.create_fn(str)
 
   local old_value = nil 
   local fn = function()
-    local new_value,err = xLib.parse_str(str)
+    local new_value,err = cLib.parse_str(str)
     if not err and (new_value ~= old_value) then
       old_value = new_value
       return new_value
