@@ -17,7 +17,7 @@ description = "Enter description...",
           output_message = "external_osc",
       },
       {
-          call_function = "-- contruct note message \n-- (velocity is controlled via tilt)\nlocal velocity, pitch = 100, (values[1] * 12) + values[2]\nif rules[2] and rules[2].values then\n  velocity = \n   xLib.scale_value(rules[2].values[2],90,166,0,127)\nend\n-- output note\nif (values[3] == 1) then\n  message_type = \"note_on\"\nelse\n  message_type = \"note_off\"\n  velocity = 0\nend\nvalues[1] = pitch\nvalues[2] = math.floor(velocity)\n",
+          call_function = "-- contruct note message \n-- (velocity is controlled via tilt)\nlocal velocity, pitch = 100, (values[1] * 12) + values[2]\nif rules[2] and rules[2].values then\n  velocity = \n   cLib.scale_value(rules[2].values[2],90,166,0,127)\nend\n-- output note\nif (values[3] == 1) then\n  message_type = \"note_on\"\nelse\n  message_type = \"note_off\"\n  velocity = 0\nend\nvalues[1] = pitch\nvalues[2] = math.floor(velocity)\n",
       },
       {
           output_message = "internal_raw",
@@ -35,7 +35,7 @@ description = "Enter description...",
   name = "Tilt → XY Pad",
   actions = {
       {
-          call_function = "local rns = renoise.song()\nlocal dev = rns.selected_device\nif dev and (dev.name == \"*XY Pad\") then\n local x = xLib.scale_value(values[1],90,166,0,1)\n local y = xLib.scale_value(values[2],90,166,0,1)\n dev.parameters[1].value = xLib.clamp_value(x,0,1)\n dev.parameters[2].value = xLib.clamp_value(y,0,1)\nend",
+          call_function = "local rns = renoise.song()\nlocal dev = rns.selected_device\nif dev and (dev.name == \"*XY Pad\") then\n local x = cLib.scale_value(values[1],90,166,0,1)\n local y = cLib.scale_value(values[2],90,166,0,1)\n dev.parameters[1].value = cLib.clamp_value(x,0,1)\n dev.parameters[2].value = cLib.clamp_value(y,0,1)\nend",
       },
       {
           output_message = "external_osc",

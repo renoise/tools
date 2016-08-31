@@ -56,7 +56,7 @@ description = "An implementation of the Mackie Protocol\n(tested with an iContro
   name = "→ Pitch Bend",
   actions = {
       {
-          call_function = "-- Volume is pitch-bend on channel 1-8  (9 = master)\n-----------------------------------------------------------\n--rprint(values)\n--print(\"channel\",channel)\nlocal trk_idx \nif (channel == 9) then\n  trk_idx = xTrack.get_master_track_index()\nelse\n  trk_idx = channel\nend\n\nlocal trk = rns.tracks[channel]\nif trk then \n  local val = xLib.scale_value(values[1],0,127,0,1.4125)\n  local volume = trk.devices[1].parameters[2]\n  volume.value = val\nend",
+          call_function = "-- Volume is pitch-bend on channel 1-8  (9 = master)\n-----------------------------------------------------------\n--rprint(values)\n--print(\"channel\",channel)\nlocal trk_idx \nif (channel == 9) then\n  trk_idx = xTrack.get_master_track_index()\nelse\n  trk_idx = channel\nend\n\nlocal trk = rns.tracks[channel]\nif trk then \n  local val = cLib.scale_value(values[1],0,127,0,1.4125)\n  local volume = trk.devices[1].parameters[2]\n  volume.value = val\nend",
       },
   },
   conditions = {

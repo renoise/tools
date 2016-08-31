@@ -25,6 +25,10 @@ Github: [Documentation and source](https://github.com/renoise/xrnx/blob/master/T
 _trace_filters = nil
 
 _clibroot = "source/cLib/classes/"
+_xlibroot = "source/xLib/classes/"
+_vlibroot = "source/vLib/classes/"
+_vlib_img = _vlibroot .. "images/"
+
 require (_clibroot.."cLib")
 require (_clibroot.."cDebug")
 require (_clibroot.."cFilesystem")
@@ -34,8 +38,8 @@ require (_clibroot.."cReflection")
 require (_clibroot.."cObservable")
 require (_clibroot.."cPreferences")
 require (_clibroot.."cParseXML")
+require (_clibroot.."cString")
 
-_xlibroot = "source/xLib/classes/"
 require (_xlibroot.."xLib")
 require (_xlibroot.."xAudioDevice")
 require (_xlibroot.."xAutomation")
@@ -62,8 +66,6 @@ require (_xlibroot.."xRuleset")
 require (_xlibroot.."xRules")
 require (_xlibroot.."xScale")
 
-_vlibroot = "source/vLib/classes/"
-_vlib_img = _vlibroot .. "images/"
 require (_vlibroot.."vLib")
 require (_vlibroot.."vTable")
 require (_vlibroot.."vLogView")
@@ -72,7 +74,6 @@ require (_vlibroot.."vDialog")
 require (_vlibroot.."vDialogWizard")
 require (_vlibroot.."vFileBrowser")
 require (_vlibroot.."helpers/vVector")
-require (_vlibroot.."helpers/vString")
 
 require "source/xRulesApp"
 require "source/xRulesAppPrefs"

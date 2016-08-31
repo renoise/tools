@@ -25,7 +25,7 @@ xRulesUIEditor.TAB = {
 
 function xRulesUIEditor:__init(...)
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   self.vb = args.vb
   self.ui = args.ui
@@ -1102,7 +1102,7 @@ end
 
 function xRulesUIEditor.validate_sysex_string(str)
 
-  local t = xLib.split(str," ")
+  local t = cString.split(str," ")
   if (t[1] ~= "F0") then
     return false, "Sysex string must begin with 'F0'"
   end

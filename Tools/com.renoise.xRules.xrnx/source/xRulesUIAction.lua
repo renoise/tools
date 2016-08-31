@@ -17,7 +17,7 @@ class 'xRulesUIAction'
 
 function xRulesUIAction:__init(...)
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   self.vb = args.vb
   self.ui = args.ui
@@ -422,7 +422,7 @@ function xRulesUIAction:create_row(k,v,args)
       self:change_value(("%s:%s"):format(ruleset_name,rule_name))
     end
 
-    local routing_values = xLib.split(v,":")
+    local routing_values = cString.split(v,":")
     local ruleset_routings = self:gather_ruleset_routings()
     local rule_routings = self:gather_rule_routings()
     --print(">>> routing_values",rprint(routing_values))

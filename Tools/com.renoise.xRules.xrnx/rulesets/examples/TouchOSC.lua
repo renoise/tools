@@ -22,10 +22,10 @@ if dev and (dev.name == "*XY Pad") then
  local param_x = dev.parameters[1]
  local param_y = dev.parameters[2]
  local track_idx = rns.selected_track_index
- local y = xLib.scale_value(values[1],1,-1,0,1)
- local x = xLib.scale_value(values[2],-1,1,0,1)
- x = xLib.clamp_value(x,0,1
- y = xLib.clamp_value(y,0,1)
+ local y = cLib.scale_value(values[1],1,-1,0,1)
+ local x = cLib.scale_value(values[2],-1,1,0,1)
+ x = cLib.clamp_value(x,0,1
+ y = cLib.clamp_value(y,0,1)
  if rns.transport.edit_mode then
   record_automation(track_idx,param_x,x)
   record_automation(track_idx,param_y,y)

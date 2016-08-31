@@ -98,8 +98,8 @@ function xRulesAppDialogPrefs:create_dialog()
   local profiles = self.owner.xprefs:get_profile_names()
   table.insert(profiles,1,"No profile selected")
 
-  local automation_write_items = xLib.stringify_table(xAutomation.WRITE_MODE)
-  local automation_follow_items = xLib.stringify_table(xAutomation.FOLLOW_MODE)
+  local automation_write_items = cLib.stringify_table(xAutomation.WRITE_MODE)
+  local automation_follow_items = cLib.stringify_table(xAutomation.FOLLOW_MODE)
   local automation_playmode_items = xAutomation.PLAYMODE_NAMES
 
   --print(">>> automation_playmode_items",rprint(automation_playmode_items))

@@ -20,8 +20,8 @@ if dev and (dev.name == "*Instr. Automation") then
   --print("got here 1")
  local param_x = dev.parameters[1]
  local track_idx = rns.selected_track_index
- local x = xLib.scale_value(values[2],0,127,0,1)
- x = xLib.clamp_value(x,0,1)
+ local x = cLib.scale_value(values[2],0,127,0,1)
+ x = cLib.clamp_value(x,0,1)
  if rns.transport.edit_mode then
   record_automation(track_idx,param_x,x)
   print("got here 2",x)

@@ -17,7 +17,7 @@ class 'xRulesUICondition'
 
 function xRulesUICondition:__init(...)
 
-	local args = xLib.unpack_args(...)
+	local args = cLib.unpack_args(...)
 
   self.vb = args.vb
   self.ui = args.ui
@@ -159,7 +159,7 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
     val = self:change_operator_assist(val,self.operator)
 
     if (type(val)=="number") then
-      xLib.clamp_value(val,val_min,val_max)
+      cLib.clamp_value(val,val_min,val_max)
     end
 
     if self.editor.last_osc_type 
