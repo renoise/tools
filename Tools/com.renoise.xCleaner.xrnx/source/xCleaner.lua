@@ -306,9 +306,9 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
           str_name = sample.name
         end
       elseif (options.samplename.value == xCleaner.SAMPLENAME.RANDOM) then
-        str_name = xLib.capitalize(self.generated_name)
+        str_name = cString.capitalize(self.generated_name)
       elseif (options.samplename.value == xCleaner.SAMPLENAME.RANDOM_ALL) then
-        str_name = xLib.capitalize(self:generate_name())
+        str_name = cString.capitalize(self:generate_name())
       end
 
       -- add velocity/note
@@ -390,7 +390,7 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
       local issues_fixed = nil
       self:collect_sample_info(instr,xsample,item_idx)
       xsample.excess_data = false
-      xsample.summary,issues_fixed = vString.strip_line(xsample.summary,"\^ISSUE:")
+      xsample.summary,issues_fixed = cString.strip_line(xsample.summary,"\^ISSUE:")
       if update_callback then
         update_callback(xsample,tab_idx,issues_fixed)
       end
@@ -834,10 +834,10 @@ function xCleaner:gather_effects()
     if not t[k].checked then
       local str_samples = (#t[k].sample_links > 0) and 
         ("samples: %s"):format(table.concat(
-          xLib.match_table_key(t[k].sample_links,"name"),",")) or ""
+          cLib.match_table_key(t[k].sample_links,"name"),",")) or ""
       local str_devices = (#t[k].device_links_in > 0) and 
         ("fx-chains: %s"):format(table.concat(
-          xLib.match_table_key(t[k].device_links_in,"name"),",")) or ""
+          cLib.match_table_key(t[k].device_links_in,"name"),",")) or ""
       t[k].summary = ("%sKEEP: Referenced by %s %s\n"):format(
           t[k].summary,str_samples,str_devices)
     else

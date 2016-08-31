@@ -1030,7 +1030,7 @@ end
 function xCleanerUI:add_to_log(txt,autoscroll)
   TRACE("xCleanerUI:add_to_log(txt,autoscroll)",txt,autoscroll)
 
-  txt = vString.strip_leading_trailing_chars(txt,"\n",true,true)
+  txt = cString.strip_leading_trailing_chars(txt,"\n",true,true)
 
   local elm = self.vb.views.info
   if (elm.text == nil) or (elm.text == "") then

@@ -18,6 +18,7 @@ require (_clibroot.."cLib")
 require (_clibroot.."cDebug")
 require (_clibroot.."cReflection")
 require (_clibroot.."cProcessSlicer")
+require (_clibroot.."cString")
 
 require (_xlibroot.."xLib")
 require (_xlibroot.."xPhrase")
@@ -28,7 +29,6 @@ require (_xlibroot.."xInstrument")
 require (_xlibroot.."xAudioDevice")
 
 require (_vlibroot.."vLib")
-require (_vlibroot.."helpers/vString")
 require (_vlibroot.."vTable")
 require (_vlibroot.."vTabs")
 
