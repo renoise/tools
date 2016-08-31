@@ -10,6 +10,8 @@
 
 --==============================================================================
 
+require (_clibroot.."cFilesystem")
+
 class 'xRulesAppPrefs'(renoise.Document.DocumentNode)
 
 xRulesAppPrefs.AUTORUN_ENABLED = true
@@ -63,7 +65,7 @@ function xRulesAppPrefs:__init()
   self:add_property("automation_playmode", renoise.Document.ObservableNumber(xRulesAppPrefs.AUTOMATION_PLAYMODE))
 
   self:property("ruleset_folder"):add_notifier(function()
-    self:property("ruleset_folder").value = xFilesystem.unixslashes(self:property("ruleset_folder").value)
+    self:property("ruleset_folder").value = cFilesystem.unixslashes(self:property("ruleset_folder").value)
   end)
 
 

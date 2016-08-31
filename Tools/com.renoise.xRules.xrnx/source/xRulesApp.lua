@@ -24,7 +24,7 @@ function xRulesApp:__init(xprefs)
   --- xRulesAppPrefs, current settings
   self.prefs = renoise.tool().preferences
 
-  --- xPreferences
+  --- cPreferences
   self.xprefs = xprefs
 
   --  xRules, our main class 
@@ -75,7 +75,7 @@ function xRulesApp:__init(xprefs)
     --print("xrules.osc_devices_observable fired...")
     if (args.type == "insert") then
       local device = self.xrules.osc_devices[args.index]
-      xObservable.attach(device.modified_observable,self,self.export_osc_devices)
+      cObservable.attach(device.modified_observable,self,self.export_osc_devices)
     --elseif (args.type == "remove") then
     end
     self:export_osc_devices()

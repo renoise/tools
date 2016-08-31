@@ -24,13 +24,21 @@ Github: [Documentation and source](https://github.com/renoise/xrnx/blob/master/T
 --_trace_filters = {".*"}
 _trace_filters = nil
 
+_clibroot = "source/cLib/classes/"
+require (_clibroot.."cLib")
+require (_clibroot.."cDebug")
+require (_clibroot.."cFilesystem")
+require (_clibroot.."cDocument")
+require (_clibroot.."cSandbox")
+require (_clibroot.."cReflection")
+require (_clibroot.."cObservable")
+require (_clibroot.."cPreferences")
+require (_clibroot.."cParseXML")
+
 _xlibroot = "source/xLib/classes/"
 require (_xlibroot.."xLib")
 require (_xlibroot.."xAudioDevice")
 require (_xlibroot.."xAutomation")
-require (_xlibroot.."xDebug")
-require (_xlibroot.."xDocument")
-require (_xlibroot.."xFilesystem")
 require (_xlibroot.."xMessage")
 require (_xlibroot.."xValue")
 require (_xlibroot.."xMidiMessage")
@@ -42,18 +50,13 @@ require (_xlibroot.."xOscValue")
 require (_xlibroot.."xOscClient")
 require (_xlibroot.."xOscDevice")
 require (_xlibroot.."xNoteColumn")
-require (_xlibroot.."xSandbox")
 require (_xlibroot.."xTrack")
 require (_xlibroot.."xTransport")
-require (_xlibroot.."xParseXML")
 require (_xlibroot.."xBlockLoop")
 require (_xlibroot.."xSongPos")
 require (_xlibroot.."xPlayPos")
 require (_xlibroot.."xParameter")
 require (_xlibroot.."xPhraseManager")
-require (_xlibroot.."xPreferences")
-require (_xlibroot.."xObservable")
-require (_xlibroot.."xReflection")
 require (_xlibroot.."xRule")
 require (_xlibroot.."xRuleset")
 require (_xlibroot.."xRules")
@@ -94,30 +97,30 @@ app = nil
 local preferences = xRulesAppPrefs()
 --renoise.tool().preferences = preferences
 
-local xprefs = xPreferences{
+local cprefs = cPreferences{
   tool_name = "xRules",
   doc_class_name = "xRulesAppPrefs",
 }
 
 local launch_with_profile = function(doc)
   renoise.tool().preferences = doc
-  app = xRulesApp(xprefs)
+  app = xRulesApp(cprefs)
 end
 
 local show_dialog = function()
   if app then
     app:show_dialog()
   else
-    xprefs.launch_callback = function(doc)
+    cprefs.launch_callback = function(doc)
       launch_with_profile(doc)
       app:show_dialog()
     end
-    xprefs.default_callback = function()
+    cprefs.default_callback = function()
       renoise.tool().preferences = preferences
-      app = xRulesApp(xprefs)
+      app = xRulesApp(cprefs)
       app:show_dialog()
     end
-    xprefs:attempt_launch()
+    cprefs:attempt_launch()
   end
 end
 
@@ -125,17 +128,17 @@ local launch = function()
   if app then
     app:launch()
   else
-    xprefs.launch_callback = function(doc)
+    cprefs.launch_callback = function(doc)
       --print(">>> launch_callback (launch)...")
       launch_with_profile(doc)
       app:launch()
     end
-    xprefs.default_callback = function()
+    cprefs.default_callback = function()
       renoise.tool().preferences = preferences
-      app = xRulesApp(xprefs)
+      app = xRulesApp(cprefs)
       app:launch()
     end
-    xprefs:attempt_launch()
+    cprefs:attempt_launch()
   end
 end
 

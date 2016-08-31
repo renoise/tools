@@ -10,6 +10,8 @@ xRulesAppDialogCreate
 
 --==============================================================================
 
+require (_clibroot.."cFilesystem")
+
 class 'xRulesAppDialogCreate' (vDialogWizard)
 
 local DIALOG_W = 400
@@ -79,7 +81,7 @@ function xRulesAppDialogCreate:create_dialog()
     end,
     on_file_open = function(vb,item)
       --print("on_file_open - vb,item",vb,rprint(item))
-      local file_path = xFilesystem.unixslashes(vb.path..item.name)
+      local file_path = cFilesystem.unixslashes(vb.path..item.name)
       --print("on_file_open - file_path",file_path)
       local passed,err = self:open_ruleset_file(file_path)
       if not passed then
@@ -296,7 +298,7 @@ function xRulesAppDialogCreate:show_next_page()
       local str_ruleset = vb_definition.text
 
       -- check for syntax errors
-      local sb = xSandbox()
+      local sb = cSandbox()
       local passed,err = sb:test_syntax(str_ruleset)
       if not passed then
         renoise.app():show_warning("The string contains a syntax error: "..err)
@@ -319,7 +321,7 @@ function xRulesAppDialogCreate:show_next_page()
     elseif (self.dialog_option == 3) then -- browser: open file
 
       local ruleset_name = self.vbrowser.filename_textfield.text
-      local file_path = xFilesystem.unixslashes(self.vbrowser.path.."/"..ruleset_name)
+      local file_path = cFilesystem.unixslashes(self.vbrowser.path.."/"..ruleset_name)
       --print("on_file_open - file_path",file_path)
       local passed,err = self:open_ruleset_file(file_path)
       if not passed then
@@ -414,7 +416,7 @@ end
 
 function xRulesAppDialogCreate:create_ruleset_file(ruleset_name,def)
 
-  local passed,err = xFilesystem.validate_filename(ruleset_name) 
+  local passed,err = cFilesystem.validate_filename(ruleset_name) 
   if not passed then
     return false, err
   end
@@ -427,7 +429,7 @@ function xRulesAppDialogCreate:create_ruleset_file(ruleset_name,def)
   -- create instance of xRuleset in order to export
   local xruleset = xRuleset(nil,def)
   local str_ruleset = xruleset:serialize()
-  local passed,err = xFilesystem.write_string_to_file(file_path,str_ruleset)
+  local passed,err = cFilesystem.write_string_to_file(file_path,str_ruleset)
   if not passed then
     return false,err
   end
@@ -451,7 +453,7 @@ end
 function xRulesAppDialogCreate:generate_ruleset_path(name)
 
   local default_folder = self.owner.prefs:property("ruleset_folder").value
-  return xFilesystem.unixslashes(("%s/%s.lua"):format(default_folder,name))
+  return cFilesystem.unixslashes(("%s/%s.lua"):format(default_folder,name))
 
 end
 

@@ -5,16 +5,16 @@
 return {
 osc_enabled = false,
 manage_voices = false,
-description = "-------------------------------------------------------------------------------------\nAUTOMAPPING OF DEVICE PARAMETERS\n(and record automation, pass messages on to Renoise)\n-------------------------------------------------------------------------------------\n\nThis ruleset will listen to a specific CC message (1, or mod-wheel),\nand apply the value to the selected parameter in Renoise. All other \nmessages will be forwarded to Renoise (so, still useful). \n\nAutomation recording is performed automatically when the \nparameter is automatable and edit mode has been enabled. \n\n## How to select a target parameter \n\n1. In Renoise, while the lower DSP automation lane is visible, the\ncurrently selected parameter becomes the target\n\n2. Else, we target the _first visible parameter_ of the selected device \nin the Mixer tab (whether this tab is visible or not). This makes it easy to provide a 'fallback' parameter, simply right-clicking the\ndevice in the mixer\n\n",
+description = "--------------------------------------------------------\nAUTOMAPPING OF DEVICE PARAMETERS\n(and record automation, pass messages on to Renoise)\n--------------------------------------------------------\n\nThis ruleset will listen to a specific CC message (1, or mod-wheel),and apply the value to the selected\nparameter in Renoise. All other messages will be\nforwarded to Renoise (so, still useful). \n\nAutomation recording is performed when the parameter \nis automatable and edit mode has been enabled. \n\n## How to select a target parameter \n\n1. While the lower DSP automation lane is visible, the currently selected parameter becomes the target\n\n2. Else, we target the _first visible parameter_ of the selected device in the Mixer tab (whether this tab is visible or not). This makes it easy to provide a 'fallback' parameter, simply right-clicking the\ndevice in the mixer\n",
 {
-  osc_pattern = {
-      pattern_in = "",
-      pattern_out = "",
+  ["osc_pattern"] = {
+      ["pattern_in"] = "",
+      ["pattern_out"] = "",
   },
-  name = "Intercept",
-  actions = {
+  ["name"] = "Intercept",
+  ["actions"] = {
       {
-          call_function = [[local device = rns.selected_device
+          ["call_function"] = [[local device = rns.selected_device
 if not device then return end
 
 -- get the selected parameter
@@ -50,48 +50,48 @@ end
 ]],
       },
   },
-  conditions = {
+  ["conditions"] = {
       {
-          message_type = {
-              equal_to = "controller_change",
+          ["message_type"] = {
+              ["equal_to"] = "controller_change",
           },
       },
       {
-          value_1 = {
-              equal_to = 1,
+          ["value_1"] = {
+              ["equal_to"] = 1,
           },
       },
   },
-  match_any = true,
-  midi_enabled = true,
+  ["match_any"] = true,
+  ["midi_enabled"] = true,
 },
 {
-  osc_pattern = {
-      pattern_in = "",
-      pattern_out = "",
+  ["osc_pattern"] = {
+      ["pattern_in"] = "",
+      ["pattern_out"] = "",
   },
-  name = "Pass through",
-  actions = {
+  ["name"] = "Pass through",
+  ["actions"] = {
       {
-          output_message = "internal_raw",
+          ["output_message"] = "internal_raw",
       },
   },
-  conditions = {
+  ["conditions"] = {
       {
-          message_type = {
-              not_equal_to = "controller_change",
+          ["message_type"] = {
+              ["not_equal_to"] = "controller_change",
           },
       },
       {
           2,
       },
       {
-          value_1 = {
-              not_equal_to = 1,
+          ["value_1"] = {
+              ["not_equal_to"] = 1,
           },
       },
   },
-  match_any = true,
-  midi_enabled = true,
+  ["match_any"] = true,
+  ["midi_enabled"] = true,
 }
 }

@@ -52,8 +52,8 @@ function xRulesAppDialogExport:show_next_page()
     if (self.dialog_option == 1) then -- browser:show folder of ruleset
 
       local xruleset = self.xrules.selected_ruleset
-      local ruleset_folder,fname,ext = xFilesystem.get_path_parts(xruleset.file_path)
-      local filename = xFilesystem.file_add_extension(xruleset.name,"lua")
+      local ruleset_folder,fname,ext = cFilesystem.get_path_parts(xruleset.file_path)
+      local filename = cFilesystem.file_add_extension(xruleset.name,"lua")
       self.vbrowser.filename_textfield.text = filename
       self.vbrowser:set_path(ruleset_folder)
 
@@ -295,9 +295,9 @@ function xRulesAppDialogExport:save_ruleset()
   local vb = self.vb 
   --local filename = vb.views["xRulesDialogExportName"].text
   local filename = self.vbrowser.filename_textfield.text
-  filename = xFilesystem.file_add_extension(filename,"lua")
+  filename = cFilesystem.file_add_extension(filename,"lua")
   local path = self.vbrowser.path
-  local file_path = xFilesystem.unixslashes(("%s/%s"):format(path,filename))
+  local file_path = cFilesystem.unixslashes(("%s/%s"):format(path,filename))
 
   -- if file exists, prompt for overwrite
   if io.exists(file_path) then

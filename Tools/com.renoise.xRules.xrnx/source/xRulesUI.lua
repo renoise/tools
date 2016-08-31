@@ -751,13 +751,13 @@ function xRulesUI:attach_to_ruleset(xruleset)
     self._build_rule_requested = true
   end
 
-  xObservable.attach(xruleset.osc_enabled_observable,osc_enabled_notifier)
-  xObservable.attach(xruleset.manage_voices_observable,manage_voices_notifier)
-  xObservable.attach(xruleset.description_observable,description_notifier)
-  xObservable.attach(xruleset.name_observable,name_notifier)
-  xObservable.attach(xruleset.active_observable,active_notifier)
-  xObservable.attach(xruleset.rules_observable,rules_notifier)
-  xObservable.attach(xruleset.selected_rule_index_observable,selected_rule_index_notifier)
+  cObservable.attach(xruleset.osc_enabled_observable,osc_enabled_notifier)
+  cObservable.attach(xruleset.manage_voices_observable,manage_voices_notifier)
+  cObservable.attach(xruleset.description_observable,description_notifier)
+  cObservable.attach(xruleset.name_observable,name_notifier)
+  cObservable.attach(xruleset.active_observable,active_notifier)
+  cObservable.attach(xruleset.rules_observable,rules_notifier)
+  cObservable.attach(xruleset.selected_rule_index_observable,selected_rule_index_notifier)
 
   self._build_rulesets_requested = true
   self._build_rule_requested = true
