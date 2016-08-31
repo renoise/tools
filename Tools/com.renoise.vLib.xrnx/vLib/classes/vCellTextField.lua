@@ -11,7 +11,7 @@ vCellTextField.DEFAULT_VALUE = 0
 
 function vCellTextField:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- (number)
   self._text = args.value or ""

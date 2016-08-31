@@ -39,7 +39,7 @@ function vWaveform:__init(...)
   TRACE("vWaveform:__init()")
 
   local rns = renoise.song()
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- properties -----------------------
   

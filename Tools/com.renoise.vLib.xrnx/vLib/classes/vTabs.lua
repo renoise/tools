@@ -44,7 +44,7 @@ vTabs.SWITCHER_DEFAULT_H = 20
 function vTabs:__init(...)
   TRACE("vTabs:__init(...)",...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
   self.vb = args.vb
 
   -- (int)

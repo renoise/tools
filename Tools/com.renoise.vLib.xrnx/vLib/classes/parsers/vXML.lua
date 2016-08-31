@@ -3,44 +3,26 @@ vXML
 ============================================================================]]--
 --[[
 
-  Ability to parse xml into a lua table
+Ability to parse xml into a vLib-friendly table representation 
+.
+#
+
+TODO use cParseXML, share data with this class
+ (retrieve, modify original document)
 
 ]]
 
 class 'vXML' 
 
-SLAXML = require (_vlibroot.."/support/slaxdom/slaxml")
-SLAXML = require (_vlibroot.."/support/slaxdom/slaxdom")
+require (_clibroot.."cParseXML")
+
+-------------------------------------------------------------------------------
 
 function vXML:__init()
-
-  --[[
-  self.parser = SLAXML:parser{
-    startElement = function(name,nsURI,nsPrefix)       
-      print('When "<foo" or <x:foo is seen')
-    end, 
-    attribute = function(name,value,nsURI,nsPrefix) 
-      print('attribute found on current element',name,value,nsURI,nsPrefix)
-    end, 
-    closeElement = function(name,nsURI)                
-      print('When "</foo>" or </x:foo> or "/>" is seen',name,nsURI)    
-    end, 
-    text = function(text)                      
-      pinrt('text and CDATA nodes',text)    
-    end, 
-    comment = function(content)                   
-      print('comments',content)
-    end, 
-    pi = function(target,content)            
-      print('processing instructions e.g. "<?yes mon?>"',target,content)
-    end, 
-  }
-  ]]
 
 end
 
 -------------------------------------------------------------------------------
--- recursively parse the slaxml and return a vLib-friendly representation 
 
 function vXML:parse(xml_doc)
   TRACE('vXML:parse(xml_doc)',xml_doc.name)

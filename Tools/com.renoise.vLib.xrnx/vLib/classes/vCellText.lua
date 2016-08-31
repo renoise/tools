@@ -11,7 +11,7 @@ vCellText.DEFAULT_VALUE = ""
 
 function vCellText:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- (variant) usually string, but any type is accepted
   -- note: the text cell supports both "transform" and "formatting"

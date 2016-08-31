@@ -18,7 +18,7 @@ vDataProvider.ID   = "item_id"
 
 function vDataProvider:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   --- (table) indexed table 
   self.data = property(self.get_data,self.set_data)

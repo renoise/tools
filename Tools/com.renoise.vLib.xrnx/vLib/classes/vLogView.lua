@@ -18,7 +18,7 @@ vLogView.VIEWS = {
 
 function vLogView:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
   --print("args",rprint(args))
 
   -- properties --

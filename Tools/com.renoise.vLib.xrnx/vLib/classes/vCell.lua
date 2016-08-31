@@ -10,7 +10,7 @@ vCell.DEFAULT_VALUE = nil
 
 function vCell:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   --- (int) the data record id associated with this cell
   -- it is the responsibility of the owner to assign this property 

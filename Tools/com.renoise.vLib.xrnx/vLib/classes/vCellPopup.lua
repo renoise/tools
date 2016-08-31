@@ -11,7 +11,7 @@ vCellPopup.DEFAULT_VALUE = 1
 
 function vCellPopup:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- (table>string)
   self.items = property(self.get_items,self.set_items)

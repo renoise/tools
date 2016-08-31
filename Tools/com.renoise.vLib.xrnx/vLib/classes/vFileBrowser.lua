@@ -17,7 +17,7 @@ vFileBrowser
 
 --]]
 
-require (_xlibroot.."xFilesystem")
+require (_clibroot.."cFilesystem")
 require (_vlibroot.."helpers/vSelection")
 require (_vlibroot.."vCompositeControl")
 require (_vlibroot.."vTable")
@@ -68,7 +68,7 @@ vFileBrowser.VIEWS = {
 function vFileBrowser:__init(...)
   TRACE("vFileBrowser:__init(...)",...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   --- int, number of visible rows (stored in vtable)
   self._num_rows = args.num_rows or vFileBrowser.NUM_ROWS_DEFAULT
@@ -519,7 +519,7 @@ end
 function vFileBrowser:match_file_type(file_path)
   --TRACE("vFileBrowser:match_file_type(file_path)",file_path)
 
-  local path,file,ext = xFilesystem.get_path_parts(file_path)
+  local path,file,ext = cFilesystem.get_path_parts(file_path)
   --print("path,file,ext",path,file,ext)
 
   for k,v in pairs(self._file_types) do
@@ -568,7 +568,7 @@ end
 function vFileBrowser:parent_directory()
   TRACE("vFileBrowser:parent_directory()")
 
-  local file_path = xFilesystem.get_parent_directory(self.path_observable.value)
+  local file_path = cFilesystem.get_parent_directory(self.path_observable.value)
   self:set_path(file_path)
 
   if self.on_changed then
@@ -598,7 +598,7 @@ function vFileBrowser:create_directory()
       err_msg = "You need to provide a name for the directory"
     end
 
-    if not xFilesystem.validate_filename(str_new_folder) then
+    if not cFilesystem.validate_filename(str_new_folder) then
       err_msg = "A directory cannot contain the following characters \\ / : * ? < > |"
     end
 
@@ -794,7 +794,7 @@ end
 -- @return boolean
 
 function vFileBrowser:is_root_folder(str)
-  local parent_path = xFilesystem.get_parent_directory(str)
+  local parent_path = cFilesystem.get_parent_directory(str)
   return (parent_path == "/")
 end
 

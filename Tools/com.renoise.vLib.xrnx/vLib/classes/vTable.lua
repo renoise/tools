@@ -79,7 +79,7 @@ vTable.META = {
 function vTable:__init(...)
   TRACE("vTable:__init(...)",...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
   --print("args",rprint(args))
 
   --- (table>table) header definition (by key)

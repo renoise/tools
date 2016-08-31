@@ -2,7 +2,7 @@
 vTree
 ============================================================================]]--
 
-require (_xlibroot.."xFilesystem")
+require (_clibroot.."cFilesystem")
 
 class 'vTree' (vControl)
 
@@ -28,12 +28,14 @@ vTree.file_formats = {
       
     },
   },
+  --[[
   {
     extension = "json", 
     parser = vJSON{
       
     },
   },
+  ]]
 }
 
 --------------------------------------------------------------------------------
@@ -42,7 +44,7 @@ vTree.file_formats = {
 function vTree:__init(...)
   TRACE("vTree:__init(...)")
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   --- (vSelection)
   self.selection = vSelection{
@@ -592,7 +594,7 @@ function vTree:load_file(file_path)
   end
 
   local data = nil
-  local folder,filename,ext = xFilesystem.get_path_parts(file_path)
+  local folder,filename,ext = cFilesystem.get_path_parts(file_path)
   for k,v in ipairs(vTree.file_formats) do
 
     if (v.extension == ext) then

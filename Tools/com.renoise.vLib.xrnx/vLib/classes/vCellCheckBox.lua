@@ -11,7 +11,7 @@ vCellCheckBox.DEFAULT_VALUE = false
 
 function vCellCheckBox:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- (bool) checked state
   self._value = args.value or vCellCheckBox.DEFAULT_VALUE

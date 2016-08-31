@@ -31,7 +31,7 @@ vSelection.SELECT_MODE = {
 function vSelection:__init(...)
   TRACE("vSelection:__init(...)",...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   --- (bool) enforce that at least one item remains selected at all times
   self.require_selection = property(self.get_require_selection,self.set_require_selection)

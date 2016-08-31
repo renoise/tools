@@ -11,7 +11,7 @@ vCellValueBox.DEFAULT_VALUE = 0
 
 function vCellValueBox:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- (number)
   self._value = args.value or 0

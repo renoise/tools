@@ -9,7 +9,7 @@ class 'vCellButton' (vCell)
 
 function vCellButton:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- (string)
   self._text = args.text or ""

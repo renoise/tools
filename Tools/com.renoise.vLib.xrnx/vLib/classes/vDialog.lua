@@ -17,7 +17,7 @@ vDialog.DEFAULT_DIALOG_TITLE = "This is a dialog"
 function vDialog:__init(...)
   TRACE("vDialog:__init()")
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
   --print("vDialog.args",rprint(args))
 
   -- string

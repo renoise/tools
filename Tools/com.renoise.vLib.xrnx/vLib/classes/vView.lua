@@ -9,7 +9,7 @@ class 'vView'
 
 function vView:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- required -------------------------
 

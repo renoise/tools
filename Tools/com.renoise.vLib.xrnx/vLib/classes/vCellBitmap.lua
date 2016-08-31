@@ -11,7 +11,7 @@ vCellBitmap.DEFAULT_VALUE = nil
 
 function vCellBitmap:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   -- (string) name and path, specify a relative path that uses  Renoise's
   -- default resource folder as base (like "Icons/ArrowRight.bmp"). Or specify 

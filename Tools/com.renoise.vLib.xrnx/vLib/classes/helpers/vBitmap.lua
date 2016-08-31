@@ -30,7 +30,7 @@ vBitmap.PIXELS_PER_METER = 2834
 
 function vBitmap:__init(...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
 	self.width = args.width or 100
 

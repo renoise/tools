@@ -66,7 +66,7 @@ vGraph.BITMAP_MAX_H = 400
 function vGraph:__init(...)
   TRACE("vGraph:__init(...)",...)
 
-  local args = vLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
   
   --- (vSelection)
   self.selection = vSelection{
@@ -263,7 +263,7 @@ function vGraph:update()
 
       -- repeat/remove entries to fit total width 
       local interval = self._width/#self._data
-      local fract = vLib.get_fractional_value(interval)
+      local fract = cLib.fraction(interval)
       interval = math.floor(interval)
       local fract_add = fract
       for i = 1,#self._data do
@@ -274,7 +274,7 @@ function vGraph:update()
           repeat_count = repeat_count + 1
           if (fract > 0) then
             repeat_count = repeat_count + math.floor(fract)
-            fract = 0 + vLib.get_fractional_value(fract)
+            fract = 0 + cLib.fraction(fract)
           end
         end
         fract = fract + fract_add
@@ -491,15 +491,15 @@ function vGraph:decide_bitmap_size(val)
 
   if (self.draw_mode == vGraph.DRAW_MODE.UNIPOLAR) then
 
-    val_upper = vLib.round_value(vLib.scale_value(val,scale_max,scale_min,0,self._height))
-    val_middle = vLib.round_value(vLib.scale_value(val,scale_min,scale_max,0,self._height))
+    val_upper = cLib.round_value(cLib.scale_value(val,scale_max,scale_min,0,self._height))
+    val_middle = cLib.round_value(cLib.scale_value(val,scale_min,scale_max,0,self._height))
     val_lower = 0 -- will be hidden
 
   elseif (self.draw_mode == vGraph.DRAW_MODE.UNIPOLAR2) then
 
     val_upper = 0 -- will be hidden
-    val_middle = vLib.round_value(vLib.scale_value(val,scale_min,scale_max,0,self._height))
-    val_lower = vLib.round_value(vLib.scale_value(val,scale_max,scale_min,0,self._height))
+    val_middle = cLib.round_value(cLib.scale_value(val,scale_min,scale_max,0,self._height))
+    val_lower = cLib.round_value(cLib.scale_value(val,scale_max,scale_min,0,self._height))
 
 
   elseif (self.draw_mode == vGraph.DRAW_MODE.BIPOLAR) then
@@ -508,15 +508,15 @@ function vGraph:decide_bitmap_size(val)
 
     if (val <= mid_value) then
       -- value in lower part
-      val_upper = vLib.round_value(vLib.scale_value(mid_value,scale_min,scale_max,0,self._height))
-      val_middle = vLib.round_value(vLib.scale_value(val,mid_value,scale_min,0,self._height/2))
-      val_lower = vLib.round_value(vLib.scale_value(val,scale_min,mid_value,0,self._height/2))
+      val_upper = cLib.round_value(cLib.scale_value(mid_value,scale_min,scale_max,0,self._height))
+      val_middle = cLib.round_value(cLib.scale_value(val,mid_value,scale_min,0,self._height/2))
+      val_lower = cLib.round_value(cLib.scale_value(val,scale_min,mid_value,0,self._height/2))
 
     else
       -- value in upper part
-      val_upper = vLib.round_value(vLib.scale_value(val,scale_max,mid_value,0,self._height/2))
-      val_middle = vLib.round_value(vLib.scale_value(val,mid_value,scale_max,0,self._height/2))
-      val_lower = vLib.round_value(vLib.scale_value(mid_value,scale_min,scale_max,0,self._height))
+      val_upper = cLib.round_value(cLib.scale_value(val,scale_max,mid_value,0,self._height/2))
+      val_middle = cLib.round_value(cLib.scale_value(val,mid_value,scale_max,0,self._height/2))
+      val_lower = cLib.round_value(cLib.scale_value(mid_value,scale_min,scale_max,0,self._height))
 
       -- ensure that upper half is exactly 50%
       local half_size = math.floor(self.height/2)

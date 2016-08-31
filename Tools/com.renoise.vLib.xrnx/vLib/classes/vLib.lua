@@ -2,6 +2,8 @@
 vLib
 ============================================================================]]--
 
+require (_clibroot.."cConfig")
+
 class 'vLib'
 
 --------------------------------------------------------------------------------
@@ -15,8 +17,11 @@ vLib.uid_counter = 0
 -- possibly saving a little CPU along the way
 vLib.lazy_updates = false
 
+--- (table) set once we access the XML configuration 
+vLib.config = nil
+
 -- (table) provide a default color for selected items
-vLib.COLOR_SELECTED = {0xD0,0x40,0x40}
+vLib.COLOR_SELECTED = {218,96,45}
 
 -- (table) provide a default color for normal (not selected) items
 vLib.COLOR_NORMAL = {0x00,0x00,0x00}
@@ -49,63 +54,18 @@ function vLib.generate_uid()
 end
 
 --------------------------------------------------------------------------------
---- used for unpacking constructor arguments
--- @param ... (varargs)
--- @return table
+-- retrieve values from the default skin/theme
 
-function vLib.unpack_args(...)
+function vLib.get_skin_color(name)
+  TRACE("vLib.get_skin_color(name)",name)
 
-  local args = {...}
-  if not args[1] then
-    return {}
-  else
-    return args[1]
+  assert(type(name)=="string")
+
+  local default_color = cConfig:get_value("RenoisePrefs/SkinColors/"..name)
+  print("default_color",default_color)
+  if default_color then
+    self.default_button_color = cLib.split(default_color,",")
   end
-end
-
---------------------------------------------------------------------------------
---- function to ensure that a value is within the given range
--- @param val (number) 
--- @param val_min (number) 
--- @param val_max (number) 
--- @return bool
-
-function vLib.within_range(val,val_min,val_max)
-
-  if (val <= val_max) and (val >= val_min) then
-    return true
-  end
-  return false
 
 end
 
---------------------------------------------------------------------------------
---- function to scale a value from one range to another
--- @param value (number) 
--- @param in_min (number) 
--- @param in_max (number) 
--- @param out_min (number) 
--- @param out_max (number) 
--- @return number
-
-function vLib.scale_value(value,in_min,in_max,out_min,out_max)
-  return(((value-in_min)*(out_max/(in_max-in_min)-(out_min/(in_max-in_min))))+out_min)
-end
-
---------------------------------------------------------------------------------
---- get fractional (decimal) part of a number
--- @param value (number) 
--- @return number
-
-function vLib.get_fractional_value(value)
-  return value-math.floor(value)
-end
-
---------------------------------------------------------------------------------
--- round_value (from http://lua-users.org/wiki/SimpleRound)
--- @param num (number)
--- @return int
-function vLib.round_value(num) 
-  if num >= 0 then return math.floor(num+.5) 
-  else return math.ceil(num-.5) end
-end

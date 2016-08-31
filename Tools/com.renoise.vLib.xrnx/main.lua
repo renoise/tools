@@ -2,22 +2,28 @@
 main.lua
 ============================================================================]]--
 
-require ("vLib/support/debug")
 
-_xlibroot = "xLib/classes/"
+_trace_filters = nil
+--_trace_filters = {".*"}
+
+_clibroot = "cLib/classes/"
+require (_clibroot.."cLib")
+require (_clibroot.."cDebug")
+
 _vlibroot = "vLib/classes/"
 _vlib_img = _vlibroot.."images/"
-
 require (_vlibroot.."vLib")
-
 --require (_vlibroot.."helpers/vFilesys")
 require (_vlibroot.."helpers/vSelection")
 require (_vlibroot.."helpers/vString")
---require (_vlibroot.."helpers/vVector")
+require (_vlibroot.."helpers/vColor")
 require (_vlibroot.."parsers/vXML")
-require (_vlibroot.."parsers/vJSON")
+--require (_vlibroot.."parsers/vJSON")
 require (_vlibroot.."vTable")
 require (_vlibroot.."vTabs")
+require (_vlibroot.."vButton")
+require (_vlibroot.."vToggleButton")
+require (_vlibroot.."vArrowButton")
 require (_vlibroot.."vFileBrowser")
 require (_vlibroot.."vTree")
 require (_vlibroot.."vLogView")
@@ -32,14 +38,27 @@ require (_vlibroot.."vGraph")
 -- workaround for http://goo.gl/UnSDnw
 local automatic_start = false
 
-local vlib_controls = {"vTabs","vTable","vFileBrowser","vTree","vLogView","vGraph"}--,"vWaveform"} 
+-- add in same order as build_xx
+local vlib_controls = {
+  "vButton",
+  "vToggleButton",
+  "vArrowButton",
+  "vTabs",
+  "vTable",
+  "vFileBrowser",
+  "vTree",
+  "vLogView",
+  "vGraph",
+}--,"vWaveform"} 
+
 local vlib_controls_ref = {}
 
 local select_on_startup = table.find(vlib_controls,"vTabs")
 
 local active_ctrl, active_ctrl_idx = nil
 local suppress_notifier = false
-local vtabs,vtable,vbrowser,vtree,vlog,vgraph --,vwaveform
+
+local vbutton,vtogglebutton,varrowbutton,vtabs,vtable,vbrowser,vtree,vlog,vgraph --,vwaveform
 
 local file_ext = "{'*.wav','*.txt',}"
 
@@ -175,6 +194,9 @@ function build()
   build_vview()
   build_vcontrol()
 
+  build_vbutton()
+  build_vtogglebutton()
+  build_varrowbutton()
   build_vtabs()
   build_vtable()
   build_vbrowser()
@@ -189,6 +211,17 @@ function build()
 
   return content
 
+end
+
+-------------------------------------------------------------------------------
+
+function set_color_property(key,val)
+  val = vColor.hex_string_to_value(val)
+  if val then
+    set_control_property(key,vColor.value_to_color_table(val))
+  else
+    renoise.app():show_warning("Not a valid color")
+  end
 end
 
 
@@ -345,7 +378,344 @@ end
 
 -------------------------------------------------------------------------------
 
+function build_vbutton()
+  print("build_vbutton()")
+
+  vb.views.props_row:add_child(vb:column{
+    id = "vButton_properties",
+    style = "panel",
+    vb:row{
+      vb:text{
+        text = "vButton",
+        font = "bold",
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "text"
+      },
+      vb:textfield{
+        id = "vButton_text",
+        width = 250,
+        --text = "",
+        notifier = function(str_val)
+          set_control_property("text",str_val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "color"
+      },
+      vb:textfield{
+        id = "vButton_color",
+        width = 250,
+        --text = "0xFF00FF",
+        notifier = function(val)
+          set_color_property("color",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "bitmap"
+      },
+      vb:textfield{
+        id = "vButton_bitmap",
+        width = 250,
+        --text = "",
+        notifier = function()
+          local str_path = vb.views.vButton_bitmap.text
+          set_control_property("bitmap",str_path)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "-- Methods ---------"
+      },
+    },
+    vb:row{
+      vb:button{
+        text = "press()",
+        notifier = function()
+          vbutton:press()
+        end
+      }
+    },
+    vb:row{
+      vb:button{
+        text = "release()",
+        notifier = function()
+          vbutton:release()
+        end
+      }
+    },
+
+  })
+
+  vbutton = vButton{
+    vb = vb,
+    id = "vButton",
+    tooltip = "vButton",
+    text = "Some text...",
+    midi_mapping = "Global:vButton:vLib_demo",
+    bitmap = "./icons/AdvancedEdit.bmp",
+    color = {0xFF,0x00,0xFF},
+    --width = 50,
+    --height = 25,
+    notifier = function()
+      print("vbutton.notifier()")
+    end,
+    pressed = function()
+      print("vbutton.pressed()")
+    end,
+    released = function()
+      print("vbutton.released()")
+    end,
+    on_resize = function()
+      print("vbutton.on_resize()")
+    end,
+  }
+  vb.views.controls_col:add_child(vbutton.view)
+  table.insert(vlib_controls_ref,vbutton)
+
+
+end
+
+
+
+-------------------------------------------------------------------------------
+
+function build_vtogglebutton()
+  print("build_vtogglebutton()")
+
+  vb.views.props_row:add_child(vb:column{
+    id = "vToggleButton_properties",
+    style = "panel",
+    vb:row{
+      vb:text{
+        text = "vToggleButton",
+        font = "bold",
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "enabled"
+      },
+      vb:checkbox{
+        id = "vToggleButton_enabled",
+        notifier = function(val)
+          set_control_property("enabled",val)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "text_enabled"
+      },
+      vb:textfield{
+        id = "vToggleButton_text_enabled",
+        width = 250,
+        notifier = function(str_val)
+          set_control_property("text_enabled",str_val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "text_disabled"
+      },
+      vb:textfield{
+        id = "vToggleButton_text_disabled",
+        width = 250,
+        notifier = function(str_val)
+          set_control_property("text_disabled",str_val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "color_enabled"
+      },
+      vb:textfield{
+        id = "vToggleButton_color_enabled",
+        width = 250,
+        notifier = function(val)
+          set_color_property("color_enabled",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "color_disabled"
+      },
+      vb:textfield{
+        id = "vToggleButton_color_disabled",
+        width = 250,
+        notifier = function(val)
+          set_color_property("color_disabled",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "bitmap_enabled"
+      },
+      vb:textfield{
+        id = "vToggleButton_bitmap_enabled",
+        width = 250,
+        notifier = function(val)
+          set_control_property("bitmap_enabled",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "bitmap_disabled"
+      },
+      vb:textfield{
+        id = "vToggleButton_bitmap_disabled",
+        width = 250,
+        notifier = function(val)
+          set_control_property("bitmap_disabled",val)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "-- Methods ---------"
+      },
+    },
+    vb:row{
+      vb:button{
+        text = "toggle()",
+        notifier = function()
+          vtogglebutton:toggle()
+        end
+      }
+    },
+
+  })
+
+  vtogglebutton = vToggleButton{
+    vb = vb,
+    id = "vToggleButton",
+    tooltip = "vToggleButton",
+    midi_mapping = "Global:vToggleButton:vLib_demo",
+    text_enabled = "Foo",
+    text_disabled = "Bar",
+    color_enabled = {0xFF,0xFF,0xFF},
+    color_disabled = {0x11,0x11,0x11},
+    bitmap_enabled = "./icons/AdvancedEdit.bmp",
+    width = 50,
+    height = 20,
+    notifier = function(active)
+      print("vtogglebutton.notifier - active",active)
+    end,
+    on_resize = function()
+      print("vtogglebutton.on_resize")
+    end,
+  }
+  vtogglebutton.enabled_observable:add_notifier(function()
+    print(">>> vtogglebutton.enabled_observable fired")
+    vb.views["vToggleButton_enabled"].value = vtogglebutton.enabled
+  end)
+
+  vb.views.controls_col:add_child(vtogglebutton.view)
+  table.insert(vlib_controls_ref,vtogglebutton)
+
+
+end
+
+
+-------------------------------------------------------------------------------
+
+function build_varrowbutton()
+  print("build_varrowbutton()")
+
+  vb.views.props_row:add_child(vb:column{
+    id = "vArrowButton_properties",
+    style = "panel",
+    vb:row{
+      vb:text{
+        text = "vArrowButton",
+        font = "bold",
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "enabled"
+      },
+      vb:checkbox{
+        id = "vArrowButton_enabled",
+        --value = true,
+        notifier = function(val)
+          set_control_property("enabled",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "flipped"
+      },
+      vb:checkbox{
+        id = "vArrowButton_flipped",
+        --value = true,
+        notifier = function(val)
+          set_control_property("flipped",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "orientation"
+      },
+      vb:popup{
+        id = "vArrowButton_orientation",
+        value = 1,
+        items = {"HORIZONTAL","VERTICAL"},
+        notifier = function(val)
+          set_control_property("orientation",val)
+        end
+      },
+    },
+
+  })
+
+  varrowbutton = vArrowButton{
+    vb = vb,
+    id = "vArrowButton",
+    tooltip = "vArrowButton",
+    midi_mapping = "Global:vArrowButton:vLib_demo",
+    width = 50,
+    height = 20,
+    notifier = function(active)
+      print("varrowbutton.notifier - active",active)
+    end,
+    on_resize = function()
+      print("varrowbutton.on_resize")
+    end,
+  }
+  varrowbutton.enabled_observable:add_notifier(function()
+    print(">>> varrowbutton.enabled_observable fired")
+    vb.views["vArrowButton_enabled"].value = varrowbutton.enabled
+  end)
+
+  vb.views.controls_col:add_child(varrowbutton.view)
+  table.insert(vlib_controls_ref,varrowbutton)
+
+
+end
+
+
+-------------------------------------------------------------------------------
+
 function build_vtabs()
+  print("build_vtabs()")
 
   --[[
   vb.views.props_row:add_child(vb:column{
@@ -1440,7 +1810,7 @@ function build_vgraph()
       -- update the "set value" slider
       local data_item = elm:get_selected_item()
       if data_item then
-        local scaled_val = vLib.scale_value(data_item,vgraph.value_min,vgraph.value_max,0,1)
+        local scaled_val = cLib.scale_value(data_item,vgraph.value_min,vgraph.value_max,0,1)
         vb.views.vGraph_selected_value.value = scaled_val
         vb.views.vGraph_selected_value_readout.value = scaled_val
       end
@@ -1673,7 +2043,7 @@ function build_vgraph()
         max = 1,
         notifier = function(val)
           --print("vGraph_selected_value.notifier",val)
-          local scaled_val = vLib.scale_value(val,0,1,vgraph.value_min,vgraph.value_max)
+          local scaled_val = cLib.scale_value(val,0,1,vgraph.value_min,vgraph.value_max)
           local idx = vgraph.selected_index
           vgraph:set_value(idx,scaled_val)
           vb.views.vGraph_selected_value_readout.value = scaled_val
@@ -2079,10 +2449,13 @@ function update_properties()
   --print("update_properties()")
 
   local ctrl_name = vlib_controls[active_ctrl_idx]
+  print("ctrl_name",ctrl_name)
+  print("active_ctrl.width",active_ctrl.width)
+  print("active_ctrl.height",active_ctrl.height)
 
   vb.views.vView_visible.value = active_ctrl.visible
-  vb.views.vView_width.value = active_ctrl.width
-  vb.views.vView_height.value = active_ctrl.height
+  if active_ctrl.width then vb.views.vView_width.value = active_ctrl.width end
+  if active_ctrl.height then vb.views.vView_height.value = active_ctrl.height end
   vb.views.vView_tooltip.value = active_ctrl.tooltip or ""
 
   vb.views.vControl_active.value = active_ctrl.active
@@ -2096,6 +2469,27 @@ function update_properties()
     vb.views.vTabs_switcher_height.value = active_ctrl.switcher_height
     vb.views.vTabs_switcher_align.value = active_ctrl.switcher_align
     vb.views.vTabs_size_method.value = active_ctrl.size_method
+
+  elseif (ctrl_name == "vButton") then
+
+    vb.views.vButton_text.text = active_ctrl.text
+    vb.views.vButton_color.text = vColor.color_table_to_hex_string(active_ctrl.color)
+    vb.views.vButton_bitmap.text = active_ctrl.bitmap
+
+  elseif (ctrl_name == "vToggleButton") then
+
+    vb.views.vToggleButton_enabled.value = active_ctrl.enabled
+    vb.views.vToggleButton_text_enabled.text = active_ctrl.text_enabled
+    vb.views.vToggleButton_text_disabled.text = active_ctrl.text_disabled
+    vb.views.vToggleButton_color_enabled.text = vColor.color_table_to_hex_string(active_ctrl.color_enabled)
+    vb.views.vToggleButton_color_disabled.text = vColor.color_table_to_hex_string(active_ctrl.color_disabled)
+
+  elseif (ctrl_name == "vArrowButton") then
+
+    vb.views.vArrowButton_enabled.value = active_ctrl.enabled
+    vb.views.vArrowButton_flipped.value = active_ctrl.flipped
+    vb.views.vArrowButton_orientation.value = active_ctrl.orientation
+
 
   elseif (ctrl_name == "vTable") then
 
