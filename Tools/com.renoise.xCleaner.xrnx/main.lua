@@ -10,10 +10,16 @@ _trace_filters = nil
 -- includes
 --------------------------------------------------------------------------------
 
+_clibroot = "source/cLib/classes/"
 _xlibroot = "source/xLib/classes/"
+_vlibroot = "source/vLib/classes/"
+
+require (_clibroot.."cLib")
+require (_clibroot.."cDebug")
+require (_clibroot.."cReflection")
+require (_clibroot.."cProcessSlicer")
+
 require (_xlibroot.."xLib")
-require (_xlibroot.."xDebug")
-require (_xlibroot.."xReflection")
 require (_xlibroot.."xPhrase")
 require (_xlibroot.."xSample")
 require (_xlibroot.."xSampleMapping")
@@ -21,14 +27,11 @@ require (_xlibroot.."xNoteColumn")
 require (_xlibroot.."xInstrument")
 require (_xlibroot.."xAudioDevice")
 
-
-_vlibroot = "source/vLib/classes/"
 require (_vlibroot.."vLib")
 require (_vlibroot.."helpers/vString")
 require (_vlibroot.."vTable")
 require (_vlibroot.."vTabs")
 
-require ("source/ProcessSlicer")
 require ("source/xCleaner")
 require ("source/xCleanerUI")
 
