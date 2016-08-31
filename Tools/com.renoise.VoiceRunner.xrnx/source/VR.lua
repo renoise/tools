@@ -79,7 +79,7 @@ VR.PROCESS_MODE = {
 
 function VR:__init(...)
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   --- VR_Prefs, current settings
   self.prefs = renoise.tool().preferences

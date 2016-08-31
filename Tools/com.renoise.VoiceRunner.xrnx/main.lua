@@ -30,6 +30,7 @@ require (_clibroot..'cLib')
 require (_clibroot..'cDebug')
 require (_clibroot..'cFilesystem')
 require (_clibroot..'cProcessSlicer')
+require (_clibroot..'cColor')
 
 require (_xlibroot..'xLib')
 require (_xlibroot..'xColumns') 
@@ -44,7 +45,6 @@ require (_xlibroot..'xVoiceRunner')
 require (_xlibroot..'xVoiceSorter') 
 
 require (_vlibroot..'vLib')
-require (_vlibroot..'helpers/vColor')
 require (_vlibroot..'vDialog')
 
 require ('source/VR')

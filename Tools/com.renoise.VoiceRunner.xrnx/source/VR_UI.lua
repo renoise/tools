@@ -54,7 +54,7 @@ function VR_UI:__init(...)
 
   self.dialog_too_many_cols = nil
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
   assert(type(args.owner)=="VR","Expected 'owner' to be a class instance")
 
   args.dialog_keyhandler = function(dlg,key)
@@ -272,7 +272,7 @@ function VR_UI:build()
 
           vb:button{
             text = "Select",
-            --color = vColor.adjust_brightness(SELECT_COLOR,0.1),
+            --color = cColor.adjust_brightness(SELECT_COLOR,0.1),
             tooltip = "Select the voice-run at the cursor position",
             midi_mapping = VR.MIDI_MAPPING.SELECT_RUN,
             width = HALF_BUTTON_W,
