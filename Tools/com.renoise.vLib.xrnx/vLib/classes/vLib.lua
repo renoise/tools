@@ -64,7 +64,7 @@ function vLib.get_skin_color(name)
   local default_color = cConfig:get_value("RenoisePrefs/SkinColors/"..name)
   print("default_color",default_color)
   if default_color then
-    self.default_button_color = cLib.split(default_color,",")
+    self.default_button_color = cString.split(default_color,",")
   end
 
 end

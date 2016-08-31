@@ -751,7 +751,7 @@ function vFileBrowser:set_path(str)
       item_type = vFileBrowser.ITEM_TYPE.FILE,
       item_icon = vFileBrowser.ITEM_ICON.FILE,
       size = file_stat and file_stat.size or 0,
-      mtime = file_stat and vString.get_sortable_time(file_stat.mtime) or "--",
+      mtime = file_stat and cString.get_sortable_time(file_stat.mtime) or "--",
     })
   end
 

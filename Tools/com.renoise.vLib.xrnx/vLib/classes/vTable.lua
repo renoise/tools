@@ -692,7 +692,7 @@ function vTable:get_col_width(idx,abs_only)
     elseif (type(col_w) == "string") 
       and (string.find(col_w,"%%"))
     then
-      local percentage = vString.string_to_percentage(col_w)
+      local percentage = cLib.string_to_percentage(col_w)
       return (self._width/100)*percentage
     else
       return 0

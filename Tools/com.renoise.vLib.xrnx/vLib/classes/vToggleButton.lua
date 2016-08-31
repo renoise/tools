@@ -10,8 +10,6 @@ A basic toggle button
 --==============================================================================
 
 require (_vlibroot.."vButton")
---require (_vlibroot.."/helpers/vColor")
-
 
 class 'vToggleButton' (vButton)
 

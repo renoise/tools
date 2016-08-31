@@ -2,23 +2,29 @@
 main.lua
 ============================================================================]]--
 
+--[[--
+
+Provide a visual demo for the various vlib components, with the ability to test (set/get) all properties and call methods...
+
+--]]
+
+--==============================================================================
 
 _trace_filters = nil
 --_trace_filters = {".*"}
 
 _clibroot = "cLib/classes/"
-require (_clibroot.."cLib")
-require (_clibroot.."cDebug")
-
 _vlibroot = "vLib/classes/"
 _vlib_img = _vlibroot.."images/"
+
+require (_clibroot.."cLib")
+require (_clibroot.."cDebug")
+require (_clibroot.."cString")
+require (_clibroot.."cColor")
+
 require (_vlibroot.."vLib")
---require (_vlibroot.."helpers/vFilesys")
 require (_vlibroot.."helpers/vSelection")
-require (_vlibroot.."helpers/vString")
-require (_vlibroot.."helpers/vColor")
 require (_vlibroot.."parsers/vXML")
---require (_vlibroot.."parsers/vJSON")
 require (_vlibroot.."vTable")
 require (_vlibroot.."vTabs")
 require (_vlibroot.."vButton")
@@ -30,9 +36,6 @@ require (_vlibroot.."vLogView")
 require (_vlibroot.."vGraph")
 --require (_vlibroot.."vWaveform")
 
---------------------------------------------------------------------------------
---- Provide a visual demo for the various vlib components, with the ability 
--- to test (set/get) all properties and call methods...
 --------------------------------------------------------------------------------
 
 -- workaround for http://goo.gl/UnSDnw
@@ -216,9 +219,9 @@ end
 -------------------------------------------------------------------------------
 
 function set_color_property(key,val)
-  val = vColor.hex_string_to_value(val)
+  val = cColor.hex_string_to_value(val)
   if val then
-    set_control_property(key,vColor.value_to_color_table(val))
+    set_control_property(key,cColor.value_to_color_table(val))
   else
     renoise.app():show_warning("Not a valid color")
   end
@@ -1125,7 +1128,7 @@ function build_vtable()
     local item = elm.owner:get_item_by_id(elm.item_id)
     if item then
       item.CHECKBOX = checked
-      vb.views.vTable_data.text = vString.table_to_string(elm.owner.data)
+      vb.views.vTable_data.text = cString.table_to_string(elm.owner.data)
     end
   end
 
@@ -1139,7 +1142,7 @@ function build_vtable()
     local item = elm.owner:get_item_by_id(elm.item_id)
     if item then
       item.POPUP = val
-      vb.views.vTable_data.text = vString.table_to_string(elm.owner.data)
+      vb.views.vTable_data.text = cString.table_to_string(elm.owner.data)
     end
   end
 
@@ -1149,7 +1152,7 @@ function build_vtable()
     if item then
       --elm.owner.data[elm.item_id].VALUEBOX = val
       item.VALUEBOX = val
-      vb.views.vTable_data.text = vString.table_to_string(elm.owner.data)
+      vb.views.vTable_data.text = cString.table_to_string(elm.owner.data)
     end
   end
 
@@ -1805,7 +1808,7 @@ function build_vgraph()
     selection_notifier = function(elm)
       suppress_notifier = true
       vb.views.vGraph_selected_index.value = elm.selected_index
-      vb.views.vGraph_selected_indices.value = vString.table_to_string(active_ctrl.selected_indices,{number_format = "%.0f"})
+      vb.views.vGraph_selected_indices.value = cString.table_to_string(active_ctrl.selected_indices,{number_format = "%.0f"})
 
       -- update the "set value" slider
       local data_item = elm:get_selected_item()
@@ -2112,7 +2115,7 @@ function build_vwaveform()
       --print("vwaveform.selection_notifier - elm",elm)
       vb.views.vWaveform_selected_index.value = active_ctrl.selected_index
       --print("selected_indices",rprint(active_ctrl.selected_indices))
-      vb.views.vWaveform_selected_indices.value = vString.table_to_string(active_ctrl.selected_indices,{number_format = "%.0f"})
+      vb.views.vWaveform_selected_indices.value = cString.table_to_string(active_ctrl.selected_indices,{number_format = "%.0f"})
       suppress_notifier = false
     end,
   }
@@ -2473,7 +2476,7 @@ function update_properties()
   elseif (ctrl_name == "vButton") then
 
     vb.views.vButton_text.text = active_ctrl.text
-    vb.views.vButton_color.text = vColor.color_table_to_hex_string(active_ctrl.color)
+    vb.views.vButton_color.text = cColor.color_table_to_hex_string(active_ctrl.color)
     vb.views.vButton_bitmap.text = active_ctrl.bitmap
 
   elseif (ctrl_name == "vToggleButton") then
@@ -2481,8 +2484,8 @@ function update_properties()
     vb.views.vToggleButton_enabled.value = active_ctrl.enabled
     vb.views.vToggleButton_text_enabled.text = active_ctrl.text_enabled
     vb.views.vToggleButton_text_disabled.text = active_ctrl.text_disabled
-    vb.views.vToggleButton_color_enabled.text = vColor.color_table_to_hex_string(active_ctrl.color_enabled)
-    vb.views.vToggleButton_color_disabled.text = vColor.color_table_to_hex_string(active_ctrl.color_disabled)
+    vb.views.vToggleButton_color_enabled.text = cColor.color_table_to_hex_string(active_ctrl.color_enabled)
+    vb.views.vToggleButton_color_disabled.text = cColor.color_table_to_hex_string(active_ctrl.color_disabled)
 
   elseif (ctrl_name == "vArrowButton") then
 
@@ -2500,16 +2503,16 @@ function update_properties()
     vb.views.vTable_header_height.value = active_ctrl.header_height
     vb.views.vTable_scrollbar_width.value = active_ctrl.scrollbar_width
     vb.views.vTable_show_header.value = active_ctrl.show_header
-    vb.views.vTable_data.text = vString.table_to_string(active_ctrl.data,{multiline = true})
+    vb.views.vTable_data.text = cString.table_to_string(active_ctrl.data,{multiline = true})
 
   elseif (ctrl_name == "vFileBrowser") then
 
     vb.views.vFileBrowser_num_rows.value = active_ctrl.num_rows
     vb.views.vFileBrowser_path.text = active_ctrl.path
     vb.views.vFileBrowser_file_ext.text = 
-      vString.table_to_string(active_ctrl.file_ext)
+      cString.table_to_string(active_ctrl.file_ext)
     vb.views.vFileBrowser_file_types.text =   
-      vString.table_to_string(active_ctrl.file_types,{multiline = true})
+      cString.table_to_string(active_ctrl.file_types,{multiline = true})
 
   elseif (ctrl_name == "vTree") then
 
@@ -2522,22 +2525,22 @@ function update_properties()
 
     vb.views.vGraph_require_selection.value = active_ctrl.require_selection
     vb.views.vGraph_selected_index.value = active_ctrl.selected_index
-    vb.views.vGraph_selected_indices.value = vString.table_to_string(active_ctrl.selected_indices,{number_format = "%.0f"})
+    vb.views.vGraph_selected_indices.value = cString.table_to_string(active_ctrl.selected_indices,{number_format = "%.0f"})
     vb.views.vGraph_draw_mode.value = active_ctrl.draw_mode
     vb.views.vGraph_style_normal.value = table.find(vLib.BITMAP_STYLES,active_ctrl.style_normal)
     vb.views.vGraph_style_selected.value = table.find(vLib.BITMAP_STYLES,active_ctrl.style_selected)
-    vb.views.vGraph_data.text = vString.table_to_string(active_ctrl.data,{multiline = true})
+    vb.views.vGraph_data.text = cString.table_to_string(active_ctrl.data,{multiline = true})
 
   elseif (ctrl_name == "vWaveform") then
     
     --[[
     vb.views.vWaveform_require_selection.value = active_ctrl.require_selection
     vb.views.vWaveform_selected_index.value = active_ctrl.selected_index
-    vb.views.vWaveform_selected_indices.value = vString.table_to_string(active_ctrl.selected_indices)
+    vb.views.vWaveform_selected_indices.value = cString.table_to_string(active_ctrl.selected_indices)
     vb.views.vWaveform_draw_mode.value = active_ctrl.draw_mode
     vb.views.vWaveform_style_normal.value = table.find(vLib.BITMAP_STYLES,active_ctrl.style_normal)
     vb.views.vWaveform_style_selected.value = table.find(vLib.BITMAP_STYLES,active_ctrl.style_selected)
-    vb.views.vWaveform_data.text = vString.table_to_string(active_ctrl.data,true)
+    vb.views.vWaveform_data.text = cString.table_to_string(active_ctrl.data,true)
     ]]
 
   end

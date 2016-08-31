@@ -65,7 +65,7 @@ end
 function vPrompt.prompt_for_color(callback,active_color,palette)
   TRACE("vPrompt.prompt_for_color(callback,active_color,palette)",callback,active_color,palette)
 
-  local t = vColor.value_to_color_table(active_color)
+  local t = cColor.value_to_color_table(active_color)
   local red = renoise.Document.ObservableNumber(t[1])
   local green = renoise.Document.ObservableNumber(t[2])
   local blue = renoise.Document.ObservableNumber(t[3])
@@ -119,10 +119,10 @@ function vPrompt.prompt_for_color(callback,active_color,palette)
     --TRACE("*** update_preview")
     local view_bt = vb.views["color_preview"]
     view_bt.color = get_active_color()
-    local val = vColor.color_table_to_value(view_bt.color)
+    local val = cColor.color_table_to_value(view_bt.color)
     local view_str = vb.views["color_preview_hex"]
     suppress_notifier = true
-    view_str.text = vColor.value_to_hex_string(val)
+    view_str.text = cColor.value_to_hex_string(val)
     suppress_notifier = false
     --scheduled_val = val
     --callback(scheduled_val)
@@ -142,10 +142,10 @@ function vPrompt.prompt_for_color(callback,active_color,palette)
   local on_idle = function()
     if scheduled_hex then
       --print("*** on_idle - scheduled_hex...",scheduled_hex)
-      local value = vColor.hex_string_to_value(scheduled_hex)
+      local value = cColor.hex_string_to_value(scheduled_hex)
       --print("*** on_idle - value",value)
       if value then
-        local t = vColor.value_to_color_table(value)
+        local t = cColor.value_to_color_table(value)
         red.value = t[1]
         green.value = t[2]
         blue.value = t[3]
@@ -153,7 +153,7 @@ function vPrompt.prompt_for_color(callback,active_color,palette)
         -- revert to last good known color...
         local view_str = vb.views["color_preview_hex"]
         suppress_notifier = true
-        view_str.text = vColor.color_table_to_hex_string(get_active_color())
+        view_str.text = cColor.color_table_to_hex_string(get_active_color())
         suppress_notifier = false
       end
       scheduled_hex = nil
@@ -220,7 +220,7 @@ function vPrompt.prompt_for_color(callback,active_color,palette)
           vb:button{
             text = "Apply",
             notifier = function()
-              local val = vColor.color_table_to_value(get_active_color())
+              local val = cColor.color_table_to_value(get_active_color())
               callback(val)
               vPrompt.color_prompt.dialog:close()
             end

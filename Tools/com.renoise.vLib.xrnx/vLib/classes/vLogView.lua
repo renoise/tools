@@ -79,7 +79,7 @@ end
 
 function vLogView:add(txt)
 
-  txt = vString.strip_leading_trailing_chars(tostring(txt),"\n",true,true)
+  txt = cString.strip_leading_trailing_chars(tostring(txt),"\n",true,true)
 
   if (self.view.text == nil) or (self.view.text == "") then
     self.view.text = txt
@@ -109,7 +109,7 @@ end
 
 function vLogView:replace(txt)
 
-  txt = vString.strip_leading_trailing_chars(txt,"\n",true,true)
+  txt = cString.strip_leading_trailing_chars(txt,"\n",true,true)
   local paras = self.view.paragraphs
   paras[#paras] = txt
   self.view.paragraphs = paras
