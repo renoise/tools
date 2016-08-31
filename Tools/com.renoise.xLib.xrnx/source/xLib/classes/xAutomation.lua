@@ -293,7 +293,7 @@ function xAutomation.get_scaled_value(value,value_mode)
     return value
   end
   
-  return xLib.scale_value(value,val_min,val_max,0,1)
+  return cLib.scale_value(value,val_min,val_max,0,1)
 
 end
 

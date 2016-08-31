@@ -17,13 +17,16 @@ PLANNED
 
 ]]
 
+_xlib_tests = table.create()
 _trace_filters = {".*"}
 
-_xlib_tests = table.create()
+_clibroot = "source/cLib/classes/"
+require (_clibroot.."cLib")
+require (_clibroot.."cDebug")
+require (_clibroot.."cFilesystem")
+
 _xlibroot = "source/xLib/classes/"
 require (_xlibroot.."xLib")
-require (_xlibroot.."xDebug")
-require (_xlibroot.."xFilesystem")
 
 --------------------------------------------------------------------------------
 -- test runner
@@ -88,9 +91,9 @@ local initialize = function()
 
   -- include all lua files in unit test
   for __, filename in pairs(os.filenames(_xlibroot.."unit_tests")) do
-    local folder,fname,extension = xFilesystem.get_path_parts(filename)
+    local folder,fname,extension = cFilesystem.get_path_parts(filename)
     if (extension == "lua") then
-      local fname = xFilesystem.file_strip_extension(fname,extension)
+      local fname = cFilesystem.file_strip_extension(fname,extension)
       require (_xlibroot.."unit_tests/"..fname)
     end
   end

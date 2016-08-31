@@ -268,6 +268,7 @@ end
 -- @return table
 
 function xLib.split(str, pat)
+  print("xLib.split(str, pat)",str, pat)
 
    local t = {}  -- NOTE: use {n = 0} in Lua-5.0
    local fpat = "(.-)" .. pat

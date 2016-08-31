@@ -10,8 +10,8 @@ fn = function()
 
   print(">>> xOscMessage: starting unit-test...")
 
+  require (_clibroot.."cDocument")
   require (_xlibroot.."xMessage")
-  require (_xlibroot.."xDocument")
   require (_xlibroot.."xOscDevice")
   require (_xlibroot.."xValue")
   require (_xlibroot.."xOscValue")

@@ -14,6 +14,7 @@ This is a supporting class for xRules
 
 ]]
 
+require (_clibroot.."cFilesystem")
 
 class 'xRuleset'
 
@@ -225,12 +226,12 @@ end
 
 function xRuleset:rename(new_name)
 
-  if not xFilesystem.validate_filename(new_name) then
+  if not cFilesystem.validate_filename(new_name) then
     return false, "The name contains illegal characters"
   end
 
-  local old_path = xFilesystem.get_path_parts(self.file_path)
-  local new_filepath = xFilesystem.unixslashes(("%s/%s.lua"):format(old_path,new_name))
+  local old_path = cFilesystem.get_path_parts(self.file_path)
+  local new_filepath = cFilesystem.unixslashes(("%s/%s.lua"):format(old_path,new_name))
   --print(">>> self.file_path",self.file_path)
   --print(">>> new_filepath",new_filepath)
 
@@ -238,7 +239,7 @@ function xRuleset:rename(new_name)
     return false,"A file already exist with that name"
   end
 
-  local passed,err = xFilesystem.rename(self.file_path,new_filepath)  
+  local passed,err = cFilesystem.rename(self.file_path,new_filepath)  
   if not passed then
     return false,err
   end
@@ -414,7 +415,7 @@ function xRuleset:load_definition(file_path)
   assert(type(file_path) == "string","Expected a string as argument")
   assert(file_path ~= "","Expected a non-empty string as argument")
 
-  local str_def,err = xFilesystem.load_string(file_path)
+  local str_def,err = cFilesystem.load_string(file_path)
   if not str_def then
     return false,err
   end
@@ -440,7 +441,7 @@ function xRuleset:load_definition(file_path)
     return false,err
   end
 
-  self.name = xFilesystem.get_raw_filename(file_path)
+  self.name = cFilesystem.get_raw_filename(file_path)
   self.file_path = file_path
 
   return true
@@ -493,7 +494,7 @@ function xRuleset:save_definition(file_path)
   end
 
   local str_def = self:serialize()
-  local passed,err = xFilesystem.write_string_to_file(file_path,str_def)
+  local passed,err = cFilesystem.write_string_to_file(file_path,str_def)
   if not passed then
     return false,err
   end
@@ -559,8 +560,8 @@ function xRuleset.get_suggested_name(str_name)
   end
 
   local file_path = xRuleset.get_normalized_file_path(str_name)
-  local str_path = xFilesystem.ensure_unique_filename(file_path)
-  local suggested_name = xFilesystem.get_raw_filename(str_path)
+  local str_path = cFilesystem.ensure_unique_filename(file_path)
+  local suggested_name = cFilesystem.get_raw_filename(str_path)
   return suggested_name
 
 end

@@ -72,15 +72,15 @@ function xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
       then
         begin_at = prev_end+1
         stop_at = v.note_range[1]-1
-        --print(">>> found room between",begin_at,stop_at)
+        print(">>> found room between",begin_at,stop_at)
         phrase_idx = k
         break
       else
-        --print(">>> no room at",v.note_range[1],v.note_range[2])
+        print(">>> no room at",v.note_range[1],v.note_range[2])
       end
       prev_end = v.note_range[2]
     else
-      --print(">>> less than keymap_offset")
+      print(">>> less than keymap_offset")
       local next_mapping = instr.phrase_mappings[k+1]
       if next_mapping 
         and (next_mapping.note_range[1] > keymap_offset)
@@ -98,11 +98,11 @@ function xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
     else
       phrase_idx = #instr.phrase_mappings+1
     end
-    --print(">>> found begin_at",begin_at,phrase_idx)
+    print(">>> found begin_at",begin_at,phrase_idx)
   end
   if not stop_at then
     stop_at = begin_at + insert_range - 1
-    --print(">>> found stop_at",stop_at)
+    print(">>> found stop_at",stop_at)
   end
 
   stop_at = math.min(119,stop_at)
@@ -122,7 +122,7 @@ function xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
   end
 
   local note_range = {begin_at,begin_at+insert_range}
-  --print(">>> note_range...",rprint(note_range))
+  print(">>> note_range...",rprint(note_range))
 
   return note_range,phrase_idx
 

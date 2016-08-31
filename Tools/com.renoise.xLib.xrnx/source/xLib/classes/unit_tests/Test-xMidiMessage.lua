@@ -10,7 +10,7 @@ fn = function()
 
   print(">>> xMidiMessage: starting unit-test...")
 
-  require (_xlibroot.."xDocument")
+  require (_clibroot.."cDocument")
   require (_xlibroot.."xMessage")
   require (_xlibroot.."xMidiMessage")
 

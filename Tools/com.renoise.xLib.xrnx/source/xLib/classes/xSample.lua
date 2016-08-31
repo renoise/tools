@@ -8,14 +8,12 @@ Static methods for working with renoise.Sample objects
 .
 #
 
-Requires 
-@{xReflection}
-@{xSampleMapping}
-@{xPhrase}
-@{xNoteColumn}
-
 ]]
 
+require (_clibroot.."cReflection")
+require (_xlibroot.."xSampleMapping")
+require (_xlibroot.."xPhrase")
+require (_xlibroot.."xNoteColumn")
 
 class 'xSample'
 
@@ -246,7 +244,7 @@ function xSample.convert_sample(instr,sample_idx,bit_depth,channel_action,range)
   new_sample.loop_start = 1
   new_sample.loop_end = num_frames
 
-  xReflection.copy_object_properties(sample,new_sample)
+  cReflection.copy_object_properties(sample,new_sample)
 
   -- only when copying single channel 
   local channel_idx = 1 

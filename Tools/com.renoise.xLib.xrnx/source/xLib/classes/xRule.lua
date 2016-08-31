@@ -12,13 +12,10 @@ A rule contains two main elements:
   conditions - criteria that the message has to match
   actions - actions to take when message got matched
 
-
-## See also: 
-@{xRules}
-@{xSandbox}
-
 ]]
 
+require (_clibroot.."cSandbox")
+require (_xlibroot.."xRules")
 
 class 'xRule'
 
@@ -264,9 +261,9 @@ function xRule:__init(def)
   end
   
   -- cast certain members to type
-  --def.name = xReflection.cast_value(def.name,"string")
-  --def.match_any = xReflection.cast_value(def.match_any,"boolean")
-  --def.midi_enabled = xReflection.cast_value(def.midi_enabled,"boolean")
+  --def.name = cReflection.cast_value(def.name,"string")
+  --def.match_any = cReflection.cast_value(def.match_any,"boolean")
+  --def.midi_enabled = cReflection.cast_value(def.midi_enabled,"boolean")
   --print("*** xRule def.midi_enabled",def.midi_enabled,type(def.midi_enabled))
 
   --print("xRule def...",rprint(def))
@@ -318,7 +315,7 @@ function xRule:__init(def)
   --- tracking the generated function to detect changes
   self.modified_observable = renoise.Document.ObservableBang()
 
-  --- xSandbox
+  --- cSandbox
   self.sandbox = nil
 
   --== initialize ==--
@@ -344,7 +341,7 @@ function xRule:__init(def)
   --- configure sandbox
   -- (add basic variables and a few utility methods)
 
-  self.sandbox = xSandbox()
+  self.sandbox = cSandbox()
   self.sandbox.compile_at_once = true
   self.sandbox.str_prefix = [[
     __xmsg = select(1, ...)

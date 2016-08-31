@@ -14,7 +14,7 @@ fn = function()
 
   -- initialize --
 
-  require (_xlibroot.."xReflection")
+  require (_clibroot.."cReflection")
   require (_xlibroot.."xOscPattern")
   require (_xlibroot.."xOscRouter")
   require (_xlibroot.."xValue")

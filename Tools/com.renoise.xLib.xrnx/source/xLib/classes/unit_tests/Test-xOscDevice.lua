@@ -10,7 +10,7 @@ fn = function()
 
   print(">>> xOscDevice: starting unit-test...")
 
-  require (_xlibroot.."xDocument")
+  require (_clibroot.."cDocument")
   require (_xlibroot.."xOscDevice")
 
   -- construct from scratch
@@ -45,7 +45,7 @@ fn = function()
   device.port_out = 8082
   assert(device.port_out,8082)
 
-  -- test export (xDocument) --
+  -- test export (cDocument) --
   --[[
   assert(type(device:serialize()) == "table")
   assert(type(device:export()) == "DocumentNode")

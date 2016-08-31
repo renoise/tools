@@ -52,7 +52,7 @@ function xParameter.set_value(param,val,mode,val_min,val_max,msg_type)
   elseif mode:find("abs") then
 
     --print("TODO treat as absolute - using 7/14 bit_depth")
-    new_val = xLib.scale_value(val,val_min,val_max,0,param.value_max)
+    new_val = cLib.scale_value(val,val_min,val_max,0,param.value_max)
 
   elseif mode:find("rel_7") then
 

@@ -1,20 +1,20 @@
 --[[
 
-  Testcase for xParseXML
+  Testcase for cParseXML
 
 --]]
 
 _xlib_tests:insert({
-name = "xParseXML",
+name = "cParseXML",
 fn = function()
 
-  print(">>> xParseXML: starting unit-test...")
+  print(">>> cParseXML: starting unit-test...")
 
-  require (_xlibroot.."xParseXML")
+  require (_xlibroot.."cParseXML")
 
   -- First try with some broken XML
 
-  local success,rslt = xParseXML.parse[[
+  local success,rslt = cParseXML.parse[[
     <RootNode foo="foo" under_score="foo">
       <A1>some_text.node</A2>
     </RootNode>
@@ -24,7 +24,7 @@ fn = function()
 
   -- Now parse some well-formed XML
 
-  local success,x = xParseXML.parse[[
+  local success,x = cParseXML.parse[[
     <RootNode foo="foo" under_score="foo">
       <A1>some_text.node</A1>
       <A2>
@@ -50,7 +50,7 @@ fn = function()
 
   -- A more realistic example
 
-  local success,x = xParseXML.parse[[
+  local success,x = cParseXML.parse[[
     <?xml version="1.0" encoding="UTF-8"?>
     <xStreamArgDocument doc_version="0">
       <Presets>
@@ -98,7 +98,7 @@ fn = function()
   local str_xml = fhandle:read("*a")
   fhandle:close()
 
-  local success,rslt = xParseXML.parse(str_xml)
+  local success,rslt = cParseXML.parse(str_xml)
   if not success then
     error(rslt)
   end
@@ -108,7 +108,7 @@ fn = function()
   -- convert to document
   --[[
   
-  local doc = xParseXML.to_document(rslt)
+  local doc = cParseXML.to_document(rslt)
   
   print("doc",doc)
 
@@ -117,7 +117,7 @@ fn = function()
   ]]
 
 
-  print(">>> xParseXML: OK - passed all tests")
+  print(">>> cParseXML: OK - passed all tests")
 
 end
 })

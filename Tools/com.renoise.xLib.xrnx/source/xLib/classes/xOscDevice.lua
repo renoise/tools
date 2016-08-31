@@ -16,9 +16,11 @@ socket_error(),socket_message()
 
 --==============================================================================
 
-class 'xOscDevice' (xDocument)
+require (_clibroot.."cDocument")
 
--- exportable properties (xDocument)
+class 'xOscDevice' (cDocument)
+
+-- exportable properties (cDocument)
 xOscDevice.DOC_PROPS = {
   active = "boolean",
   name = "string",
