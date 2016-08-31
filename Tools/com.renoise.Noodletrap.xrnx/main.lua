@@ -2,26 +2,31 @@
 main.lua
 ============================================================================]]--
 
--- variables
-
---_trace_filters = {".*"}
-_trace_filters = nil
-_xlibroot = "classes/xLib/classes/"
-rns = nil
+-- variables --------------------------
 
 local ntrap = nil
 local ntrap_preferences = nil
 local waiting_to_show_dialog = true
 
--- includes
+rns = nil
+
+--_trace_filters = {".*"}
+_trace_filters = nil
+
+-- includes ---------------------------
+
+_clibroot = "classes/cLib/classes/"
+require (_clibroot.."cDebug")
+require (_clibroot.."cProcessSlicer")
+
+_xlibroot = "classes/xLib/classes/"
+require (_xlibroot.."xPhraseManager")
+require (_xlibroot.."xNoteColumn")
 
 require "classes/NTrapEvent"
 require "classes/NTrap"
 require "classes/NTrapPrefs"
 require "classes/NTrapUI"
-require "classes/ProcessSlicer"
-require (_xlibroot.."xDebug")
-require (_xlibroot.."xPhraseManager")
 
 --------------------------------------------------------------------------------
 -- debug
