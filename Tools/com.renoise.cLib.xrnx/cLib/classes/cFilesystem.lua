@@ -190,7 +190,7 @@ function cFilesystem.ensure_unique_filename(file_path)
     and cFilesystem.file_strip_extension(filename,extension)
     or filename
 
-  local count = xLib.detect_counter_in_str(file_no_ext)
+  local count = cString.detect_counter_in_str(file_no_ext)
 
   while (io.exists(rslt)) do
     if extension then
@@ -243,7 +243,7 @@ function cFilesystem.makedir(file_path)
   cFilesystem.assert_string(file_path,"file_path")
 
   local folder_path = cFilesystem.get_path_parts(file_path)
-  local folders = xLib.split(folder_path,"[/\\]")
+  local folders = cString.split(folder_path,"[/\\]")
 
   local tmp_path = ""
 

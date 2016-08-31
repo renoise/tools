@@ -48,6 +48,8 @@ TODO how to ...
 
 ]]
 
+require (_clibroot.."cString")
+
 class 'cSandbox'
 
 -- disallow the following lua methods/properties
@@ -292,9 +294,9 @@ end
 function cSandbox.strip_comments(str_fn)
   TRACE("cSandbox.strip_comments(str_fn)",str_fn)
 
-  local t = xLib.split(str_fn,"\n")
+  local t = cString.split(str_fn,"\n")
   for k,v in ripairs(t) do
-    local ln = xLib.trim(v)
+    local ln = cString.trim(v)
     if (ln:sub(0,2) == "--") then 
       table.remove(t,k)
     end
@@ -323,10 +325,10 @@ function cSandbox.insert_return(str_fn)
   TRACE("cSandbox.insert_return(str_fn)",str_fn)
   
   local present = false
-  local t = xLib.split(str_fn,"\n")
+  local t = cString.split(str_fn,"\n")
   for k,v in ipairs(t) do
     if not present then
-      local ln = xLib.trim(v)
+      local ln = cString.trim(v)
       --print("ln",ln)
       
       if (ln ~= "") then -- skip empty lines

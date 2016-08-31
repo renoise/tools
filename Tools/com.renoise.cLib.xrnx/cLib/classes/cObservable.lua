@@ -139,7 +139,7 @@ function cObservable.get_by_type_and_name(str_type,str_obs,str_prefix)
   --print(">>> matches",matches,#matches)
 
   -- break string into segments
-  local obs_parts = xLib.split(str_obs,"%.")
+  local obs_parts = cString.split(str_obs,"%.")
   local tmp = matches[obs_parts[1]]
   local target = tmp
   --print(">>> target PRE",target,rprint(target))
@@ -286,7 +286,7 @@ function cObservable.retrieve_observable(obs)
 
   local err
   if (type(obs)=="string") then
-    obs,err = xLib.parse_str(obs)
+    obs,err = cLib.parse_str(obs)
     if err then
       return false,err
     end

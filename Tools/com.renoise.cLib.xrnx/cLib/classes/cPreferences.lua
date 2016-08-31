@@ -34,7 +34,7 @@ cPreferences.BUTTON_H = 26
 
 function cPreferences:__init(...)
 
-  local args = xLib.unpack_args(...)
+  local args = cLib.unpack_args(...)
 
   --- string, supply to make the launch dialog feel more familiar
   self.tool_name = args.tool_name or "Tool Name"

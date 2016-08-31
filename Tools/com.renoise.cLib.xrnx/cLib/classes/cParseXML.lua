@@ -70,7 +70,7 @@ end
 function cParseXML.get_node_by_path(doc,xpath)
   TRACE("cParseXML.get_node_by_path(doc,xpath)",doc,xpath)
 
-  local parts = xLib.split(xpath,"/")
+  local parts = cString.split(xpath,"/")
   local node = doc
   for k,v in ipairs(parts) do
     node = cParseXML.get_attribute(node,v)

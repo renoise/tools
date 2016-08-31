@@ -165,6 +165,15 @@ function cLib.scale_value(value,in_min,in_max,out_min,out_max)
 end
 
 --------------------------------------------------------------------------------
+-- @param str (string), e.g. "33.3%"
+
+function cLib.string_to_percentage(str)
+  TRACE("cLib.string_to_percentage(str)",str)
+  return tonumber(string.sub(str,1,#str-1))
+end
+
+
+--------------------------------------------------------------------------------
 -- clamp_value: ensure value is within min/max
 -- @param value (number) 
 -- @param min_value (number) 
@@ -236,82 +245,6 @@ function cLib.fraction(val)
   return val-math.floor(val)
 end
 
-
---------------------------------------------------------------------------------
--- String methods
---------------------------------------------------------------------------------
--- split string - original script: http://lua-users.org/wiki/SplitJoin 
--- @param str (string)
--- @param pat (string) pattern
--- @return table
-
-function cLib.split(str, pat)
-  print("cLib.split(str, pat)",str, pat)
-
-   local t = {}  -- NOTE: use {n = 0} in Lua-5.0
-   local fpat = "(.-)" .. pat
-   local last_end = 1
-   local s, e, cap = str:find(fpat, 1)
-   while s do
-      if s ~= 1 or cap ~= "" then
-   table.insert(t,cap)
-      end
-      last_end = e+1
-      s, e, cap = str:find(fpat, last_end)
-   end
-   if last_end <= #str then
-      cap = str:sub(last_end)
-      table.insert(t, cap)
-   end
-   return t
-
-end
-
--------------------------------------------------------------------------------
--- remove trailing and leading whitespace from string.
--- http://en.wikipedia.org/wiki/Trim_(8programming)
--- @param s (string)
--- @return string
-
-function cLib.trim(s)
-  return (s:gsub("^%s*(.-)%s*$", "%1"))
-end
-
--------------------------------------------------------------------------------
--- capitalize first letter of every word
--- @param s (string)
--- @return string
-
-function cLib.capitalize(s)
-  return string.gsub(" "..s, "%W%l", string.upper):sub(2)
-end
-
--------------------------------------------------------------------------------
--- insert return code whenever we encounter dashes or spaces in a string
--- TODO keep dashes, and allow a certain length per line
--- @param str (string)
--- @return string
-
-function cLib.soft_wrap(str)
-
-  local t = cLib.split(str,"[-%s]")
-  return table.concat(t,"\n")  
-
-end
-
--------------------------------------------------------------------------------
--- detect counter in string (used for incrementing, unique names)
-
-function cLib.detect_counter_in_str(str)
-  local count = string.match(str,"%((%d)%)$")
-  if count then 
-    str = string.gsub(str,"%s*%(%d%)$","")
-  else
-    count = 1
-  end
-  return count
-end
-
 -------------------------------------------------------------------------------
 -- find number of hex digits needed to represent a number (e.g. 255 = 2)
 -- @param val (int)
@@ -319,18 +252,6 @@ end
 
 function cLib.get_hex_digits(val)
   return 8-#string.match(bit.tohex(val),"0*")
-end
-
--------------------------------------------------------------------------------
--- prepare a string so it can be stored in XML attributes
--- (strip illegal characters instead of trying to fix them)
--- @param str (string)
--- @return string
-
-function cLib.sanitize_string(str)
-  str=str:gsub('"','')  
-  str=str:gsub("'",'')  
-  return str
 end
 
 -------------------------------------------------------------------------------
