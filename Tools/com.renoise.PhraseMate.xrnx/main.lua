@@ -23,13 +23,13 @@ Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/T
 -- required files
 --------------------------------------------------------------------------------
 
-rns = nil
 _trace_filters = nil
 --_trace_filters = {".*"}
 
 _clibroot = 'source/cLib/classes/'
 require (_clibroot..'cLib')
 require (_clibroot..'cDebug')
+require (_clibroot..'cDocument')
 require (_clibroot.."cConfig")
 require (_clibroot..'cFilesystem')
 require (_clibroot.."cParseXML")
@@ -47,10 +47,16 @@ require (_xlibroot..'xSelection')
 _vlibroot = 'source/vLib/classes/'
 require (_vlibroot..'vLib')
 require (_vlibroot..'vDialog')
+require (_vlibroot..'vTable')
+require (_vlibroot..'vEditField')
+require (_vlibroot..'vPathSelector')
+require (_vlibroot..'vPopup')
 require (_vlibroot..'vArrowButton')
+require (_vlibroot..'helpers/vSelection')
 
 require ('source/PhraseMate')
 require ('source/PhraseMateUI')
+require ('source/PhraseMateExportDialog')
 require ('source/PhraseMatePrefs')
 
 --------------------------------------------------------------------------------
@@ -245,6 +251,21 @@ renoise.tool():add_keybinding {
   end
 }
 
+--renoise.tool():add_keybinding {
+  --name = "Global:PhraseMate:Select Phrase in Instrument",
+  --invoke = function()
+    --phrasemate:invoke_task(xPhraseManager.select_previous_phrase)
+  --end
+--}
+renoise.tool():add_midi_mapping {
+  name = PhraseMate.MIDI_MAPPING.SELECT_PHRASE_IN_INSTR,
+  invoke = function(msg)
+    local instr = rns.selected_instrument
+    local idx = cLib.clamp_value(msg.int_value,0,#instr.phrases)
+    rns.selected_phrase_index = idx
+  end
+}
+
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Select Previous Phrase in Instrument",
   invoke = function()
@@ -302,8 +323,50 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping {
   name = PhraseMate.MIDI_MAPPING.SET_PLAYBACK_MODE,
   invoke = function(msg)
-    local mode = cLib.clamp_value(msg.int_value,1,3)
-    phrasemate:invoke_task(xPhraseManager.set_playback_mode,renoise.Instrument.PHRASES_PLAY_KEYMAP)
+    local mode = cLib.clamp_value(msg.int_value,renoise.Instrument.PHRASES_OFF,renoise.Instrument.PHRASES_PLAY_KEYMAP)
+    xPhraseManager.set_playback_mode(mode)
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Delete Selected Phrase",
+  invoke = function(repeated)
+    if (not repeated) then 
+      local rslt,err = phrasemate:delete_phrase() 
+      if err then
+        renoise.app():show_warning(err)
+      end
+    end
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = PhraseMate.MIDI_MAPPING.DELETE_PHRASE,
+  invoke = function(msg)
+    local rslt,err = phrasemate:delete_phrase() 
+    if err then
+      LOG(err)
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Insert New Phrase",
+  invoke = function(repeated)
+    if (not repeated) then 
+      local rslt,err = phrasemate:insert_phrase() 
+      if err then
+        renoise.app():show_warning(err)
+      end
+    end
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = PhraseMate.MIDI_MAPPING.INSERT_PHRASE,
+  invoke = function(msg)
+    local rslt,err = phrasemate:insert_phrase() 
+    if err then
+      LOG(err)
+    end
   end
 }
 

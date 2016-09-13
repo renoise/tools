@@ -6,6 +6,19 @@
 
 PhraseMate (main application)
 
+#
+.
+
+TODO
+
+  * Move into UI class
+    + realtime observables 
+    + "UI_" constants 
+
+
+  * Batch-apply phrase settings
+
+
 --]]
 
 
@@ -13,12 +26,6 @@ PhraseMate (main application)
 
 
 class 'PhraseMate'
-
-PhraseMate.UI_TABS = {
-  INPUT = 1,
-  OUTPUT = 2,
-  REALTIME = 3,
-}
 
 PhraseMate.UI_SOURCE_ITEMS = {"➜ Autocapture","➜ Capture All Instr.","➜ Selected Instrument"}
 PhraseMate.UI_TARGET_ITEMS = {"➜ Same Instrument","➜ New Instrument(s)"}
@@ -64,9 +71,12 @@ PhraseMate.PLAYBACK_MODE = {
 }
 
 PhraseMate.MIDI_MAPPING = {
+  SELECT_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Phrase in Instrument [Set]",
   PREV_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Previous Phrase in Instrument [Trigger]",
   NEXT_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Next Phrase in Instrument [Trigger]",
   SET_PLAYBACK_MODE = "Tools:PhraseMate:Select Playback Mode [Set]",
+  DELETE_PHRASE = "Tools:PhraseMate:Delete Selected Phrase [Trigger]",
+  INSERT_PHRASE = "Tools:PhraseMate:Insert New Phrase [Trigger]",
 }
 
 --------------------------------------------------------------------------------
@@ -152,6 +162,7 @@ function PhraseMate:__init(...)
   }
 
   self.ui:build()
+
 
 
   -- notifications --------------------
@@ -476,6 +487,64 @@ function PhraseMate:sync_source_target_instr()
 end
 
 --------------------------------------------------------------------------------
+-- when pressing the '+' button or when we're importing phrases
+-- will apply the default settings for new phrases
+-- @return bool, true when phrase was inserted
+-- @return string, error message when failed
+
+function PhraseMate:insert_phrase()
+
+  local instr = rns.selected_instrument
+  if not instr then
+    return false,"Can't insert phrase, no instrument is selected"
+  end
+
+  local instr_idx = rns.selected_instrument_index
+  local keymap_args = self.prefs.create_keymappings.value and {
+    keymap_range = self.prefs.create_keymap_range.value,
+    keymap_offset = self.prefs.create_keymap_offset.value,
+  }
+
+  local insert_at_idx = rns.selected_phrase_index+1
+
+  local phrase,phrase_idx_or_err = xPhraseManager.auto_insert_phrase(instr_idx,insert_at_idx,nil,keymap_args)
+  if not phrase then
+    return false,phrase_idx_or_err
+  end
+
+  local looping = self.prefs.input_loop_phrases.value
+  local looping_set,err = xPhraseManager.set_universal_property(instr_idx,phrase_idx_or_err,"looping",looping)
+  if not looping_set then
+    LOG(err)
+  end
+
+  rns.selected_phrase_index = phrase_idx_or_err
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+-- when pressing the '+' button or when we're importing phrases
+-- will apply the default settings for new phrases
+-- @return bool, true when phrase was inserted
+-- @return string, error message when failed
+
+function PhraseMate:delete_phrase()
+
+  local phrase_idx = rns.selected_phrase_index
+  if not phrase_idx or (phrase_idx == 0) then
+    return false,"Can't delete phrase, none is selected"
+  end
+
+  local instr = rns.selected_instrument
+  instr:delete_phrase_at(phrase_idx)
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
 -- reuse instrument (via map), take over (when empty) or create as needed
 -- will update self.target_instr_idx ...
 
@@ -546,14 +615,19 @@ function PhraseMate:allocate_phrase(track,seq_idx,trk_idx,selection)
   if not phrase then
     
     local takeover = not self.prefs.input_include_empty_phrases.value 
-    local create_keymap = self.prefs.input_create_keymappings.value
-    local keymap_range = self.prefs.input_keymap_range.value
-    local keymap_offset = self.prefs.input_keymap_offset.value
-    phrase,phrase_idx_or_err = xPhraseManager.auto_insert_phrase(self.target_instr_idx,create_keymap,keymap_range,keymap_offset,takeover)
+    local insert_at_idx = nil
+    local keymap_args = self.prefs.create_keymappings.value and {
+      keymap_range = self.prefs.create_keymap_range.value,
+      keymap_offset = self.prefs.create_keymap_offset.value
+    } or nil
+
+    phrase,phrase_idx_or_err = xPhraseManager.auto_insert_phrase(self.target_instr_idx,insert_at_idx,takeover,keymap_args)
     --print("*** allocate_phrase - phrase,phrase_idx_or_err",phrase,phrase_idx_or_err)
     if not phrase then
       LOG(phrase_idx_or_err) -- carries error msg
     end
+
+    phrase:clear() -- clear default C-4 
 
     -- maintain a record for later
     if not self.collected_phrases[self.source_instr_idx] then
@@ -581,7 +655,7 @@ function PhraseMate:allocate_phrase(track,seq_idx,trk_idx,selection)
       end
       phrase.visible_effect_columns = track.visible_effect_columns
 
-      local looping_set,err = xPhraseManager.set_universal_phrase_property(self.target_instr_idx,phrase_idx_or_err,"looping",self.prefs.input_loop_phrases.value)
+      local looping_set,err = xPhraseManager.set_universal_property(self.target_instr_idx,phrase_idx_or_err,"looping",self.prefs.input_loop_phrases.value)
       if not looping_set then
         LOG(err)
       end
@@ -704,7 +778,7 @@ function PhraseMate:collect_from_matrix_selection()
     return false,"No selection is defined in the matrix"
   end
 
-  local create_keymap = self.prefs.input_create_keymappings.value
+  local create_keymap = self.prefs.create_keymappings.value
   for seq_idx = 1, #rns.sequencer.pattern_sequence do
     if matrix_sel[seq_idx] then
       for trk_idx = 1, #rns.tracks do
@@ -1090,7 +1164,7 @@ function PhraseMate:do_finalize()
               instr.phrase_editor_visible = true
 
               -- switch to the relevant playback mode
-              if self.prefs.input_create_keymappings.value then
+              if self.prefs.create_keymappings.value then
                 instr.phrase_playback_mode = renoise.Instrument.PHRASES_PLAY_KEYMAP
               end
 
@@ -1201,242 +1275,6 @@ end
 
 --------------------------------------------------------------------------------
 -- Output methods
---------------------------------------------------------------------------------
--- @param start_col - note/effect column index
--- @param end_col - note/effect column index
--- @param start_line - pattern line
--- @param end_line - pattern line
---[[
-function PhraseMate:apply_phrase_to_track(start_col,end_col,start_line,end_line)
-
-  local track_index = rns.selected_track_index
-  local instr_index = rns.selected_instrument_index
-  local phrase = rns.selected_phrase
-
-  if not phrase then
-    return false,"No phrase was selected"
-  end
-
-  suppress_line_notifier = true
-  local track = rns.selected_track
-
-  -- TODO support other track types
-  if (track.type ~= renoise.Track.TRACK_TYPE_SEQUENCER) then
-    return false,"Can only write to sequencer tracks"
-  end
-
-  local ptrack = rns.selected_pattern_track
-  
-  local start_note_col,end_note_col
-  local start_fx_col,end_fx_col
-  local restrict_to_selection = start_col
-
-  if not start_col then
-    start_line = 1
-    start_note_col = 1
-    start_fx_col = 1
-    end_line = #ptrack.lines
-    end_note_col = phrase.visible_note_columns
-    end_fx_col = phrase.visible_effect_columns
-  else
-    if (start_col <= track.visible_note_columns) then
-      start_note_col = start_col
-      start_fx_col = 1
-    else
-      start_note_col = nil
-      start_fx_col = start_col - phrase.visible_note_columns
-    end
-    if (end_col <= phrase.visible_note_columns) then
-      start_fx_col = nil
-      end_note_col = end_col
-    else 
-      end_note_col = start_col + phrase.visible_note_columns - 1
-      end_fx_col = end_col - phrase.visible_note_columns
-    end
-  end
-
-  -- produce output
-  
-  local num_lines = end_line - start_line
-  local phrase_num_lines = phrase.number_of_lines
-
-  for i = 1,num_lines do
-
-    local source_line_idx = i
-
-    if not self.prefs.cont_paste.value then
-      if (i > phrase_num_lines) then
-        break
-      end
-    else
-      if self.prefs.anchor_to_selection.value then
-        source_line_idx = i % phrase_num_lines
-      else
-        source_line_idx = (start_line+i-1) % phrase_num_lines
-      end
-      if (source_line_idx == 0) then
-        source_line_idx = phrase_num_lines
-      end
-    end
-    
-    local source_line = phrase:line(source_line_idx)
-    local target_line = ptrack:line(start_line+i-1)
-   
-    if start_note_col then
-      local col_count = 0
-      for col_idx = 1,renoise.InstrumentPhrase.MAX_NUMBER_OF_NOTE_COLUMNS do
-        if (col_idx >= start_note_col) and
-          (col_idx <= end_note_col) 
-        then
-
-          col_count = col_count + 1
-          local skip_column = (phrase:column_is_muted(col_count)
-            and self.prefs.skip_muted.value) or false
-
-          if not skip_column then
-
-            local source_col = source_line:note_column(col_count)
-            local target_col = target_line:note_column(col_idx)
-
-            -- note
-            if (source_col.note_value < 121) then
-              target_col.note_value = source_col.note_value
-            elseif not self.prefs.mix_paste.value then
-              target_col.note_value = 121
-            end
-
-            -- instrument 
-            if (source_col.note_value < 121) then
-              target_col.instrument_value = instr_index-1
-            elseif not self.prefs.mix_paste.value then
-              target_col.note_value = 121
-            end
-
-            -- volume
-            if phrase.volume_column_visible then
-              if (source_col.volume_value ~= 255) then
-                target_col.volume_value = source_col.volume_value
-                if self.prefs.expand_subcolumns.value then
-                  track.volume_column_visible = true
-                end
-              elseif not self.prefs.mix_paste.value then
-                target_col.volume_value = 255
-              end          
-            end          
-  
-            -- panning
-            if phrase.panning_column_visible then
-              if (source_col.panning_value ~= 255) then
-                target_col.panning_value = source_col.panning_value
-                if self.prefs.expand_subcolumns.value then
-                  track.panning_column_visible = true
-                end
-              elseif not self.prefs.mix_paste.value then
-                target_col.panning_value = 255
-              end      
-            end      
-            
-            -- delay
-            if phrase.delay_column_visible then
-              if (source_col.delay_value > 0) then
-                target_col.delay_value = source_col.delay_value
-                if self.prefs.expand_subcolumns.value then
-                  track.delay_column_visible = true
-                end
-              elseif not self.prefs.mix_paste.value then
-                target_col.delay_value = 0
-              end          
-            end          
-  
-            -- sample effects
-            if phrase.sample_effects_column_visible then
-              if (source_col.effect_amount_value > 0) then
-                target_col.effect_amount_value = source_col.effect_amount_value
-                if self.prefs.expand_subcolumns.value then
-                  track.sample_effects_column_visible = true
-                end
-              elseif not self.prefs.mix_paste.value then
-                target_col.effect_amount_value = 0
-              end          
-              if (source_col.effect_number_value > 0) then
-                target_col.effect_number_value = source_col.effect_number_value
-                if self.prefs.expand_subcolumns.value then
-                  track.sample_effects_column_visible = true
-                end
-              elseif not self.prefs.mix_paste.value then
-                target_col.effect_number_value = 0
-              end  
-            end  
-
-            if self.prefs.expand_columns and 
-              (track.visible_note_columns < col_idx)
-            then
-              track.visible_note_columns = col_idx
-            end
-
-          else
-
-            -- muted: clear when not mix-pasting
-            if not self.prefs.mix_paste.value then
-              local target_col = target_line:note_column(col_idx)
-              target_col:clear()
-            end
-
-          end          
-        
-        end
-      end
-    end
-
-    if start_fx_col then
-    local col_count = 1
-      for col_idx = 1,track.visible_effect_columns do
-        if (col_idx >= start_fx_col) and
-          (col_idx <= end_fx_col) 
-        then
-
-          local source_col = source_line:effect_column(col_count)
-          local target_col = target_line:effect_column(col_idx)
-
-          if (source_col.amount_value > 0) then
-            target_col.amount_value = source_col.amount_value
-          elseif not self.prefs.mix_paste.value then
-            target_col.amount_value = 0
-          end          
-          if (source_col.number_value > 0) then
-            target_col.number_value = source_col.number_value
-          elseif not self.prefs.mix_paste.value then
-            target_col.number_value = 0
-          end 
-
-          col_count = col_count + 1
-
-        end
-      end
-    end
-
-  end
-  
-  suppress_line_notifier = false
-
-  return true
-
-end
-
---------------------------------------------------------------------------------
-
-function PhraseMate:apply_phrase_to_selection()
-
-  local sel,err = xSelection.get_pattern_if_single_track()
-  if not sel then
-    return false,err
-  end
-
-  return apply_phrase_to_track(sel.start_column,sel.end_column,sel.start_line,sel.end_line)
-
-end
-]]
-
 --------------------------------------------------------------------------------
 -- @param start_col - note/effect column index
 -- @param end_col - note/effect column index
@@ -1606,6 +1444,8 @@ function PhraseMate:attach_to_instrument()
 
   self.ui:update_realtime()
 
+  self.ui:update_submit_buttons()
+
 end
 
 --------------------------------------------------------------------------------
@@ -1700,4 +1540,100 @@ function PhraseMate:attach_to_song()
 end
 
 
+--------------------------------------------------------------------------------
+-- Batch/Properties
+--------------------------------------------------------------------------------
+-- @param prop_name (string)
+-- @param operator (vEditField.OPERATOR)
+-- @param value (boolean,string or number)
+-- @return bool, true when properties were modified
+-- @return string, error message when failed
 
+function PhraseMate:apply_properties(instr,prop_name,operator,value,phrase_indices)
+  print("PhraseMate:apply_properties(instr,prop_name,operator,value,phrase_indices)",instr,prop_name,operator,value,phrase_indices)
+
+  for k,v in ipairs(phrase_indices) do
+    local phrase = instr.phrases[v]
+    if not phrase then
+      return false,"Can't set property, missing phrase"
+    end
+    if (operator == vEditField.OPERATOR.SET) then
+      -- do nothing
+    elseif (operator == vEditField.OPERATOR.ADD) then
+      -- TODO
+    elseif (operator == vEditField.OPERATOR.SUB) then
+      -- TODO
+    elseif (operator == vEditField.OPERATOR.MUL) then
+      -- TODO
+    elseif (operator == vEditField.OPERATOR.DIV) then
+      -- TODO
+    elseif (operator == vEditField.OPERATOR.INVERT) then
+      -- TODO
+    end
+
+    xPhrase.set_property(phrase,prop_name,value)
+
+  end
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+-- Import/Export
+--------------------------------------------------------------------------------
+
+function PhraseMate:import_presets(files)
+  TRACE("PhraseMate:import_presets(files)",files)
+
+  local instr_idx = rns.selected_instrument_index
+  local insert_at_idx = rns.selected_phrase_index+1
+  local takeover = false
+  local keymap_args = self.prefs.create_keymappings.value and {
+    keymap_range = self.prefs.create_keymap_range.value,
+    keymap_offset = self.prefs.create_keymap_offset.value,
+  }
+
+  local rslt,err = xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,keymap_args)
+  if err then
+    return false,err
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- @return bool, true when presets were exported
+-- @return string, error message when failed
+
+function PhraseMate:export_presets(indices,overwrite)
+  TRACE("PhraseMate:export_presets(indices,overwrite)",indices,overwrite)
+
+  --print("*** export_presets - self.prefs.output_folder.value",self.prefs.output_folder.value)
+
+  if (self.prefs.output_folder.value == "") then
+    return false,"Please select a valid output path"
+  end
+
+  overwrite = overwrite or self.prefs.overwrite_on_export.value
+  --print("*** export_presets - overwrite",overwrite)
+
+  local prefix = self.prefs.prefix_with_index.value
+  local folder = self.prefs.output_folder.value
+  local instr_idx = rns.selected_instrument_index
+  --print("*** export_presets - prefix",prefix)
+  --print("*** export_presets - folder",folder)
+  --print("*** export_presets - instr_idx",instr_idx)
+
+  local use_subfolder = self.prefs.use_instr_subfolder.value
+  if use_subfolder then
+    folder = folder .. cFilesystem.sanitize_filename(rns.selected_instrument.name) .. "/"
+  end
+
+  local rslt,err,indices = xPhraseManager.export_presets(folder,instr_idx,indices,overwrite,prefix)
+  if err then
+    return false, err
+  end
+
+  return true
+
+end

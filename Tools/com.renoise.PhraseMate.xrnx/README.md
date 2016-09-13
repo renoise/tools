@@ -95,6 +95,8 @@ Note that the realtime mode is experimental and has a few quirks - please see th
 	Global : PhraseMate : Set Playback Mode to 'Off'
 	Global : PhraseMate : Set Playback Mode to 'Program'
 	Global : PhraseMate : Set Playback Mode to 'Keymap'
+	Global : PhraseMate : Insert New Phrase
+	Global : PhraseMate : Delete Selected Phrase
 
 ## Menu Entries
 
@@ -118,5 +120,8 @@ Note that the realtime mode is experimental and has a few quirks - please see th
 	Tools : PhraseMate : Write Phrase to Track [Trigger]
 	Tools : PhraseMate : Select Previous Phrase in Instrument [Trigger]
 	Tools : PhraseMate : Select Next Phrase in Instrument [Trigger]
+	Tools : PhraseMate : Select Phrase in Instrument [Set]
 	Tools : PhraseMate : Select Playback Mode [Set]
+	Tools : PhraseMate : Insert New Phrase [Trigger]
+	Tools : PhraseMate : Delete Selected Phrase [Trigger]
 
