@@ -3,20 +3,20 @@ vSelection
 ============================================================================]]--
 --[[
 
-  This class contains properties and methods for dealing with single- 
-  or multi-selection of items 
+This class contains properties and methods for dealing with single- 
+or multi-selection of items 
 
-  Generally, all methods return a boolean result along with one or two tables
-  containing items that were added/removed as part of the operation. 
+Generally, all methods return a boolean result along with one or two tables
+containing items that were added/removed as part of the operation. 
 
-  PLANNED
-  - generic keyboard support:
-    - next/previous item
-    - orientation (in which direction is next?)
+PLANNED
+- generic keyboard support:
+  - next/previous item
+  - orientation (in which direction is next?)
 
-  CHANGELOG
-  * added double-press support
-  * changed index into observable number
+CHANGELOG
+* added double-press support
+* changed index into observable number
 
 ]]
 

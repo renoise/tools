@@ -16,7 +16,7 @@ class 'vButton' (vControl)
 --------------------------------------------------------------------------------
 
 function vButton:__init(...)
-  print("vButton:__init()")
+  TRACE("vButton:__init()")
 
   local args = cLib.unpack_args(...)
 
@@ -56,7 +56,8 @@ end
 --------------------------------------------------------------------------------
 
 function vButton:build()
-  print(">>> vButton:build()")
+  TRACE(">>> vButton:build()")
+
 	local vb = self.vb
   if not self.view then
     self.view = vb:button{
@@ -83,7 +84,8 @@ end
 --------------------------------------------------------------------------------
 
 function vButton:release()
-  print(">>> vButton:release()")
+  TRACE(">>> vButton:release()")
+
   if self.released then
     self:released()
   end
@@ -95,14 +97,14 @@ end
 --------------------------------------------------------------------------------
 
 function vButton:update()
-  print("vButton:update()")
+  TRACE("vButton:update()")
 
-  print(">>> self.view.bitmap",self.view.bitmap)
-  print(">>> self.view.text",self.view.text)
-  print(">>> self.view.color",self.view.color)
-  print(">>> self.view.midi_mapping",self.view.midi_mapping)
-  print(">>> self.view.width",self.view.width)
-  print(">>> self.view.height",self.view.height)
+  --print(">>> self.view.bitmap",self.view.bitmap)
+  --print(">>> self.view.text",self.view.text)
+  --print(">>> self.view.color",self.view.color)
+  --print(">>> self.view.midi_mapping",self.view.midi_mapping)
+  --print(">>> self.view.width",self.view.width)
+  --print(">>> self.view.height",self.view.height)
 
   if self.text then self.view.text = self.text end
   if self.color then self.view.color = self.color end
@@ -167,7 +169,8 @@ end
 --------------------------------------------------------------------------------
 
 function vButton:set_width(val)
-  print(">>> vButton:set_width(val)")
+  TRACE(">>> vButton:set_width(val)")
+
   assert(type(val)=="number")
   self.view.width = val
   vControl.set_width(self)
@@ -176,7 +179,8 @@ end
 --------------------------------------------------------------------------------
 
 function vButton:set_height(val)
-  print(">>> vButton:set_height(val)")
+  TRACE(">>> vButton:set_height(val)")
+
   assert(type(val)=="number")
   self.view.height = val
   vControl.set_height(self)

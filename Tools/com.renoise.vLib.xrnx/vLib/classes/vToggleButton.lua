@@ -57,11 +57,13 @@ end
 --------------------------------------------------------------------------------
 
 function vToggleButton:update()
-  print("vToggleButton:update()")
+  TRACE("vToggleButton:update()")
+
   self.color = self.enabled and self.color_enabled or self.color_disabled
   self.text = self.enabled and self.text_enabled or self.text_disabled
   self.bitmap = self.enabled and self.bitmap_enabled or self.bitmap_disabled
   vButton.update(self)
+
 end
 
 --------------------------------------------------------------------------------

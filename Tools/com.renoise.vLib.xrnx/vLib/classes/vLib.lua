@@ -2,12 +2,22 @@
 vLib
 ============================================================================]]--
 
+--[[--
+
+This class provides static members and methods for the vLib library
+
+
+--]]
+
+
+--==============================================================================
+
 require (_clibroot.."cConfig")
 
 class 'vLib'
 
+
 --------------------------------------------------------------------------------
---- This class provides static members and methods for the vLib library
 
 --- (int) when you instantiate a vLib component, it will register itself
 -- with a unique viewbuilder ID. This is the global incrementer
@@ -19,6 +29,9 @@ vLib.lazy_updates = false
 
 --- (table) set once we access the XML configuration 
 vLib.config = nil
+
+--- (string) location of images
+vLib.imageroot = _vlibroot .. "/images/"
 
 -- (table) provide a default color for selected items
 vLib.COLOR_SELECTED = {218,96,45}
@@ -38,7 +51,13 @@ vLib.BITMAP_STYLES = {
   "main_color",   -- same as 'button_back' but with main text/back colors     
 }
 
+--- (number), standard height for controls
+vLib.CONTROL_H = 18
+
+--- (number), height for medium-large controls
 vLib.LARGE_BUTTON_H = 22
+
+-- ??? too specific
 vLib.SUBMIT_BT_W = 82
 
 --------------------------------------------------------------------------------
@@ -62,9 +81,9 @@ function vLib.get_skin_color(name)
   assert(type(name)=="string")
 
   local default_color = cConfig:get_value("RenoisePrefs/SkinColors/"..name)
-  print("default_color",default_color)
+  --print("default_color",default_color)
   if default_color then
-    self.default_button_color = cString.split(default_color,",")
+    vLib.COLOR_SELECTED = cString.split(default_color,",")
   end
 
 end

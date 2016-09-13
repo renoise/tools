@@ -12,6 +12,8 @@ function vCell:__init(...)
 
   local args = cLib.unpack_args(...)
 
+  --assert(type(args.item_id)=="number")
+
   --- (int) the data record id associated with this cell
   -- it is the responsibility of the owner to assign this property 
   self.item_id = args.item_id

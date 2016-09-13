@@ -6,6 +6,9 @@ main.lua
 
 Provide a visual demo for the various vlib components, with the ability to test (set/get) all properties and call methods...
 
+#
+.
+
 --]]
 
 --==============================================================================
@@ -25,15 +28,19 @@ require (_clibroot.."cColor")
 require (_vlibroot.."vLib")
 require (_vlibroot.."helpers/vSelection")
 require (_vlibroot.."parsers/vXML")
+require (_vlibroot.."vArrowButton")
+require (_vlibroot.."vButton")
+require (_vlibroot.."vDialog")
+require (_vlibroot.."vEditField")
+require (_vlibroot.."vFileBrowser")
+require (_vlibroot.."vGraph")
+require (_vlibroot.."vLogView")
+require (_vlibroot.."vPathSelector")
+require (_vlibroot.."vPopup")
 require (_vlibroot.."vTable")
 require (_vlibroot.."vTabs")
-require (_vlibroot.."vButton")
 require (_vlibroot.."vToggleButton")
-require (_vlibroot.."vArrowButton")
-require (_vlibroot.."vFileBrowser")
 require (_vlibroot.."vTree")
-require (_vlibroot.."vLogView")
-require (_vlibroot.."vGraph")
 --require (_vlibroot.."vWaveform")
 
 --------------------------------------------------------------------------------
@@ -41,27 +48,13 @@ require (_vlibroot.."vGraph")
 -- workaround for http://goo.gl/UnSDnw
 local automatic_start = false
 
--- add in same order as build_xx
-local vlib_controls = {
-  "vButton",
-  "vToggleButton",
-  "vArrowButton",
-  "vTabs",
-  "vTable",
-  "vFileBrowser",
-  "vTree",
-  "vLogView",
-  "vGraph",
-}--,"vWaveform"} 
+local vbutton,vtogglebutton,varrowbutton,vtabs,vtable,vbrowser,vtree,vlog,vgraph,vpathselector,vpopup,veditfield --,vwaveform
 
+local vlib_controls = {}
 local vlib_controls_ref = {}
-
-local select_on_startup = table.find(vlib_controls,"vTabs")
 
 local active_ctrl, active_ctrl_idx = nil
 local suppress_notifier = false
-
-local vbutton,vtogglebutton,varrowbutton,vtabs,vtable,vbrowser,vtree,vlog,vgraph --,vwaveform
 
 local file_ext = "{'*.wav','*.txt',}"
 
@@ -75,6 +68,7 @@ local function start()
     if not dialog_content then
       dialog_content = build()
       --attach_to_song()
+      local select_on_startup = table.find(vlib_controls,"vTable")
       vb.views.control_chooser.value = select_on_startup
     end
 
@@ -157,14 +151,13 @@ function build()
   --print("build()")
 
   -- skeleton
-
   local content = vb:row{
     margin = 6,
     spacing = 4,
     vb:column{
       vb:row{
         id = "basic_row",
-        margin = 6,
+        --margin = 6,
         spacing = 4,
         vb:column{
           style = "panel",
@@ -174,7 +167,7 @@ function build()
           },
           vb:chooser{
             id = "control_chooser",
-            items = vlib_controls,
+            --items = vlib_controls,
             value = 1,
             notifier = function(idx)
               set_active_ctrl(idx)
@@ -197,20 +190,25 @@ function build()
   build_vview()
   build_vcontrol()
 
-  build_vbutton()
-  build_vtogglebutton()
   build_varrowbutton()
-  build_vtabs()
-  build_vtable()
-  build_vbrowser()
-  build_vtree()
-  build_vlog()
+  build_vbutton()
+  build_veditfield()
+  build_vfilebrowser()
   build_vgraph()
+  build_vlog()
+  build_vpathselector()
+  build_vpopup()
+  build_vtable()
+  build_vtabs()
+  build_vtogglebutton()
+  build_vtree()
   --build_vwaveform()
   --build_vscroll()
 
   local ctrl_idx = vb.views.control_chooser.value
   set_active_ctrl(ctrl_idx)
+
+  vb.views["control_chooser"].items = vlib_controls
 
   return content
 
@@ -248,6 +246,7 @@ function set_active_ctrl(idx)
 
   -- hide all property panels
   for _,elm_id in ipairs(vlib_controls) do
+    print("elm_id",elm_id)
     vb.views[elm_id].visible = false
     vb.views[elm_id.."_properties"].visible = false
   end
@@ -387,11 +386,15 @@ function build_vbutton()
   vb.views.props_row:add_child(vb:column{
     id = "vButton_properties",
     style = "panel",
-    vb:row{
-      vb:text{
-        text = "vButton",
-        font = "bold",
-      },
+    vb:text{
+      text = "vButton",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+The button component is the most basic button in vLib,
+functionally similar to the renoise Viewbuilder version]],
+      font = "italic",
     },
 
     vb:row{
@@ -483,7 +486,7 @@ function build_vbutton()
   }
   vb.views.controls_col:add_child(vbutton.view)
   table.insert(vlib_controls_ref,vbutton)
-
+  table.insert(vlib_controls,vbutton.id)
 
 end
 
@@ -497,11 +500,15 @@ function build_vtogglebutton()
   vb.views.props_row:add_child(vb:column{
     id = "vToggleButton_properties",
     style = "panel",
-    vb:row{
-      vb:text{
-        text = "vToggleButton",
-        font = "bold",
-      },
+    vb:text{
+      text = "vToggleButton",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+The toggle button is a simple state-switching button
+with independant settings for the on/off state]],
+      font = "italic",
     },
     vb:row{
       vb:text{
@@ -630,7 +637,7 @@ function build_vtogglebutton()
 
   vb.views.controls_col:add_child(vtogglebutton.view)
   table.insert(vlib_controls_ref,vtogglebutton)
-
+  table.insert(vlib_controls,vtogglebutton.id)
 
 end
 
@@ -643,11 +650,15 @@ function build_varrowbutton()
   vb.views.props_row:add_child(vb:column{
     id = "vArrowButton_properties",
     style = "panel",
-    vb:row{
-      vb:text{
-        text = "vArrowButton",
-        font = "bold",
-      },
+    vb:text{
+      text = "vArrowButton",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+The arrow-button is a toggle button which has been  
+modified to look like this common UI element]],
+      font = "italic",
     },
     vb:row{
       vb:text{
@@ -694,8 +705,8 @@ function build_varrowbutton()
     id = "vArrowButton",
     tooltip = "vArrowButton",
     midi_mapping = "Global:vArrowButton:vLib_demo",
-    width = 50,
-    height = 20,
+    --width = 50,
+    --height = 20,
     notifier = function(active)
       print("varrowbutton.notifier - active",active)
     end,
@@ -710,7 +721,7 @@ function build_varrowbutton()
 
   vb.views.controls_col:add_child(varrowbutton.view)
   table.insert(vlib_controls_ref,varrowbutton)
-
+  table.insert(vlib_controls,varrowbutton.id)
 
 end
 
@@ -737,11 +748,15 @@ function build_vtabs()
   vb.views.props_row:add_child(vb:column{
     id = "vTabs_properties",
     style = "panel",
-    vb:row{
-      vb:text{
-        text = "vTabs",
-        font = "bold",
-      },
+    vb:text{
+      text = "vTabs",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+This component allows you to toggle between views,
+using the familiar tabbed interface]],
+      font = "italic",
     },
     vb:row{
       vb:text{
@@ -891,6 +906,7 @@ function build_vtabs()
   }
   vb.views.controls_col:add_child(vtabs.view)
   table.insert(vlib_controls_ref,vtabs)
+  table.insert(vlib_controls,vtabs.id)
 
 end
 
@@ -903,11 +919,15 @@ function build_vtable()
   vb.views.props_row:add_child(vb:column{
     id = "vTable_properties",
     style = "panel",
-    vb:row{
-      vb:text{
-        text = "vTable",
-        font = "bold",
-      },
+    vb:text{
+      text = "vTable",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+A highly configurable table class that supports all the basic
+components (text, number, checkbox etc.)]],
+      font = "italic",
     },
     vb:row{
       vb:text{
@@ -1204,24 +1224,28 @@ function build_vtable()
   print(">>> vtable.data",rprint(vtable.data))
   --vtable:update()
   table.insert(vlib_controls_ref,vtable)
+  table.insert(vlib_controls,vtable.id)
 
 end
 
 -------------------------------------------------------------------------------
 
-function build_vbrowser()
-  print("build_vbrowser()")
+function build_vfilebrowser()
+  print("build_vfilebrowser()")
 
   -- class properties and methods
   vb.views.props_row:add_child(vb:column{
     id = "vFileBrowser_properties",
     style = "panel",
-
-    vb:row{
-      vb:text{
-        text = "vFileBrowser",
-        font = "bold",
-      },
+    vb:text{
+      text = "vFileBrowser",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+The file-browser looks and works much like the native counterpart,
+but is based around the vTable component]],
+      font = "italic",
     },
     vb:row{
       vb:text{
@@ -1436,6 +1460,7 @@ function build_vbrowser()
   }
   vb.views.controls_col:add_child(vbrowser.view)
   table.insert(vlib_controls_ref,vbrowser)
+  table.insert(vlib_controls,vbrowser.id)
 
   vbrowser:refresh()
 
@@ -1449,13 +1474,17 @@ function build_vtree()
   vb.views.props_row:add_child(vb:column{
     id = "vTree_properties",
     style = "panel",
-
-    vb:row{
-      vb:text{
-        text = "vTree",
-        font = "bold",
-      },
+    vb:text{
+      text = "vTree",
+      font = "bold",
     },
+    vb:text{
+      text = [[
+The tree component can display hierarchical structures,
+can load/parse XML documents and lua tables]],
+      font = "italic",
+    },
+
     vb:row{
       vb:text{
         text = "-- Properties ---------"
@@ -1636,6 +1665,7 @@ function build_vtree()
 
   vb.views.controls_col:add_child(vtree.view)
   table.insert(vlib_controls_ref,vtree)
+  table.insert(vlib_controls,vtree.id)
 
 end
 
@@ -1759,6 +1789,7 @@ function build_vlog()
 
   vb.views.controls_col:add_child(vlog.view)
   table.insert(vlib_controls_ref,vlog)
+  table.insert(vlib_controls,vlog.id)
 
 
 end
@@ -1824,6 +1855,7 @@ function build_vgraph()
 
   vb.views.controls_col:add_child(vgraph.view)
   table.insert(vlib_controls_ref,vgraph)
+  table.insert(vlib_controls,vgraph.id)
 
   -- class properties and methods
   vb.views.props_row:add_child(vb:column{
@@ -2091,6 +2123,205 @@ function build_vgraph()
 
 
 end
+
+-------------------------------------------------------------------------------
+
+function build_vpathselector()
+
+  -- class definition
+  vpathselector = vPathSelector{
+    vb = vb,
+    id = "vPathSelector",
+    width = 340,
+    height = 30,
+  }
+
+  vb.views.controls_col:add_child(vpathselector.view)
+  table.insert(vlib_controls_ref,vpathselector)
+  table.insert(vlib_controls,vpathselector.id)
+
+  -- class properties and methods
+  vb.views.props_row:add_child(vb:column{
+    id = "vPathSelector_properties",
+    style = "panel",
+    vb:row{
+      vb:text{
+        text = "vPathSelector",
+        font = "bold",
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "-- Properties ---------"
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "editable"
+      },
+      vb:checkbox{
+        id = "vPathSelector_editable",
+        notifier = function(val)
+          print("vPathSelector_editable.notifier...",val)
+          set_control_property("editable",val)
+        end
+      },
+    },
+  })
+
+end
+
+-------------------------------------------------------------------------------
+
+function build_vpopup()
+
+  -- class definition
+  vpopup = vPopup{
+    vb = vb,
+    id = "vPopup",
+    width = 20,
+    height = 20,
+    items = {
+      "Testing for long items (visible on popup?)",
+      "Followed by some empty lines",
+      "",
+      "",
+      "",
+    }
+  }
+
+  vb.views.controls_col:add_child(vpopup.view)
+  table.insert(vlib_controls_ref,vpopup)
+  table.insert(vlib_controls,vpopup.id)
+
+  -- class properties and methods
+  vb.views.props_row:add_child(vb:column{
+    id = "vPopup_properties",
+    style = "panel",
+    vb:text{
+      text = "vPopup",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+The vPopup is functionally close to the Renoise API version,
+but you can control the message shown when no items are presents]],
+      font = "italic",
+    },
+    vb:row{
+      vb:text{
+        text = "-- Properties ---------"
+      },
+    },
+    --[[
+    vb:row{
+      vb:text{
+        text = "editable"
+      },
+      vb:checkbox{
+        id = "vPopup_editable",
+        notifier = function(val)
+          print("vPopup_editable.notifier...",val)
+          set_control_property("editable",val)
+        end
+      },
+    },
+    ]]
+  })
+
+end
+
+-------------------------------------------------------------------------------
+
+function build_veditfield()
+
+  -- class definition
+  veditfield = vEditField{
+    vb = vb,
+    id = "vEditField",
+    width = 120,
+    height = 24,
+  }
+
+  vb.views.controls_col:add_child(veditfield.view)
+  table.insert(vlib_controls_ref,veditfield)
+  table.insert(vlib_controls,veditfield.id)
+
+  -- class properties and methods
+  vb.views.props_row:add_child(vb:column{
+    id = "vEditField_properties",
+    style = "panel",
+    vb:text{
+      text = "vEditField",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+vEditField is a general-purpose value-editing field, 
+inspired by 'modify' in the Advanced-Edit panel]],
+      font = "italic",
+    },
+    vb:row{
+      vb:text{
+        text = "-- Properties ---------"
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "-- Methods ---------"
+      },
+    },
+    vb:button{
+      text = "set_value() - float between 0 and 1",
+      notifier = function()
+        local cval = cNumber{
+          value = 0.5,
+          value_type = "number",
+          value_min = 0,
+          value_max = 1,
+          value_quantum = nil,
+        }
+        veditfield:set_value(cval)
+      end
+    },
+    vb:button{
+      text = "set_value() - integer between -50 and 50",
+      notifier = function()
+        local cval = cNumber{
+          value = 10,
+          value_type = "number",
+          value_min = -50,
+          value_max = 50,
+          value_quantum = 1,
+        }
+        veditfield:set_value(cval)
+      end
+    },
+    vb:button{
+      text = "set_value() - string ",
+      notifier = function()
+        local cval = cValue{
+          value = "hello world!",
+          value_type = "string",
+        }
+        veditfield:set_value(cval)
+      end
+    },
+    vb:button{
+      text = "set_value() - boolean ",
+      notifier = function()
+        local cval = cValue{
+          value = true,
+          value_type = "boolean",
+        }
+        veditfield:set_value(cval)
+      end
+    },
+
+  })
+
+end
+
 
 -------------------------------------------------------------------------------
 --[[
@@ -2530,6 +2761,18 @@ function update_properties()
     vb.views.vGraph_style_normal.value = table.find(vLib.BITMAP_STYLES,active_ctrl.style_normal)
     vb.views.vGraph_style_selected.value = table.find(vLib.BITMAP_STYLES,active_ctrl.style_selected)
     vb.views.vGraph_data.text = cString.table_to_string(active_ctrl.data,{multiline = true})
+  
+  elseif (ctrl_name == "vPathSelector") then
+
+    -- TODO
+
+  elseif (ctrl_name == "vPopup") then
+
+    -- TODO
+
+  elseif (ctrl_name == "vEditField") then
+
+    -- TODO
 
   elseif (ctrl_name == "vWaveform") then
     

@@ -40,18 +40,18 @@ end
 function vControl:request_update()
   TRACE("vControl:request_update()")
   
-  print("request_update - self",self)
-  print("request_update - self.update",self.update)
+  --print("request_update - self",self)
+  --print("request_update - self.update",self.update)
 
   if not self.update then
     return
   end
 
   if not vLib.lazy_updates then
-    print("no lazy_updates")
+    --print("no lazy_updates")
     self:update()
   else
-    print("lazy_updates - set timer")
+    --print("lazy_updates - set timer")
     if not renoise.tool():has_timer({self,self.perform_update}) then
       renoise.tool():add_timer({self,self.perform_update},10)
     end
@@ -75,9 +75,26 @@ function vControl:perform_update()
 end
 
 --------------------------------------------------------------------------------
+-- invoke this method as the last step when implementing your own method
+-- it will confirm the existence of required properties
+
+function vControl:build()
+  TRACE("vControl:build()")
+
+  if (type(self.id)=="nil") then
+    error("vLib components need unique IDs")
+  end
+
+  if (type(self.view)=="nil") then
+    error("vLib components need to define a view")
+  end
+
+end
+
+--------------------------------------------------------------------------------
 
 function vControl:update()
-  print("vControl:update() - unimplemented")
+  TRACE("vControl:update() - unimplemented")
 end
 
 --------------------------------------------------------------------------------

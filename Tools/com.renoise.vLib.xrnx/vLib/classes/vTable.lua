@@ -67,7 +67,7 @@ vTable.TABLE_MIN_W = 8
 vTable.HEADER_DEF_KEYS = {"data","col_type"}
 vTable.COLUMN_DEF_KEYS = {"key","col_width","col_type","margin"}
 
--- meta-properties of data (refactor into xDataSource)
+-- meta-properties of data
 vTable.META = {
   --ID   = "item_id",
   ICON = "item_icon",
@@ -526,15 +526,17 @@ function vTable:update()
       cell.height = get_cell_height(col_margin)
         
       if not row_data then
-        -- no data for row
+        --print("no data for row - row,col",row,col)
         cell.visible = false
         cell:set_value(nil,true)
       elseif not type(row_data[key]=="nil") then
-        -- no data for cell
+        --print("no data for cell - row,col",row,col)
         cell.visible = false
       else
+        --print("set data for cell - row,col,row_data,value",row,col,rprint(row_data),row_data[key])
         cell.visible = true
-        cell[vDataProvider.ID] = row_data.item_id
+        cell.item_id = row_data.item_id
+        --cell[vDataProvider.ID] = row_data.item_id
         cell:set_value(row_data[key])
       end
 

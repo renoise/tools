@@ -102,7 +102,7 @@ end
 -- @return renoise.Views.Rack
 
 function vDialog:create_dialog()
-  TRACE("vDialog:create_dialog()")
+  TRACE(">>> vDialog:create_dialog()")
 
   local vb = self.vb
 
