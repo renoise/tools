@@ -22,14 +22,15 @@ The tool can be triggered in a number of ways:
 * From the supplied MIDI and keyboard shortcuts (search for 'PhraseMate') 
 * By right-clicking the pattern editor/matrix  
 
-## How it works
+## The user interface 
 
-The tool has a number of distinctive operating modes:
+The tool has a large number of features, organized in a tabbed interface.  Here is a walk-through of the features offered in each tab:
 
-### Read - convert pattern data into phrases
+### Read - *convert pattern data into phrases*
 
-The input mode makes it easy to convert pattern data into phrases, and has a very flexible set of parameters.
+<img src="./manual/tab_read.png"> 
 
+The input mode makes it easy to convert pattern data into phrases, and has a very flexible set of parameters.  
 Consider the following diagram for a possible phrase-capturing workflow:
 
 <img src="./manual/collect_capture_all_replace.png"> 
@@ -42,38 +43,67 @@ Settings used:
 	Target: New instrument(s)  
 	[x] Replace notes with phrase
 
-### Write - convert phrases into pattern-data    
+### Write - *convert phrases into pattern-data*  
 
-* **Anchor to selection** - when writing to a selection, determine if the output is written relative to the top of the selection, or the top of the pattern
+<img src="./manual/tab_write.png"> 
+
+* **Anchor to selection** - determine if output is written relative to the top of the selection, or the top of the pattern
 * **Continuous paste** - when source phrase is shorter than pattern/selection, repeat in order to fill
-* **Skip muted columns** - skip note-columns when they are muted in the phrase (will also clear columns, unless mix-paste is enabled)
+* **Skip muted columns** - skip note-columns when muted in the phrase (clear columns, unless mix-paste is enabled)
 * **Expand columns** - show additional note columns if required by source phrase
 * **Expand sub-columns** - show sub-columns (VOL/PAN/DLY/FX) if required by source phrase
+* **Insert Z00 commands** - makes resulting notes ignore/not trigger phrases
 * **Mix-Paste** - attempt to keep existing content when producing output (same as Mix-Paste in the advanced edit panel)
 
-### Smart Write - auto-completing popup dialog
+### Smart Write - *auto-completing popup dialog*
 
-TODO
+<img src="./manual/smart_write.png"> 
 
+The Smart Write dialog is an auto-completing text dialog which searches through either (a) the instrument phrases or (b) phrases that are located in the 'export path'. The dialog can be launched via the associated keyboard shortcut or found in the 'Write' tab. 
+
+It's designed to be completely keyboard driven. In the picture above, I've entered "m", and the dialog responds by showing the two saved entries matching this letter. 
+
+**Keyboard shortcuts** 
+
+* While input is focused
+	* Entering text will search through phrases
+	* Pressing return will select the first matched entry (you can also use the popup to select between matches).
+	* ESC returns focus to dialog
+* While dialog is focused
+	* TAB brings focus to the text input 
+  	* Return to apply the match, using the settings specified settings in the 'Write' tab 
+	* ESC closes the dialog
  
 
-### Zxx - real-time monitoring of the pattern 
+### Zxx - *real-time monitoring of the pattern* 
+
+<img src="./manual/tab_zxx.png"> 
 
 One of the exciting features in Renoise 3.1 is the program mode for phrases. It's awesome to be able to pull up any phrase and trigger it in any key. But, less awesome is the fact that it's easy to forget those pesky Zxx commands that goes along with each note. Hence, the "insert Zxx" mode of this tool.
 
-When enabled, PhraseMate will listen for changes to the pattern and insert Zxx commands when it seems appropriate (or remove them if they are not required). **_It will only do so while you have the edit-mode enabled, and only while your selected instrument/phrase is set to program mode_**. 
+**Zxx commands are inserted when:**
+  
+* Live monitoring has been enabled (see screenshot above)
+* Edit-mode is enabled in Renoise
+* Instrument/phrase is set to program mode  
+* The instrument matches the selected one   
 
-Note that the realtime mode is experimental and has a few quirks - please see the following section with questions and answers...
 
-### Props - property panel
+### Props - *property panel*
+
+<img src="./manual/tab_props.png"> 
 
 TODO
 
-### Preset - import and export  
+### Preset - *import and export*
+
+<img src="./manual/tab_presets.png"> 
 
 TODO
 
-### Prefs - tool preferences
+### Prefs - *tool preferences*
+
+<img src="./manual/tab_prefs.png"> 
 
 TODO 
 
