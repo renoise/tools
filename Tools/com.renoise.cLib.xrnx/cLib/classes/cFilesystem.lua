@@ -10,6 +10,8 @@ Static methods for dealing with the file-system
 
 ]]
 
+require (_clibroot.."cString")
+
 class 'cFilesystem'
 
 cFilesystem.FILETYPE = {
@@ -176,7 +178,6 @@ end
 
 --------------------------------------------------------------------------------
 -- if file already exist, return a name with (number) appended to it
--- note: this is a virtual function which doesn't require I/O access 
 -- @param file_path (string)
 
 function cFilesystem.ensure_unique_filename(file_path)
@@ -453,6 +454,33 @@ function cFilesystem.load_string(file_path)
 end
 
 --------------------------------------------------------------------------------
+-- list files in a given folder
+-- @param str_path (string)
+-- @param file_ext (table)
+
+function cFilesystem.list_files(str_path,file_ext)
+
+  cFilesystem.assert_string(str_path,"str_path")
+
+  if not file_ext then
+    file_ext = {"*.*"}
+  end
+
+  if not io.exists(str_path) then
+    return false,"Can't list files, path does not exist"
+  end
+
+  local filenames = os.filenames(str_path,file_ext)
+  local rslt = {}
+  for k,v in ipairs(filenames) do
+    table.insert(rslt,v)
+  end
+  
+  return rslt
+
+end
+
+--------------------------------------------------------------------------------
 -- save string to disk
 -- @param file_path (string)
 -- @param str (string)
@@ -493,7 +521,7 @@ end
 -- iterate through folders, starting from the provided path
 -- @param str_path (string)
 -- @param callback_fn (function) return false to stop recursion
--- @param file_ext (string) 
+-- @param file_ext (table)
 -- @param level (int) 
 
 function cFilesystem.recurse(str_path,callback_fn,file_ext,level)
@@ -515,14 +543,14 @@ function cFilesystem.recurse(str_path,callback_fn,file_ext,level)
 
   local filenames = os.filenames(str_path,file_ext)
   for k,v in ipairs(filenames) do
-    --print("filenames",k,v)
+    --print("*** recurse - filenames",k,v)
     if not callback_fn(str_path,v,cFilesystem.FILETYPE.FILE) then
       return
     end
   end
   local dirnames = os.dirnames(str_path)
   for k,v in ipairs(dirnames) do
-    --print("dirnames",k,v)
+    --print("*** recurse - dirnames",k,v)
     if not callback_fn(str_path,v,cFilesystem.FILETYPE.FOLDER) then
       return
     end

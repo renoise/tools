@@ -6,17 +6,17 @@ local SLAXML = {
 	VERSION = "0.7",
 	_call = {
 		pi = function(target,content)
-			print(string.format("<?%s %s?>",target,content))
+			print (string.format("<?%s %s?>",target,content))
 		end,
 		comment = function(content)
-			print(string.format("<!-- %s -->",content))
+			print (string.format("<!-- %s -->",content))
 		end,
 		startElement = function(name,nsURI,nsPrefix)
 			                 io.write("<")
 			if nsPrefix then io.write(nsPrefix,":") end
 			                 io.write(name)
 			if nsURI    then io.write(" (ns='",nsURI,"')") end
-			                 print(">")
+			                 print (">")
 		end,
 		attribute = function(name,value,nsURI,nsPrefix)
 			                 io.write('  ')
@@ -26,10 +26,10 @@ local SLAXML = {
 			                 io.write("\n")
 		end,
 		text = function(text)
-			print(string.format("  text: %q",text))
+			print (string.format("  text: %q",text))
 		end,
 		closeElement = function(name,nsURI,nsPrefix)
-			print(string.format("</%s>",name))
+			print (string.format("</%s>",name))
 		end,
 	}
 }

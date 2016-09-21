@@ -4,7 +4,7 @@
 
 --[[--
 
-Static methods for accessing with the Renoise config file
+Static methods for accessing the Renoise config file
 .
 #
 
@@ -26,10 +26,10 @@ cConfig.xml = nil
 function cConfig.load_config()
 
   local config_fpath = cFilesystem.get_userdata_folder().."Config.xml"
-  print("config_fpath",config_fpath)
+  --print("config_fpath",config_fpath)
 
   cConfig.xml = cParseXML.load_and_parse(config_fpath)
-  print("cConfig.xml",cConfig.xml)
+  --print("cConfig.xml",cConfig.xml)
 
 end
 

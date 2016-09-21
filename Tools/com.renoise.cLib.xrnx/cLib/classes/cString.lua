@@ -19,7 +19,7 @@ class 'cString'
 -- @return table
 
 function cString.split(str, pat)
-  print("cString.split(str, pat)",str, pat)
+  TRACE("cString.split(str, pat)",str, pat)
 
    local t = {}  -- NOTE: use {n = 0} in Lua-5.0
    local fpat = "(.-)" .. pat

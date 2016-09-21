@@ -144,7 +144,7 @@ function LOG(...)
   for i = 1, n do
     result = result .. tostring(select(i, ...)) .. "\t"
   end
-  print(result)
+  print (result)
 end
 
 --------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ if (_trace_filters ~= nil) then
     -- apply filter
     for _,filter in pairs(_trace_filters) do
       if result:find(filter) then
-        print(result)
+        print (result)
         break
       end
     end

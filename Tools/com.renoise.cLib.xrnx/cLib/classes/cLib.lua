@@ -13,17 +13,8 @@ This is the core cLib class, containing a bunch of static helper methods
 
 --==============================================================================
 
--- Global variables and functions 
-
-function TRACE(...)
-  print(...)
-end
-
-function LOG(...)
-  print(...)
-end
-
---------------------------------------------------------------------------------
+require (_clibroot.."cValue")
+require (_clibroot.."cNumber")
 
 class 'cLib'
 
@@ -37,6 +28,21 @@ function cLib.unpack_args(...)
   else
     return args[1]
   end
+end
+
+--------------------------------------------------------------------------------
+-- Turn value descriptor into instance
+-- @return cNumber or cValue
+
+function cLib.create_cvalue(t)
+
+  local val = t.value or t.value_default
+  if (type(val)=="number") then
+    return cNumber(t)
+  else
+    return cValue(t)
+  end
+
 end
 
 --------------------------------------------------------------------------------
