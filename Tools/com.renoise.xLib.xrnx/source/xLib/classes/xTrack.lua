@@ -177,4 +177,25 @@ function xTrack.previous_sequencer_track(wrap_pattern)
 
 end
 
+--------------------------------------------------------------------------------
+-- obtain a specific pattern-track
+-- @return PatternTrack or nil (when failed)
+-- @return string, error message when failed
+
+function xTrack:get_pattern_track(seq_idx,track_index)
+
+  local patt_idx = rns.sequencer:pattern(seq_idx)
+  if not patt_idx then
+    return false,"Could not locate pattern"
+  end
+  local patt = rns.patterns[patt_idx]
+  local ptrack = patt:track(track_index)
+  if not ptrack then
+    return nil,"Could not locate pattern-track"
+  end
+
+  return ptrack
+
+end
+
 

@@ -68,7 +68,7 @@ function xSelection.get_pattern_track(seq_idx,trk_idx)
     start_column = 1, 
     end_line = patt.number_of_lines,
     end_track = trk_idx,
-    end_column = 12 --total_cols,
+    end_column = track.visible_note_columns + track.visible_effect_columns,
   }
 
 end

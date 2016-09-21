@@ -13,20 +13,6 @@ This is the core xLib class, containing a bunch of static helper methods
 
 --==============================================================================
 
--- Global variables and functions 
-
--- reference to song document 
--- rns = renoise.song()
-function TRACE(...)
-  print(...)
-end
-
-function LOG(...)
-  print(...)
-end
-
---------------------------------------------------------------------------------
-
 class 'xLib'
 
 xLib.COLOR_ENABLED = {0xD0,0xD8,0xD4}

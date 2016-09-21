@@ -4,7 +4,7 @@ xPhraseManager
 
 --[[--
 
-This class will assist in managing phrases, phrase mappings
+Static methods for managing phrases, phrase mappings and presets
 .
 #
 
@@ -23,16 +23,19 @@ http://forum.renoise.com/index.php/topic/26329-the-api-wishlist-thread/?p=221484
 
 class 'xPhraseManager'
 
+
+xPhraseManager.MAX_NUMBER_OF_PHRASES = 126
+
 --------------------------------------------------------------------------------
 -- Retrieve the next available phrase mapping
 -- @param instr_idx (int), index of instrument 
--- @param insert_range (int), the size of the mapping in semitones
+-- @param keymap_range (int), the size of the mapping in semitones
 -- @param keymap_offset (int), start search from this note [first, if nil]
 -- @return table{} or nil (if not able to find room)
 -- @return int, the index where we can insert
 
-function xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
-  TRACE("xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)",instr_idx,insert_range,keymap_offset)
+function xPhraseManager.get_available_slot(instr_idx,keymap_range,keymap_offset)
+  TRACE("xPhraseManager.get_available_slot(instr_idx,keymap_range,keymap_offset)",instr_idx,keymap_range,keymap_offset)
 
   assert(type(instr_idx)=="number","Expected instr_idx to be a number")
 
@@ -45,8 +48,8 @@ function xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
   if not keymap_offset then
     keymap_offset = 0
   end
-  if not insert_range then
-    insert_range = 12 
+  if not keymap_range then
+    keymap_range = 12 
   end
 
   -- find empty space from the selected phrase and upwards
@@ -72,15 +75,15 @@ function xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
       then
         begin_at = prev_end+1
         stop_at = v.note_range[1]-1
-        print(">>> found room between",begin_at,stop_at)
+        --print(">>> found room between",begin_at,stop_at)
         phrase_idx = k
         break
       else
-        print(">>> no room at",v.note_range[1],v.note_range[2])
+        --print(">>> no room at",v.note_range[1],v.note_range[2])
       end
       prev_end = v.note_range[2]
     else
-      print(">>> less than keymap_offset")
+      --print(">>> less than keymap_offset")
       local next_mapping = instr.phrase_mappings[k+1]
       if next_mapping 
         and (next_mapping.note_range[1] > keymap_offset)
@@ -98,22 +101,22 @@ function xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
     else
       phrase_idx = #instr.phrase_mappings+1
     end
-    print(">>> found begin_at",begin_at,phrase_idx)
+    --print(">>> found begin_at",begin_at,phrase_idx)
   end
   if not stop_at then
-    stop_at = begin_at + insert_range - 1
-    print(">>> found stop_at",stop_at)
+    stop_at = begin_at + keymap_range - 1
+    --print(">>> found stop_at",stop_at)
   end
 
   stop_at = math.min(119,stop_at)
 
-  if (stop_at-begin_at < insert_range) then
+  if (stop_at-begin_at < keymap_range) then
     -- another phrase appears within our range
-    insert_range = stop_at-begin_at
+    keymap_range = stop_at-begin_at
   end
   if (stop_at > max_note) then
     -- there isn't enough room on the piano
-    insert_range = max_note-prev_end-1
+    keymap_range = max_note-prev_end-1
   end
 
   -- no room for the start
@@ -121,8 +124,8 @@ function xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
     return false,"There is no more room for phrase mapping"
   end
 
-  local note_range = {begin_at,begin_at+insert_range}
-  print(">>> note_range...",rprint(note_range))
+  local note_range = {begin_at,begin_at+keymap_range}
+  --print(">>> note_range...",rprint(note_range))
 
   return note_range,phrase_idx
 
@@ -189,17 +192,38 @@ end
 
 --------------------------------------------------------------------------------
 --- Automatically add a new phrase to the specified instrument 
--- @param instr_idx (int), index of instrument 
--- @param create_keymap (bool), add mapping 
--- @param insert_range (int), size of mappings (in semitones)
--- @param keymap_offset (int), starting note (0-120)
--- @return 
---  + InstrumentPhrase, the resulting phrase object
---  + int, the phrase index
---  or nil if failed
+-- @param instr_idx (int), index of instrument [required]
+-- @param insert_at_idx (int), insert at this position [optional, default = end]
+-- @param takeover (bool), 'take over' empty phrases [optional]
+-- @param keymap_args (table), define to create keymapping [optional]
+--  keymap_range (int), size of mappings (in semitones)
+--  keymap_offset (int), starting note (0-120)
+-- @return InstrumentPhrase, the resulting phrase object
+-- @return int, the phrase index or nil if failed
 
-function xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,keymap_offset,takeover)
-  TRACE("xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,keymap_offset,takeover)",instr_idx,create_keymap,insert_range,keymap_offset,takeover)
+function xPhraseManager.auto_insert_phrase(instr_idx,insert_at_idx,takeover,keymap_args)
+  TRACE("xPhraseManager.auto_insert_phrase(instr_idx,insert_at_idx,takeover,keymap_args)",instr_idx,insert_at_idx,takeover,keymap_args)
+
+  assert(type(instr_idx)=="number")
+
+  if insert_at_idx then
+    assert(type(insert_at_idx)=="number")
+  end
+
+  if takeover then
+    assert(type(takeover)=="boolean")
+  end
+
+  local create_keymap = false
+  local keymap_range,keymap_offset
+  if keymap_args then
+    --print("keymap_args",rprint(keymap_args))
+    create_keymap = true
+    keymap_range = keymap_args.keymap_range
+    keymap_offset = keymap_args.keymap_offset
+    assert(type(keymap_range)=="number")
+    assert(type(keymap_offset)=="number")
+  end
 
   local instr = rns.instruments[instr_idx]
   if not instr then
@@ -220,35 +244,42 @@ function xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,
     end
   end
 
+  --print(">>> vphrase_idx #1",vphrase_idx)
+
   if not vphrase_idx then
     if create_keymap then
-      vphrase_range,vphrase_idx = xPhraseManager.get_available_slot(instr_idx,insert_range,keymap_offset)
+      vphrase_range,vphrase_idx = xPhraseManager.get_available_slot(instr_idx,keymap_range,keymap_offset)
       if not vphrase_range then
-        local err = "Failed to allocate a phrase (no more room left?)"
+        local err = "Failed to allocate keymapping for the phrase (not enough room)"
         return false,err
       end
-    else
-      vphrase_idx = (#instr.phrases > 0) and #instr.phrases+1 or 1
     end
   end
 
   --print(">>> vphrase_idx #2",vphrase_idx)
 
+  local phrase_map_idx = vphrase_idx
+
+  vphrase_idx = insert_at_idx and insert_at_idx
+    or (#instr.phrases > 0) and #instr.phrases+1 or 1
+
+  --print(">>> vphrase_idx #3",vphrase_idx)
+
   local phrase = nil
   if do_create then
-    if (#instr.phrases == 126) then
-      local err = "Failed to allocate a phrase (can only have up to 126 phrase per instrument)"
+    if (#instr.phrases == xPhraseManager.MAX_NUMBER_OF_PHRASES) then
+      local err = "Failed to allocate phrase (each instrument can only contain up to 126 phrases)"
       return false,err
     end
     phrase = instr:insert_phrase_at(vphrase_idx)
-    phrase:clear() -- clear default C-4 
+    --phrase:clear() -- clear default C-4 
     --print(">>> inserted phrase at",vphrase_idx,"in",instr.name)
   else
     phrase = instr.phrases[vphrase_idx]
   end
 
   if (create_keymap and renoise.API_VERSION > 4) then
-    instr:insert_phrase_mapping_at(#instr.phrase_mappings+1,phrase)
+    instr:insert_phrase_mapping_at(phrase_map_idx,phrase)
   end
   if (create_keymap or renoise.API_VERSION <= 4) then
     phrase.mapping.note_range = {
@@ -473,7 +504,7 @@ end
 -- @param prop_name (string)
 -- @param prop_value (number/string/boolean)
 
-function xPhraseManager.set_universal_phrase_property(instr_idx,phrase_idx,prop_name,prop_value)
+function xPhraseManager.set_universal_property(instr_idx,phrase_idx,prop_name,prop_value)
 
   local accepted_prop_names = {
     "key_tracking",
@@ -581,25 +612,29 @@ end
 
 --------------------------------------------------------------------------------
 -- @param mode (int), renoise.Instrument.PHRASES_xxx
+-- @param toggle (bool), makes same mode toggle between off & mode
 -- @return int or nil
 -- @return string (error message when failed)
---[[
-function xPhraseManager.set_playback_mode(mode)
-  TRACE("xPhraseManager.set_playback_mode(mode)",mode)
+
+function xPhraseManager.set_playback_mode(mode,toggle)
+  TRACE("xPhraseManager.set_playback_mode(mode,toggle)",mode,toggle)
 
   local phrase = rns.selected_phrase
   if not phrase then
     return false, "No phrase is selected"
   end
 
-  if (rns.selected_instrument.phrase_playback_mode == mode) then
-    rns.selected_instrument.phrase_playback_mode = renoise.Instrument.PHRASES_OFF
+  if toggle then
+    if (rns.selected_instrument.phrase_playback_mode == mode) then
+      rns.selected_instrument.phrase_playback_mode = renoise.Instrument.PHRASES_OFF
+    else
+      rns.selected_instrument.phrase_playback_mode = mode
+    end
   else
     rns.selected_instrument.phrase_playback_mode = mode
   end
 
 end
-]]
 
 --------------------------------------------------------------------------------
 -- locate duplicate phrases within instrument
@@ -633,3 +668,59 @@ function xPhraseManager.find_duplicates(instr)
   return duplicates
 
 end
+
+--------------------------------------------------------------------------------
+-- export indicated phrases in the instrument
+-- @return bool, true when export was succesfull
+-- @return string, error message when a problem was encountered
+-- @return table, on problem, the indices not yet processed
+
+function xPhraseManager.export_presets(folder,instr_idx,indices,overwrite,prefix)
+  TRACE("xPhraseManager.export_presets(folder,instr_idx,indices,overwrite,prefix)",folder,instr_idx,indices,overwrite,prefix)
+  --print("*** export_presets - indices",rprint(indices))
+  --print("*** export_presets - prefix",prefix)
+
+  assert(type(folder)=="string")
+  assert(type(instr_idx)=="number")
+
+  for k,v in ripairs(indices) do
+    local rslt,err = xPhrase.export_preset(folder,instr_idx,v,overwrite,prefix)
+    if err then
+      return false,err,indices
+    end
+    indices[k] = nil
+  end
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+-- import one or more phrase presets into instrument
+-- @param files (table)
+-- @param instr_idx (int)
+-- @param insert_at_idx (int)
+-- @param takeover (bool)
+-- @param keymap_args (table), see auto_insert_phrase for syntax
+-- @return bool, true when import was succesfull
+-- @return string, error message when failed
+
+function xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,keymap_args)
+  TRACE("xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,keymap_args)",files,instr_idx,insert_at_idx,takeover,keymap_args)
+
+  assert(type(files)=="table")
+  assert(type(instr_idx)=="number")
+
+  for k,v in ipairs(files) do
+
+    local phrase,phrase_idx_or_err = xPhraseManager.auto_insert_phrase(instr_idx,insert_at_idx,takeover,keymap_args)
+    if not phrase then
+      return false,phrase_idx_or_err
+    end
+
+    rns.selected_phrase_index = phrase_idx_or_err
+    renoise.app():load_instrument_phrase(v)
+
+  end
+
+end
+

@@ -8,7 +8,7 @@ _xlib_tests:insert({
 name = "cParseXML",
 fn = function()
 
-  print(">>> cParseXML: starting unit-test...")
+  print (">>> cParseXML: starting unit-test...")
 
   require (_xlibroot.."cParseXML")
 
@@ -103,21 +103,21 @@ fn = function()
     error(rslt)
   end
 
-  print("rslt",rprint(rslt))
+  print ("rslt",rprint(rslt))
 
   -- convert to document
   --[[
   
   local doc = cParseXML.to_document(rslt)
   
-  print("doc",doc)
+  print ("doc",doc)
 
   local doc_file_out = _xlibroot .. "/unit_tests/example_preferences_output.xml"
   doc:save_as(doc_file_out)
   ]]
 
 
-  print(">>> cParseXML: OK - passed all tests")
+  print (">>> cParseXML: OK - passed all tests")
 
 end
 })

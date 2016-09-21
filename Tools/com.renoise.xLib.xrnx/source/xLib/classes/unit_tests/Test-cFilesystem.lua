@@ -14,7 +14,7 @@ fn = function()
   local relative_path = "./cFilesystem_test/"
 
   local function clean_temp_files()
-    print(cFilesystem.rmdir("./cFilesystem_test/"))
+    print (cFilesystem.rmdir("./cFilesystem_test/"))
   end
 
   -- initialize
@@ -30,7 +30,7 @@ fn = function()
 
   ---------------------------------------------------------
 
-  print(">>> cFilesystem: starting unit-test...")
+  print (">>> cFilesystem: starting unit-test...")
 
   -- @ cFilesystem.get_path_parts 
   
@@ -72,7 +72,7 @@ fn = function()
   parent_folder = cFilesystem.get_parent_directory(parent_folder)
   assert(parent_folder == "C:/")
   parent_folder = cFilesystem.get_parent_directory(parent_folder)
-  print(parent_folder)
+  print (parent_folder)
   assert(parent_folder == "C:/")
 
   local parent_folder = cFilesystem.get_parent_directory(".\\Root Folder\\SubFolder\\file without extension")
@@ -203,7 +203,7 @@ Will it be the same once loaded from disk?]]
   clean_temp_files()
 
 
-  print(">>> cFilesystem: OK - passed all tests")
+  print (">>> cFilesystem: OK - passed all tests")
 
 end
 })

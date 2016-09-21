@@ -464,7 +464,7 @@ function xVoiceSorter:find_note_column(note_value,line_idx,num_lines)
           --[[
           if prev_low and (prev_low < note_value) then
             -- previous column a better match
-            print("*** do_mark_column - clear_from #B",k)
+            --print("*** do_mark_column - clear_from #B",k)
             clear_from = k
           end
           ]]
@@ -821,10 +821,10 @@ function xVoiceSorter:insert_note_run(col_idx,voice_run,line_idx)
   -- testcase: Unique III (low-high), 
 
   local shifted = self:shift_runs(notecol.note_value,source_col_idx,target_col_idx,line_idx-1) 
-  print("*** insert_note_run - shifted, line_idx,notecol.note_value",shifted,line_idx,notecol.note_value)
+  --print("*** insert_note_run - shifted, line_idx,notecol.note_value",shifted,line_idx,notecol.note_value)
   if shifted then -- check where we've got room 
     found_room,col_idx = self:find_note_column(notecol.note_value,line_idx,num_lines)
-    print("*** insert_note_run - post-shift - found_room,col_idx",found_room,col_idx)
+    --print("*** insert_note_run - post-shift - found_room,col_idx",found_room,col_idx)
     --print("*** sort_by_note - self.temp_runs (post-shift)...",rprint(self.temp_runs))
   end
   ]]
