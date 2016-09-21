@@ -32,8 +32,8 @@ function vButton:__init(...)
   self._color = args.color or {0x00,0x00,0x00}
 
   -- specify defaults
-  args.width = args.width or 50
-  args.height = args.height or 21
+  args.width = args.width or 20
+  args.height = args.height or vLib.CONTROL_H
 
   -- methods --------------------------
 

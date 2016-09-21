@@ -76,7 +76,7 @@ function vPathSelector:__init(...)
 
   vControl.__init(self,...)
 
-  self._height = args.height or vLib.LARGE_BUTTON_H
+  self._height = args.height or vLib.CONTROL_H
 
   -- done --
 

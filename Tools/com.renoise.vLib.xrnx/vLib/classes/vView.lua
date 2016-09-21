@@ -86,7 +86,6 @@ end
 --------------------------------------------------------------------------------
 
 function vView:set_width(val)
-  --print("vView:set_width(val)",val)
   self._width = val
   if val and self.view then
     self.view.width = val

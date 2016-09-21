@@ -18,7 +18,12 @@ vDialogWizard
 
 --==============================================================================
 
+require (_vlibroot.."vDialog")
+
 class 'vDialogWizard' (vDialog)
+
+vDialogWizard.SUBMIT_BT_W = 82
+vDialogWizard.LARGE_BUTTON_H = 22
 
 function vDialogWizard:__init()
   TRACE("vDialogWizard:__init()")
@@ -80,8 +85,8 @@ function vDialogWizard:build_navigation()
   self._prev_button = vb:button{
     text = "Previous",
     active = false,
-    height = vLib.LARGE_BUTTON_H,
-    width = vLib.SUBMIT_BT_W,
+    height = vDialogWizard.LARGE_BUTTON_H,
+    width = vDialogWizard.SUBMIT_BT_W,
     notifier = function()
       self:show_prev_page()
     end,
@@ -89,8 +94,8 @@ function vDialogWizard:build_navigation()
 
   self._next_button = vb:button{
     text = "Next",
-    height = vLib.LARGE_BUTTON_H,
-    width = vLib.SUBMIT_BT_W,
+    height = vDialogWizard.LARGE_BUTTON_H,
+    width = vDialogWizard.SUBMIT_BT_W,
     notifier = function()
       self:show_next_page()
     end
@@ -98,8 +103,8 @@ function vDialogWizard:build_navigation()
 
   self._cancel_button = vb:button{
     text = "Cancel",
-    height = vLib.LARGE_BUTTON_H,
-    width = vLib.SUBMIT_BT_W,
+    height = vDialogWizard.LARGE_BUTTON_H,
+    width = vDialogWizard.SUBMIT_BT_W,
     notifier = function()
       self.dialog:close()
     end

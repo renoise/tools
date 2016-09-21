@@ -32,6 +32,8 @@ require (_vlibroot.."vArrowButton")
 require (_vlibroot.."vButton")
 require (_vlibroot.."vDialog")
 require (_vlibroot.."vEditField")
+require (_vlibroot.."vTextField")
+require (_vlibroot.."vSearchField")
 require (_vlibroot.."vFileBrowser")
 require (_vlibroot.."vGraph")
 require (_vlibroot.."vLogView")
@@ -43,17 +45,25 @@ require (_vlibroot.."vToggleButton")
 require (_vlibroot.."vTree")
 --require (_vlibroot.."vWaveform")
 
+
+--------------------------------------------------------------------------------
+-- variables etc.
 --------------------------------------------------------------------------------
 
 -- workaround for http://goo.gl/UnSDnw
 local automatic_start = false
 
-local vbutton,vtogglebutton,varrowbutton,vtabs,vtable,vbrowser,vtree,vlog,vgraph,vpathselector,vpopup,veditfield --,vwaveform
+local vbutton,vtogglebutton,varrowbutton,vtabs,vtable,vbrowser,vtree,vlog,vgraph,vpathselector,vpopup,veditfield,vtextfield,vsearchfield --,vwaveform
 
 local vlib_controls = {}
 local vlib_controls_ref = {}
 
-local active_ctrl, active_ctrl_idx = nil
+local prefs = renoise.Document.create("ScriptingToolPreferences") {
+ active_ctrl_idx = 1,
+}
+
+local active_ctrl = nil
+--local active_ctrl_idx = nil
 local suppress_notifier = false
 
 local file_ext = "{'*.wav','*.txt',}"
@@ -61,15 +71,16 @@ local file_ext = "{'*.wav','*.txt',}"
 local vb = renoise.ViewBuilder()
 local dialog,dialog_content
 
+--------------------------------------------------------------------------------
+
 local function start()
-  --print("start()")
+  print("start()")
 
   if not dialog or not dialog.visible then
     if not dialog_content then
       dialog_content = build()
-      --attach_to_song()
-      local select_on_startup = table.find(vlib_controls,"vTable")
-      vb.views.control_chooser.value = select_on_startup
+      --local select_on_startup = table.find(vlib_controls,"vTable")
+      --vb.views.control_chooser.value = select_on_startup
     end
 
     local function keyhandler(dialog, key)
@@ -109,7 +120,6 @@ renoise.tool():add_keybinding{
   end
 }
 
-
 --------------------------------------------------------------------------------
 -- notifications
 --------------------------------------------------------------------------------
@@ -148,7 +158,7 @@ end
 --------------------------------------------------------------------------------
 
 function build()
-  --print("build()")
+  print("build()")
 
   -- skeleton
   local content = vb:row{
@@ -156,8 +166,6 @@ function build()
     spacing = 4,
     vb:column{
       vb:row{
-        id = "basic_row",
-        --margin = 6,
         spacing = 4,
         vb:column{
           style = "panel",
@@ -167,21 +175,50 @@ function build()
           },
           vb:chooser{
             id = "control_chooser",
-            --items = vlib_controls,
-            value = 1,
             notifier = function(idx)
-              set_active_ctrl(idx)
+              prefs.active_ctrl_idx.value = idx
             end
-          }
-        }
+          },
+        },
+        vb:column{
+          id = "basic_row",
+        
+        },
       },
+      vb:column{
+        vb:row{
+          vb:space{
+            width = 6,
+          },
+          vb:button{
+            id = "ruler_width",
+            color = {0x00,0xFF,0xFF},
+            height = 6,
+          },
+        },
+        vb:row{
+          vb:button{
+            id = "ruler_height",
+            color = {0x00,0xFF,0xFF},
+            width = 6,
+          },
+          vb:column{
+            id = "controls_col",
+            spacing = 6,
+            -- controls goes here
+          },
+        },
+
+      },
+      --[[
       vb:column{
         id = "controls_col",
         spacing = 6,
         -- controls goes here
       },
+      ]]
     },
-    vb:row{
+    vb:column{
       id = "props_row",
       -- control properties
     }
@@ -193,6 +230,8 @@ function build()
   build_varrowbutton()
   build_vbutton()
   build_veditfield()
+  build_vtextfield()
+  build_vsearchfield()
   build_vfilebrowser()
   build_vgraph()
   build_vlog()
@@ -205,10 +244,13 @@ function build()
   --build_vwaveform()
   --build_vscroll()
 
-  local ctrl_idx = vb.views.control_chooser.value
-  set_active_ctrl(ctrl_idx)
+  vb.views.control_chooser.items = vlib_controls
+  vb.views.control_chooser.value = prefs.active_ctrl_idx.value
+  --local ctrl_idx = vb.views.control_chooser.value
+  set_active_ctrl(prefs.active_ctrl_idx.value)
+  --set_active_ctrl(prefs.active_ctrl_idx.value)
 
-  vb.views["control_chooser"].items = vlib_controls
+
 
   return content
 
@@ -217,14 +259,29 @@ end
 -------------------------------------------------------------------------------
 
 function set_color_property(key,val)
+
   val = cColor.hex_string_to_value(val)
   if val then
     set_control_property(key,cColor.value_to_color_table(val))
   else
     renoise.app():show_warning("Not a valid color")
   end
+
 end
 
+-------------------------------------------------------------------------------
+
+function set_ruler_width(val)
+  print("set_ruler_width",val)
+  if not val then return end
+  vb.views["ruler_width"].width = val
+end
+
+function set_ruler_height(val)
+  print("set_ruler_height",val)
+  if not val then return end
+  vb.views["ruler_height"].height = val
+end
 
 -------------------------------------------------------------------------------
 
@@ -232,6 +289,7 @@ function set_control_property(key,val)
   --print("set_control_property(key,val)",key,val)
   
   if suppress_notifier then
+    LOG("set_control_property - suppress_notifier...")
     return
   end
 
@@ -242,7 +300,12 @@ function set_control_property(key,val)
 
 end
 
+-------------------------------------------------------------------------------
+
 function set_active_ctrl(idx)
+  --print("set_active_ctrl(idx)",idx)
+
+  --vb.views.control_chooser.value = idx
 
   -- hide all property panels
   for _,elm_id in ipairs(vlib_controls) do
@@ -252,9 +315,6 @@ function set_active_ctrl(idx)
   end
 
   active_ctrl = vlib_controls_ref[idx]
-  active_ctrl_idx = idx
-  --local ctrl_idx = vb.views.control_chooser.value
-  --print("active_ctrl",active_ctrl)
 
   if not active_ctrl then
     return
@@ -268,6 +328,7 @@ function set_active_ctrl(idx)
   update_properties()
 
 end
+
 
 -------------------------------------------------------------------------------
 
@@ -304,6 +365,7 @@ function build_vview()
         max = 1000,
         notifier = function(val)
           set_control_property("width",val)
+          set_ruler_width(val)
         end
       },
     },
@@ -318,6 +380,7 @@ function build_vview()
         max = 1000,
         notifier = function(val)
           set_control_property("height",val)
+          set_ruler_height(val)
         end
       },
     },
@@ -341,6 +404,7 @@ end
 -------------------------------------------------------------------------------
 
 function build_vcontrol()
+  print("build_vcontrol()")
 
   vb.views.basic_row:add_child(vb:column{
     style = "panel",
@@ -403,7 +467,7 @@ functionally similar to the renoise Viewbuilder version]],
       },
       vb:textfield{
         id = "vButton_text",
-        width = 250,
+        width = 120,
         --text = "",
         notifier = function(str_val)
           set_control_property("text",str_val)
@@ -416,7 +480,7 @@ functionally similar to the renoise Viewbuilder version]],
       },
       vb:textfield{
         id = "vButton_color",
-        width = 250,
+        width = 120,
         --text = "0xFF00FF",
         notifier = function(val)
           set_color_property("color",val)
@@ -429,7 +493,7 @@ functionally similar to the renoise Viewbuilder version]],
       },
       vb:textfield{
         id = "vButton_bitmap",
-        width = 250,
+        width = 120,
         --text = "",
         notifier = function()
           local str_path = vb.views.vButton_bitmap.text
@@ -465,11 +529,11 @@ functionally similar to the renoise Viewbuilder version]],
     vb = vb,
     id = "vButton",
     tooltip = "vButton",
-    text = "Some text...",
+    text = "Some text",
     midi_mapping = "Global:vButton:vLib_demo",
     bitmap = "./icons/AdvancedEdit.bmp",
     color = {0xFF,0x00,0xFF},
-    --width = 50,
+    width = 100,
     --height = 25,
     notifier = function()
       print("vbutton.notifier()")
@@ -528,7 +592,7 @@ with independant settings for the on/off state]],
       },
       vb:textfield{
         id = "vToggleButton_text_enabled",
-        width = 250,
+        width = 120,
         notifier = function(str_val)
           set_control_property("text_enabled",str_val)
         end
@@ -540,7 +604,7 @@ with independant settings for the on/off state]],
       },
       vb:textfield{
         id = "vToggleButton_text_disabled",
-        width = 250,
+        width = 120,
         notifier = function(str_val)
           set_control_property("text_disabled",str_val)
         end
@@ -552,7 +616,7 @@ with independant settings for the on/off state]],
       },
       vb:textfield{
         id = "vToggleButton_color_enabled",
-        width = 250,
+        width = 120,
         notifier = function(val)
           set_color_property("color_enabled",val)
         end
@@ -564,7 +628,7 @@ with independant settings for the on/off state]],
       },
       vb:textfield{
         id = "vToggleButton_color_disabled",
-        width = 250,
+        width = 120,
         notifier = function(val)
           set_color_property("color_disabled",val)
         end
@@ -576,7 +640,7 @@ with independant settings for the on/off state]],
       },
       vb:textfield{
         id = "vToggleButton_bitmap_enabled",
-        width = 250,
+        width = 120,
         notifier = function(val)
           set_control_property("bitmap_enabled",val)
         end
@@ -588,7 +652,7 @@ with independant settings for the on/off state]],
       },
       vb:textfield{
         id = "vToggleButton_bitmap_disabled",
-        width = 250,
+        width = 120,
         notifier = function(val)
           set_control_property("bitmap_disabled",val)
         end
@@ -1330,7 +1394,7 @@ but is based around the vTable component]],
       },
       vb:textfield{
         id = "vFileBrowser_file_ext",
-        width = 250,
+        width = 120,
         text = file_ext,
       },
       vb:button{
@@ -2179,7 +2243,7 @@ function build_vpopup()
   vpopup = vPopup{
     vb = vb,
     id = "vPopup",
-    width = 20,
+    width = 120,
     height = 20,
     items = {
       "Testing for long items (visible on popup?)",
@@ -2213,6 +2277,20 @@ but you can control the message shown when no items are presents]],
         text = "-- Properties ---------"
       },
     },
+
+    vb:row{
+      vb:text{
+        text = "value"
+      },
+      vb:valuebox{
+        id = "vPopup_value",
+        notifier = function(val)
+          print("vPopup_value.notifier...",val)
+          set_control_property("value",val)
+        end
+      },
+    },
+
     --[[
     vb:row{
       vb:text{
@@ -2266,6 +2344,9 @@ inspired by 'modify' in the Advanced-Edit panel]],
         text = "-- Properties ---------"
       },
     },
+
+    -- TODO
+
     vb:row{
       vb:text{
         text = "-- Methods ---------"
@@ -2317,6 +2398,323 @@ inspired by 'modify' in the Advanced-Edit panel]],
         veditfield:set_value(cval)
       end
     },
+
+  })
+
+end
+
+-------------------------------------------------------------------------------
+
+function build_vtextfield()
+
+  -- class definition
+  vtextfield = vTextField{
+    vb = vb,
+    id = "vTextField",
+    --width = 120,
+    --height = 20,
+    --items = {"foo","bar","baz"},
+    placeholder = "Your text here...",
+    --popup = true,
+    auto_size = true,
+    --font = "normal",
+    style = "strong",
+  }
+  vtextfield.edit_mode_observable:add_notifier(function()
+    print("vtextfield.edit_mode_observable fired...")
+    update_properties()
+  end)
+  vtextfield.text_observable:add_notifier(function()
+    print("vtextfield.text_observable fired...")
+    --update_properties()
+  end)
+
+  vb.views.controls_col:add_child(vtextfield.view)
+  table.insert(vlib_controls_ref,vtextfield)
+  table.insert(vlib_controls,vtextfield.id)
+
+  -- class properties and methods
+  vb.views.props_row:add_child(vb:column{
+    id = "vTextField_properties",
+    style = "panel",
+    vb:text{
+      text = "vTextField",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+vTextField is a text-input with support for 'placeholder' text,
+and the ability to resize/fit to the contained text]],
+      font = "italic",
+    },
+    vb:row{
+      vb:text{
+        text = "-- Properties ---------"
+      },
+    },
+
+    --vb:row{
+      --vb:text{
+        --text = "align"
+      --},
+      --vb:popup{
+        --id = "vTextField_align",
+        --width = 120,
+        ----text = "",
+        --items = vTextField.ALIGN,
+        --notifier = function(idx)
+          --local align = vTextField.ALIGN[idx]
+          --set_control_property("align",align)
+        --end
+      --},
+    --},
+
+    vb:row{
+      vb:text{
+        text = "font"
+      },
+      vb:popup{
+        id = "vTextField_font",
+        width = 120,
+        --text = "",
+        items = vTextField.FONT,
+        notifier = function(idx)
+          local font = vTextField.FONT[idx]
+          set_control_property("font",font)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "style"
+      },
+      vb:popup{
+        id = "vTextField_style",
+        width = 120,
+        --text = "",
+        items = vTextField.STYLE,
+        notifier = function(idx)
+          local font = vTextField.STYLE[idx]
+          set_control_property("style",font)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "text"
+      },
+      vb:textfield{
+        id = "vTextField_text",
+        width = 120,
+        notifier = function(str_val)
+          set_control_property("text",str_val)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "placeholder"
+      },
+      vb:textfield{
+        id = "vTextField_placeholder",
+        width = 120,
+        --text = "",
+        notifier = function(str_val)
+          set_control_property("placeholder",str_val)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "edit_mode"
+      },
+      vb:checkbox{
+        id = "vTextField_edit_mode",
+        value = true,
+        notifier = function(val)
+          set_control_property("edit_mode",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "auto_size"
+      },
+      vb:checkbox{
+        id = "vTextField_auto_size",
+        value = true,
+        notifier = function(val)
+          set_control_property("auto_size",val)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "-- Methods ---------"
+      },
+    },
+
+
+  })
+
+end
+
+
+
+-------------------------------------------------------------------------------
+
+function build_vsearchfield()
+
+  -- class definition
+  vsearchfield = vSearchField{
+    vb = vb,
+    id = "vSearchField",
+    width = 120,
+    --height = 20,
+    --items = {"foo","bar","baz"},
+    placeholder = "Search...",
+    --popup = true,
+    --edit_mode = false,
+  }
+  vsearchfield.edit_mode_observable:add_notifier(function()
+    print("vsearchfield.edit_mode_observable fired...")
+  end)
+  vsearchfield.text_observable:add_notifier(function()
+    print("vsearchfield.text_observable fired...")
+    suppress_notifier = true
+    vb.views["vSearchField_text"].text = vsearchfield.text
+    suppress_notifier = false
+  end)
+  vsearchfield.selected_index_observable:add_notifier(function()
+    print("vsearchfield.selected_index_observable fired...")
+    --update_properties()
+    suppress_notifier = true
+    vb.views["vSearchField_selected_index"].value = vsearchfield.selected_index
+    suppress_notifier = false
+
+  end)
+
+  vb.views.controls_col:add_child(vsearchfield.view)
+  table.insert(vlib_controls_ref,vsearchfield)
+  table.insert(vlib_controls,vsearchfield.id)
+
+  -- class properties and methods
+  vb.views.props_row:add_child(vb:column{
+    id = "vSearchField_properties",
+    style = "panel",
+    vb:text{
+      text = "vSearchField",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+vSearchField is a text-input that allows you to search 
+among a number of pre-defined entries]],
+      font = "italic",
+    },
+    vb:row{
+      vb:text{
+        text = "-- Properties ---------"
+      },
+    },
+
+    vb:button{
+      text = 'items = {}',
+      notifier = function()
+        vsearchfield.items = {}
+      end
+    },
+
+    vb:button{
+      text = 'items = {"foo","bar","baz"}',
+      notifier = function()
+        vsearchfield.items = {"foo","bar","baz"}
+      end
+    },
+
+    vb:button{
+      text = 'items = {"fooA","fooB","fooC","barA","barB","baz 1","baz 2"}',
+      notifier = function()
+        vsearchfield.items = {"fooA","fooB","fooC","barA","barB","baz 1","baz 2"}
+      end
+    },
+
+    vb:row{
+      vb:text{
+        text = "text"
+      },
+      vb:textfield{
+        id = "vSearchField_text",
+        width = 120,
+        notifier = function(str_val)
+          set_control_property("text",str_val)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "placeholder"
+      },
+      vb:textfield{
+        id = "vSearchField_placeholder",
+        width = 120,
+        --text = "",
+        notifier = function(str_val)
+          set_control_property("placeholder",str_val)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "selected_index"
+      },
+      vb:valuebox{
+        id = "vSearchField_selected_index",
+        notifier = function(val)
+          set_control_property("selected_index",val)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "popup"
+      },
+      vb:checkbox{
+        id = "vSearchField_popup",
+        value = true,
+        notifier = function(val)
+          set_control_property("popup",val)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "edit_mode"
+      },
+      vb:checkbox{
+        id = "vSearchField_edit_mode",
+        value = true,
+        notifier = function(val)
+          set_control_property("edit_mode",val)
+        end
+      },
+    },
+
+    vb:row{
+      vb:text{
+        text = "-- Methods ---------"
+      },
+    },
+
 
   })
 
@@ -2682,15 +3080,28 @@ end
 function update_properties()
   --print("update_properties()")
 
-  local ctrl_name = vlib_controls[active_ctrl_idx]
-  print("ctrl_name",ctrl_name)
-  print("active_ctrl.width",active_ctrl.width)
-  print("active_ctrl.height",active_ctrl.height)
+  local ctrl_name = vlib_controls[prefs.active_ctrl_idx.value]
+  print("*** update_properties - ctrl_name",ctrl_name)
+  --print("active_ctrl.width",active_ctrl.width)
+  --print("active_ctrl.height",active_ctrl.height)
+
+  -- vView ----------------------------
 
   vb.views.vView_visible.value = active_ctrl.visible
-  if active_ctrl.width then vb.views.vView_width.value = active_ctrl.width end
-  if active_ctrl.height then vb.views.vView_height.value = active_ctrl.height end
+  
+  if active_ctrl.width then 
+    vb.views.vView_width.value = active_ctrl.width 
+    set_ruler_width(active_ctrl.width)
+  end
+  
+  if active_ctrl.height then 
+    vb.views.vView_height.value = active_ctrl.height 
+    set_ruler_height(active_ctrl.height)
+  end
+  
   vb.views.vView_tooltip.value = active_ctrl.tooltip or ""
+
+  -- vControl -------------------------
 
   vb.views.vControl_active.value = active_ctrl.active
   vb.views.vControl_midi_mapping.text = active_ctrl.midi_mapping or ""
@@ -2740,10 +3151,8 @@ function update_properties()
 
     vb.views.vFileBrowser_num_rows.value = active_ctrl.num_rows
     vb.views.vFileBrowser_path.text = active_ctrl.path
-    vb.views.vFileBrowser_file_ext.text = 
-      cString.table_to_string(active_ctrl.file_ext)
-    vb.views.vFileBrowser_file_types.text =   
-      cString.table_to_string(active_ctrl.file_types,{multiline = true})
+    vb.views.vFileBrowser_file_ext.text = cString.table_to_string(active_ctrl.file_ext)
+    vb.views.vFileBrowser_file_types.text = cString.table_to_string(active_ctrl.file_types,{multiline = true})
 
   elseif (ctrl_name == "vTree") then
 
@@ -2768,11 +3177,32 @@ function update_properties()
 
   elseif (ctrl_name == "vPopup") then
 
-    -- TODO
+    vb.views.vPopup_value.value = active_ctrl.value
 
   elseif (ctrl_name == "vEditField") then
 
     -- TODO
+
+  elseif (ctrl_name == "vTextField") then
+
+    vb.views.vTextField_text.value = active_ctrl.text
+    vb.views.vTextField_placeholder.text = active_ctrl.placeholder
+    vb.views.vTextField_edit_mode.value = active_ctrl.edit_mode
+    vb.views.vTextField_auto_size.value = active_ctrl.auto_size
+    vb.views.vTextField_font.value = table.find(vTextField.FONT,active_ctrl.font)
+    vb.views.vTextField_style.value = table.find(vTextField.STYLE,active_ctrl.style)
+
+  elseif (ctrl_name == "vSearchField") then
+
+    vb.views.vSearchField_text.value = active_ctrl.text
+    vb.views.vSearchField_selected_index.value = active_ctrl.selected_index
+    vb.views.vSearchField_placeholder.text = active_ctrl.placeholder
+    vb.views.vSearchField_edit_mode.value = active_ctrl.edit_mode
+    --vb.views.vSearchField_auto_size.value = active_ctrl.auto_size
+    --vb.views.vSearchField_font.value = table.find(vTextField.FONT,active_ctrl.font)
+    --vb.views.vSearchField_style.value = table.find(vTextField.STYLE,active_ctrl.style)
+    vb.views.vSearchField_popup.value = active_ctrl.popup
+
 
   elseif (ctrl_name == "vWaveform") then
     
@@ -2789,4 +3219,14 @@ function update_properties()
   end
 
 end
+
+--------------------------------------------------------------------------------
+-- preferences
+--------------------------------------------------------------------------------
+
+prefs.active_ctrl_idx:add_notifier(function()
+  set_active_ctrl(prefs.active_ctrl_idx.value)
+end)
+
+renoise.tool().preferences = prefs
 

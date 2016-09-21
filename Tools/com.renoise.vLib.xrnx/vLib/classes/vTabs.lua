@@ -10,6 +10,7 @@ vTabs
 
 --]]
 
+require (_vlibroot.."vControl")
 
 class 'vTabs' (vControl)
 

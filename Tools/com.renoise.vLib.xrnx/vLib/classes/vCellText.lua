@@ -2,6 +2,9 @@
 vCellText
 ============================================================================]]--
 
+
+require (_vlibroot.."helpers/vMetrics")
+
 class 'vCellText' (vCell)
 
 --------------------------------------------------------------------------------
@@ -103,6 +106,7 @@ function vCellText:get_text()
 end
 
 function vCellText:set_text(str)
+
   self._text = str
   local str = self._text
   if (type(str)== "nil") then
@@ -118,8 +122,12 @@ function vCellText:set_text(str)
     end
   end
   local text_elm = self.vb.views[self.text_elm_id]
+
+  text_elm.tooltip = str -- full length text
+  str = vMetrics.fit_text(str,self._width,"normal")
   text_elm.text = str
 	vCell.update(self)
+
 end
 
 --------------------------------------------------------------------------------

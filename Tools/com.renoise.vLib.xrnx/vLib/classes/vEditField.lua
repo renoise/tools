@@ -46,20 +46,22 @@ vEditField.BOOLEAN_OPS = {
 
 vEditField.NUMBER_OPS = {
   vEditField.OPERATOR.SET,
-  --vEditField.OPERATOR.ADD,
-  --vEditField.OPERATOR.SUB,
-  --vEditField.OPERATOR.MUL,
-  --vEditField.OPERATOR.DIV,
+  vEditField.OPERATOR.ADD,
+  vEditField.OPERATOR.SUB,
+  vEditField.OPERATOR.MUL,
+  vEditField.OPERATOR.DIV,
 }
 
 --------------------------------------------------------------------------------
 
 function vEditField:__init(...)
+  TRACE("vEditField:__init()")
 
 	local args = cLib.unpack_args(...)
 
   --assert(type(args.value)~="nil")
 
+  -- cValue,cNumber
   self.value = property(self.get_value,self.set_value)
   self._value = args.value or {value=0}
 
@@ -70,9 +72,15 @@ function vEditField:__init(...)
 
   self.vb_ops = nil
   self.vb_valuefield = nil
-  self.vb_integerfield = nil
-  self.vb_textfield = nil
+  self.vb_valuebox = nil
+  self.vb_popup = nil
   self.vb_checkbox = nil
+  self.vb_checkbox_label = nil
+  self.vb_textfield = nil
+
+  self.vb_result = nil
+  self.vb_valuebox_operator = nil
+  self.vb_value_result = nil
 
   self.value_tonumber = function(val) return nil end
   self.value_tostring = function(val) return nil end
@@ -93,39 +101,44 @@ end
 --------------------------------------------------------------------------------
 
 function vEditField:build()
+  TRACE("vEditField:build()")
 
   local vb = self.vb
 
   self.vb_ops = vb:popup{
     items = {},    
-    --width = PhraseMateUI.UI_BATCH_OPERATOR_W,
     notifier = function(idx)
-      local op_name = self.vb_ops[idx]
+      local op_name = self.vb_ops.items[idx]
+      --print("op_name",op_name)
       local operator_idx = table.find(vEditField.OPERATORS,op_name)
+      --print("operator_idx",operator_idx)
       self:set_operator(operator_idx)
+      self:request_update()
     end
   }
 
+  -- show floating point value
   self.vb_valuefield = vb:valuefield{
     visible = false,
+    tonumber = function(val)
+      return self.value_tonumber(val)
+    end,
+    tostring = function(val) 
+      return self.value_tostring(val)
+    end,
     notifier = function(val)
       self._value.value = val
     end
   }
   
+  -- show integer value
   self.vb_valuebox = vb:valuebox{
     visible = false,
     tonumber = function(val)
-      print("editfield tonumber",val)
-      if self.value_tonumber then
-        return self.value_tonumber(val)
-      end
+      return self.value_tonumber(val)
     end,
     tostring = function(val) 
-      print("editfield tostring",val)
-      if self.value_tostring then
-        return self.value_tostring(val)
-      end
+      return self.value_tostring(val)
     end,
     notifier = function(val)
       self._value.value = val
@@ -150,6 +163,7 @@ function vEditField:build()
     visible = false,
   }
 
+  -- show text value
   self.vb_textfield = vb:textfield{
     visible = false,
     notifier = function(val)
@@ -157,12 +171,79 @@ function vEditField:build()
     end
   }
 
+  -- integer operators 
+  self.vb_valuebox_operator = vb:valuebox{
+    value = 1,
+    min = 1,
+    max = 512,
+    notifier = function(val)
+      local rslt = self:update_result()
+      --print("vb_valuebox_operator.notifier rslt",rslt)
+    end
+  }
+
+  -- float operators
+  self.vb_valuefield_operator = vb:valuefield{
+    value = 0,
+    min = 0,
+    max = 512,
+    tonumber = function(val)
+      --print("vb_valuefield_operator.tonumber",val,type(val))
+      --[[
+      return tonumber(val)
+      ]]
+      val = tonumber(val)
+      if not val then
+        return nil
+      end
+      if self._value.value_factor 
+        and (self._operator == vEditField.OPERATOR.ADD) 
+        or (self._operator == vEditField.OPERATOR.SUB) 
+      then
+        return val/self._value.value_factor
+      else
+        return val
+      end
+    end,
+    tostring = function(val) 
+      --print("vb_valuefield_operator.tostring",val)
+      --[[
+      return tostring(val)
+      ]]
+      if self._value.value_factor 
+        and (self._operator == vEditField.OPERATOR.ADD) 
+        or (self._operator == vEditField.OPERATOR.SUB) 
+      then
+        return tostring(val*self._value.value_factor)
+      else
+        return tostring(val)
+      end
+    end,
+    notifier = function(val)
+      local rslt = self:update_result()
+      --print("vb_valuefield_operator.notifier rslt",rslt)
+    end
+  }
+
+  self.vb_value_result = vb:text{}
+
+  self.vb_result = vb:row{
+    self.vb_valuebox_operator,
+    self.vb_valuefield_operator,
+    vb:text{
+      text = "=",
+      font = "mono",
+    },
+    self.vb_value_result,
+  }
+
   self.view = vb:row{
     id = self.id,
     --style = "panel",
     self.vb_ops,
-    self.vb_valuefield,
     self.vb_valuebox,
+    self.vb_result,
+    self.vb_valuefield,
     self.vb_popup,
     self.vb_checkbox,
     self.vb_checkbox_label,
@@ -178,6 +259,7 @@ end
 -- @param cval (cValue)
 
 function vEditField:update()
+  TRACE("vEditField:update()")
 
   self.vb_valuefield.visible = false
   self.vb_valuebox.visible = false
@@ -189,36 +271,121 @@ function vEditField:update()
   local ops = self:get_type_ops()
   --print("ops",rprint(ops))
 
-  if (type(self._value.value) == "boolean") then
-    self.vb_checkbox.visible = true
-    self.vb_checkbox_label.visible = true
-  elseif (type(self._value.value) == "string") then
-    self.vb_textfield.visible = true
-  elseif (type(self._value.value) == "number") then
-    if (self._value.value_quantum == 1) then
-      if self._value.value_enums then
-        self.vb_popup.visible = true
+  if (self._operator == vEditField.OPERATOR.SET) then
+    self.vb_result.visible = false
+    if (type(self._value.value) == "boolean") then
+      self.vb_checkbox.visible = true
+      self.vb_checkbox_label.visible = true
+    elseif (type(self._value.value) == "string") then
+      self.vb_textfield.visible = true
+    elseif (type(self._value.value) == "number") then
+      if (self._value.value_quantum == 1) then
+        if self._value.value_enums then
+          self.vb_popup.visible = true
+        else
+          self.vb_valuebox.visible = true
+        end
       else
-        self.vb_valuebox.visible = true
+        self.vb_valuefield.visible = true
       end
     else
-      self.vb_valuefield.visible = true
+      error("Unsupported value-type")
     end
+
   else
-    error("Unsupported value-type")
+    self.vb_result.visible = true
+    local is_integer = (self._value.value_quantum == 1) 
+    self.vb_valuebox_operator.visible = is_integer
+    self.vb_valuefield_operator.visible = not is_integer
   end
+
 
   --print("vEditField.NUMBER_OPS",rprint(vEditField.NUMBER_OPS))
 
+
+  -- update the operator popup 
   local str_ops = {}
   for k,v in ipairs(ops) do
     table.insert(str_ops,vEditField.OPERATORS[v])
   end
-
   self.vb_ops.items = str_ops
+  --print("str_ops",rprint(str_ops))
+
+  local op_name = vEditField.OPERATORS[self._operator]
+  --print("op_name",op_name)
+  local operator_idx = table.find(self.vb_ops.items,op_name)
+  --print("operator_idx",operator_idx)
+  self.vb_ops.value = operator_idx or vEditField.OPERATOR.SET
+
 
   self:set_height(self._height)
   self:set_width(self._width)
+
+  self:update_result()
+
+end
+
+
+--------------------------------------------------------------------------------
+-- display 'preview' of value 
+
+function vEditField:update_result()
+  TRACE("vEditField:update_result()")
+
+  if (self._operator == vEditField.OPERATOR.SET) then
+    return
+  end
+
+  --print("self:get_result()",self:get_result(),type(self:get_result()))
+  --print("self:value_tostring()",self.value_tostring)
+  self.vb_value_result.text = self.value_tostring(self:get_result())
+
+end
+
+--------------------------------------------------------------------------------
+-- @return value (with the current operator applied...)
+
+function vEditField:get_result()
+  TRACE("vEditField:get_result()")
+
+  -- work on copy 
+  -- TODO other value-types
+  local rslt = cNumber(self._value)
+  --print("*** get_result - rslt",rslt)
+
+  local operator_val = self.vb_valuebox_operator.visible 
+    and self.vb_valuebox_operator.value 
+    or self.vb_valuefield_operator.value
+
+  --print("operator_val",operator_val)
+
+  if (self._operator == vEditField.OPERATOR.SET) then
+  elseif (self._operator == vEditField.OPERATOR.ADD) then
+    rslt:add(operator_val)
+  elseif (self._operator == vEditField.OPERATOR.SUB) then
+    rslt:subtract(operator_val)
+  elseif (self._operator == vEditField.OPERATOR.MUL) then
+    rslt:multiply(operator_val)
+  elseif (self._operator == vEditField.OPERATOR.DIV) then
+    rslt:divide(operator_val)
+  end
+
+  return rslt.value
+
+end
+
+--------------------------------------------------------------------------------
+-- apply operator to value
+
+function vEditField:apply()
+  TRACE("vEditField:apply()")
+
+  if (self._operator == vEditField.OPERATOR.SET) then
+    return -- nothing to do
+  end
+
+  self.value.value = self:get_result()
+  self:request_update()
 
 end
 
@@ -227,6 +394,7 @@ end
 -- @return table
 
 function vEditField:get_type_ops()
+  TRACE("vEditField:get_type_ops()")
 
   if (type(self._value.value) == "boolean") then
     return vEditField.BOOLEAN_OPS
@@ -245,11 +413,9 @@ function vEditField:set_value(cval)
   TRACE("vEditField:set_value(cval)",cval)
 
   --print("cval",rprint(cval))
-
   self._value = cLib.create_cvalue(cval)
-
   --print("self._value",self._value)
-  --print("self._value.value_type",self._value.value_type)
+  --print("self._value.value_type",type(self._value.value),self._value.value)
 
   if (type(self._value.value) == "boolean") then
     self.vb_checkbox.value = self._value.value
@@ -257,6 +423,10 @@ function vEditField:set_value(cval)
   elseif (type(self._value.value) == "string") then
     self.vb_textfield.text = self._value.value
   elseif (type(self._value.value) == "number") then
+
+    local display_val = self._value.zero_based and self._value.value-1 or self._value.value
+    --print(">>> display_val",display_val)
+
     if self._value.value_enums then
       self.vb_popup.items = self._value.value_enums
       self.vb_popup.value = self._value.value
@@ -266,23 +436,37 @@ function vEditField:set_value(cval)
     if self._value.value_tonumber then
       self.value_tonumber = self._value.value_tonumber
     else
-      self.value_tonumber = function()
-        return self._value.value
+      self.value_tonumber = function(val)
+        --print("value_tonumber val",val)
+        return val
       end
     end
     if self._value.value_tostring then
       self.value_tostring = self._value.value_tostring
     else
-      self.value_tostring = function()
-        return ("%d"):format(self._value.value)
+      self.value_tostring = function(val)
+        --print("value_tostring val",val)
+        if (self._value.value_quantum == 1) then
+          return ("%d"):format(val)
+        else
+          return ("%.4f"):format(val)
+        end
       end
     end
-    self.vb_valuebox.value = self._value.value
+    self.vb_valuebox.value = display_val
     self.vb_valuefield.min = self._value.value_min
     self.vb_valuefield.max = self._value.value_max
-    self.vb_valuefield.value = self._value.value
+    self.vb_valuefield.value = display_val
   else
     error("Unsupported value-type")
+  end
+
+  -- fallback to SET operator?
+  local ops = self:get_type_ops()
+  local str_op = vEditField.OPERATORS[vEditField.OPERATOR.SET]
+  --print("str_op",str_op)
+  if not table.find(self.vb_ops.items,str_op) then
+    self:set_operator(vEditField.OPERATOR.SET)
   end
 
   self:request_update()
@@ -292,6 +476,7 @@ end
 --------------------------------------------------------------------------------
 
 function vEditField:get_value()
+  TRACE("vEditField:get_value()")
 
   return self._value
 
@@ -301,19 +486,32 @@ end
 -- @param val (vEditField.OPERATOR)
 
 function vEditField:set_operator(val)
+  TRACE("vEditField:set_operator(val)",val)
 
   assert(type(val)=="number")
-  if not vEditField.OPERATOR[val] then
-    error("Unsupported operator")
-  end
 
   self._operator = val
+
+  if (val == vEditField.OPERATOR.SET) then
+
+  elseif (val == vEditField.OPERATOR.ADD) 
+    or (val == vEditField.OPERATOR.SUB) 
+  then
+    self.vb_valuebox_operator.value = 10
+  elseif (val == vEditField.OPERATOR.MUL) 
+    or (val == vEditField.OPERATOR.DIV) 
+  then
+    self.vb_valuebox_operator.value = 2
+  end
+
+  --self:request_update()
 
 end
 
 --------------------------------------------------------------------------------
 
 function vEditField:get_operator()
+  TRACE("vEditField:get_operator()")
 
   return self._operator
 
@@ -321,7 +519,23 @@ end
 
 --------------------------------------------------------------------------------
 
+function vEditField:get_operator_value()
+  
+  if (self._operator ~= vEditField.OPERATOR.SET) then
+    if self.vb_valuebox_operator.visible then
+      return self.vb_valuebox_operator.value
+    elseif self.vb_valuefield_operator.visible then
+      return self.vb_valuefield_operator.value
+    end
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
 function vEditField:set_width(val)
+  TRACE("vEditField:set_width()")
 
   local popup_w = 50
   local ctrl_w = val - popup_w
@@ -339,6 +553,7 @@ end
 --------------------------------------------------------------------------------
 
 function vEditField:set_height(val)
+  TRACE("vEditField:set_height()")
 
   self.vb_ops.height = val
   self.vb_valuefield.height = val
@@ -354,6 +569,7 @@ end
 --------------------------------------------------------------------------------
 
 function vEditField:set_active(val)
+  TRACE("vEditField:set_active()")
 
   self.vb_ops.active = val
   self.vb_valuefield.active = val

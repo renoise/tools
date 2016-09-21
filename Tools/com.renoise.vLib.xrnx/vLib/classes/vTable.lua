@@ -9,7 +9,6 @@ vTable
 --    __row_style : a valid Viewbuilder.Rack style property
 --
 
-
 require (_vlibroot.."vControl")
 require (_vlibroot.."vScrollbar")
 require (_vlibroot.."vCell")
@@ -22,7 +21,7 @@ require (_vlibroot.."vCellValueBox")
 require (_vlibroot.."vCellTextField")
 require (_vlibroot.."helpers/vDataProvider")
 require (_vlibroot.."helpers/vVector")
-
+require (_vlibroot..'helpers/vSelection')
 
 class 'vTable' (vControl)
 
@@ -130,6 +129,13 @@ function vTable:__init(...)
   self.row_offset = property(self.get_row_offset,self.set_row_offset)
   self._row_offset = 0
 
+  --- vSelection
+  self.selection = vSelection()
+
+  --- (bool) when true, setting index can cause row_offset to follow
+  self.follow_row = property(self.get_follow_row,self.set_follow_row)
+  self._follow_row = args.follow_row or true
+
   --- (function) define this to perform post-update actions,
   -- such as custom row highlighting, tooltips etc.
   -- @param elm (vTable)
@@ -196,13 +202,12 @@ end
 function vTable:set_data(data)
   TRACE("vTable:set_data(data)",data)
 
+  local row_offset = self._row_offset
   self.dataprovider:set_data(data)
+  self.selection.num_items = #data
+  self:set_row_offset(row_offset) 
 
-  self:set_row_offset(0) 
   self:update_scrollbar()
-  self.scrollbar:set_position(0)
-  --self:update()
-  self:request_update()
 
 end
 
@@ -246,6 +251,7 @@ function vTable:build()
     self.view = vb:row{
       id = self.id,
       style = "plain",
+      --style = "panel",
       vb:column{
         style = self.table_style,
         vb:space{
@@ -551,6 +557,7 @@ function vTable:update()
       self:set_height(self:get_height())
     end
   end
+    vControl.set_width(self,self._width)
 
   -- callback func --------------------
 
@@ -973,8 +980,20 @@ end
 function vTable:set_row_offset(val)
   TRACE("vTable:set_row_offset(val)",val)
 
-  self._row_offset = math.max(0,val) 
+  --print("set_row_offset #A",val)
+
+  local data_count = #self.data
+
+  if (data_count < self._num_rows) then
+    self._row_offset = 0
+  else
+    self._row_offset = math.max(0,val) 
+  end
+
+  --print("set_row_offset #B",self._row_offset)
+
   self:request_update()
+
 end
 
 function vTable:get_row_offset()

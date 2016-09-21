@@ -2,6 +2,7 @@
 vWaveform 
 ============================================================================]]--
 --[[
+
   Waveform visulation made simple
   
   Introduces two extra display modes, suitable for stereo samples:
@@ -32,8 +33,9 @@ vWaveform
 
 --==============================================================================
 
-class 'vWaveform' (vGraph)
+require (_vlibroot.."vGraph")
 
+class 'vWaveform' (vGraph)
 
 function vWaveform:__init(...)
   TRACE("vWaveform:__init()")

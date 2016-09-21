@@ -54,12 +54,6 @@ vLib.BITMAP_STYLES = {
 --- (number), standard height for controls
 vLib.CONTROL_H = 18
 
---- (number), height for medium-large controls
-vLib.LARGE_BUTTON_H = 22
-
--- ??? too specific
-vLib.SUBMIT_BT_W = 82
-
 --------------------------------------------------------------------------------
 --- generate a unique string that you is used as viewbuilder id for widgets
 -- (avoids clashes in names between multiple instances of the same widget)

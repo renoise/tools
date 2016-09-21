@@ -44,8 +44,8 @@ function vArrowButton:__init(...)
   self.flipped_observable = renoise.Document.ObservableBoolean(args.flipped or true)
 
   -- override default value
-  args.width = args.width or 18
-  args.height = args.height or 18
+  args.width = args.width or vLib.CONTROL_H
+  args.height = args.height or vLib.CONTROL_H
   args.color_enabled = vLib.COLOR_SELECTED
   args.color_disabled = vLib.COLOR_NORMAL
 
@@ -62,7 +62,7 @@ end
 --------------------------------------------------------------------------------
 --[[
 function vArrowButton:update()
-  print("vArrowButton:update()")
+  TRACE("vArrowButton:update()")
 
   vToggleButton.update(self)
 

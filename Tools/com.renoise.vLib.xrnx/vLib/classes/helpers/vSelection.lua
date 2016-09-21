@@ -28,6 +28,11 @@ vSelection.SELECT_MODE = {
   MULTIPLE = 2, 
 }
 
+vSelection.ORIENTATION = {
+  HORIZONTAL = 1,   
+  VERTICAL = 2, 
+}
+
 function vSelection:__init(...)
   TRACE("vSelection:__init(...)",...)
 
@@ -71,6 +76,9 @@ function vSelection:__init(...)
   --- (ObservableBang), fired on double-press 
   -- note: use "self.last_selected_index" to obtain the item
   self.doublepress_observable = renoise.Document.ObservableBang()
+
+  -- vSelection.ORIENTATION, affects which arrow keys are handled
+  self.orientation = args.orientation or vSelection.ORIENTATION.VERTICAL
 
   -- initialize --
 
@@ -218,11 +226,75 @@ end
 -- @return int (index)
 
 function vSelection:contains_index(idx)
+  TRACE("vSelection:contains_index(idx)",idx)
 
   local values = table.values(self._indices)
   return table.find(values,idx)
 
 end
+
+--------------------------------------------------------------------------------
+-- select next item 
+
+function vSelection:select_previous()
+  TRACE("vSelection:select_previous()")
+
+  --print("*** select_previous - self.index",self.index)
+
+  if self.index 
+    and (self.index > 1)
+  then
+    self:set_index(self.index-1)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function vSelection:select_next()
+  TRACE("vSelection:select_next()")
+
+  --print("*** select_next - self.index",self.index)
+  --print("*** select_next - self.num_items",self.num_items)
+
+  if self.index and self.num_items
+    and (self.index < self.num_items)
+  then
+    self:set_index(self.index+1)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- TODO: 
+--  * support modifier keys (multi-select only)
+--  * page up/down, home/end
+-- @return key (table) for unhandled keys
+
+function vSelection:keyhandler(key)
+  TRACE("vSelection:keyhandler(key)",key)
+
+  if (key.modifiers == "") then
+
+    if (self.orientation == vSelection.ORIENTATION.VERTICAL) then
+      if (key.name == "up") then
+        self:select_previous()
+      elseif (key.name == "down") then
+        self:select_next()
+      end
+    elseif (self.orientation == vSelection.ORIENTATION.HORIZONTAL) then
+      if (key.name == "left") then
+        self:select_previous()
+      elseif (key.name == "right") then
+        self:select_next()
+      end
+    else
+      error("Unsupported orientation")
+    end
+  end
+
+end
+
 
 --------------------------------------------------------------------------------
 -- Getters and setters 
@@ -317,7 +389,9 @@ function vSelection:set_index(idx)
     end
   end
 
+  --print("about to set self.index_observable.value",idx)
   self.index_observable.value = idx
+
   if (idx > 0) then
     self._indices = {idx}
     table.insert(added,idx)
@@ -360,6 +434,7 @@ end
 -- @return table (removed_items)
 
 function vSelection:set_mode(val)
+  TRACE("vSelection:set_mode(val)",val)
 
   local added,removed = {},{}
   local changed = (val ~= self._mode)

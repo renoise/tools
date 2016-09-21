@@ -3,6 +3,7 @@ vTree
 ============================================================================]]--
 
 require (_clibroot.."cFilesystem")
+require (_vlibroot.."vControl")
 
 class 'vTree' (vControl)
 

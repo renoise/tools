@@ -27,7 +27,7 @@ function vDialog:__init(...)
   self.dialog_content = args.dialog_content or nil
 
   -- function, custom keyhandler
-  self.dialog_keyhandler = args.dialog_keyhandler or nil
+  self.dialog_keyhandler = args.dialog_keyhandler or function() end
 
   --- function, supply your own idle notifier here
   -- (will only start once Renoise has an active document)
@@ -86,7 +86,11 @@ function vDialog:show()
       self.dialog_content = self:create_dialog()
     end
     self.dialog = renoise.app():show_custom_dialog(
-      self.dialog_title, self.dialog_content,self.dialog_keyhandler)
+      self.dialog_title, self.dialog_content,function(dialog,key)
+        --print("vDialog self,dialog,key",self,dialog,key)
+        --print("vDialog self.dialog_keyhandler",self.dialog_keyhandler)
+        return self:dialog_keyhandler(dialog,key)
+      end)
   
     self.dialog_visible_observable:bang()
 
@@ -132,7 +136,7 @@ function vDialog:idle_notifier_waiting()
 
   local remove_notifier = false
   if self.waiting_to_show_dialog then
-    if renoise.song() then --xLib.is_song_available() 
+    if renoise.song() then
       self.waiting_to_show_dialog = false
       self:show() 
       remove_notifier = true
