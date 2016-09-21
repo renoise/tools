@@ -31,7 +31,7 @@ function vDialog:__init(...)
 
   --- function, supply your own idle notifier here
   -- (will only start once Renoise has an active document)
-  self.on_idle_notifier = args.on_idle_notifier or nil
+  --self.on_idle_notifier = args.on_idle_notifier or nil
 
   --- bool, set to true to wait until Renoise has a document
   self.waiting_to_show_dialog = args.waiting_to_show_dialog or false
@@ -42,7 +42,8 @@ function vDialog:__init(...)
   self.dialog_visible_observable = renoise.Document.ObservableBang()
 
   --- when dialog is closed
-  self.dialog_hidden_observable = renoise.Document.ObservableBang()
+  -- TODO 
+  --self.dialog_hidden_observable = renoise.Document.ObservableBang()
 
   --- when dialog gains focus
   -- TODO make it work both when invoked manually and programatically 
@@ -50,7 +51,7 @@ function vDialog:__init(...)
 
   --- when dialog looses focus
   -- TODO make it work when invoked manually and/or programatically 
-  self.dialog_resigned_active_observable = renoise.Document.ObservableBang()
+  --self.dialog_resigned_active_observable = renoise.Document.ObservableBang()
 
   -- private --
 
@@ -59,7 +60,6 @@ function vDialog:__init(...)
 
   -- renoise.ViewBuilder
   self.vb = renoise.ViewBuilder()
-
 
   -- initialize --
 
@@ -76,29 +76,26 @@ function vDialog:show()
   TRACE("vDialog:show()")
 
   if self.waiting_to_show_dialog then
-    return
+    return false
   end
 
   if not self.dialog or not self.dialog.visible then
-
-    -- create, or re-create if hidden
+    --print("create, or re-create if hidden")
     if not self.dialog_content then
       self.dialog_content = self:create_dialog()
     end
     self.dialog = renoise.app():show_custom_dialog(
       self.dialog_title, self.dialog_content,function(dialog,key)
-        --print("vDialog self,dialog,key",self,dialog,key)
-        --print("vDialog self.dialog_keyhandler",self.dialog_keyhandler)
         return self:dialog_keyhandler(dialog,key)
       end)
-  
     self.dialog_visible_observable:bang()
-
   else
-    -- bring existing/visible dialog to front
+    --print("bring existing/visible dialog to front")
     self.dialog:show()
     self.dialog_became_active_observable:bang()
   end
+
+  return true
 
 end
 
@@ -106,10 +103,9 @@ end
 -- @return renoise.Views.Rack
 
 function vDialog:create_dialog()
-  TRACE(">>> vDialog:create_dialog()")
+  TRACE("vDialog:create_dialog()")
 
   local vb = self.vb
-
   return vb:column{
     vb:text{
       text = "Hello World!"
@@ -134,22 +130,22 @@ end
 function vDialog:idle_notifier_waiting()
   TRACE("vDialog:idle_notifier_waiting()")
 
+  local idle_obs = renoise.tool().app_idle_observable
   local remove_notifier = false
-  if self.waiting_to_show_dialog then
-    if renoise.song() then
-      self.waiting_to_show_dialog = false
-      self:show() 
-      remove_notifier = true
-    end
-  else
+
+  if self.waiting_to_show_dialog 
+    and renoise.song() 
+  then
+    self.waiting_to_show_dialog = false
+    self:show() 
     remove_notifier = true
   end  
 
-  local idle_obs = renoise.tool().app_idle_observable
   if remove_notifier and idle_obs:has_notifier(self,vDialog.idle_notifier_waiting) then
     idle_obs:remove_notifier(self,vDialog.idle_notifier_waiting)
   end
 
-
 end
+
+-------------------------------------------------------------------------------
 
