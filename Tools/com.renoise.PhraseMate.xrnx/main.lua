@@ -69,11 +69,23 @@ require ('source/PhraseMatePrefs')
 --------------------------------------------------------------------------------
 
 rns = nil
-phrasemate = nil
-APP_DISPLAY_NAME = "PhraseMate"
-
+local phrasemate = nil
 local prefs = PhraseMatePrefs()
 renoise.tool().preferences = prefs
+
+function launch(new_song)
+  rns = renoise.song()
+  if not phrasemate then
+    phrasemate = PhraseMate{
+      app_display_name = "PhraseMate",
+    }
+  end
+  if not new_song then
+    phrasemate:show_main_dialog()
+  elseif not prefs.autostart_hidden.value then
+    phrasemate:show_main_dialog()
+  end
+end
 
 --------------------------------------------------------------------------------
 -- Menu entries & MIDI/Key mappings
@@ -82,7 +94,7 @@ renoise.tool().preferences = prefs
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:PhraseMate...",
   invoke = function() 
-    show() 
+    launch() 
   end
 } 
 
@@ -90,7 +102,7 @@ renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Show Preferences...",
   invoke = function(repeated)
     if (not repeated) then 
-      show() 
+      launch() 
     end
   end
 }
@@ -389,43 +401,27 @@ renoise.tool():add_midi_mapping {
 renoise.tool():add_menu_entry {
   name = "--- Pattern Editor:PhraseMate:Adjust settings...",
   invoke = function() 
-    show()
+    launch()
   end
 }
 renoise.tool():add_menu_entry {
   name = "--- Pattern Matrix:PhraseMate:Adjust settings...",
   invoke = function() 
-    show()
+    launch()
   end
 }
+
 
 --------------------------------------------------------------------------------
 
 renoise.tool().app_new_document_observable:add_notifier(function()
-  rns = renoise.song()
-  if not phrasemate then
-    phrasemate = PhraseMate{
-      app_display_name = APP_DISPLAY_NAME,
-    }
+  
+  if prefs.autostart.value then
+    launch(true)
   end
+
 end)
 
---------------------------------------------------------------------------------
--- invoked by menu entries, autostart - 
--- first time around, the UI/class instances are created 
-
-function show()
-
-
-  --if not phrasemate then
-    --phrasemate = PhraseMate{
-      --app_display_name = APP_DISPLAY_NAME,
-    --}
-  --end
-
-  phrasemate.ui:show()
-
-end
 
 
 

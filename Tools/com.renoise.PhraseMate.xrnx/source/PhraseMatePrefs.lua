@@ -20,14 +20,15 @@ function PhraseMatePrefs:__init()
   -- tool/ui options
   --self:add_property("active_tab_index",renoise.Document.ObservableNumber(PhraseMateUI.TABS.COLLECT))
   self:add_property("active_tab_index",renoise.Document.ObservableNumber(1))
-  self:add_property("autostart", renoise.Document.ObservableBoolean(true))
+  self:add_property("autostart", renoise.Document.ObservableBoolean(false))
+  self:add_property("autostart_hidden", renoise.Document.ObservableBoolean(false))
   self:add_property("output_show_collection_report", renoise.Document.ObservableBoolean(true))
   self:add_property("input_show_collection_panel", renoise.Document.ObservableBoolean(false))
   --self:add_property("input_show_properties_panel", renoise.Document.ObservableBoolean(false))
   self:add_property("preset_show_export_options", renoise.Document.ObservableBoolean(false))
 
   -- 'new' options (formerly input)
-  self:add_property("create_keymappings", renoise.Document.ObservableBoolean(true))
+  self:add_property("create_keymappings", renoise.Document.ObservableBoolean(false))
   self:add_property("create_keymap_range", renoise.Document.ObservableNumber(1))
   self:add_property("create_keymap_offset", renoise.Document.ObservableNumber(0))
 

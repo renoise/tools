@@ -143,6 +143,9 @@ function PhraseMate:__init(...)
   --- function, when running as sliced process
   --self.collect_yield_fn = nil
 
+  --- PhraseMateUI
+  self.ui = nil
+
   --- PhraseMateExportDialog
   self.export_dialog = nil
 
@@ -151,20 +154,6 @@ function PhraseMate:__init(...)
 
   --- string, error message when failing to allocate phrase during collection
   self.allocation_error_msg = nil
-
-  -- initialize -----------------------
-
-  --- configure user-interface
-  self.ui = PhraseMateUI{
-    dialog_title = self.app_display_name,
-    dialog_keyhandler = self.keyhandler,
-    owner = self,
-    waiting_to_show_dialog = self.prefs.autostart.value,
-  }
-
-  self.ui:build()
-
-
 
   -- notifications --------------------
 
@@ -280,6 +269,23 @@ function PhraseMate:keyhandler(dialog,key)
 
 end
 
+--------------------------------------------------------------------------------
+
+function PhraseMate:show_main_dialog()
+  TRACE("PhraseMate:show_main_dialog()")
+
+  if not self.ui then
+    self.ui = PhraseMateUI{
+      dialog_title = self.app_display_name,
+      dialog_keyhandler = self.keyhandler,
+      owner = self,
+      waiting_to_show_dialog = self.prefs.autostart.value and not self.prefs.autostart_hidden.value,
+    }
+  end
+
+  self.ui:show()
+
+end
 --------------------------------------------------------------------------------
 
 function PhraseMate:show_export_dialog()

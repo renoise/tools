@@ -75,10 +75,12 @@ function PhraseMateUI:__init(...)
   self.prefs = renoise.tool().preferences
 
   local args = cLib.unpack_args(...)
-  assert(type(args.owner)=="PhraseMate","Expected 'owner' to be a class instance")
+  assert(type(args.owner)=="PhraseMate")
 
   --- PhraseMate
   self.owner = args.owner
+
+  -- internal -------------------------
 
   --- vTable
   self.vtable_batch = nil
@@ -89,6 +91,9 @@ function PhraseMateUI:__init(...)
   --- vArrowButton
   self.export_toggle = nil
 
+  --- vEditField
+  self.editfield = nil
+
   --- int, position of PhraseMateUI.UI_PROGRESS_TXT
   self.progress_txt_count = 1
 
@@ -96,7 +101,7 @@ function PhraseMateUI:__init(...)
   self.default_button_color = nil
 
   --- table, titles of xPhrase.DOC_PROPS (for use in popup)
-  self.phrase_props = {}
+  self.phrase_props = nil
 
   --- string, scheduled message for status bar
   self.status_update = nil  
@@ -106,25 +111,15 @@ function PhraseMateUI:__init(...)
 
   -- initialize -----------------------
 
-  --- vEditField
-  self.editfield = nil
-
-
   vDialog.__init(self,...)
 
-  for k,v in ipairs(xPhrase.DOC_PROPS) do
-    table.insert(self.phrase_props,v.title)
-  end
+  self.phrase_props = cLib.match_table_key(xPhrase.DOC_PROPS,"title")
 
-  -- notifiers --
+  -- notifiers ------------------------
 
   self.prefs.create_keymappings:add_notifier(self.update_keymap,self)
   --self.prefs.use_custom_note:add_notifier(self.update_output_tab_note,self)
   --self.prefs.custom_note:add_notifier(self.update_output_tab_note,self)
-
-  renoise.tool().app_new_document_observable:add_notifier(function()
-    self:attach_to_song()
-  end)
 
   renoise.tool().app_idle_observable:add_notifier(function()
     if self.update_requested then
@@ -136,11 +131,7 @@ function PhraseMateUI:__init(...)
       self:update_submit_buttons()
       self.status_update = nil
     end
-
-    --print("self.searchfield.edit_mode",self.searchfield.edit_mode)
-
   end)
-
 
 end
 
@@ -205,39 +196,8 @@ end
 function PhraseMateUI:create_dialog()
   TRACE("PhraseMateUI:create_dialog()")
 
-  return self.vb:column{
-    self.vb_content,
-  }
-
-end
-
--------------------------------------------------------------------------------
-
-function PhraseMateUI:show()
-  TRACE("PhraseMateUI:show()")
-
-  vDialog.show(self)
-
-  self:show_tab()
-  self:update_realtime()
-  self:update_keymap()
-  self:update_props_tab()
-  self:update_preset_tab()
-  self:update_collect_tab()
-  self:update_submit_buttons()
-
-  self:attach_to_song()
-
-end
-
--------------------------------------------------------------------------------
-
-function PhraseMateUI:build()
-  TRACE("PhraseMateUI:build()")
-  
   local vb = self.vb
-
-  self.vb_content = vb:column{
+  return vb:column{
     margin = PhraseMateUI.UI_MARGIN,
     spacing = 4,
     
@@ -355,14 +315,29 @@ function PhraseMateUI:build()
     self:build_props_tab(),
     self:build_preset_tab(),
     self:build_prefs_tab(),
-    --vb:button{
-      --text = "remove trace statements",
-      --notifier = function()
-        --cDebug.remove_trace_statements()
-      --end
-    --}
 
   }
+
+end
+
+-------------------------------------------------------------------------------
+
+function PhraseMateUI:show()
+  TRACE("PhraseMateUI:show()")
+
+  if not vDialog.show(self) then
+    return
+  end
+
+  self:show_tab()
+  self:update_realtime()
+  self:update_keymap()
+  self:update_props_tab()
+  self:update_preset_tab()
+  self:update_collect_tab()
+  self:update_submit_buttons()
+
+  self:attach_to_song()
 
 end
 
@@ -1132,13 +1107,23 @@ function PhraseMateUI:build_prefs_tab()
             text = "General settings",
             font = "bold",
           },
-          vb:button{
-            text = "Docs & source code",
-            tooltip = "Visit github for documentation and source code",
-            width = PhraseMateUI.BUTTON_SIZE,
-            notifier = function()
-              renoise.app():open_url("https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.PhraseMate.xrnx")
-            end
+          vb:column{
+            vb:button{
+              text = "Docs & source code",
+              tooltip = "Visit github for documentation and source code",
+              width = PhraseMateUI.BUTTON_SIZE,
+              notifier = function()
+                renoise.app():open_url("https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.PhraseMate.xrnx")
+              end
+            },
+            --[[
+            vb:button{
+              text = "Remove TRACEs",
+              notifier = function()
+                cDebug.remove_trace_statements()
+              end
+            },
+            ]]
           },
         },
 
@@ -1148,7 +1133,16 @@ function PhraseMateUI:build_prefs_tab()
             bind = self.prefs.autostart,
           },
           vb:text{
-            text = "Autostart tool "
+            text = "Autostart tool with Renoise"
+          },
+        },
+        vb:row{
+          tooltip = "Start tool, but keep dialog hidden (Zxx mode still applies)",
+          vb:checkbox{
+            bind = self.prefs.autostart_hidden,
+          },
+          vb:text{
+            text = "Don't show dialog on autostart"
           },
         },
         vb:row{
