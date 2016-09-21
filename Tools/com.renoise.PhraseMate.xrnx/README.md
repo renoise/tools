@@ -1,6 +1,16 @@
 # PhraseMate
 
-PhraseMate aims to make it more convenient to work with phrases in Renoise, particularly if you prefer a keyboard-centric workflow. Copy phrases into the pattern editor, or vice versa, and make the tool insert "set phrase" commands (Zxx) automatically as you are entering notes into a song.
+PhraseMate is a tool for Renoise which aims to make it more convenient to work with phrases. 
+
+Features at a glance:
+
+* Offers control of all essential phrase features via keyboard and MIDI   
+* Configurable converters (convert from pattern -> phrase, or vice versa)    
+* Batch import, export functionality for single files or entire phrase banks 
+* Property editor with mass-assignment capabilities (e.g. "raise tempo for all phrases")  
+* Real-time editing which automatically inserts Zxx commands as you type/record
+* 'Smart' write mode via auto-completing text input (keyboard-centric workflow) 
+ 
 
 ## Quickstart
 
@@ -16,7 +26,7 @@ The tool can be triggered in a number of ways:
 
 The tool has a number of distinctive operating modes:
 
-### Input - convert pattern data into phrases
+### Read - convert pattern data into phrases
 
 The input mode makes it easy to convert pattern data into phrases, and has a very flexible set of parameters.
 
@@ -32,7 +42,7 @@ Settings used:
 	Target: New instrument(s)  
 	[x] Replace notes with phrase
 
-### Output - convert phrases into pattern-data    
+### Write - convert phrases into pattern-data    
 
 * **Anchor to selection** - when writing to a selection, determine if the output is written relative to the top of the selection, or the top of the pattern
 * **Continuous paste** - when source phrase is shorter than pattern/selection, repeat in order to fill
@@ -41,13 +51,31 @@ Settings used:
 * **Expand sub-columns** - show sub-columns (VOL/PAN/DLY/FX) if required by source phrase
 * **Mix-Paste** - attempt to keep existing content when producing output (same as Mix-Paste in the advanced edit panel)
 
-### Realtime - monitor the pattern and insert Zxx commands
+### Smart Write - auto-completing popup dialog
+
+TODO
+
+ 
+
+### Zxx - real-time monitoring of the pattern 
 
 One of the exciting features in Renoise 3.1 is the program mode for phrases. It's awesome to be able to pull up any phrase and trigger it in any key. But, less awesome is the fact that it's easy to forget those pesky Zxx commands that goes along with each note. Hence, the "insert Zxx" mode of this tool.
 
 When enabled, PhraseMate will listen for changes to the pattern and insert Zxx commands when it seems appropriate (or remove them if they are not required). **_It will only do so while you have the edit-mode enabled, and only while your selected instrument/phrase is set to program mode_**. 
 
 Note that the realtime mode is experimental and has a few quirks - please see the following section with questions and answers...
+
+### Props - property panel
+
+TODO
+
+### Preset - import and export  
+
+TODO
+
+### Prefs - tool preferences
+
+TODO 
 
 ## Questions & Answers
 
@@ -73,7 +101,7 @@ Note that the realtime mode is experimental and has a few quirks - please see th
 
 **A**: Phrases can have an independent LPB (lines-per-beat) value. PhraseMate does not attempt to change the speed when it creates output, but simply writes the data "as-it". Consider using a tool such as [this one](http://forum.renoise.com/index.php/topic/27930-new-tool-28-30-flexible-pattern-resizer/) if you would like to stretch or squash pattern data after it's written. 
 
-## Implementation details
+## Limitations
 * (Input) When collecting phrases with the 'replace notes' option enabled, the tool cannot insert more than 12 phrase triggers per track. 
 * (Input) When the source instrument is already making use of phrases, notes that trigger phrases are skipped
 * (Input) When starting to collect phrases from the middle of a pattern/song, ghost notes are not resolved until an instrument is reached. As a result, the first notes might be missing. 

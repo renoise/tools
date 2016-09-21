@@ -25,6 +25,7 @@ Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/T
 
 _trace_filters = nil
 --_trace_filters = {".*"}
+--_trace_filters = {"^vEditField:"}
 
 _clibroot = 'source/cLib/classes/'
 require (_clibroot..'cLib')
@@ -32,6 +33,7 @@ require (_clibroot..'cDebug')
 require (_clibroot..'cDocument')
 require (_clibroot.."cConfig")
 require (_clibroot..'cFilesystem')
+require (_clibroot..'cObservable')
 require (_clibroot.."cParseXML")
 require (_clibroot.."cProcessSlicer")
 
@@ -42,6 +44,7 @@ require (_xlibroot..'xLinePattern')
 require (_xlibroot..'xInstrument')
 require (_xlibroot..'xNoteColumn') 
 require (_xlibroot..'xPhraseManager')
+require (_xlibroot..'xScale')
 require (_xlibroot..'xSelection')
 
 _vlibroot = 'source/vLib/classes/'
@@ -49,14 +52,16 @@ require (_vlibroot..'vLib')
 require (_vlibroot..'vDialog')
 require (_vlibroot..'vTable')
 require (_vlibroot..'vEditField')
+require (_vlibroot..'vSearchField')
 require (_vlibroot..'vPathSelector')
 require (_vlibroot..'vPopup')
 require (_vlibroot..'vArrowButton')
-require (_vlibroot..'helpers/vSelection')
+--require (_vlibroot..'helpers/vMetrics')
 
 require ('source/PhraseMate')
 require ('source/PhraseMateUI')
 require ('source/PhraseMateExportDialog')
+require ('source/PhraseMateSmartDialog')
 require ('source/PhraseMatePrefs')
 
 --------------------------------------------------------------------------------
@@ -80,11 +85,20 @@ renoise.tool():add_menu_entry {
     show() 
   end
 } 
+
 renoise.tool():add_keybinding {
-  name = "Global:PhraseMate:Show preferences...",
+  name = "Global:PhraseMate:Show Preferences...",
   invoke = function(repeated)
     if (not repeated) then 
       show() 
+    end
+  end
+}
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Smart Write...",
+  invoke = function(repeated)
+    if (not repeated) then 
+      phrasemate:show_smart_dialog()
     end
   end
 }
@@ -389,9 +403,11 @@ renoise.tool():add_menu_entry {
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   rns = renoise.song()
-  phrasemate = PhraseMate{
-    app_display_name = APP_DISPLAY_NAME,
-  }
+  if not phrasemate then
+    phrasemate = PhraseMate{
+      app_display_name = APP_DISPLAY_NAME,
+    }
+  end
 end)
 
 --------------------------------------------------------------------------------

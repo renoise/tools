@@ -14,15 +14,18 @@ PhraseMate (user-interface)
 class 'PhraseMateExportDialog' (vDialog)
 
 function PhraseMateExportDialog:__init(...)
-  print("PhraseMateExportDialog:__init(...)")
+  TRACE("PhraseMateExportDialog:__init(...)")
 
   self.prefs = renoise.tool().preferences
   vDialog.__init(self,...)
 
   local args = cLib.unpack_args(...)
+  assert(type(args.owner)=="PhraseMate")
 
   --- PhraseMate
   self.owner = args.owner
+
+  -- internal -------------------------
 
   --- vPathSelector
   self.vpathselector = nil
@@ -35,7 +38,7 @@ end
 --------------------------------------------------------------------------------
 
 function PhraseMateExportDialog:create_dialog()
-  print("PhraseMateExportDialog:create_dialog()")
+  TRACE("PhraseMateExportDialog:create_dialog()")
 
   local vb = self.vb
 
@@ -57,7 +60,7 @@ function PhraseMateExportDialog:create_dialog()
         col_width = 20, 
         col_type = vTable.CELLTYPE.CHECKBOX,
         notifier = function(elm,checked)
-          print("notifier...elm,checked",elm,checked)
+          --print("notifier...elm,checked",elm,checked)
           local item = elm.owner:get_item_by_id(elm.item_id)
           if item then
             item.CHECKED = checked
@@ -81,7 +84,7 @@ function PhraseMateExportDialog:create_dialog()
         col_type = vTable.CELLTYPE.TEXTFIELD,
         col_width = "auto",
         notifier = function(elm,val)
-          print("notifier...elm,val",elm,val)
+          --print("notifier...elm,val",elm,val)
           local item = elm.owner:get_item_by_id(elm.item_id)
           if item then
           end
@@ -141,9 +144,9 @@ end
 --------------------------------------------------------------------------------
 
 function PhraseMateExportDialog:update()
-  print("PhraseMateExportDialog:update()")
+  TRACE("PhraseMateExportDialog:update()")
 
-  local data = PhraseMateUI.get_vtable_phrase_data()
+  local data = self.owner.ui:get_vtable_phrase_data()
 
   for k,v in ipairs(data) do
     v.INDEX = ("%.2X"):format(k)
@@ -162,11 +165,9 @@ end
 --------------------------------------------------------------------------------
 
 function PhraseMateExportDialog:show()
-  print("PhraseMateExportDialog:show()")
-
+  TRACE("PhraseMateExportDialog:show()")
 
   vDialog.show(self)
-
   self:update()
 
 end
@@ -176,7 +177,7 @@ end
 -- @return bool, true when able to submit
 
 function PhraseMateExportDialog:submit()
-  print("PhraseMateExportDialog:submit()")
+  TRACE("PhraseMateExportDialog:submit()")
 
   local indices = {}
   for k,v in ipairs(self.vtable.data) do
@@ -185,7 +186,7 @@ function PhraseMateExportDialog:submit()
     end
   end
 
-  self.owner:export_presets(indices)
+  self.owner.ui:export_presets(indices)
 
   return true
 

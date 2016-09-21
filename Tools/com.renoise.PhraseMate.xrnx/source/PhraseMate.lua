@@ -9,16 +9,6 @@ PhraseMate (main application)
 #
 .
 
-TODO
-
-  * Move into UI class
-    + realtime observables 
-    + "UI_" constants 
-
-
-  * Batch-apply phrase settings
-
-
 --]]
 
 
@@ -26,9 +16,6 @@ TODO
 
 
 class 'PhraseMate'
-
-PhraseMate.UI_SOURCE_ITEMS = {"➜ Autocapture","➜ Capture All Instr.","➜ Selected Instrument"}
-PhraseMate.UI_TARGET_ITEMS = {"➜ Same Instrument","➜ New Instrument(s)"}
 
 PhraseMate.INPUT_SCOPES = {
   "Selection in Pattern",
@@ -54,6 +41,16 @@ PhraseMate.TARGET_INSTR = {
   SAME = 1,
   NEW = 2,
   CUSTOM = 3,
+}
+
+PhraseMate.OUTPUT_SOURCE = {
+  SELECTED = 1,
+  PRESET = 2,
+}
+
+PhraseMate.OUTPUT_MODE = {
+  SELECTION = 1,
+  TRACK = 2,
 }
 
 PhraseMate.SLICE_MODES = {"Disabled","Pattern","Patt-track"}
@@ -140,23 +137,27 @@ function PhraseMate:__init(...)
   --- bool, do not trigger handler while true
   self.suppress_line_notifier = false 
 
-  --- bool, perform UI update on next idle
-  self.realtime_update_requested = false 
-
-  --- string, scheduled message for status bar
-  self.status_update = nil  
-
   --- (ProcessSlicer)
   self.process_slicer = nil 
 
   --- function, when running as sliced process
-  self.yield_fn = nil
+  --self.collect_yield_fn = nil
+
+  --- PhraseMateExportDialog
+  self.export_dialog = nil
+
+  --- PhraseMateSmartDialog
+  self.smart_dialog = nil 
+
+  --- string, error message when failing to allocate phrase during collection
+  self.allocation_error_msg = nil
 
   -- initialize -----------------------
 
   --- configure user-interface
   self.ui = PhraseMateUI{
     dialog_title = self.app_display_name,
+    dialog_keyhandler = self.keyhandler,
     owner = self,
     waiting_to_show_dialog = self.prefs.autostart.value,
   }
@@ -168,12 +169,6 @@ function PhraseMate:__init(...)
   -- notifications --------------------
 
   renoise.tool().app_idle_observable:add_notifier(function()
-
-    if self.realtime_update_requested then
-      self.realtime_update_requested = false
-      self.ui:update_realtime()
-    end
-
     if (#self.modified_lines > 0) then
       if rns.transport.edit_mode then
         for k,v in ipairs(self.modified_lines) do
@@ -182,21 +177,11 @@ function PhraseMate:__init(...)
       end
       self.modified_lines = {}
     end
-
-    -- show progress
-    if self.status_update then
-      renoise.app():show_status(self.status_update)
-      self.ui:update_submit_buttons()
-      self.status_update = nil
-    end
-
   end)
-
 
   renoise.tool().app_new_document_observable:add_notifier(function()
     rns = renoise.song()
     self:attach_to_song()
-    self.ui:update_realtime()
   end)
 
   self.prefs.zxx_mode:add_notifier(function()
@@ -231,7 +216,7 @@ function PhraseMate:progress_handler(msg)
   if (self.ui.progress_txt_count == #PhraseMateUI.UI_PROGRESS_TXT) then
     self.ui.progress_txt_count = 1
   end
-  self.status_update = msg
+  self.ui.status_update = msg
 
 end
 
@@ -240,7 +225,7 @@ end
 function PhraseMate:done_handler(msg)
   TRACE("PhraseMate:done_handler(msg)",msg)
 
-  self.status_update = "(PhraseMate) Done processing!"
+  self.ui.status_update = "(PhraseMate) Done processing!"
   self:initialize_variables()
   collectgarbage()
   --print("Memory used:",collectgarbage("count")*1024)
@@ -270,8 +255,6 @@ function PhraseMate:initialize_variables()
 
 end
 
-
-
 --------------------------------------------------------------------------------
 
 function PhraseMate:invoke_sliced_task(fn,arg)
@@ -284,43 +267,53 @@ function PhraseMate:invoke_sliced_task(fn,arg)
     fn(arg)
   end
 
-  --fn(arg)
+end
+
+--------------------------------------------------------------------------------
+-- forward keypresses to UI 
+-- NB: proxy method - 'self' refers to PhraseMateUI...
+
+function PhraseMate:keyhandler(dialog,key)
+  TRACE("PhraseMate:keyhandler(dialog,key)",dialog,key)
+
+  self:keyhandler(dialog,key)
 
 end
 
+--------------------------------------------------------------------------------
+
+function PhraseMate:show_export_dialog()
+  TRACE("PhraseMate:show_export_dialog()")
+
+  if not self.export_dialog then
+    self.export_dialog = PhraseMateExportDialog{
+      dialog_title = "PhraseMate: Export presets",
+      owner = self,
+    }
+  end
+
+  self.export_dialog:show()
+
+end
+
+--------------------------------------------------------------------------------
+
+function PhraseMate:show_smart_dialog()
+  TRACE("PhraseMate:show_smart_dialog()")
+
+  if not self.smart_dialog then
+    self.smart_dialog = PhraseMateSmartDialog{
+      dialog_title = "PhraseMate: Smart Write",
+      owner = self,
+    }
+  end
+
+  self.smart_dialog:show()
+
+end
 
 --------------------------------------------------------------------------------
 -- Input methods
---------------------------------------------------------------------------------
-
-function PhraseMate:get_source_instr()
-  TRACE("PhraseMate:get_source_instr()")
-
-  local rslt = table.copy(PhraseMate.UI_SOURCE_ITEMS)
-  for k = 1,127 do
-    local instr = rns.instruments[k]
-    local instr_name = instr and instr.name or ""
-    table.insert(rslt,("%.2X %s"):format(k-1,instr_name))
-  end
-  return rslt
-
-end
-
---------------------------------------------------------------------------------
-
-function PhraseMate:get_target_instr()
-  TRACE("PhraseMate:get_target_instr()")
-
-  local rslt = table.copy(PhraseMate.UI_TARGET_ITEMS)
-  for k = 1,127 do
-    local instr = rns.instruments[k]
-    local instr_name = instr and instr.name or ""
-    table.insert(rslt,("%.2X %s"):format(k-1,instr_name))
-  end
-  return rslt
-
-end
-
 --------------------------------------------------------------------------------
 -- return pattern name, or "Patt XX" if not defined
 
@@ -530,9 +523,9 @@ end
 -- @return bool, true when phrase was inserted
 -- @return string, error message when failed
 
-function PhraseMate:delete_phrase()
+function PhraseMate:delete_phrase(phrase_idx)
 
-  local phrase_idx = rns.selected_phrase_index
+  --local phrase_idx = rns.selected_phrase_index
   if not phrase_idx or (phrase_idx == 0) then
     return false,"Can't delete phrase, none is selected"
   end
@@ -586,6 +579,8 @@ end
 
 --------------------------------------------------------------------------------
 -- continue existing phrase, take over empty phrase or create as needed
+-- @return bool, true when allocated
+-- @return string, error message when failed
 
 function PhraseMate:allocate_phrase(track,seq_idx,trk_idx,selection)
   TRACE("PhraseMate:allocate_phrase(track,seq_idx,trk_idx,selection)",track,seq_idx,trk_idx,selection)
@@ -624,7 +619,8 @@ function PhraseMate:allocate_phrase(track,seq_idx,trk_idx,selection)
     phrase,phrase_idx_or_err = xPhraseManager.auto_insert_phrase(self.target_instr_idx,insert_at_idx,takeover,keymap_args)
     --print("*** allocate_phrase - phrase,phrase_idx_or_err",phrase,phrase_idx_or_err)
     if not phrase then
-      LOG(phrase_idx_or_err) -- carries error msg
+      return false,phrase_idx_or_err
+      --LOG(phrase_idx_or_err) -- carries error msg
     end
 
     phrase:clear() -- clear default C-4 
@@ -675,9 +671,10 @@ end
 --------------------------------------------------------------------------------
 -- the yield function, invoked while collecting phrases 
 
-function PhraseMate:yield_fn(seq_idx,trk_idx)
+function PhraseMate:collect_yield_fn(seq_idx,trk_idx)
+  TRACE("PhraseMate:collect_yield_fn(seq_idx,trk_idx)",seq_idx,trk_idx)
 
-  if (self.prefs.process_slice_mode.value == PhraseMate.SLICE_MODE.PATTERN_TRACK) then
+  if trk_idx and (self.prefs.process_slice_mode.value == PhraseMate.SLICE_MODE.PATTERN_TRACK) then
     self:progress_handler(("Collecting phrases : sequence index = %d, track index = %d"):format(seq_idx,trk_idx))
   elseif (self.prefs.process_slice_mode.value == PhraseMate.SLICE_MODE.PATTERN) then
     self:progress_handler(("Collecting phrases : sequence index = %d"):format(seq_idx))
@@ -761,7 +758,10 @@ function PhraseMate:collect_from_pattern_selection()
   local seq_idx = rns.selected_sequence_index
   self:do_capture_once(patt_sel.start_track,seq_idx)
 
-  self:do_collect(nil,nil,patt_sel)
+  local rslt,err = self:do_collect(nil,nil,patt_sel)
+  if not rslt then
+    return false,err
+  end
 
 end
 
@@ -784,11 +784,15 @@ function PhraseMate:collect_from_matrix_selection()
       for trk_idx = 1, #rns.tracks do
         if matrix_sel[seq_idx][trk_idx] then
           self:do_capture_once(trk_idx,seq_idx)
-          self:do_collect(seq_idx,trk_idx)
+          local rslt,err = self:do_collect(seq_idx,trk_idx)
+          if not rslt then
+            return false,err
+          end
+
         end
       end
       --self:progress_handler(("Collecting phrases : sequence index = %d, track index = %d"):format(seq_idx,trk_idx))
-      self:yield_fn(seq_idx)
+      self:collect_yield_fn(seq_idx)
     end
   end
 
@@ -808,7 +812,10 @@ function PhraseMate:collect_from_track_in_pattern()
   local seq_idx = rns.selected_sequence_index
   self:do_capture_once(trk_idx,seq_idx)
 
-  self:do_collect()
+  local rslt,err = self:do_collect()
+  if not rslt then
+    return false,err
+  end
 
 end
 
@@ -824,9 +831,13 @@ function PhraseMate:collect_from_track_in_song()
 
   for seq_idx = 1, #rns.sequencer.pattern_sequence do
     self:do_capture_once(trk_idx,seq_idx)
-    self:do_collect(seq_idx)
+    local rslt,err = self:do_collect(seq_idx)
+    if not rslt then
+      return false,err
+    end
+
     --self:progress_handler(("Collecting phrases : sequence index = %d"):format(seq_idx))
-    self:yield_fn(seq_idx)
+    self:collect_yield_fn(seq_idx)
   end
 
 end
@@ -836,6 +847,8 @@ end
 -- @param seq_idx (int)
 -- @param trk_idx (int)
 -- @param patt_sel (table), specified when doing SELECTION_IN_PATTERN
+-- @return bool, true when collected
+-- @return string, error message when failed
 
 function PhraseMate:do_collect(seq_idx,trk_idx,patt_sel)
   TRACE("PhraseMate:do_collect(seq_idx,trk_idx,patt_sel)",seq_idx,trk_idx,patt_sel)
@@ -859,8 +872,7 @@ function PhraseMate:do_collect(seq_idx,trk_idx,patt_sel)
   end
   if self.processed_ptracks[patt_idx][trk_idx] then
     local msg = "(At sequence #%.2d: We've already processed this pattern, skip..."
-    LOG(msg:format(seq_idx))
-    return
+    return false,msg:format(seq_idx)
   end
 
   if not patt_sel then
@@ -873,18 +885,12 @@ function PhraseMate:do_collect(seq_idx,trk_idx,patt_sel)
     self.ghost_columns[trk_idx] = {}
   end
 
-  -- set up our iterator
-  local patt_lines = rns.pattern_iterator:lines_in_pattern_track(patt_idx,trk_idx)
-
-
   -- loop through pattern, create phrases/instruments as needed
-
-  local target_phrase,target_phrase_idx = nil
-
+  local patt_lines = rns.pattern_iterator:lines_in_pattern_track(patt_idx,trk_idx)
+  local target_phrase,target_phrase_idx_or_err = nil
   for pos, line in patt_lines do
     if pos.line > patt_sel.end_line then break end
     if pos.line >= patt_sel.start_line then
-      --if not line.is_empty then
 
         local phrase_line_idx = pos.line - (patt_sel.start_line-1)
 
@@ -912,7 +918,7 @@ function PhraseMate:do_collect(seq_idx,trk_idx,patt_sel)
                 do_note_off = true
                 self:set_source_instr(self.ghost_columns[trk_idx][note_col_idx].instrument_index)
                 self:allocate_target_instr()
-                target_phrase,target_phrase_idx = self:allocate_phrase(track,seq_idx,trk_idx,patt_sel)
+                target_phrase,target_phrase_idx_or_err = self:allocate_phrase(track,seq_idx,trk_idx,patt_sel)
               elseif (self.source_instr_idx ~= instr_value+1)
                 and self.ghost_columns[trk_idx][note_col_idx]
                 and (self.source_instr_idx == self.ghost_columns[trk_idx][note_col_idx].instrument_index)
@@ -950,8 +956,11 @@ function PhraseMate:do_collect(seq_idx,trk_idx,patt_sel)
               and not ptrack.is_empty
             then
               self:allocate_target_instr()
-              target_phrase,target_phrase_idx = self:allocate_phrase(track,seq_idx,trk_idx,patt_sel)
-              --print("*** do_collect - allocated phrase",target_phrase_idx,target_phrase)
+              target_phrase,target_phrase_idx_or_err = self:allocate_phrase(track,seq_idx,trk_idx,patt_sel)
+              --print("*** do_collect - allocated phrase",target_phrase_idx_or_err,target_phrase)
+              if not target_phrase then
+                self.allocation_error_msg = target_phrase_idx_or_err
+              end
             end
 
             if target_phrase then
@@ -1030,7 +1039,9 @@ function PhraseMate:do_collect(seq_idx,trk_idx,patt_sel)
   self.processed_ptracks[patt_idx][trk_idx] = true
 
   --self:progress_handler(("Collecting phrases : sequence index = %d, track index = %d"):format(seq_idx,trk_idx))
-  self:yield_fn(seq_idx,trk_idx)
+  self:collect_yield_fn(seq_idx,trk_idx)
+
+  return true
 
 end
 
@@ -1260,8 +1271,13 @@ function PhraseMate:do_finalize()
       and "" or (#table.keys(duplicate_phrases) > 0) and ("\nDuplicate phrases skipped: %d "):format(duplicate_phrase_count) or ""
     --print("msg_include_duplicates",msg_include_duplicates)
 
-    local msg = ("Created a total of %d phrase(s) across %d instrument(s)%s%s"):format(
-      collected_phrase_count,#table.keys(collected_instruments),msg_include_empty,msg_include_duplicates)
+    local msg_error = self.allocation_error_msg 
+      and "\n\nOne or more errors was encountered during collection:\n"
+        ..self.allocation_error_msg 
+      or ""
+
+    local msg = ("Created a total of %d phrase(s) across %d instrument(s)%s%s%s"):format(
+      collected_phrase_count,#table.keys(collected_instruments),msg_include_empty,msg_include_duplicates,msg_error)
     self.collected_messages[msg] = true
 
   end
@@ -1280,34 +1296,43 @@ end
 -- @param end_col - note/effect column index
 -- @param start_line - pattern line
 -- @param end_line - pattern line
+-- @return boolean, true when applied
+-- @return string, error message when failed
 
 function PhraseMate:apply_to_track(sel)
+  TRACE("PhraseMate:apply_to_track(sel)",sel)
 
   if not rns.selected_phrase then
     return false,"No phrase was selected"
   end
 
-  if not sel then
-    sel = xSelection.get_pattern_track(rns.selected_sequence_index,rns.selected_track_index)
-  end
-
   local options = {
     instr_index = rns.selected_instrument_index,
     phrase = rns.selected_phrase,
+    sequence_index = rns.selected_sequence_index,
+    track_index = sel and sel.start_track or rns.selected_track_index,
     anchor_to_selection = self.prefs.anchor_to_selection.value,
-    expand_subcolumns = self.prefs.expand_subcolumns.value,
     cont_paste = self.prefs.cont_paste.value,
+    skip_muted = self.prefs.skip_muted.value,
+    expand_columns = self.prefs.expand_columns.value,
+    expand_subcolumns = self.prefs.expand_subcolumns.value,
+    insert_zxx = self.prefs.output_insert_zxx.value,
     mix_paste = self.prefs.mix_paste.value,
     selection = sel,
   }
 
   self.suppress_line_notifier = true
-  self:invoke_sliced_task(xPhrase.apply_to_track,options)
+  --self:invoke_sliced_task(xPhrase.apply_to_track,options)
+  xPhrase.apply_to_track(options)
   self.suppress_line_notifier = false
+
+  return true
 
 end
 
 --------------------------------------------------------------------------------
+-- @return boolean, true when applied
+-- @return string, error message when failed
 
 function PhraseMate:apply_to_selection()
   TRACE("PhraseMate:apply_to_selection()")
@@ -1322,13 +1347,68 @@ function PhraseMate:apply_to_selection()
 end
 
 --------------------------------------------------------------------------------
+-- insert temp phrase, load preset and write 
+-- @param source (PhraseMate.OUTPUT_MODE)
+-- @param fpath (string), full path to .xrnz file
+-- @return boolean, true when applied
+-- @return string, error message when failed
+
+function PhraseMate:apply_external_phrase(mode,fpath)
+  TRACE("PhraseMate:apply_external_phrase(mode,fpath)",mode,fpath)
+
+  --print("*** apply_external_phrase - fpath",fpath)
+  if not io.exists(fpath) then
+    return false,"Could not locate phrase"
+  end
+
+  local cached_phrase_idx = rns.selected_phrase_index
+  local instr_idx = rns.selected_instrument_index
+  local phrase,phrase_idx_or_err = xPhraseManager.auto_insert_phrase(instr_idx)
+  --print("*** apply_external_phrase - phrase,phrase_idx_or_err",phrase,phrase_idx_or_err)
+  if not phrase then
+    return false,phrase_idx_or_err
+  end
+
+  local function cleanup()
+    local rslt,err = self:delete_phrase(phrase_idx_or_err)
+    if not rslt then
+      return false,err
+    end
+    --print("*** apply_external_phrase - done")
+    rns.selected_phrase_index = cached_phrase_idx
+    return true
+  end
+
+  rns.selected_phrase_index = phrase_idx_or_err
+
+  renoise.app():load_instrument_phrase(fpath)
+
+  local rslt,err
+  if (mode == PhraseMate.OUTPUT_MODE.SELECTION) then
+    rslt,err = self:apply_to_selection()
+  elseif (mode == PhraseMate.OUTPUT_MODE.TRACK) then
+    rslt,err = self:apply_to_track()
+  else
+    error("Unsupported output mode")
+  end
+  if not rslt then
+    cleanup()
+    return false,err
+  end
+
+  return cleanup()
+
+end
+
+
+--------------------------------------------------------------------------------
 -- Realtime methods
 --------------------------------------------------------------------------------
 
 function PhraseMate:line_notifier_fn(pos)
   TRACE("PhraseMate:line_notifier_fn(pos)",pos)
 
-  print("self",self)
+  --print("self",self)
 
   if not self.prefs.zxx_mode.value then
     return
@@ -1414,54 +1494,6 @@ function PhraseMate:handle_modified_line(pos)
 end
 
 --------------------------------------------------------------------------------
-function PhraseMate:phrase_playback_mode_handler()
-  TRACE("PhraseMate:phrase_playback_mode_handler()")
-
-  self.realtime_update_requested = true
-
-end
-
---------------------------------------------------------------------------------
-
-function PhraseMate:phrase_index_notifier()
-  TRACE("PhraseMate:phrase_index_notifier()")
-
-  self.realtime_update_requested = true
-
-end
-
-
---------------------------------------------------------------------------------
-
-function PhraseMate:attach_to_instrument()
-  TRACE("PhraseMate:attach_to_instrument()")
-
-  local instr = rns.selected_instrument
-
-  if not instr.phrase_playback_mode_observable:has_notifier(self.phrase_playback_mode_handler,self) then
-    instr.phrase_playback_mode_observable:add_notifier(self.phrase_playback_mode_handler,self)
-  end
-
-  self.ui:update_realtime()
-
-  self.ui:update_submit_buttons()
-
-end
-
---------------------------------------------------------------------------------
-
-function PhraseMate:detach_from_instrument()
-  TRACE("PhraseMate:detach_from_instrument()")
-
-  local instr = rns.selected_instrument
-
-  if instr.phrase_playback_mode_observable:has_notifier(self.phrase_playback_mode_handler,self) then
-    instr.phrase_playback_mode_observable:remove_notifier(self.phrase_playback_mode_handler,self)
-  end
-
-end
-
---------------------------------------------------------------------------------
 
 function PhraseMate:attach_to_pattern()
   TRACE("PhraseMate:attach_to_pattern()")
@@ -1476,102 +1508,54 @@ end
 
 --------------------------------------------------------------------------------
 
-function PhraseMate:detach_from_pattern()
-  TRACE("PhraseMate:detach_from_pattern()")
-
-  local pattern = rns.selected_pattern
-
-  if pattern:has_line_notifier(self.line_notifier_fn,self) then
-    pattern:remove_line_notifier(self.line_notifier_fn,self)
-  end
-
-end
-
---------------------------------------------------------------------------------
-
-function PhraseMate:detach_from_song()
-  TRACE("PhraseMate:detach_from_song()")
-
-  if rns.selected_pattern_observable:has_notifier(self.attach_to_pattern,self) then
-    rns.selected_pattern_observable:remove_notifier(self.attach_to_pattern,self)
-  end
-  self:detach_from_pattern()
-
-  if rns.selected_instrument_observable:has_notifier(self.attach_to_instrument,self) then
-    rns.selected_instrument_observable:remove_notifier(self.attach_to_instrument,self)
-  end
-  self:detach_from_instrument()
-
-  if rns.selected_phrase_observable:has_notifier(self.phrase_index_notifier,self) then
-    rns.selected_phrase_observable:remove_notifier(self.phrase_index_notifier,self)
-  end
-
-  if rns.instruments_observable:has_notifier(self.ui.update_instruments,self.ui) then
-    rns.instruments_observable:remove_notifier(self.ui.update_instruments,self.ui)
-  end
-
-end
-
---------------------------------------------------------------------------------
-
 function PhraseMate:attach_to_song()
   TRACE("PhraseMate:attach_to_song()")
 
-  self:detach_from_song()
-
-  if not rns.selected_pattern_observable:has_notifier(self.attach_to_pattern,self) then
-    rns.selected_pattern_observable:add_notifier(self.attach_to_pattern,self)
-  end
+  cObservable.attach(rns.selected_pattern_observable,self.attach_to_pattern,self)
   self:attach_to_pattern()
-  
-  if not rns.selected_instrument_observable:has_notifier(self.attach_to_instrument,self) then
-    rns.selected_instrument_observable:add_notifier(self.attach_to_instrument,self)
-  end
-  self:attach_to_instrument()
-
-  if not rns.selected_phrase_observable:has_notifier(self.phrase_index_notifier,self) then
-    rns.selected_phrase_observable:add_notifier(self.phrase_index_notifier,self)
-  end
-
-  if not rns.instruments_observable:has_notifier(self.ui.update_instruments,self.ui) then
-    rns.instruments_observable:add_notifier(self.ui.update_instruments,self.ui)
-  end
 
 end
-
 
 --------------------------------------------------------------------------------
 -- Batch/Properties
 --------------------------------------------------------------------------------
+-- set phrase properties based on operator 
 -- @param prop_name (string)
 -- @param operator (vEditField.OPERATOR)
--- @param value (boolean,string or number)
+-- @param operator_value (boolean,string or number)
 -- @return bool, true when properties were modified
 -- @return string, error message when failed
 
-function PhraseMate:apply_properties(instr,prop_name,operator,value,phrase_indices)
-  print("PhraseMate:apply_properties(instr,prop_name,operator,value,phrase_indices)",instr,prop_name,operator,value,phrase_indices)
+function PhraseMate:apply_properties(instr,prop_name,operator,operator_value,phrase_indices)
+  TRACE("PhraseMate:apply_properties(instr,prop_name,operator,operator_value,phrase_indices)",instr,prop_name,operator,operator_value,phrase_indices)
 
   for k,v in ipairs(phrase_indices) do
     local phrase = instr.phrases[v]
     if not phrase then
       return false,"Can't set property, missing phrase"
     end
+
+    
+    local prop,prop_idx = cDocument.get_property(xPhrase.DOC_PROPS,prop_name)
+    local cval = cLib.create_cvalue(prop)
+    local prop_val = cval.zero_based and phrase[prop_name]-1 or phrase[prop_name]
+    cval.value = prop_val
+
     if (operator == vEditField.OPERATOR.SET) then
-      -- do nothing
+      cval.value = operator_value
     elseif (operator == vEditField.OPERATOR.ADD) then
-      -- TODO
+      cval:add(operator_value)
     elseif (operator == vEditField.OPERATOR.SUB) then
-      -- TODO
+      cval:subtract(operator_value)
     elseif (operator == vEditField.OPERATOR.MUL) then
-      -- TODO
+      cval:multiply(operator_value)
     elseif (operator == vEditField.OPERATOR.DIV) then
-      -- TODO
+      cval:divide(operator_value)
     elseif (operator == vEditField.OPERATOR.INVERT) then
-      -- TODO
+      error("Not implemented")
     end
 
-    xPhrase.set_property(phrase,prop_name,value)
+    xPhrase.set_property(phrase,prop_name,cval.value)
 
   end
 

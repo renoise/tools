@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <ApiVersion>5</ApiVersion>
   <Id>com.renoise.PhraseMate</Id>
-  <Version>1.55</Version>
+  <Version>1.7</Version>
   <Author>danoise [bjorn.nesby@gmail.com]</Author>
   <Name>PhraseMate</Name>
   <Category>Pattern Editor, Phrase Editor</Category>
