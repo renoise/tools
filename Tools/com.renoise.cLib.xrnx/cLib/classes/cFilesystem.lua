@@ -456,9 +456,11 @@ end
 --------------------------------------------------------------------------------
 -- list files in a given folder
 -- @param str_path (string)
--- @param file_ext (table)
+-- @param file_ext (table), valid file extensions 
+-- @param include_path (bool), when true we append path to string
+-- @return table<string> 
 
-function cFilesystem.list_files(str_path,file_ext)
+function cFilesystem.list_files(str_path,file_ext,include_path)
 
   cFilesystem.assert_string(str_path,"str_path")
 
@@ -473,7 +475,11 @@ function cFilesystem.list_files(str_path,file_ext)
   local filenames = os.filenames(str_path,file_ext)
   local rslt = {}
   for k,v in ipairs(filenames) do
-    table.insert(rslt,v)
+    if include_path then
+      table.insert(rslt,str_path.."/"..v)
+    else
+      table.insert(rslt,v)
+    end
   end
   
   return rslt

@@ -11,8 +11,8 @@ com.renoise.xStream.xrnx (main.lua)
 -- required files
 --------------------------------------------------------------------------------
 
-_trace_filters = nil
---_trace_filters = {".*"}
+--_trace_filters = nil
+_trace_filters = {".*"}
 --_trace_filters = {"^vDialog"}
 
 _clibroot = 'source/cLib/classes/'

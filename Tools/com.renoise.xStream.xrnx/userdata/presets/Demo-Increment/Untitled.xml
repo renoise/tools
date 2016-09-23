@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xStreamPresets doc_version="0">
+  <Presets>
+    <Preset type="lua_model:xStreamPreset">
+      <basenote>43.200000000000003</basenote>
+      <volume>37</volume>
+      <name/>
+    </Preset>
+  </Presets>
+</xStreamPresets>

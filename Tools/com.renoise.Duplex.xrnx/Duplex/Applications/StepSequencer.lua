@@ -1,5 +1,5 @@
 --[[============================================================================
--- Duplex.Application.StepSequencer 
+-- Duplex.Application.StepSequencer
 ============================================================================]]--
 
 --[[--
@@ -28,7 +28,19 @@ Originally written by daxton.fleming@gmail.com
 
 ### Changes
 
-
+  0.99 by Eran Dax Lonker
+    - Added: "grid mode" option - use all grid buttons for only one track/column
+    - Added: "follow column" option - use the currently selected column
+    - Added: "Write mode" option - insert notes only if pattern edit mode is on
+    - Added: "Play notes" option - plays the current note if trigger pads is
+              pushed (via OSC, if "Write notes" set not to "All time", notes 
+              will be played only if pattern edit mode is off.)
+    - Added: "display notes" option - display notes + volumens on the grid buttons
+    - Added: new mapping "levelslider" (single slider for setting the volume) 
+             new mapping "lvelsteps" (single button for rotating the volume)
+    - Added: grid mapping parameter button_size ... only needed to decide whether
+             it's possible to display the note volume in addition to the note value
+    - Fixed: wrong note octave in renoise notifications 
 
   0.98.21
     - Support line_notifier when slots are aliased (also when created and/or removed)
@@ -88,9 +100,19 @@ local COLUMNS_SINGLE = 1
 local COLUMNS_MULTI = 2
 local FOLLOW_TRACK_ON = 1
 local FOLLOW_TRACK_OFF = 2
+local FOLLOW_COLUMN_ON = 1
+local FOLLOW_COLUMN_OFF = 2
 local TRACK_PAGE_AUTO = 1
 local FOLLOW_LINE_ON = 1
 local FOLLOW_LINE_OFF = 2
+local GRID_MODE_MULTIPLE = 1
+local GRID_MODE_SINGLE = 2
+local WRITE_MODE_RECORD_OFF = 1
+local WRITE_MODE_RECORD_ON = 2
+local PLAY_NOTES_ON = 2
+local PLAY_NOTES_OFF = 1
+local DISPLAY_NOTES_ON = 2
+local DISPLAY_NOTES_OFF = 1
 
 --==============================================================================
 
@@ -101,7 +123,7 @@ StepSequencer.default_options = {
   line_increment = {
     label = "Line increment",
     description = "Choose the number of lines to jump for each step "
-                .."when flipping through pattern",
+                .."\nwhen flipping through pattern",
     on_change = function(inst)
       inst:_update_line_count()
     end,
@@ -115,8 +137,8 @@ StepSequencer.default_options = {
   },
   follow_track = {
     label = "Follow track",
-    description = "Enable this if you want to align the sequencer with " 
-                .."\nthe selected track in Renoise",
+    description = "Enable this if you want to align the sequencer to " 
+                .."\nthe selected track in pattern",
     on_change = function(inst)
       inst:_follow_track()
     end,
@@ -126,16 +148,82 @@ StepSequencer.default_options = {
     },
     value = 2,
   },
+  follow_column = {
+    label = "Follow column",
+    description = "Enable this if you want to align the sequencer to " 
+                .."\nthe currently selected column in pattern",
+    on_change = function(inst)
+      inst:_update_selected_column()
+    end,
+    items = {
+      "Follow column enabled",
+      "Follow column disabled"
+    },
+    value = 2,
+  },
   follow_line = {
     label = "Follow line",
     description = "Enable this if you want to align the sequencer with " 
-                .."\nthe selected line in Renoise",
+                .."\nthe selected line in pattern",
     --on_change = function(inst)
     --  inst:_follow_track()
     --end,
     items = {
       "Follow line enabled",
       "Follow line disabled"
+    },
+    value = 1,
+  },
+  grid_mode = {
+    label = "Grid Mode",
+    description = "Choose if you want to edit multiple tracks" 
+                .."\nwith the grid or only one track.",
+    on_change = function(inst)
+      inst:_build_app()
+      inst:_update_grid()
+      renoise.app():show_status("Grid mode changed.")
+    end,
+    items = {
+      "Multiple tracks",
+      "Single track"
+    },
+    value = 1,
+  },
+  write_mode = {
+    label = "Write Mode",
+    description = "Choose if you want to write notes to the pattern" 
+                .."\ndependent from Renoise's edit mode.",
+    on_change = function(inst)
+    end,
+    items = {
+      "All time",
+      "Only in record mode"
+    },
+    value = 1,
+  },
+  play_notes = {
+    label = "Play notes",
+    description = "Choose if you want to play the instrument / note" 
+                .."\non pushing a trigger pad or grid button."
+                .."\nIf 'Write mode' is set to 'Only in edit mode' "
+                .."\nnotes will be played only if edit mode is off.",
+    on_change = function(inst)
+    end,
+    items = {
+      "No",
+      "Yes"
+    },
+    value = 1,
+  },  
+  display_notes = {
+    label = "Display notes",
+    description = "Choose if you want to display the note values" 
+                .."\onto the grid buttons in Duplex",
+    on_change = function(inst)
+    end,
+    items = {
+      "No",
+      "Yes"
     },
     value = 1,
   },
@@ -154,6 +242,18 @@ StepSequencer.default_options = {
     },
     value = 1,
   },
+  volume_steps = {
+    label = "Volume steps",
+    description = "Specify the step size of the"
+                .."\nvolume-steps button",
+    on_change = function(inst)
+      inst:_update_track_count()
+    end,
+    items = {
+      "3","4","6","8","12","16","24","32"
+    },
+    value = 3,
+  },
 }
 
 StepSequencer.available_mappings = {
@@ -163,6 +263,7 @@ StepSequencer.available_mappings = {
                 .."\nHold multiple buttons to adjust level/transpose"
                 .."\nControl value: ",
     orientation = ORIENTATION.VERTICAL,
+    button_size = 1
   },
   level = {
     -- note: this control serves two purposes, as it will also display the 
@@ -170,6 +271,12 @@ StepSequencer.available_mappings = {
     -- as the grid (rows if ORIENTATION.VERTICAL, columns if ORIENTATION.HORIZONTAL)
     description = "Sequencer: Adjust note volume",
     orientation = ORIENTATION.VERTICAL,
+  },
+  levelslider = {
+    description = "Sequencer: Adjust note volume",
+  },
+  levelsteps = {
+    description = "Sequencer: Increase the note volume step wise",
   },
   line = { 
     component = UISlider,
@@ -262,6 +369,9 @@ function StepSequencer:__init(...)
   
   --- remember the current line index
   self._current_line_index = nil  
+
+  --- remember the current column in track
+  self._current_column_index = 1  
   
   self._update_lines_requested = false
   self._update_tracks_requested = false
@@ -286,7 +396,8 @@ function StepSequencer:__init(...)
 
   --- track held grid keys
   self._keys_down = { } 
-  
+  self._volume_steps = {3,4,6,8,12,16,24,32} 
+
   --- don't toggle off if pressing multiple on / transposing / etc
   self._toggle_exempt = { } 
 
@@ -307,6 +418,10 @@ function StepSequencer:start_app()
   if not Application.start_app(self) then
     return
   end
+
+  self.voice_mgr = self._process.browser._voice_mgr
+  assert(self.voice_mgr,"Internal Error. Please report: " ..
+    "expected OSC voice-manager to be present")
 
   self._follow_player = rns.transport.follow_player
 
@@ -372,19 +487,24 @@ function StepSequencer:_build_app()
     renoise.app():show_warning(msg)
     return false
   end
-
+ 
 
   -- build each section's controllers
   self:_build_line()
   self:_build_track()
   self:_build_grid()
   self:_build_level()
+  self:_build_levelslider()
+  self:_build_levelsteps()
   self:_build_transpose()
 
   -- bind observables
   self:_attach_to_song()
 
+  self:_update_selected_column()
+
   Application._build_app(self)
+
   return true
 
 end
@@ -513,12 +633,36 @@ function StepSequencer:_build_grid()
   local orientation = self:_get_orientation()
 
   for track_idx=1,self._track_count do
-    for line_idx=1,self._line_count do
 
+    local button_idx_base = ( track_idx-1) * self._line_count 
+
+    for line_idx=1,self._line_count do
+      
       local x,y = track_idx,line_idx
 
-      if not (orientation==ORIENTATION.VERTICAL) then
+      -- button_idx generates the index of all grid buttons independent from grid layout
+      local button_idx = button_idx_base + line_idx
+
+      -- x,y repesenting the grid layout independent from the grid mode setting
+      local x_p,y_p = x,y
+
+      -- _gms = grid mode single, tmm = grid mode multi
+      -- workaround to get grid mode specific x/y values 
+      -- into the button event functions (x.on_press etc.).
+      -- once the grid is build, it was impossible to overwrite 
+      -- change this values in this functions.
+      local x_gmm,y_gmm = x,y
+      local x_gms,y_gms = 1,button_idx
+
+      if ( self.options.grid_mode.value == GRID_MODE_SINGLE ) then 
+        x,y = x_gms,y_gms
+      end
+
+      if not ( orientation == ORIENTATION.VERTICAL ) then
         x,y = y,x
+        x_p,y_p = y_p,x_p
+        x_gms,y_gms = y_gms,x_gms
+        x_gmm,y_gmm = y_gmm,x_gmm
       end
 
       -- construct tables
@@ -533,17 +677,27 @@ function StepSequencer:_build_grid()
       end
 
       local c = UIButton(self)
-      c.group_name = self.mappings.grid.group_name
+
+      c.group_name = self.mappings.grid.group_name 
       c.tooltip = self.mappings.grid.description
-      c.x_pos = x
-      c.y_pos = y
+      c.x_pos = x_p
+      c.y_pos = y_p
 
       -- grid toggling
       c.on_press = function(obj)
-        self:_process_grid_event(x, y, true,obj)
+
+        if ( self.options.grid_mode.value == GRID_MODE_SINGLE ) then 
+          self:_process_grid_event(x_gms, y_gms, true,obj)
+        else
+          self:_process_grid_event(x_gmm, y_gmm, true,obj)
+        end
       end
       c.on_release = function(obj)
-        self:_process_grid_event(x, y, false,obj)
+        if ( self.options.grid_mode.value == GRID_MODE_SINGLE ) then 
+          self:_process_grid_event(x_gms, y_gms, false,obj)
+        else
+          self:_process_grid_event(x_gmm, y_gmm, false,obj)
+        end
       end
       
       -- hold to "pick up" note, volume & instrument (ie copy step)
@@ -551,9 +705,14 @@ function StepSequencer:_build_grid()
 
         -- check if we're holding multiple keys
         local held = self:_walk_held_keys(nil, false)
-        if (held == 1) then
-          self._toggle_exempt[x][y] = true
-          self:_copy_grid_button(x,y,obj)
+        if (held == 1 and self:_write_note()) then
+          if ( self.options.grid_mode.value == GRID_MODE_SINGLE ) then    
+            self._toggle_exempt[x_gms][y_gms] = true
+            self:_copy_grid_button(x_gms,y_gms,obj)
+          else
+            self._toggle_exempt[x_gmm][y_gmm] = true
+            self:_copy_grid_button(x_gmm,y_gmm,obj)
+          end
 
           local msg = "StepSequencer: note was copied"
           renoise.app():show_status(msg)
@@ -566,12 +725,21 @@ function StepSequencer:_build_grid()
 
           -- bring focus to track
           local track_idx = nil
-          if (orientation==ORIENTATION.HORIZONTAL) then
-            track_idx = y + self._track_offset
+          if ( self.options.grid_mode.value == GRID_MODE_SINGLE ) then    
+            if (orientation==ORIENTATION.HORIZONTAL) then
+              track_idx = y_gms + self._track_offset
+            else
+              track_idx = x_gms + self._track_offset
+            end
           else
-            track_idx = x + self._track_offset
+            if (orientation==ORIENTATION.HORIZONTAL) then
+              track_idx = y_gmm + self._track_offset
+            else
+              track_idx = x_gmm + self._track_offset
+            end
           end
           rns.selected_track_index = track_idx
+
         end
 
       end
@@ -618,7 +786,7 @@ function StepSequencer:_build_level()
           end
           local tracks = rns.selected_pattern.tracks[track_idx + self._track_offset]
           local inc = self.options.line_increment.value
-          local note = tracks:line(line_idx + self._edit_page * inc).note_columns[1]
+          local note = tracks:line(line_idx + self._edit_page * inc).note_columns[self._current_column_index]
           note.volume_value = newval
         end,
         true
@@ -632,9 +800,161 @@ function StepSequencer:_build_level()
       end
       self._update_grid_requested = true
       self:_draw_volume_slider(newval)
+      self:_draw_volume_steps(newval)
+      self._levelslider:set_value(newval)
       return true
     end
-    self._level = c
+    self._level = c    
+    self:_draw_volume_slider()
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+--- construct user interface
+
+function StepSequencer:_build_levelslider()
+  TRACE("StepSequencer:_build_levelslider()")
+
+  if self.mappings.levelslider.group_name then
+
+    local cm = self.display.device.control_map
+
+      -- locate the control-map "maximum" attribute,
+      -- and make the slider use this range as "ceiling"
+      local param = cm:get_param_by_index(self.mappings.levelslider.index,self.mappings.levelslider.group_name)
+      local args = param.xarg
+      --print("*** Hydra _build_app")
+
+      local c = UISlider(self)
+      c.group_name = self.mappings.levelslider.group_name
+      c.tooltip = self.mappings.levelslider.description
+
+      c:set_pos(self.mappings.levelslider.index)
+      c:set_value(self._base_volume)
+      c.ceiling = args.maximum
+      c.on_change = function(obj)
+        local newval = math.ceil(obj.value)
+        -- check for held grid notes
+
+        local held = self:_walk_held_keys(
+          function(track_idx,line_idx)
+            if (self:_get_orientation()==ORIENTATION.HORIZONTAL) then
+              track_idx,line_idx = line_idx,track_idx
+            end
+            local tracks = rns.selected_pattern.tracks[track_idx + self._track_offset]
+            local inc = self.options.line_increment.value
+            local note = tracks:line(line_idx + self._edit_page * inc).note_columns[self._current_column_index]
+            note.volume_value = newval
+          end,
+          true
+        )
+        if (held == 0) then 
+          self._base_volume = newval
+          local msg = string.format("StepSequencer: Volume changed to %X",self._base_volume)
+          renoise.app():show_status(msg)
+        end
+        self._update_grid_requested = true
+        self:_draw_volume_slider(newval)
+        self:_draw_volume_steps(newval)
+        return true
+      end
+      self._levelslider = c
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+
+--- construct user interface
+
+function StepSequencer:_build_levelsteps()
+  TRACE("StepSequencer:_build_levelsteps()")
+
+  if self.mappings.levelslider.group_name then
+
+    local cm = self.display.device.control_map
+
+      -- locate the control-map "maximum" attribute,
+      -- and make the slider use this range as "ceiling"
+      local param = cm:get_param_by_index(self.mappings.levelsteps.index,self.mappings.levelsteps.group_name)
+      local args = param.xarg
+      --print("*** Hydra _build_app")
+
+      local c = UIButton(self)
+      c.group_name = self.mappings.levelsteps.group_name
+      c.tooltip = self.mappings.levelsteps.description
+      c:set_pos(self.mappings.levelsteps.index)
+      c.monochrome = is_monochrome(self.display.device.colorspace)
+      c.on_press = function(obj)
+        local newval = self._base_volume + math.ceil (args.maximum/self._volume_steps[self.options.volume_steps.value])
+        if ( newval > args.maximum and 
+             args.maximum - self._base_volume < args.maximum/self._volume_steps[self.options.volume_steps.value] and
+             args.maximum - self._base_volume ~= 0 ) then
+          newval = args.maximum
+        elseif ( newval >= args.maximum) then
+          newval = 0
+        end
+
+        -- check for held grid notes
+        local held = self:_walk_held_keys(
+          function(track_idx,line_idx)
+            if (self:_get_orientation()==ORIENTATION.HORIZONTAL) then
+              track_idx,line_idx = line_idx,track_idx
+            end
+            local tracks = rns.selected_pattern.tracks[track_idx + self._track_offset]
+            local inc = self.options.line_increment.value
+            local note = tracks:line(line_idx + self._edit_page * inc).note_columns[self._current_column_index]
+            note.volume_value = newval
+          end,
+          true
+        )
+         if (held == 0) then 
+          self._base_volume = newval
+          local msg = string.format("StepSequencer: Volume changed to %X",self._base_volume)
+          renoise.app():show_status(msg)
+        end
+        self._update_grid_requested = true
+        self:_draw_volume_slider(newval)        
+        self:_draw_volume_steps(newval)
+        self._levelslider:set_value(newval)
+        return true
+      end
+
+      c.on_hold = function(obj)
+
+        local newval = 100
+        -- check for held grid notes
+        local held = self:_walk_held_keys(
+          function(track_idx,line_idx)
+            if (self:_get_orientation()==ORIENTATION.HORIZONTAL) then
+              track_idx,line_idx = line_idx,track_idx
+            end
+            local tracks = rns.selected_pattern.tracks[track_idx + self._track_offset]
+            local inc = self.options.line_increment.value
+            local note = tracks:line(line_idx + self._edit_page * inc).note_columns[self._current_column_index]
+            note.volume_value = newval
+          end,
+          true
+        )
+         if (held == 0) then 
+          self._base_volume = newval
+          local msg = string.format("StepSequencer: Volume changed to %X",self._base_volume)
+          renoise.app():show_status(msg)
+        end
+        self._update_grid_requested = true
+        self:_draw_volume_slider(newval)
+        self:_draw_volume_steps(newval)
+        self._levelslider:set_value(newval)
+
+        return true
+
+      end
+      self._levelsteps = c
+
+      self:_draw_volume_steps()
   end
 
 end
@@ -649,6 +969,7 @@ function StepSequencer:_build_transpose()
 
   if self.mappings.transpose.group_name then
 
+    self:_update_selected_column()
 
     self._transpose = { }
     local transposes = { -12, -1, 1, 12 }
@@ -678,7 +999,7 @@ function StepSequencer:_build_transpose()
             end
             local inc = self.options.line_increment.value
             local note = rns.selected_pattern.tracks[x + self._track_offset]:line(
-              y + self._edit_page * inc).note_columns[1]
+              y + self._edit_page * inc).note_columns[self._current_column_index]
             local newval = note.note_value + obj.transpose
             if (newval > 0 and newval < 120) then 
               note.note_value = newval
@@ -711,7 +1032,8 @@ function StepSequencer:on_idle()
   if not self.active then 
     return 
   end
-  
+  local v= renoise.song().transport.edit_mode
+
   -- did we change current_pattern?
   if (self._current_pattern ~= rns.selected_pattern_index) then
     self._current_pattern = rns.selected_pattern_index
@@ -730,6 +1052,13 @@ function StepSequencer:on_idle()
       end
     )
   end
+
+  -- did we change current_column?
+  if (self._current_column ~= rns.selected_note_column_index) then
+    self:_update_selected_column();
+    self:_update_grid()
+  end
+
 
   -- check if the current line changed
   if not rns.transport.follow_player and
@@ -759,12 +1088,14 @@ function StepSequencer:on_idle()
     self._update_grid_requested = false
     self:_update_grid()
   end
-  
-  if rns.transport.playing then
-    self:_update_position()
-  else
-    -- clear level?
-    self:_draw_position(0)
+
+  if ( self.options.grid_mode.value == GRID_MODE_MULTIPLE ) then 
+    if rns.transport.playing then
+      self:_update_position()
+    else
+      -- clear level?
+      self:_draw_position(0)
+    end
   end
 
 end
@@ -1012,6 +1343,8 @@ function StepSequencer:_update_grid()
     return 
   end
 
+  self:_update_selected_column()
+  
   local orientation = self:_get_orientation()
 
   -- loop through grid & buttons
@@ -1020,10 +1353,17 @@ function StepSequencer:_update_grid()
   local track_count = #rns.tracks
   local selected_pattern_tracks = rns.selected_pattern.tracks
   local selected_pattern_lines = rns.selected_pattern.number_of_lines
-  for track_idx = (1 + self._track_offset),(self._track_count+self._track_offset) do
+  local track_c = self._track_count
+  local line_c = self._line_count
+  if ( self.options.grid_mode.value == GRID_MODE_SINGLE ) then 
+        track_c = 1
+        line_c = self._line_count * self._track_count
+  end
+
+  for track_idx = (1 + self._track_offset),(track_c+self._track_offset) do
     local pattern_track = selected_pattern_tracks[track_idx]
     local current_track = (track_idx==rns.selected_track_index)
-    for line_idx = (1 + line_offset),(self._line_count + line_offset) do
+    for line_idx = (1 + line_offset),(line_c + line_offset) do
 
       local button = nil
       if(orientation==ORIENTATION.VERTICAL) then
@@ -1036,7 +1376,7 @@ function StepSequencer:_update_grid()
         local note = nil
         if (line_idx <= selected_pattern_lines) and
           (track_idx <= track_count) then
-          note = pattern_track:line(line_idx).note_columns[1]
+          note = pattern_track:line(line_idx).note_columns[self._current_column_index]
         end
         self:_draw_grid_button(button,note,current_track)
       end
@@ -1104,6 +1444,7 @@ function StepSequencer:_follow_track()
   local track_idx = math.min(rns.selected_track_index,master_idx-1)
   local page = self:_get_track_page(track_idx)
   local page_width = self:_get_page_width()
+
   if (page~=self._track_page) then
     self._track_page = page
     self._track_offset = page*page_width
@@ -1116,6 +1457,22 @@ function StepSequencer:_follow_track()
 
   if self._highlight_track then
     self._update_grid_requested = true
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+--- when following the active track in Renoise, we call this method
+-- (track following is limited to sequencer tracks)
+
+function StepSequencer:_update_selected_column()
+  TRACE("StepSequencer:_update_selected_column()")
+
+  if (self.options.follow_column.value == FOLLOW_COLUMN_OFF) then
+    self._current_column_index = 1
+  else 
+    self._current_column_index = rns.selected_note_column_index
   end
 
 end
@@ -1142,6 +1499,10 @@ end
 
 function StepSequencer:_get_page_width()
   TRACE("StepSequencer:_get_page_width()")
+
+  if ( self.options.grid_mode.value == GRID_MODE_SINGLE ) then
+   return 1
+  end
 
   return (self.options.page_size.value == TRACK_PAGE_AUTO)
     and self._track_count or self.options.page_size.value-1
@@ -1328,6 +1689,7 @@ function StepSequencer:on_new_document()
   self:_update_line_buttons()
   self:_update_grid()
   self:_follow_track()
+  self:_update_selected_column()
 
 end
 
@@ -1341,7 +1703,7 @@ end
 function StepSequencer:_process_grid_event(x,y, state, btn)
   TRACE("StepSequencer:_process_grid_event()",x,y, state, btn)
 
-  local track_idx,line_idx = x,y
+  local track_idx,line_idx,t_ex = x,y,true
   if not (self:_get_orientation() == ORIENTATION.VERTICAL) then
     line_idx,track_idx = track_idx,line_idx
   end
@@ -1352,17 +1714,19 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
   if (track_idx >= get_master_track_index()) then 
     return false 
   end
-  
+
   -- check if we are dealing with a group track
   local track = rns.tracks[track_idx]
   if (track.type == renoise.Track.TRACK_TYPE_GROUP) then
     return
   end
-
+  
   local current_track = (track_idx == rns.selected_track_index)
 
+  self:_update_selected_column()
+
   local note = rns.selected_pattern.tracks[track_idx]:line(
-    line_idx).note_columns[1]
+    line_idx).note_columns[self._current_column_index]
 
   -- determine instrument by matching track title with instruments
   -- a matching title will select that instrument 
@@ -1375,33 +1739,67 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
     renoise.app():show_status(msg)
   end
 
+  local base_note = (self._base_note-1) + (self._base_octave-1)*12
+  
   if (state) then -- press
     self._keys_down[x][y] = true
+
     if (note.note_string == "OFF" or note.note_string == "---") then
-      local base_note = (self._base_note-1) + 
-        (self._base_octave-1)*12
-      self:_set_note(note, base_note, instr_index-1, 
-        self._base_volume)
-      self._toggle_exempt[x][y] = true
-      -- and update the button ...
-      self:_draw_grid_button(btn,note,current_track)
-    end
-      
-  else -- release
-    self._keys_down[x][y] = nil
-    -- don't toggle off if we just turned on
-    if (not self._toggle_exempt[x][y]) then 
-      self:_clear_note(note)
-      -- and update the button ...
-      if (rns.selected_pattern.number_of_lines<line_idx) then
-        -- reset to "out of bounds" color
-        note = nil
+      if self:_write_note() then
+        self:_set_note(note, base_note, instr_index-1, self._base_volume)
+        self._toggle_exempt[x][y] = true
+        -- and update the button ...
+        self:_draw_grid_button(btn,note,current_track)
       end
-      self:_draw_grid_button(btn,note,current_track)
+       -- trigger note 
+      if ( self:_play_note() ) then
+        self.voice_mgr:trigger(self,instr_index,track_idx, base_note , self._base_volume , false)
+      end
     else
-      self._toggle_exempt[x][y] = nil
+      -- trigger note 
+      if ( self:_play_note() and self.options.write_mode.value == WRITE_MODE_RECORD_ON ) then
+        self.voice_mgr:trigger(self,instr_index,track_idx, base_note , self._base_volume , false)
+      end
     end
+
+  else -- release
+
+    self._keys_down[x][y] = nil
+    if self:_write_note() then
+      -- don't toggle off if we just turned on
+      if (not self._toggle_exempt[x][y]) then    
+        self:_clear_note(note)
+        -- and update the button ...
+        if (rns.selected_pattern.number_of_lines<line_idx) then
+          -- reset to "out of bounds" color
+          note = nil
+        end
+        self:_draw_grid_button(btn,note,current_track)
+      else
+        self._toggle_exempt[x][y] = nil
+      end
+
+    end
+     -- release note
+    if ( self:_play_note() ) then
+       self.voice_mgr:release(self,instr_index,track_idx, base_note , self._base_volume , false)
+    end
+
   end
+
+
+  -- -- trigger notes 
+  -- if ( renoise.song().transport.edit_mode == false 
+  --      and self.options.play_notes.value == PLAY_NOTES_ON ) then
+  --   if ( state ) then
+  --     self.voice_mgr:trigger(self,instr_index,track_idx, base_note , self._base_volume , false)
+  --   else 
+  --     self.voice_mgr:release(self,instr_index,track_idx, base_note , self._base_volume , false)
+  --   end
+  -- end
+
+
+
   return true
 end
 
@@ -1431,31 +1829,54 @@ end
 function StepSequencer:_copy_grid_button(lx,ly, btn)
   TRACE("StepSequencer:_copy_grid_button()",lx,ly, btn)
 
-  local gx = lx+self._track_offset
-  local gy = ly+self._edit_page*self._line_count
+   local gx = nil
+   local gy = nil
 
-  if not (self:_get_orientation() == ORIENTATION.VERTICAL) then
-    gx,gy = gy,gx
+  if ( self.options.grid_mode.value == GRID_MODE_MULTIPLE ) then
+
+    gx = lx+self._track_offset
+    gy = ly+self._edit_page*self._line_count
+
+    if not (self:_get_orientation() == ORIENTATION.VERTICAL) then
+      gx,gy = gy,gx
+    end
+
+  elseif ( self.options.grid_mode.value == GRID_MODE_SINGLE ) then
+
+    if not (self:_get_orientation() == ORIENTATION.VERTICAL) then
+      lx,ly = ly,lx
+    end
+
+    gx = lx+self._track_offset
+    gy = ly+self._edit_page * self.options.line_increment.value
+
   end
 
   if (gx >= get_master_track_index()) then 
     return false 
   end
 
-  local note = rns.selected_pattern.tracks[gx]:line(gy).note_columns[1]
-  
+  self:_update_selected_column()
+
+  local note = rns.selected_pattern.tracks[gx]:line(gy).note_columns[self._current_column_index]
+
   if not note then
     return false
   end
   -- copy note to base note
   if (note.note_value < 120) then
     self:_set_basenote(note.note_value)
+  else
+    return false
   end
+
   -- copy volume to base volume
-  local note_vol = math.min(128,note.volume_value)
-  if (note_vol <= 128) then
+  local note_vol = math.min(127,note.volume_value)
+  if (note_vol <= 127) then
     self._base_volume = note_vol
     self:_draw_volume_slider(note_vol)
+    self:_draw_volume_steps(note_vol)
+    self._levelslider:set_value(note_vol)
   end
   -- change selected instrument
   if (note.instrument_value < #rns.instruments) then
@@ -1493,6 +1914,71 @@ function StepSequencer:_draw_volume_slider(volume)
   end
 
 end
+
+
+--------------------------------------------------------------------------------
+
+--- update display of volume slider
+-- @param volume (int), between 0-127
+
+function StepSequencer:_draw_volume_steps(volume)
+  TRACE("StepSequencer:_draw_volume_steps()",volume)
+  
+  if self._level then
+
+    if not volume then
+      volume = self._base_volume
+    end 
+
+    local p = { }
+    if (volume == 0) then
+      p = table.rcopy(self.palette.slot_muted)
+    else 
+      p = self:_volume_palette(volume, 127)
+    end
+
+    self._levelsteps:set(p)
+
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+--- check if it should be possible to write not pattern
+
+
+function StepSequencer:_write_note()
+  TRACE("StepSequencer:_write_note()")
+
+  if ( renoise.song().transport.edit_mode == true and 
+       self.options.write_mode.value == WRITE_MODE_RECORD_ON ) or 
+     ( self.options.write_mode.value == WRITE_MODE_RECORD_OFF ) then
+     return true
+  else
+     return false
+  end    
+
+end
+
+
+
+--------------------------------------------------------------------------------
+
+--- check if note should be triggered
+
+
+function StepSequencer:_play_note()
+  TRACE("StepSequencer:_play_note()")
+  if ( renoise.song().transport.edit_mode == false and
+       self.options.play_notes.value == PLAY_NOTES_ON ) then
+     return true
+  else
+     return false
+  end    
+
+end
+
 
 --------------------------------------------------------------------------------
 
@@ -1542,6 +2028,13 @@ function StepSequencer:_draw_grid_button(button,note,current_track)
     else
       button:set(self:_volume_palette(note.volume_value, 127))
     end
+    if (self.options.display_notes.value == DISPLAY_NOTES_ON and note.note_value ~= 121 ) then
+       local t = tostring (note.note_string)
+       if ( self.mappings.grid.button_size >= 1.3 ) then
+         t = t.."\n"..tostring (note.volume_value)
+       end
+       button:set({text=t})
+    end
   else
     button:set(self.palette.out_of_bounds)
   end
@@ -1579,7 +2072,7 @@ function StepSequencer:_set_basenote(note_value)
   self._base_note = note
   self._base_octave = oct
   local msg = string.format(
-    "StepSequencer: Basenote changed to %s%i",NOTE_ARRAY[note],oct)
+    "StepSequencer: Basenote changed to %s%i",NOTE_ARRAY[note],oct-1)
 
   renoise.app():show_status(msg)
 
