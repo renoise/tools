@@ -73,6 +73,10 @@ local phrasemate = nil
 local prefs = PhraseMatePrefs()
 renoise.tool().preferences = prefs
 
+--------------------------------------------------------------------------------
+-- Functions
+--------------------------------------------------------------------------------
+
 function launch(new_song)
   rns = renoise.song()
   if not phrasemate then
@@ -84,6 +88,18 @@ function launch(new_song)
     phrasemate:show_main_dialog()
   elseif not prefs.autostart_hidden.value then
     phrasemate:show_main_dialog()
+  end
+end
+
+function invoke_task(rslt,err)
+  if (rslt == false and err) then
+    renoise.app():show_status(err)
+  end
+end
+
+function invoke_task_logged(rslt,err)
+  if (rslt == false and err) then
+    LOG(err)
   end
 end
 
@@ -109,7 +125,7 @@ renoise.tool():add_keybinding {
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Smart Write...",
   invoke = function(repeated)
-    if (not repeated) then 
+    if phrasemate and not repeated then 
       phrasemate:show_smart_dialog()
     end
   end
@@ -120,22 +136,24 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrase from Selection in Pattern [Trigger]",
   invoke = function(msg)
-    if msg:is_trigger() then
-      phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_PATTERN)
+    if phrasemate and msg:is_trigger() then
+      invoke_task_logged(phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_PATTERN))
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Create Phrase from Selection",
   invoke = function() 
-    phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_PATTERN)
+    if phrasemate then
+      invoke_task(phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_PATTERN))
+    end
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrase from Selection in Pattern",
   invoke = function(repeated)
-    if (not repeated) then 
-      phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_PATTERN)
+    if phrasemate and not repeated then 
+      invoke_task(phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_PATTERN))
     end
   end
 }
@@ -145,22 +163,24 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrase from Selection in Matrix [Trigger]",
   invoke = function(msg)
-    if msg:is_trigger() then
-      phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_MATRIX)
+    if phrasemate and msg:is_trigger() then
+      invoke_task_logged(phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_MATRIX))
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Matrix:PhraseMate:Create Phrase from Selection",
   invoke = function() 
-    phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_MATRIX)
+    if phrasemate then
+      invoke_task(phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_MATRIX))
+    end
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrase from Selection in Matrix",
   invoke = function(repeated)
-    if (not repeated) then 
-      phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_MATRIX)
+    if phrasemate and not repeated then 
+      invoke_task(phrasemate:collect_phrases(INPUT_SCOPE.SELECTION_IN_MATRIX))
     end
   end
 }
@@ -170,22 +190,24 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrase from Track [Trigger]",
   invoke = function(msg)
-    if msg:is_trigger() then
-      phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_PATTERN)
+    if phrasemate and msg:is_trigger() then
+      invoke_task_logged(phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_PATTERN))
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Create Phrase from Track",
   invoke = function() 
-    phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_PATTERN)
+    if phrasemate then
+      invoke_task(phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_PATTERN))
+    end
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrase from Track",
   invoke = function(repeated)
-    if (not repeated) then 
-      phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_PATTERN)
+    if phrasemate and not repeated then 
+      invoke_task(phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_PATTERN))
     end
   end
 }
@@ -195,22 +217,24 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrases from Track in Song [Trigger]",
   invoke = function(msg)
-    if msg:is_trigger() then
-      phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_SONG)
+    if phrasemate and msg:is_trigger() then
+      invoke_task_logged(phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_SONG))
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Create Phrases from Track in Song",
   invoke = function() 
-    phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_SONG)
+    if phrasemate then
+      invoke_task(phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_SONG))
+    end
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrases from Track in Song",
   invoke = function(repeated)
-    if (not repeated) then 
-      phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_SONG)
+    if phrasemate and not repeated then 
+      invoke_task(phrasemate:collect_phrases(INPUT_SCOPE.TRACK_IN_SONG))
     end
   end
 }
@@ -220,22 +244,22 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Write Phrase to Selection In Pattern [Trigger]",
   invoke = function(msg)
-    if msg:is_trigger() then
-      phrasemate:apply_phrase_to_selection()
+    if phrasemate and msg:is_trigger() then
+      invoke_task_logged(phrasemate:apply_phrase_to_selection())
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "--- Pattern Editor:PhraseMate:Write Phrase to Selection In Pattern",
   invoke = function() 
-    phrasemate:apply_phrase_to_selection()
+    invoke_task(phrasemate:apply_phrase_to_selection())
   end
 } 
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Write Phrase to Selection in Pattern",
   invoke = function(repeated)
-    if (not repeated) then 
-      phrasemate:apply_phrase_to_selection()
+    if phrasemate and not repeated then 
+      invoke_task(phrasemate:apply_phrase_to_selection())
     end
   end
 }
@@ -245,23 +269,25 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Write Phrase to Track [Trigger]",
   invoke = function(msg)
-    if msg:is_trigger() then
-      phrasemate:apply_phrase_to_track()
+    if phrasemate and msg:is_trigger() then
+      invoke_task_logged(phrasemate:apply_phrase_to_track())
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Write Phrase to Track",
   invoke = function() 
-    phrasemate:apply_phrase_to_track()
+    if phrasemate then
+      invoke_task(phrasemate:apply_phrase_to_track())
+    end
   end
 } 
 
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Write Phrase to Track",
   invoke = function(repeated)
-    if (not repeated) then 
-      phrasemate:apply_phrase_to_track()
+    if phrasemate and not repeated then 
+      invoke_task(phrasemate:apply_phrase_to_track())
     end
   end
 }
@@ -271,18 +297,14 @@ renoise.tool():add_keybinding {
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Toggle Realtime/Zxx mode",
   invoke = function(repeated)
-    if (not repeated) then 
+    if phrasemate and not repeated then 
       prefs.zxx_mode = not prefs.zxx_mode
     end
   end
 }
 
---renoise.tool():add_keybinding {
-  --name = "Global:PhraseMate:Select Phrase in Instrument",
-  --invoke = function()
-    --phrasemate:invoke_task(xPhraseManager.select_previous_phrase)
-  --end
---}
+-- control : select phrase [set/trigger]
+
 renoise.tool():add_midi_mapping {
   name = PhraseMate.MIDI_MAPPING.SELECT_PHRASE_IN_INSTR,
   invoke = function(msg)
@@ -292,17 +314,21 @@ renoise.tool():add_midi_mapping {
   end
 }
 
+-- control : previous/next phrase
+
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Select Previous Phrase in Instrument",
   invoke = function()
-    phrasemate:invoke_task(xPhraseManager.select_previous_phrase)
+    if phrasemate then
+      invoke_task(xPhraseManager.select_previous_phrase())
+    end
   end
 }
 renoise.tool():add_midi_mapping {
   name = PhraseMate.MIDI_MAPPING.PREV_PHRASE_IN_INSTR,
   invoke = function(msg)
-    if msg:is_trigger() then
-      phrasemate:invoke_task(xPhraseManager.select_previous_phrase)
+    if phrasemate and msg:is_trigger() then
+      invoke_task_logged(xPhraseManager.select_previous_phrase())
     end
   end
 }
@@ -310,39 +336,79 @@ renoise.tool():add_midi_mapping {
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Select Next Phrase in Instrument",
   invoke = function()
-    phrasemate:invoke_task(xPhraseManager.select_next_phrase)
+    invoke_task(xPhraseManager.select_next_phrase())
   end
 }
 renoise.tool():add_midi_mapping {
   name = PhraseMate.MIDI_MAPPING.NEXT_PHRASE_IN_INSTR,
   invoke = function(msg)
     if msg:is_trigger() then
-      phrasemate:invoke_task(xPhraseManager.select_next_phrase())
+      if phrasemate then
+        invoke_task_logged(xPhraseManager.select_next_phrase())
+      end
+    end
+  end
+}
+
+-- control : first/last phrase
+
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Select First Phrase in Instrument",
+  invoke = function()
+    if phrasemate then
+      invoke_task(xPhraseManager.select_first_phrase())
+    end
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = PhraseMate.MIDI_MAPPING.FIRST_PHRASE_IN_INSTR,
+  invoke = function(msg)
+    if phrasemate and msg:is_trigger() then
+      invoke_task_logged(xPhraseManager.select_first_phrase())
     end
   end
 }
 
 renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Select Last Phrase in Instrument",
+  invoke = function()
+    invoke_task(xPhraseManager.select_last_phrase())
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = PhraseMate.MIDI_MAPPING.LAST_PHRASE_IN_INSTR,
+  invoke = function(msg)
+    if msg:is_trigger() then
+      if phrasemate then
+        invoke_task_logged(xPhraseManager.select_last_phrase())
+      end
+    end
+  end
+}
+
+-- control : playback mode
+
+renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Set Playback Mode to 'Off'",
   invoke = function(repeated)
-    if (not repeated) then 
-      phrasemate:invoke_task(xPhraseManager.set_playback_mode,renoise.Instrument.PHRASES_OFF)
+    if phrasemate and not repeated then      
+      invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_OFF))
     end
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Set Playback Mode to 'Program'",
   invoke = function(repeated)
-    if (not repeated) then 
-      phrasemate:invoke_task(xPhraseManager.set_playback_mode,renoise.Instrument.PHRASES_PLAY_SELECTIVE)
+    if phrasemate and not repeated then 
+      invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_PLAY_SELECTIVE))
     end
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Set Playback Mode to 'Keymap'",
   invoke = function(repeated)
-    if (not repeated) then 
-      phrasemate:invoke_task(xPhraseManager.set_playback_mode,renoise.Instrument.PHRASES_PLAY_KEYMAP)
+    if phrasemate and not repeated then 
+      invoke_task(xPhraseManager.set_playback_mode(renoise.Instrument.PHRASES_PLAY_KEYMAP))
     end
   end
 }
@@ -350,17 +416,32 @@ renoise.tool():add_midi_mapping {
   name = PhraseMate.MIDI_MAPPING.SET_PLAYBACK_MODE,
   invoke = function(msg)
     local mode = cLib.clamp_value(msg.int_value,renoise.Instrument.PHRASES_OFF,renoise.Instrument.PHRASES_PLAY_KEYMAP)
-    xPhraseManager.set_playback_mode(mode)
+    invoke_task_logged(xPhraseManager.set_playback_mode(mode))
   end
 }
+renoise.tool():add_keybinding {
+  name = "Global:PhraseMate:Cycle Playback Mode",
+  invoke = function(repeated)
+    if phrasemate and not repeated then 
+      invoke_task(xPhraseManager.cycle_playback_mode())
+    end
+  end
+}
+renoise.tool():add_midi_mapping {
+  name = PhraseMate.MIDI_MAPPING.CYCLE_PLAYBACK_MODE,
+  invoke = function(msg)
+    invoke_task_logged(xPhraseManager.cycle_playback_mode())
+  end
+}
+
+-- control : insert/delete phrase
 
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Delete Selected Phrase",
   invoke = function(repeated)
     if (not repeated) then 
-      local rslt,err = phrasemate:delete_phrase() 
-      if err then
-        renoise.app():show_warning(err)
+      if phrasemate then
+        invoke_task(phrasemate:delete_phrase())
       end
     end
   end
@@ -368,9 +449,8 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping {
   name = PhraseMate.MIDI_MAPPING.DELETE_PHRASE,
   invoke = function(msg)
-    local rslt,err = phrasemate:delete_phrase() 
-    if err then
-      LOG(err)
+    if phrasemate then
+      invoke_task_logged(phrasemate:delete_phrase())
     end
   end
 }
@@ -378,20 +458,16 @@ renoise.tool():add_midi_mapping {
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Insert New Phrase",
   invoke = function(repeated)
-    if (not repeated) then 
-      local rslt,err = phrasemate:insert_phrase() 
-      if err then
-        renoise.app():show_warning(err)
-      end
+    if phrasemate and not repeated then       
+      invoke_task(phrasemate:insert_phrase())
     end
   end
 }
 renoise.tool():add_midi_mapping {
   name = PhraseMate.MIDI_MAPPING.INSERT_PHRASE,
   invoke = function(msg)
-    local rslt,err = phrasemate:insert_phrase() 
-    if err then
-      LOG(err)
+    if phrasemate then
+      invoke_task_logged(phrasemate:insert_phrase())
     end
   end
 }
@@ -412,6 +488,8 @@ renoise.tool():add_menu_entry {
 }
 
 
+--------------------------------------------------------------------------------
+-- Notifiers
 --------------------------------------------------------------------------------
 
 renoise.tool().app_new_document_observable:add_notifier(function()
