@@ -78,9 +78,15 @@ xMidiMessage.VALUE_LABELS = {
   --RPN = "rpn",
 }
 
+xMidiMessage.NRPN_ORDER = {
+  MSB_LSB = 1, -- 0x63 followed by 0x62
+  LSB_MSB = 2, -- 0x62 followed by 0x63
+}
+
 xMidiMessage.DEFAULT_BIT_DEPTH = xMidiMessage.BIT_DEPTH.SEVEN
 xMidiMessage.DEFAULT_CHANNEL = 0
 xMidiMessage.DEFAULT_PORT_NAME = "Unknown port"
+xMidiMessage.DEFAULT_NRPN_ORDER = xMidiMessage.NRPN_ORDER.MSB_LSB
 
 -------------------------------------------------------------------------------
 
@@ -110,6 +116,12 @@ function xMidiMessage:__init(...)
 
   --- string, source/target port
   self.port_name = args.port_name or xMidiMessage.DEFAULT_PORT_NAME
+
+  --- xMidiMessage.NRPN_ORDER
+  self.nrpn_order = args.nrpn_order or xMidiMessage.NRPN_ORDER.MSB_LSB
+
+  --- boolean, whether to terminate NRPNs (output)
+  self.terminate_nrpns = args.terminate_nrpns or xMidiMessage.DEFAULT_NRPN_ORDER
 
   -- initialize --
 
@@ -293,7 +305,7 @@ function xMidiMessage:create_raw_message()
 
       [xMidiMessage.TYPE.NRPN] = function()
 
-        -- ### build NRPN message
+        -- build NRPN message (MSB/LSB order applies)...
         --  0xBX,0x63,0xYY  (X = Channel, Y = NRPN Number MSB)
         --  0xBX,0x62,0xYY  (X = Channel, Y = NRPN Number LSB)
         --  0xBX,0x06,0xYY  (X = Channel, Y = Data Entry MSB)
@@ -302,19 +314,35 @@ function xMidiMessage:create_raw_message()
         local num_msb,num_lsb = xMidiMessage.split_mb(self.values[1])
         local val_msb,val_lsb = xMidiMessage.split_mb(self.values[2])
 
+        local msb_first = (self.nrpn_order == xMidiMessage.NRPN_ORDER.MSB_LSB)
+        local num_msb_t = {0xAF + self.channel,0x63, num_msb}
+        local num_lsb_t = {0xAF + self.channel,0x62, num_lsb}
+        local val_msb_t = {0xAF + self.channel,0x06, val_msb}
+        local val_lsb_t = {0xAF + self.channel,0x26, val_lsb}
+
         local rslt = {
-          {0xAF + self.channel,0x63,num_msb},
-          {0xAF + self.channel,0x62,num_lsb},
-          {0xAF + self.channel,0x06,val_msb},
+          msb_first and num_msb_t or num_lsb_t,
+          msb_first and num_lsb_t or num_msb_t,
+          --msb_first and val_msb_t or val_lsb_t,
         }
 
-        if self.bit_depth ~= xMidiMessage.BIT_DEPTH.SEVEN then
-          table.insert(rslt,{0xAF + self.channel,0x26,val_lsb})        
+        if self.bit_depth == xMidiMessage.BIT_DEPTH.SEVEN then
+          table.insert(rslt,val_msb_t)
+        else
+          table.insert(rslt,msb_first and val_msb_t or val_lsb_t)
+          table.insert(rslt,msb_first and val_lsb_t or val_msb_t)
         end
 
-        -- TODO optionally, when 'terminate_nrpn' is specified...
+        -- optionally, when 'terminate_nrpn' is specified...
         --  0xBX,0x65,0x7F  (X = Channel)
         --  0xBX,0x64,0x7F  (X = Channel)
+
+        if self.terminate_nrpns then
+          local terminate_msb = {0xAF + self.channel,0x65,0x7F}
+          local terminate_lsb = {0xAF + self.channel,0x64,0x7F}
+          table.insert(rslt,msb_first and terminate_msb or terminate_lsb)
+          table.insert(rslt,msb_first and terminate_lsb or terminate_msb)
+        end
 
         return rslt
 

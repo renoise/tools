@@ -61,6 +61,13 @@ function xRules:__init(...)
     terminate_nrpns = args.terminate_nrpns,
   }
 
+  --- number, default order of NRPN bytes (output) 
+  self.nrpn_order = args.nrpn_order or xMidiMessage.NRPN_ORDER.MSB_LSB
+
+  --- boolean, whether to terminate NRPNs (output)
+  self.terminate_nrpns = args.terminate_nrpns_out or false
+
+
   --[[
   self.voice_manager = xVoiceManager{
     **TODO**
@@ -329,6 +336,8 @@ function xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)
 
     for k,midi_output in pairs(self.midi_outputs) do
       if (k == xmsg.port_name) then
+        xmsg.nrpn_order = self.nrpn_order
+        xmsg.terminate_nrpns = self.terminate_nrpns
         str_msg = "MIDI ↪ " .. tostring(xmsg)
         local midi_msgs = xmsg:create_raw_message()
         --print("*** midi_msgs",rprint(midi_msgs))
