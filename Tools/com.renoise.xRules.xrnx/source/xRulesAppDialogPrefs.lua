@@ -15,9 +15,9 @@ class 'xRulesAppDialogPrefs' (vDialog)
 local DIALOG_W = 460
 local DIALOG_MARGIN = 6
 local LABEL_W = 60
-local TABLE_W = DIALOG_W/2 - (DIALOG_MARGIN)
+local TABLE_W = DIALOG_W/2 -- (DIALOG_MARGIN)
 local TABLE_ROW_H = 19
-local MIDI_ROWS = 5
+local MIDI_ROWS = 8
 local OSC_ROWS = 5
 local OSC_LABEL_W = 70
 local OSC_CONTROL_W = 90
@@ -43,8 +43,9 @@ function xRulesAppDialogPrefs:__init(ui)
   -- vLib components
   self.vtable_midi_inputs = nil
   self.vtable_midi_outputs = nil
-  self.vtable_osc_devices = nil
-  
+  self.vtable_osc_devices = nil  
+  self.nrpn_toggle = nil
+
   -- initialize --
 
   -- prevent device editing while inactive
@@ -103,6 +104,14 @@ function xRulesAppDialogPrefs:create_dialog()
   local automation_playmode_items = xAutomation.PLAYMODE_NAMES
 
   --print(">>> automation_playmode_items",rprint(automation_playmode_items))
+
+  self.nrpn_toggle = vArrowButton{
+    enabled = false, --self.prefs.props_batch_apply.value,
+    vb = vb,
+  }
+  self.nrpn_toggle.enabled_observable:add_notifier(function()
+    self:update_midi_tab()
+  end)
 
   local content = vb:column{
     margin = 6,
@@ -268,51 +277,6 @@ function xRulesAppDialogPrefs:create_dialog()
     },
     vb:column{
       id ="xRulesPrefsMidiRack",
-      vb:column{
-        width = DIALOG_W,
-        style = "group",
-        margin = 6,
-        vb:text{
-          text = "MIDI-options",
-          font = "bold",
-        },
-        vb:row{
-          vb:checkbox{
-            value = self.prefs.midi_multibyte_enabled.value,
-            notifier = function(val)
-              self.prefs.midi_multibyte_enabled.value = val
-              self.xrules.midi_input.multibyte_enabled = val
-            end,
-          },
-          vb:text{
-            text = "Enable multi-byte support (14bit control-change)"
-          },
-        },
-        vb:row{
-          vb:checkbox{
-            value = self.prefs.midi_nrpn_enabled.value,
-            notifier = function(val)
-              self.prefs.midi_nrpn_enabled.value = val
-              self.xrules.midi_input.nrpn_enabled = val
-            end,
-          },
-          vb:text{
-            text = "Enable NRPN support (14bit messages)"
-          },
-        },
-        vb:row{
-          vb:checkbox{
-            value = self.prefs.midi_terminate_nrpns.value,
-            notifier = function(val)
-              self.prefs.midi_terminate_nrpns.value = val
-              self.xrules.midi_input.terminate_nrpns = val
-            end,
-          },
-          vb:text{
-            text = "Require NRPN messages to be terminated"
-          },
-        },
-      },
       vb:row{
         vb:column{
           id = "xRulesPrefsMidiInputRack",
@@ -330,6 +294,91 @@ function xRulesAppDialogPrefs:create_dialog()
           },
           
         },
+      },
+      vb:column{
+        width = DIALOG_W,
+        style = "group",
+        margin = 6,
+        vb:row{
+          self.nrpn_toggle.view,
+          vb:text{
+            text = "14-bit MIDI/NRPN options",
+            font = "bold",
+          },
+        },
+        vb:space{
+          width = DIALOG_W-12,
+          height = 1,
+        },
+        vb:column{
+          id = "ui_nrpn_panel",
+          vb:row{
+            vb:checkbox{
+              value = self.prefs.midi_multibyte_enabled.value,
+              notifier = function(val)
+                self.prefs.midi_multibyte_enabled.value = val
+                self.xrules.midi_input.multibyte_enabled = val
+              end,
+            },
+            vb:text{
+              text = "Enable multi-byte support (14bit MIDI)"
+            },
+          },
+          vb:row{
+            vb:checkbox{
+              value = self.prefs.midi_nrpn_enabled.value,
+              notifier = function(val)
+                self.prefs.midi_nrpn_enabled.value = val
+                self.xrules.midi_input.nrpn_enabled = val
+              end,
+            },
+            vb:text{
+              text = "Enable NRPN support (input)"
+            },
+          },
+          vb:row{
+            vb:checkbox{
+              value = self.prefs.midi_terminate_nrpns.value,
+              notifier = function(val)
+                self.prefs.midi_terminate_nrpns.value = val
+                self.xrules.midi_input.terminate_nrpns = val
+              end,
+            },
+            vb:text{
+              text = "Require incoming NRPN to be terminated"
+            },
+          },
+          vb:row{
+            vb:checkbox{
+              value = self.prefs.midi_terminate_nrpns_out.value,
+              notifier = function(val)
+                self.xrules.terminate_nrpns = val
+              end,
+            },
+            vb:text{
+              text = "Terminate outgoing NRPN messages"
+            },
+          },
+          vb:row{
+            vb:text{
+              text = "NRPN byte-order"
+            },
+            vb:popup{
+              width = 140,
+              items = {
+                "MSB followed by LSB",
+                "LSB followed by MSB",
+              },
+              value = self.prefs.midi_nrpn_order.value,
+              notifier = function(val)
+                self.prefs.midi_nrpn_order.value = val
+                self.xrules.nrpn_order = val
+              end,
+            },
+          },
+
+        },
+
       },
 
     },
@@ -781,5 +830,16 @@ function xRulesAppDialogPrefs:update_dialog()
   --vtable.show_header = false
   vtable:update()
 
+  self:update_midi_tab()
 
 end
+
+-------------------------------------------------------------------------------
+
+function xRulesAppDialogPrefs:update_midi_tab()
+
+  local val = self.nrpn_toggle.enabled
+  self.vb.views["ui_nrpn_panel"].visible = val
+
+end
+

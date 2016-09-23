@@ -71,9 +71,10 @@ require (_vlibroot.."vTable")
 require (_vlibroot.."vLogView")
 require (_vlibroot.."vPrompt")
 require (_vlibroot.."vDialog")
+require (_vlibroot.."vArrowButton")
 require (_vlibroot.."vDialogWizard")
 require (_vlibroot.."vFileBrowser")
-require (_vlibroot.."helpers/vVector")
+--require (_vlibroot.."helpers/vVector")
 
 require "source/xRulesApp"
 require "source/xRulesAppPrefs"

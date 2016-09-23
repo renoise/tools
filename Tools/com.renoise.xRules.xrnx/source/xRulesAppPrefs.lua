@@ -20,7 +20,9 @@ xRulesAppPrefs.SHOW_MINIMIZED = false
 xRulesAppPrefs.RULESET_FOLDER = renoise.tool().bundle_path .. "/rulesets/"
 xRulesAppPrefs.MULTIBYTE_ENABLED = true
 xRulesAppPrefs.NRPN_ENABLED = true
+xRulesAppPrefs.NRPN_ORDER = xMidiMessage.NRPN_ORDER.MSB_LSB
 xRulesAppPrefs.TERMINATE_NRPNS = false
+xRulesAppPrefs.TERMINATE_NRPNS_OUT = false
 xRulesAppPrefs.OSC_CLIENT_HOST = "127.0.0.1"
 xRulesAppPrefs.OSC_CLIENT_PORT = 8000
 xRulesAppPrefs.AUTOMATION_FOLLOW_MODE = xAutomation.FOLLOW_MODE.AUTOMATIC
@@ -40,7 +42,9 @@ function xRulesAppPrefs:__init()
 
   self:add_property("midi_multibyte_enabled", renoise.Document.ObservableBoolean(xRulesAppPrefs.AUTORUN_ENABLED))
   self:add_property("midi_nrpn_enabled", renoise.Document.ObservableBoolean(xRulesAppPrefs.NRPN_ENABLED))
+  self:add_property("midi_nrpn_order", renoise.Document.ObservableNumber(xRulesAppPrefs.NRPN_ORDER))
   self:add_property("midi_terminate_nrpns", renoise.Document.ObservableBoolean(xRulesAppPrefs.TERMINATE_NRPNS))
+  self:add_property("midi_terminate_nrpns_out", renoise.Document.ObservableBoolean(xRulesAppPrefs.TERMINATE_NRPNS_OUT))
 
   self:add_property("osc_client_host", renoise.Document.ObservableString(xRulesAppPrefs.OSC_CLIENT_HOST))
   self:add_property("osc_client_port", renoise.Document.ObservableNumber(xRulesAppPrefs.OSC_CLIENT_PORT))

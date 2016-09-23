@@ -31,7 +31,9 @@ function xRulesApp:__init(xprefs)
   self.xrules = xRules{
     multibyte_enabled = self.prefs.midi_multibyte_enabled.value,
     nrpn_enabled = self.prefs.midi_nrpn_enabled.value,
+    nrpn_order = self.prefs.midi_nrpn_order.value,
     terminate_nrpns = self.prefs.midi_terminate_nrpns.value,
+    terminate_nrpns_out = self.prefs.midi_terminate_nrpns_out.value,
   }
 
   --- xRulesUI
