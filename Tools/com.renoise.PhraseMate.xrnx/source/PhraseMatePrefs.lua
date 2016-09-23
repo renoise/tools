@@ -25,6 +25,7 @@ function PhraseMatePrefs:__init()
   self:add_property("output_show_collection_report", renoise.Document.ObservableBoolean(true))
   self:add_property("input_show_collection_panel", renoise.Document.ObservableBoolean(false))
   --self:add_property("input_show_properties_panel", renoise.Document.ObservableBoolean(false))
+  self:add_property("preset_show_import_options", renoise.Document.ObservableBoolean(false))
   self:add_property("preset_show_export_options", renoise.Document.ObservableBoolean(false))
 
   -- 'new' options (formerly input)
@@ -68,6 +69,7 @@ function PhraseMatePrefs:__init()
   -- preset options
   self:add_property("output_folder", renoise.Document.ObservableString(""))
   self:add_property("use_instr_subfolder", renoise.Document.ObservableBoolean(true))
+  self:add_property("remove_prefix_on_import", renoise.Document.ObservableBoolean(true))
   self:add_property("prefix_with_index", renoise.Document.ObservableBoolean(false))
   self:add_property("overwrite_on_export", renoise.Document.ObservableBoolean(false))
 

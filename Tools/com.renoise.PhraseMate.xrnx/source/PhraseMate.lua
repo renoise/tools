@@ -71,7 +71,10 @@ PhraseMate.MIDI_MAPPING = {
   SELECT_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Phrase in Instrument [Set]",
   PREV_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Previous Phrase in Instrument [Trigger]",
   NEXT_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Next Phrase in Instrument [Trigger]",
+  FIRST_PHRASE_IN_INSTR = "Tools:PhraseMate:Select First Phrase in Instrument [Trigger]",
+  LAST_PHRASE_IN_INSTR = "Tools:PhraseMate:Select Last Phrase in Instrument [Trigger]",
   SET_PLAYBACK_MODE = "Tools:PhraseMate:Select Playback Mode [Set]",
+  CYCLE_PLAYBACK_MODE = "Tools:PhraseMate:Cycle Playback Mode [Trigger]",
   DELETE_PHRASE = "Tools:PhraseMate:Delete Selected Phrase [Trigger]",
   INSERT_PHRASE = "Tools:PhraseMate:Insert New Phrase [Trigger]",
 }
@@ -187,16 +190,6 @@ end
 -- helper functions
 --------------------------------------------------------------------------------
 
-function PhraseMate:invoke_task(rslt,err)
-  TRACE("PhraseMate:invoke_task(rslt,err)",rslt,err)
-
-  if (rslt == false and err) then
-    renoise.app():show_status(err)
-  end
-
-end
-
---------------------------------------------------------------------------------
 
 function PhraseMate:progress_handler(msg)
   TRACE("PhraseMate:progress_handler(msg)",msg)
@@ -1577,14 +1570,16 @@ function PhraseMate:import_presets(files)
   TRACE("PhraseMate:import_presets(files)",files)
 
   local instr_idx = rns.selected_instrument_index
-  local insert_at_idx = rns.selected_phrase_index+1
+  local insert_at_idx = nil --rns.selected_phrase_index+1
   local takeover = false
+  local remove_prefix = self.prefs.remove_prefix_on_import.value 
+
   local keymap_args = self.prefs.create_keymappings.value and {
     keymap_range = self.prefs.create_keymap_range.value,
     keymap_offset = self.prefs.create_keymap_offset.value,
   }
 
-  local rslt,err = xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,keymap_args)
+  local rslt,err = xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,keymap_args,remove_prefix)
   if err then
     return false,err
   end
