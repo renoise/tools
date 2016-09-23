@@ -24,13 +24,59 @@ The tool can be triggered in a number of ways:
 
 ## The user interface 
 
-The tool has a large number of features, organized in a tabbed interface.  Here is a walk-through of the features offered in each tab:
+The tool us organized in a tabbed interface, with each tab being largely self-contained. So don't fret over the sheer number of buttons and checkboxes - each feature can be explored on it's own.   
 
-### Read - *convert pattern data into phrases*
+
+### Phrase panel (control the active phrase)
+
+<img src="./manual/phrase_control.png"> 
+
+The phrase panel is basically recreating the small phrase bank you know from the instrument editor, fully assignable to MIDI and keyboard shortcuts. This panel is always visible.
+
+
+### Read (convert pattern data into phrases)
 
 <img src="./manual/tab_read.png"> 
 
-The input mode makes it easy to convert pattern data into phrases, and has a very flexible set of parameters.  
+**Scope**
+
+Control where the collection of data should happen. Are you familiar with Advanced Edit in the Renoise pattern editor? Then this is basically the same idea...you can transform a whole song into phrases in a single operation, or use it on a smaller piece. 
+
+**Source option** 
+
+Decides which instrument(s) to look for while collecting:
+
+* **Autocapture** - select/capture the first encountered instrument 
+* **Capture All Instr.** - capture the various instruments as they are encountered
+* **Selected Instr.** - only capture the currently selected instrument 
+* **Instrument 00,01,02,etc.** - select a specific instrument as source 
+
+**Target option**
+
+Decides where the collected phrases should go:
+
+* **Same Instrument** - stick to the source instrument
+* **New Instrument** - create a new instrument for each source 
+* **Instrument 00,01,02,etc.** - select a specific instrument as target
+
+**Advanced Settings** 
+
+* **Collect empty phrases** - when disabled, skip phrases that would be empty   
+* **Keep duplicate phrases** - when disabled, only unique phrases are created
+* **Replace notes with Zxx** - when enabled, collected notes are replaced with phrase
+
+**Collect Phrases**
+
+Once you hit the 'Collect' button, a (background) process will start, which collects data and creates phrases. As long as the process is running, progress is reported in the status bar. 
+
+> Depending on how you configured the tool, this might take considerable time. If you experience warnings saying that the script takes too long, change the 'Processing/undo' value in 'Prefs'. 
+
+
+
+    
+
+#### An example
+
 Consider the following diagram for a possible phrase-capturing workflow:
 
 <img src="./manual/collect_capture_all_replace.png"> 
@@ -40,10 +86,10 @@ Here, a single pattern-track containing three different instruments is collected
 Settings used:
  
 	Source: 'Capture All Instr.'  
-	Target: New instrument(s)  
-	[x] Replace notes with phrase
+	Target: 'New instrument(s)'  
+	[x] Replace notes with Zxx
 
-### Write - *convert phrases into pattern-data*  
+### Write (convert phrases into pattern-data)  
 
 <img src="./manual/tab_write.png"> 
 
@@ -55,7 +101,7 @@ Settings used:
 * **Insert Z00 commands** - makes resulting notes ignore/not trigger phrases
 * **Mix-Paste** - attempt to keep existing content when producing output (same as Mix-Paste in the advanced edit panel)
 
-### Smart Write - *auto-completing popup dialog*
+### Smart Write (auto-completing insert dialog)
 
 <img src="./manual/smart_write.png"> 
 
@@ -75,7 +121,7 @@ It's designed to be completely keyboard driven. In the picture above, I've enter
 	* ESC closes the dialog
  
 
-### Zxx - *real-time monitoring of the pattern* 
+### Zxx (real-time monitoring of the pattern) 
 
 <img src="./manual/tab_zxx.png"> 
 
@@ -89,19 +135,19 @@ One of the exciting features in Renoise 3.1 is the program mode for phrases. It'
 * The instrument matches the selected one   
 
 
-### Props - *property panel*
+### Props (property panel)
 
 <img src="./manual/tab_props.png"> 
 
 TODO
 
-### Preset - *import and export*
+### Preset (import and export)
 
 <img src="./manual/tab_presets.png"> 
 
 TODO
 
-### Prefs - *tool preferences*
+### Prefs (tool preferences)
 
 <img src="./manual/tab_prefs.png"> 
 
