@@ -452,6 +452,40 @@ function xPhraseManager.set_selected_phrase(idx)
 end
 
 --------------------------------------------------------------------------------
+-- Select first phrase 
+-- @return boolean, true if phrase was selected
+
+function xPhraseManager.select_first_phrase()
+  TRACE("xPhraseManager.select_first_phrase()")
+
+  local instr = rns.selected_instrument
+  if (#instr.phrases == 0) then
+    return false,"Instrument does not contain any phrases"
+  end
+
+  rns.selected_phrase_index = 1
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+-- Select last phrase 
+-- @return boolean, true if phrase was selected
+
+function xPhraseManager.select_last_phrase()
+  TRACE("xPhraseManager.select_last_phrase()")
+
+  local instr = rns.selected_instrument
+  if (#instr.phrases == 0) then
+    return false,"Instrument does not contain any phrases"
+  end
+
+  rns.selected_phrase_index = #instr.phrases
+  return true
+
+end
+
+--------------------------------------------------------------------------------
 -- API5: Using the mapping index to retrieve the selected phrase
 
 function xPhraseManager.get_phrase_index_by_mapping_index(instr_idx,mapping_idx)
@@ -613,7 +647,7 @@ end
 --------------------------------------------------------------------------------
 -- @param mode (int), renoise.Instrument.PHRASES_xxx
 -- @param toggle (bool), makes same mode toggle between off & mode
--- @return int or nil
+-- @return boolean, true when mode was set
 -- @return string (error message when failed)
 
 function xPhraseManager.set_playback_mode(mode,toggle)
@@ -633,6 +667,32 @@ function xPhraseManager.set_playback_mode(mode,toggle)
   else
     rns.selected_instrument.phrase_playback_mode = mode
   end
+
+  return true
+
+end
+
+--------------------------------------------------------------------------------
+-- @return boolean, true when mode was set
+-- @return string (error message when failed)
+
+function xPhraseManager.cycle_playback_mode()
+  TRACE("xPhraseManager.cycle_playback_mode()")
+
+  local phrase = rns.selected_phrase
+  if not phrase then
+    return false, "No phrase is selected"
+  end
+
+  if (rns.selected_instrument.phrase_playback_mode == renoise.Instrument.PHRASES_OFF) then
+    rns.selected_instrument.phrase_playback_mode = renoise.Instrument.PHRASES_PLAY_SELECTIVE
+  elseif (rns.selected_instrument.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_SELECTIVE) then
+    rns.selected_instrument.phrase_playback_mode = renoise.Instrument.PHRASES_PLAY_KEYMAP
+  elseif (rns.selected_instrument.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_KEYMAP) then
+    rns.selected_instrument.phrase_playback_mode = renoise.Instrument.PHRASES_OFF
+  end
+
+  return true
 
 end
 
@@ -698,19 +758,22 @@ end
 -- import one or more phrase presets into instrument
 -- @param files (table)
 -- @param instr_idx (int)
--- @param insert_at_idx (int)
--- @param takeover (bool)
--- @param keymap_args (table), see auto_insert_phrase for syntax
+-- @param insert_at_idx (int) [optional]
+-- @param takeover (bool) [optional]
+-- @param keymap_args (table), see auto_insert_phrase [optional]
+-- @param remove_prefix (bool), remove the "09_0A_" prefix [optional]
 -- @return bool, true when import was succesfull
 -- @return string, error message when failed
 
-function xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,keymap_args)
-  TRACE("xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,keymap_args)",files,instr_idx,insert_at_idx,takeover,keymap_args)
+function xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,keymap_args,remove_prefix)
+  TRACE("xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,keymap_args,remove_prefix)",files,instr_idx,insert_at_idx,takeover,keymap_args,remove_prefix)
 
   assert(type(files)=="table")
   assert(type(instr_idx)=="number")
 
   for k,v in ipairs(files) do
+
+    --print("*** import_presets - k,v",k,v)
 
     local phrase,phrase_idx_or_err = xPhraseManager.auto_insert_phrase(instr_idx,insert_at_idx,takeover,keymap_args)
     if not phrase then
@@ -718,7 +781,13 @@ function xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,ke
     end
 
     rns.selected_phrase_index = phrase_idx_or_err
-    renoise.app():load_instrument_phrase(v)
+    if not renoise.app():load_instrument_phrase(v) then
+      return false,"Failed to load phrase preset: "..tostring(v)
+    end
+
+    if remove_prefix then
+      rns.selected_phrase.name = xPhrase.get_raw_preset_name(rns.selected_phrase.name)
+    end
 
   end
 
