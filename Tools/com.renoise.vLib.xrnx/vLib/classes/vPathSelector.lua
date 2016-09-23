@@ -35,7 +35,6 @@ vPathSelector.MODE = {
 }
 
 vPathSelector.BROWSE_BUTTON_W = 55
-vPathSelector.DEFAULT_PLACEHOLDER = "(unspecified)"
 
 --------------------------------------------------------------------------------
 
@@ -58,15 +57,15 @@ function vPathSelector:__init(...)
   self.path = property(self.get_path,self.set_path)
   self._path = args.path or ""
 
-  self.placeholder = property(self.get_placeholder,self.set_placeholder)
-  self._placeholder = args.placeholder or vPathSelector.DEFAULT_PLACEHOLDER
+  self.path_token = property(self.get_path_token,self.set_path_token)
+  self._path_token = args.path_token or "(unspecified)"
 
   --- function
   self.notifier = args.notifier or nil
 
   --- bool, when true the component will not accept invalid locations
   -- TODO 
-  --self.require_existing = args.require_existing or true
+  self.require_existing = args.require_existing or true
 
   -- internal --
 
@@ -77,8 +76,9 @@ function vPathSelector:__init(...)
 
   vControl.__init(self,...)
 
-  self._width = args.width or 150
   self._height = args.height or vLib.CONTROL_H
+
+  -- done --
 
   self:build()
 
@@ -164,7 +164,7 @@ function vPathSelector:update()
 
   if self.vb_textfield then
     if (self._path == "") then
-      self.vb_textfield.text = self._placeholder 
+      self.vb_textfield.text = self._path_token 
     else
       self.vb_textfield.text = self._path 
     end
@@ -199,65 +199,41 @@ function vPathSelector:path_is_valid()
 end
 
 --------------------------------------------------------------------------------
--- Getters & Setters
---------------------------------------------------------------------------------
 
-function vPathSelector:set_active(val)
-  assert(type(val)=="boolean")
-  
-  self.vb_textfield.active = val
-  self.vb_browse_button.active = val
-
-  vControl.set_active(self,val)
-
-end
-
---------------------------------------------------------------------------------
 function vPathSelector:get_mode()
-  return self._mode
+
 end
 
-function vPathSelector:set_mode(val)
-  assert(type(val)=="number")
-  
-  self._mode = val
-  -- set to default
-  self:set_path(self._placeholder)
+function vPathSelector:set_mode()
 
 end
 
 --------------------------------------------------------------------------------
 
 function vPathSelector:get_editable()
-  return self._editable
+
 end
 
-function vPathSelector:set_editable(val)
-
-  assert(type(val)=="boolean")
-  self._editable = val
+function vPathSelector:set_editable()
 
 end
 
 --------------------------------------------------------------------------------
 
 function vPathSelector:get_path()
+
   return self._path
+
 end
 
 function vPathSelector:set_path(val)
   TRACE("vPathSelector:set_path(val)",val)
 
   assert(type(val)=="string")
-
-  if (val == self._placeholder) then
-    self._path = ""
-  else
-    self._path = val
-  end
+  self._path = val
 
   if self.notifier then
-    self.notifier(self._path)
+    self.notifier(val)
   end
 
   self:request_update()
@@ -266,14 +242,16 @@ end
 
 --------------------------------------------------------------------------------
 
-function vPathSelector:get_placeholder()
-  return self._placeholder
+function vPathSelector:get_path_token()
+
+  return self._path_token
+
 end
 
-function vPathSelector:set_placeholder(val)
+function vPathSelector:set_path_token(val)
 
   assert(type(val)=="string")
-  self._placeholder = val
+  self._path_token = val
 
   self:request_update()
 

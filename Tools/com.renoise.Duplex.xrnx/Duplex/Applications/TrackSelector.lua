@@ -8,9 +8,6 @@ Inheritance: @{Duplex.Application} > Duplex.Application.TrackSelector
 
 ### Changes
 
-  0.99.4 by Eran Dax Lonker
-    - New mappings: prev/next column
-
   0.99.3
     - All "pattern line mappings" has moved into 
       Duplex.Applications.PatternCursor
@@ -84,14 +81,6 @@ TrackSelector.available_mappings = {
   next_track = {    
     description = "TrackSelector: Select next track",
     component = UIButton,
-  },  
-  prev_column = {    
-    description = "TrackSelector: Select previous column",
-    component = UIButton,
-  },
-  next_column = {    
-    description = "TrackSelector: Select next column",
-    component = UIButton,
   },
   --[[
   prev_next_page = {
@@ -136,18 +125,14 @@ TrackSelector.default_palette = {
   track_send_off      = { color = {0x00,0x00,0x00}, text = "S", val=false },
   select_device_tip   = { color = {0xFF,0xFF,0xFF}, text = "▪", val=true  },
   select_device_back  = { color = {0x40,0x40,0x80}, text = "▫", val=false },
-  track_prev_on       = { color = {0xFF,0xFF,0xFF}, text = "«", val=true  },
-  track_prev_off      = { color = {0x00,0x00,0x00}, text = "«", val=false },
-  track_next_on       = { color = {0xFF,0xFF,0xFF}, text = "»", val=true  },
-  track_next_off      = { color = {0x00,0x00,0x00}, text = "»", val=false },
-  column_prev_on      = { color = {0xFF,0xFF,0xFF}, text = "‹", val=true  },
-  column_prev_off     = { color = {0x00,0x00,0x00}, text = "‹", val=false },
-  column_next_on      = { color = {0xFF,0xFF,0xFF}, text = "›", val=true  },
-  column_next_off     = { color = {0x00,0x00,0x00}, text = "›", val=false },
-  page_prev_on        = { color = {0xFF,0xFF,0xFF}, text = "<", val=true  },
-  page_prev_off       = { color = {0x00,0x00,0x00}, text = "<", val=false },
-  page_next_on        = { color = {0xFF,0xFF,0xFF}, text = ">", val=true  },
-  page_next_off       = { color = {0x00,0x00,0x00}, text = ">", val=false },
+  track_prev_on       = { color = {0xFF,0xFF,0xFF}, text = "◄", val=true  },
+  track_prev_off      = { color = {0x00,0x00,0x00}, text = "◄", val=false },
+  track_next_on       = { color = {0xFF,0xFF,0xFF}, text = "►", val=true  },
+  track_next_off      = { color = {0x00,0x00,0x00}, text = "►", val=false },
+  page_prev_on        = { color = {0xFF,0xFF,0xFF}, text = "◄", val=true  },
+  page_prev_off       = { color = {0x00,0x00,0x00}, text = "◄", val=false },
+  page_next_on        = { color = {0xFF,0xFF,0xFF}, text = "►", val=true  },
+  page_next_off       = { color = {0x00,0x00,0x00}, text = "►", val=false },
 
 }
 
@@ -167,7 +152,7 @@ function TrackSelector:__init(...)
 
   -- selected track index
   self._selected_track_index = nil
-  self._selected_column_index = nil
+
   -- out-of-bounds track index
   -- this is the track we *wanted* to select, but
   -- could not, because it was out of bounds
@@ -182,8 +167,6 @@ function TrackSelector:__init(...)
   --self._prev_next_track = nil
   self._prev_track = nil
   self._next_track = nil
-  self._prev_column = nil
-  self._next_column = nil
   --self._prev_next_page = nil
   self._prev_page = nil
   self._next_page = nil
@@ -253,7 +236,6 @@ function TrackSelector:_attach_to_song(song)
   TRACE("TrackSelector:_attach_to_song",song)
 
   self._selected_track_index = song.selected_track_index
-  self._selected_column_index = song.selected_note_column_index
 
   -- follow active track in Renoise
   song.selected_track_index_observable:add_notifier(
@@ -269,7 +251,6 @@ function TrackSelector:_attach_to_song(song)
       end
     end
   )
-
   -- update on track changes in the song 
   song.tracks_observable:add_notifier(
     function()
@@ -327,21 +308,6 @@ function TrackSelector:update()
       self._next_track:set(self.palette.track_next_on)
     end
   end
-
-
-    if (self._selected_column_index <= 1) then
-      self._prev_column:set(self.palette.column_prev_off)
-    else
-      self._prev_column:set(self.palette.column_prev_on)
-    end
-
-
-    if (self._selected_column_index >= renoise.song().tracks[self._selected_track_index].visible_note_columns) then
-      self._next_column:set(self.palette.column_next_off)
-    else
-      self._next_column:set(self.palette.column_next_on)
-    end
-
 
   -- set the active track page + range
   local track_max = #renoise.song().tracks
@@ -487,59 +453,6 @@ function TrackSelector:_build_app(song)
     self._next_track = c
   end
 
-  local map = self.mappings.prev_column
-  if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index or 1)
-    c.on_press = function() 
-      local columns = renoise.song().tracks[renoise.song().selected_track_index].visible_note_columns
-      local column_idx = renoise.song().selected_note_column_index
-      column_idx = math.max(column_idx-1,1)
-      renoise.song().selected_note_column_index = column_idx
-      -- observing column via Renoise API is not possible so we set the palette changes on button press 
-      if (column_idx <= columns ) then
-       self._prev_column:set(self.palette.column_prev_off)
-       if ( columns>1 ) then
-        self._next_column:set(self.palette.column_next_on)
-       end
-      else 
-       self._prev_column:set(self.palette.column_prev_on)
-      end
-    end
-    c.on_hold = function() 
-      renoise.song().selected_note_column_index = 1
-    end
-    self._prev_column = c
-  end
-
-  local map = self.mappings.next_column
-  if map.group_name then
-    local c = UIButton(self)
-    c.group_name = map.group_name
-    c.tooltip = map.description
-    c:set_pos(map.index or 1)
-    c.on_press = function() 
-      local columns = renoise.song().tracks[renoise.song().selected_track_index].visible_note_columns
-      local column_idx = renoise.song().selected_note_column_index
-      column_idx = math.min(column_idx+1,columns)
-      renoise.song().selected_note_column_index = column_idx
-      -- observing column via Renoise API is not possible so we set the palette changes on button press 
-      if (column_idx >= columns ) then
-       self._next_column:set(self.palette.column_next_off)
-       if ( columns>1 ) then
-        self._prev_column:set(self.palette.column_prev_on)
-       end
-      else 
-       self._next_column:set(self.palette.column_next_on)
-      end
-    end
-    c.on_hold = function() 
-      renoise.song().selected_note_column_index = renoise.song().tracks[renoise.song().selected_track_index].visible_note_columns
-    end
-    self._next_column = c
-  end
 
   -- add previous/next page control
   --[[

@@ -395,7 +395,6 @@ function xStreamUIArgsPanel:build_args()
         end
       elseif (display_as == xStreamArg.DISPLAY_AS.INTEGER) 
         or (display_as == xStreamArg.DISPLAY_AS.HEX) 
-        or (display_as == xStreamArg.DISPLAY_AS.NOTE) 
       then -- whole numbers
         integered = true
         arg_control = vb:valuebox{
@@ -434,6 +433,7 @@ function xStreamUIArgsPanel:build_args()
 
         if (display_as == xStreamArg.DISPLAY_AS.MINISLIDER) 
           or (display_as == xStreamArg.DISPLAY_AS.PERCENT) 
+          or (display_as == xStreamArg.DISPLAY_AS.NOTE) 
         then
           arg_control = vb:minislider{
             value = arg.value,
