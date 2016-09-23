@@ -89,6 +89,9 @@ function PhraseMateUI:__init(...)
   self.batch_toggle = nil
 
   --- vArrowButton
+  --self.import_toggle = nil
+
+  --- vArrowButton
   self.export_toggle = nil
 
   --- vEditField
@@ -929,12 +932,22 @@ function PhraseMateUI:build_preset_tab()
     id = "vPathSelector",
     vb = vb,
     width = PhraseMateUI.UI_WIDTH_TWOTHIRD - (40),
-    path_token = "⚠ Please select a path!",
+    placeholder = "⚠ Please select a path!",
     path = self.prefs.output_folder.value,
     notifier = function(val)
       self.prefs.output_folder.value = val
     end,
   }
+
+  --[[
+  self.import_toggle = vArrowButton{
+    enabled = self.prefs.preset_show_import_options.value,
+    vb = vb,
+  }
+  self.import_toggle.enabled_observable:add_notifier(function()
+    self:update_preset_tab()
+  end)
+  ]]
 
   self.export_toggle = vArrowButton{
     enabled = self.prefs.preset_show_export_options.value,
@@ -978,18 +991,36 @@ function PhraseMateUI:build_preset_tab()
             width = "100%",
             height = PhraseMateUI.BUTTON_SIZE,
             notifier = function()
+              local include_path = true
               local str_path = renoise.app():prompt_for_path("Locate preset folder")
-              local file_list = cFilesystem.list_files(str_path,{"*.xrnz"})
+              local file_list = cFilesystem.list_files(str_path,{"*.xrnz"},include_path)
               self:import_presets(file_list)
             end
           },
           --[[
-          vb:text{
-            text = "Note that settings in 'New' applies"
-                .."\nto any imported phrases",
-            font = "italic",
-          }
+          vb:row{
+            self.import_toggle.view,
+            vb:text{
+              text = "Show import settings",
+              --font = "bold",
+            },
+          },
           ]]
+          vb:column{
+            id = "ui_import_settings_panel",
+            vb:row{
+              vb:checkbox{
+                value = self.prefs.remove_prefix_on_import.value,
+                notifier = function(val)
+                  self.prefs.remove_prefix_on_import.value = val
+                end,
+              },
+              vb:text{
+                text = "Remove prefix on import"
+              }
+            },
+          },
+
         },
       },
       vb:column{
@@ -1419,6 +1450,12 @@ function PhraseMateUI:update_preset_tab()
   self.vb.views["ui_export_settings_panel"].visible = val
   self.prefs.preset_show_export_options.value = val
 
+  --[[
+  local val = self.import_toggle.enabled
+  self.vb.views["ui_import_settings_panel"].visible = val
+  self.prefs.preset_show_import_options.value = val
+  ]]
+
 end
 
 --------------------------------------------------------------------------------
@@ -1536,6 +1573,7 @@ end
 --------------------------------------------------------------------------------
 
 function PhraseMateUI:import_presets(file_list)
+  TRACE("PhraseMateUI:import_presets(file_list)",file_list)
 
   if not file_list or table.is_empty(file_list) then
     return
@@ -1548,6 +1586,8 @@ function PhraseMateUI:import_presets(file_list)
     local str_list = "\n"
     for k,v in ipairs(file_list) do
       str_list = str_list .. "\n"..cFilesystem.get_raw_filename(v) 
+      -- TODO limit after X number of files
+      -- "And X more (not shown)..."
     end
     renoise.app():show_message("The following phrases were imported:"..str_list)
   end
