@@ -1433,11 +1433,11 @@ renoise.song().instruments[].macros[].mappings[], _observable
 
 -------- Constants
 
-renoise.InstrumentMacro.SCALING_LOG_FAST
-renoise.InstrumentMacro.SCALING_LOG_SLOW
-renoise.InstrumentMacro.SCALING_LINEAR
-renoise.InstrumentMacro.SCALING_EXP_SLOW
-renoise.InstrumentMacro.SCALING_EXP_FAST
+renoise.InstrumentMacroMapping.SCALING_LOG_FAST
+renoise.InstrumentMacroMapping.SCALING_LOG_SLOW
+renoise.InstrumentMacroMapping.SCALING_LINEAR
+renoise.InstrumentMacroMapping.SCALING_EXP_SLOW
+renoise.InstrumentMacroMapping.SCALING_EXP_FAST
 
 
 -------- Properties
@@ -3054,7 +3054,7 @@ renoise.song().patterns[].tracks[].lines[].note_columns[].delay_string
 
 renoise.song().patterns[].tracks[].lines[].note_columns[].effect_number_value
   -> [int, 0-65535 in the form 0x0000xxyy where xx=effect char 1 and yy=effect char 2]
-song().patterns[].tracks[].lines[].note_columns[].effect_number_string
+renoise.song().patterns[].tracks[].lines[].note_columns[].effect_number_string
   -> [string, '00' - 'ZZ']
 
 renoise.song().patterns[].tracks[].lines[].note_columns[].effect_amount_value 
