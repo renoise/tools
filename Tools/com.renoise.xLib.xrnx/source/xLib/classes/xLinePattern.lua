@@ -61,8 +61,6 @@ function xLinePattern:__init(note_columns,effect_columns)
 
   self:apply_descriptor(self.note_columns,self.effect_columns)
 
-  --print("xLinePattern.note_columns",rprint(self.note_columns))
-
 end
 
 -------------------------------------------------------------------------------
@@ -73,26 +71,24 @@ end
 function xLinePattern:apply_descriptor(note_columns,effect_columns)
 
   if note_columns then
-    --print("apply_descriptor - note_columns PRE",rprint(note_columns))
     for k,note_col in ipairs(note_columns) do
       if (type(note_col) == "table") and
         not table.is_empty(note_col)
       then
-        --print("*** xLinePattern.apply_descriptor - convert into xNoteColumn at column",k,note_col)
+        -- convert into xNoteColumn 
         self.note_columns[k] = xNoteColumn(note_col)
       end
     end
     for i = #note_columns+1, #self.note_columns do
       self.note_columns[i] = {}
     end
-    --print("apply_descriptor - note_columns POST",rprint(note_columns))
   end
   if effect_columns then
     for k,fx_col in ipairs(effect_columns) do
       if (type(fx_col) == "table") and 
         not table.is_empty(fx_col)
       then
-        --print("*** xLinePattern.apply_descriptor - convert into xEffectColumn at column",k)
+        -- convert into xEffectColumn
         self.effect_columns[k] = xEffectColumn(fx_col)
       end
     end
@@ -117,9 +113,6 @@ end
 
 function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hidden,expand_columns,clear_undefined)
 
-  --print("xLinePattern:do_write - tokens",rprint(tokens))
-  --print("xLinePattern:do_write - self.note_columns",rprint(self.note_columns))
-
   local rns_line,patt_idx,rns_patt,rns_track,rns_ptrack
   local rns_track_or_phrase
 
@@ -133,11 +126,9 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
   end
 
   local is_seq_track = (rns_track.type == renoise.Track.TRACK_TYPE_SEQUENCER)
-  --print("is_seq_track",is_seq_track)
 
   local visible_note_cols = rns_track_or_phrase.visible_note_columns
   local visible_fx_cols = rns_track_or_phrase.visible_effect_columns
-  --print("visible_note_cols",visible_note_cols)
 
   -- figure out which sub-columns to display (VOL/PAN/DLY)
   if is_seq_track and expand_columns and not table.is_empty(self.note_columns) then
@@ -200,13 +191,10 @@ function xLinePattern:process_columns(
   clear_undefined,
   col_type)
 
-  --rprint(xline_columns)
-
 	for k,rns_col in ipairs(rns_columns) do
     
     if not expand_columns then
       if not include_hidden and (k > visible_cols) then
-        --print("skip hidden column #1",k)
         break
       end
     end
@@ -221,12 +209,10 @@ function xLinePattern:process_columns(
       then
         if (k > visible_cols) then
           visible_cols = k
-          --print(">>> xLinePattern:process_columns - expand cols to",k)
         end
       end
 
       if not include_hidden and (k > visible_cols) then
-        --print("skip hidden column #2",k,visible_cols)
         break
       end
 
@@ -253,8 +239,6 @@ function xLinePattern:process_columns(
   elseif (col_type == xLinePattern.COLUMN_TYPES.EFFECT_COLUMN) then
     rns_track_or_phrase.visible_effect_columns = visible_cols
   end
-  --print("rns_track_or_phrase",rns_track_or_phrase)
-  --print("rns_track_or_phrase.visible_note_columns",rns_track_or_phrase.visible_note_columns)
 
 end
 
@@ -280,9 +264,7 @@ function xLinePattern.do_read(rns_line,max_note_cols,max_fx_cols)
     table.insert(fx_cols, xEffectColumn.do_read(fx_col))
   end
 
-  --print("#note_cols",#note_cols,"#fx_cols",#fx_cols)
   return note_cols,fx_cols
-
 
 end
 

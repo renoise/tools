@@ -55,7 +55,6 @@ function xOscRouter:input(osc_msg)
   local rslt = {}
 
   if (self.cache[fingerprint]) then
-    --print(">>> return cached patterns...")
     for k,v in ipairs(self.cache[fingerprint]) do
       table.insert(rslt,v)
     end
@@ -69,7 +68,7 @@ function xOscRouter:input(osc_msg)
         end
         table.insert(rslt,v)
       else
-        --print("***",err)
+        --LOG("***",err)
       end
     end
     -- only cache when patterns are _all_ cacheable
@@ -80,12 +79,10 @@ function xOscRouter:input(osc_msg)
         if not self.cache[fingerprint] then
           self.cache[fingerprint] = {}
         end
-        --print(">>> add to cache",v,v.pattern_in,fingerprint)
         table.insert(self.cache[fingerprint],v)
       end
     end
   end
-  --print("xOscRouter:input - #rslt",#rslt)
   return rslt
 
 end
@@ -96,19 +93,13 @@ end
 
 function xOscRouter:add_pattern(patt)
 
-  --print(">>> xOscPattern.uid",patt.uid)
-
   table.insert(self.patterns,patt)
   local patt_idx = #self.patterns
 
   patt.before_modified_observable:add_notifier(function()
-    -- clear from cache
-    --print(">>> before_modified_observable fired... clear from cache")
     self:remove_from_cache(patt_idx)
   end)
   
-  --print(">>> xOscRouter:add_pattern - #patterns",#self.patterns)
-
   return #self.patterns
 
 end
@@ -118,24 +109,15 @@ end
 -- @param idx (int), pattern index
 
 function xOscRouter:replace_pattern(patt,idx)
-
   self.patterns[idx] = patt
-
-  --print(">>> xOscRouter:replace_pattern",self.patterns)
-
 end
 
 -------------------------------------------------------------------------------
 -- @param idx (int), pattern index
 
 function xOscRouter:remove_pattern(idx)
-
   self:remove_from_cache(idx)
-
   table.remove(self.patterns,idx)
-
-  --print(">>> xOscRouter:remove_pattern - #patterns",#self.patterns)
-
 end
 
 -------------------------------------------------------------------------------
@@ -143,11 +125,8 @@ end
 
 function xOscRouter:remove_from_cache(idx)
 
-  --print(">>> xOscRouter:remove_from_cache - cache PRE",rprint(self.cache))
-
   local patt = self.patterns[idx]
   local pattern_in = patt.pattern_in
-  --print("*** removing from cache - pattern_in",pattern_in)
 
   local purely_literal = patt:purely_literal()
   if purely_literal then
@@ -167,29 +146,5 @@ function xOscRouter:remove_from_cache(idx)
       end
     end
   end
-
-  -- is this even necessary (the first should be enough)
-  --[[
-  local rslt = {}
-  for k,v in pairs(self.cache) do
-    --print("k,v",k,v)
-    for k2,v2 in ripairs(v) do
-      --print("k2,v2",k2,v2)
-      if (v2.pattern_in == pattern_in) then
-        --print("*** remove from cache",k,pattern_in)
-        --table.insert(rslt,k)
-        self.cache[k] = nil
-        break
-      end
-    end
-  end
-  ]]
-  --[[
-  for k,v in pairs(rslt) do
-    self.cache[k] = nil
-  end
-  ]]
-
-  --print(">>> xOscRouter:remove_from_cache - cache POST",rprint(self.cache))
 
 end

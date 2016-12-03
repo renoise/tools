@@ -78,7 +78,6 @@ end
 function ProcessSlicer:start()
   assert(not self:running(), "process already running")
   
-  --print("coroutine start...")
   self.__process_thread = coroutine.create(self.__process_func)
   
   renoise.tool().app_idle_observable:add_notifier(
@@ -92,7 +91,6 @@ end
 function ProcessSlicer:stop()
   assert(self:running(), "process not running")
 
-  --print("coroutine stop...")
   renoise.tool().app_idle_observable:remove_notifier(
     ProcessSlicer.__on_idle, self)
 
@@ -108,8 +106,6 @@ function ProcessSlicer:__on_idle()
   assert(self.__process_thread ~= nil, "ProcessSlicer internal error: "..
     "expected no idle call with no thread running")
   
-  --print("coroutine __on_idle...")
-
   -- continue or start the process while its still active
   if (coroutine.status(self.__process_thread) == 'suspended') then
     local succeeded, error_message = coroutine.resume(

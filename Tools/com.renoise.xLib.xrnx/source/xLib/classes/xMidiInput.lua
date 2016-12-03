@@ -152,12 +152,6 @@ function xMidiInput:input(msg,port_name)
   assert(#msg==3,"Malformed MIDI message, expected 3 parts")
   assert(type(port_name)=="string","Expected port_name to be a string")
 
-  --[[
-  if not self.callback_fn then
-    error("Expected a callback function")
-  end
-  ]]
-
   local msg_type,
         msg_channel,
         msg_bit_depth
@@ -215,7 +209,7 @@ function xMidiInput:input(msg,port_name)
       -- and          0xBX,0x64,0x7F  (X = Channel)
 
       if (msg[2]==0x63) then
-        --print("*** First part of NRPN msg header")
+        -- First part of NRPN msg header
         local nrpn_msg = {
           timestamp = os.clock(),
           channel = msg_channel,
@@ -236,8 +230,6 @@ function xMidiInput:input(msg,port_name)
           -- @return bool (false when message requires termination)
 
           local process_nrpn = function(nrpn_msg_idx,nrpn_msg)
-            --print(">>> process_nrpn - nrpn_msg_idx,nrpn_msg",nrpn_msg_idx,rprint(nrpn_msg))
-            --print(">>> process_nrpn - self.terminate_nrpns",self.terminate_nrpns,type(self.terminate_nrpns))
             msg_type = xMidiMessage.TYPE.NRPN
             msg_values[1] = xMidiMessage.merge_mb(nrpn_msg.num_msb,nrpn_msg.num_lsb)
             msg_values[2] = xMidiMessage.merge_mb(nrpn_msg.data_msb,nrpn_msg.data_lsb)
@@ -245,7 +237,6 @@ function xMidiInput:input(msg,port_name)
             interpret_as_cc = false
             if (self.terminate_nrpns == false) then
               table.remove(self._nrpn_messages,nrpn_msg_idx)
-              --print(">>> received NRPN message",os.clock())
               return true
             else
               return false
@@ -253,10 +244,10 @@ function xMidiInput:input(msg,port_name)
           end
 
           if (v.port_name ~= port_name) then
-            --print("Message looked like NRPN data, but origin is different")
+            -- Message looked like NRPN data, but origin is different
           else
             if (msg[2] == 0x62) and not v.num_lsb then
-              --print("*** Second part of NRPN message header")
+              -- Second part of NRPN message header
               v.num_lsb = msg[3]
               return
             elseif v.num_lsb and not v.data_msb 
@@ -265,7 +256,7 @@ function xMidiInput:input(msg,port_name)
               or (msg[2] == 0x60)   -- NRPN Increment
             then
               if (msg[2] == 0x06) then
-                --print("*** First part of NRPN data (MSB)")
+                -- First part of NRPN data (MSB)
                 v.data_msb = msg[3]
                 -- if MSB-only, transmit the message without waiting for LSB
                 local fingerprint = self:_create_fingerprint(xMidiMessage.TYPE.NRPN,{
@@ -273,21 +264,21 @@ function xMidiInput:input(msg,port_name)
                   {0xAF+msg_channel,0x62,v.num_lsb},
                 })
                 if table.find(self._nrpn_msb_only,fingerprint) then
-                  --print("*** MSB-only - send immediately?")
+                  -- MSB-only - send immediately?
                   v.data_lsb = 0x00
                   if not process_nrpn(k,v) then
-                    --print("*** no, wait for termination in idle time")
+                    -- no, wait for termination in idle time
                     return
                   end
                 else
+                  -- MSB-only - wait for idle loop or new NRPN message with same number (7bit)
                   -- if we don't receive the LSB part, this message
                   -- is sent as-is once the idle loop detects it...
-                  --print("*** MSB-only - wait for idle loop or new NRPN message with same number (7bit)")
                   return
                 end
               else
 
-                --print("*** NRPN increment/decrement")
+                -- NRPN increment/decrement
 
                 local msg_type = nil
                 if (msg[2] == 0x61) then
@@ -313,28 +304,24 @@ function xMidiInput:input(msg,port_name)
 
               end
             elseif v.data_msb and (msg[2] == 0x026) then
-              --print("*** Second part of NRPN data (LSB)")
+              -- Second part of NRPN data (LSB)
               v.data_lsb = msg[3]
               if not process_nrpn(k,v) then
-                --print("*** wait for termination in idle time")
+                -- wait for termination in idle time
                 return
               end
             elseif (v.data_msb) and 
               (msg[2] == 0x65) and (msg[3] == 0x7f) 
             then
-              --print("*** First part of NRPN termination")
+              -- First part of NRPN termination
               return
             elseif (v.data_msb) and 
               (msg[2] == 0x64) and (msg[3] == 0x7f) 
             then
-              --print("*** Second part of NRPN termination")
+              -- Second part of NRPN termination
               if not v.data_lsb then
-                --v.terminated = true
                 v.data_lsb = 0x00
-                --local msg = {0xAF+v.channel,0x26,0x00}
-                --self:midi_callback(msg)
               end
-              --local nrpn_num = v.num_lsb + (v.num_msb*128)
               table.remove(self._nrpn_messages,k)
               msg_type = xMidiMessage.TYPE.NRPN
               msg_values[1] = xMidiMessage.merge_mb(v.num_msb,v.num_lsb)
@@ -350,7 +337,6 @@ function xMidiInput:input(msg,port_name)
 
       -- ### end NRPN message
     elseif self.multibyte_enabled and
-    --if self.multibyte_enabled and
       (msg[2] >= 0 and msg[2] < 65) 
     then
 
@@ -364,7 +350,6 @@ function xMidiInput:input(msg,port_name)
         if not table.find(self._multibyte_exempted,fingerprint) then
           local mb_message = self._mb_messages[fingerprint]
           if (mb_message) then
-            --print("*** repeated message - output 'swallowed' message")
             -- repeated message - seems we are dealing with 7-bit after all...
             -- output the message that got "swallowed"
             self.callback_fn(xMidiMessage{
@@ -379,7 +364,7 @@ function xMidiInput:input(msg,port_name)
             })
             self._mb_messages[fingerprint] = nil
           else
-            --print("*** possible multibyte message initiated",rprint(self._mb_messages),fingerprint)
+            -- possible multibyte message initiated
             -- store the message and wait for the LSB part 
             self._mb_messages[fingerprint] = {
               timestamp = os.clock(),
@@ -393,7 +378,7 @@ function xMidiInput:input(msg,port_name)
             return
           end
         else
-          --print("message is exempted - do not interpret as multibyte")
+          -- message is exempted - do not interpret as multibyte
         end
       else
         -- check for first part (lower by 32)
@@ -402,21 +387,20 @@ function xMidiInput:input(msg,port_name)
         local mb_message = self._mb_messages[fingerprint]
         if (mb_message) then
           if (mb_message.port_name ~= port_name) then
-            --print("Message looked like multibyte CC, but origin is different")
+            -- Message looked like multibyte CC, but origin is different
           else
             if (mb_message.timestamp < os.clock()- self.timeout) then
               -- we shouldn't arrive here
-              --print("multibyte message is too old - ignore")
+              -- multibyte message is too old - ignore
               return
             else 
               -- receive final LSB part 
+              -- (14 bit multibyte message)
               mb_message.lsb = msg[3]
               msg_type = xMidiMessage.TYPE.CONTROLLER_CHANGE
               msg_values[1] = mb_message.num
               msg_values[2] = xMidiMessage.merge_mb(mb_message.msb,mb_message.lsb)
               self._mb_messages[fingerprint] = nil
-              --print("mb_message",mb_message)
-              --print("received 14 bit multibyte message",os.clock())
               msg_bit_depth = xMidiMessage.BIT_DEPTH.FOURTEEN
               interpret_as_cc = false
             end
@@ -459,7 +443,7 @@ function xMidiInput:input(msg,port_name)
       -- and          0xEX,0xYY,0x00 (LSB byte, final value)
 
       if (msg[2] == 0) and not self._mb_messages[fingerprint] then
-        --print("possible multibyte pitch-bend initiated")
+        -- possible multibyte pitch-bend initiated
         self._mb_messages[fingerprint] = {
           timestamp = os.clock(),
           channel = msg_channel,
@@ -474,11 +458,10 @@ function xMidiInput:input(msg,port_name)
         local lsb_message = self._mb_messages[fingerprint]
         if (lsb_message) then
           if (lsb_message.port_name ~= port_name) then
-            --print("Message looked like multibyte PB, but origin is different")
+            -- Message looked like multibyte PB, but origin is different
           else
             if (lsb_message.timestamp < os.clock()- self.timeout) then
-              --print("pitchbend too old - purge from list")
-              --self._mb_messages[fingerprint] = nil
+              -- pitchbend too old - purge from list
               return
             end
             -- previous initiated, receive MSB part
@@ -487,21 +470,21 @@ function xMidiInput:input(msg,port_name)
               return
             end
             -- receive final LSB part
+            -- received 14 bit pitch bend message
             lsb_message.lsb = msg[2]
             msg_values[1] = xMidiMessage.merge_mb(lsb_message.msb,lsb_message.lsb)
             msg_bit_depth = xMidiMessage.BIT_DEPTH.FOURTEEN
             self._mb_messages[fingerprint] = nil
-            --print("received 14 bit pitch bend message",msg_values[1])
           end
         end
       end
       -- ### end multibyte message
 
     else
+      -- received 7 bit pitch bend message
       self._mb_messages[fingerprint] = nil
       msg_values[1] = msg[2] -- LSB
       msg_values[2] = msg[3] -- MSB
-      --print("received 7 bit pitch bend message",msg_values[1],msg_values[2])
     end
 
   elseif (msg[1]==0xF1) then
@@ -516,9 +499,6 @@ function xMidiInput:input(msg,port_name)
   else
     LOG("Unrecognized MIDI message: "..cLib.serialize_table(msg))
   end
-
-  --print(">>> xMidiInput - msg_values",rprint(msg_values))
-  --print("xMidiInput - msg_values[2]",msg_values[2])
 
   self.callback_fn(xMidiMessage{
     message_type = msg_type,
@@ -580,12 +560,10 @@ function xMidiInput:on_idle()
   local clk = os.clock()
 
   if (#self._nrpn_messages > 0) then
-    --print("on_idle - #self._nrpn_messages",#self._nrpn_messages)
     for k,v in ripairs(self._nrpn_messages) do
-      --print("k,v,",k,v)
       if v and (v.timestamp < (clk- (self.timeout/2))) then
         if (v.data_msb and not v.data_lsb) then
-          --print("*** process timed-out NRPN message without LSB part")
+          -- process timed-out NRPN message without LSB part
           self.callback_fn(xMidiMessage{
             message_type = xMidiMessage.TYPE.NRPN,
             channel   = v.channel,
@@ -612,29 +590,22 @@ function xMidiInput:on_idle()
           table.remove(self._nrpn_messages,k)
 
         else
-          --print("discarding old message")
+          -- discarding old message
           table.remove(self._nrpn_messages,k)
         end
       end
     end
   end
 
-  --print("on_idle - self._throttle_buffer",rprint(self._throttle_buffer))
-
   for k,v in pairs(self._mb_messages) do
     if (v.timestamp < (clk - self.timeout)) then
-      --print("detected timed-out multibyte message",rprint(self._mb_messages))
+      -- detected timed-out multibyte message
       local mb_msg = table.rcopy(v)
       self._mb_messages[k] = nil
       if (v.type == xMidiMessage.TYPE.CONTROLLER_CHANGE) then
-        --print("idle loop: likely timed-out multibyte CC message in the range 0-31")
+        -- likely timed-out multibyte CC message in the range 0-31
         -- (to avoid this, we can either disable multibyte support entirely,
         -- or add it to the list of exempted multibyte sources)
-        --[[
-        local no_mb = true
-        local midi_msg = {0xAF+mb_msg.channel,mb_msg.num,mb_msg.msb}
-        self:midi_callback(midi_msg,no_mb)
-        ]]
         self.callback_fn(xMidiMessage{
           message_type = xMidiMessage.TYPE.CONTROLLER_CHANGE,
           channel   = mb_msg.channel,
@@ -643,7 +614,7 @@ function xMidiInput:on_idle()
           bit_depth = xMidiMessage.BIT_DEPTH.SEVEN,
         })
       elseif (v.type == xMidiMessage.TYPE.PITCH_BEND) then
-        --print("timed-out: treat possible multibyte pitch-bend message as 7bit ")
+        -- timed-out: treat possible multibyte pitch-bend message as 7bit
         self.callback_fn(xMidiMessage{
           message_type = v.type,
           channel = v.channel,
@@ -656,21 +627,8 @@ function xMidiInput:on_idle()
         -- other message types?
         LOG("*** timed out multibyte message with no handler",v)
       end
-      --print("cleared this mb-entry:",k)
     end
   end
-
-  --[[
-  for k,v in pairs(self._throttle_buffer) do
-    if (v.value_str) then
-      local value_str = v.value_str
-      v.value_str = nil
-      --print("send throttled, timed-out message - v.value_str",k,value_str,v.msg_value)
-      self:build_message(value_str,v.msg_value,v.msg_context,v.msg_channel,
-        v.msg_is_note_off,v.bit_depth,v.midi_msgs)
-    end
-  end
-  ]]
 
 end
 

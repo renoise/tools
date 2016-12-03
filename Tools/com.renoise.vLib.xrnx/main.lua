@@ -2196,8 +2196,8 @@ function build_vpathselector()
   vpathselector = vPathSelector{
     vb = vb,
     id = "vPathSelector",
-    width = 340,
-    height = 30,
+    width = 240,
+    --height = 30,
   }
 
   vb.views.controls_col:add_child(vpathselector.view)
@@ -2228,6 +2228,43 @@ function build_vpathselector()
         notifier = function(val)
           print("vPathSelector_editable.notifier...",val)
           set_control_property("editable",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "mode"
+      },
+      vb:popup{
+        id = "vPathSelector_mode",
+        items = {
+          "File",
+          "Folder",
+        },
+        notifier = function(val)
+          set_control_property("mode",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "path"
+      },
+      vb:textfield{
+        id = "vPathSelector_path",
+        notifier = function(val)
+          set_control_property("path",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "placeholder"
+      },
+      vb:textfield{
+        id = "vPathSelector_placeholder",
+        notifier = function(val)
+          set_control_property("placeholder",val)
         end
       },
     },
@@ -3173,7 +3210,10 @@ function update_properties()
   
   elseif (ctrl_name == "vPathSelector") then
 
-    -- TODO
+    vb.views.vPathSelector_editable.value = active_ctrl.editable
+    vb.views.vPathSelector_mode.value = active_ctrl.mode
+    vb.views.vPathSelector_path.value = active_ctrl.path
+    vb.views.vPathSelector_placeholder.value = active_ctrl.placeholder
 
   elseif (ctrl_name == "vPopup") then
 

@@ -258,7 +258,6 @@ function vGraph:update()
         local idx = math.floor(i*interval)
         local is_selected = self.selection:contains_index(idx) 
         local lower_id,middle_id,upper_id,line_id = self:get_bitmap_ids(i,1)
-        --print("adding bitmaps",lower_id,upper_id,line_id)
         self:add_line_elements(lower_id,middle_id,upper_id,line_id,i,self._data[idx],is_selected)
       end
     else
@@ -356,7 +355,6 @@ function vGraph:apply_to_bar(idx,fn)
     end
     repeat_count = repeat_count + 1
     lower_id,middle_id,upper_id = self:get_bitmap_ids(idx,repeat_count)
-    --print("bitmap_id",bitmap_id)
   end
 
   -- changing bitmaps can cause sizes to be thrown off
@@ -531,7 +529,6 @@ function vGraph:decide_bitmap_size(val)
 
   end
 
-  --print("val,val_upper,val_middle,val_lower",val,val_upper,val_middle,val_lower)
   return val_lower,val_middle,val_upper
 
 end
@@ -551,7 +548,6 @@ function vGraph:set_value(idx,val)
     local src_middle = self:value_to_bitmap(val_middle,"middle")
     local src_lower = self:value_to_bitmap(val_lower,"lower")
     self:apply_to_bar(idx,function(bitmap,part)
-      --print("apply_to_bar - bitmap,part",bitmap,part)
       if (part == "upper") then
         if (val_upper < 1) then
           bitmap.visible = false
@@ -607,8 +603,6 @@ end
 
 function vGraph:selection_handler(changed,added,removed)
   TRACE("vGraph:selection_handler(changed,added,removed)",changed,added,removed)
-  --print("added",rprint(added))
-  --print("removed",rprint(removed))
 
   if changed then
     for k,v in ipairs(removed) do

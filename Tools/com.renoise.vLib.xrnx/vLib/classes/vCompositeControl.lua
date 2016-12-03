@@ -53,13 +53,11 @@ function vCompositeControl:register_views(t)
     if not table.is_empty(self.views) 
       and table.find(self.views,v) 
     then
-      --print("skip entry, already registered:",k,v)
+      -- skip entry, already registered
     else
       table.insert(self.views,v)
     end
   end
-
-  --print("self.views",rprint(self.views))
 
 end
 

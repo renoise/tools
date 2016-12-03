@@ -79,7 +79,6 @@ function vTable:__init(...)
   TRACE("vTable:__init(...)",...)
 
   local args = cLib.unpack_args(...)
-  --print("args",rprint(args))
 
   --- (table>table) header definition (by key)
   -- Required values: vTable.HEADER_DEF_KEYS
@@ -190,7 +189,6 @@ function vTable:__init(...)
   if args.data then
     self:set_data(args.data)
   else
-    --self:update()
     self:request_update()
   end
 
@@ -226,7 +224,6 @@ end
 function vTable.assign_members(cell,defs,col_key,reserved_keys)
   TRACE("vTable.assign_members(cell,defs,col_key,reserved_keys)",cell,#defs,col_key,#reserved_keys)
 
-  --print("*** assign_members",cell,defs,col_key)
   if cell and defs[col_key] then
     for k,v in pairs(defs[col_key]) do
       cell[k] = v
@@ -477,26 +474,20 @@ function vTable:update()
     local col_margin = self:get_col_margin(col)
     local col_width = self:get_col_width(col)
     local header_cell = self.header_cells[key]
-    --print("header_cell",header_cell,key)
-    --if header_cell then
-      header_cell.width = get_cell_width(col_width,col_margin)
-      header_cell.height = get_header_height(col_margin)
-      local header_data = self:get_header_data(key)
-      if (type(header_data) == "nil") then
-        -- use key when no header data is available
-        if (type(header_cell.DEFAULT_VALUE) == "string") then
-          header_cell:set_value(key)
-        end
-      else
-        header_cell:set_value(header_data,true)
+    header_cell.width = get_cell_width(col_width,col_margin)
+    header_cell.height = get_header_height(col_margin)
+    local header_data = self:get_header_data(key)
+    if (type(header_data) == "nil") then
+      -- use key when no header data is available
+      if (type(header_cell.DEFAULT_VALUE) == "string") then
+        header_cell:set_value(key)
       end
-    --end
-
+    else
+      header_cell:set_value(header_data,true)
+    end
     local header_elm = vb.views[self.header_id]
     header_elm.visible =  self._show_header 
-
   end
-
 
   -- update cells
   for row = 1,self._num_rows do
@@ -512,7 +503,6 @@ function vTable:update()
 
     -- apply custom styling to row?
     if item then
-      --print(">>> vTable:update - item",rprint(item))
       if item.__row_style then
         row_elm.style = item.__row_style
       else
@@ -522,30 +512,23 @@ function vTable:update()
 
     -- update cells 
     for col = 1,#self.column_defs do
-
       local key = self:get_col_key(col)
-
       local col_margin = self:get_col_margin(col)
       local col_width = self:get_col_width(col)
       local cell = self.cells[row][col]
       cell.width = get_cell_width(col_width,col_margin)
       cell.height = get_cell_height(col_margin)
-        
       if not row_data then
-        --print("no data for row - row,col",row,col)
         cell.visible = false
         cell:set_value(nil,true)
       elseif not type(row_data[key]=="nil") then
-        --print("no data for cell - row,col",row,col)
+        -- no data for cell
         cell.visible = false
       else
-        --print("set data for cell - row,col,row_data,value",row,col,rprint(row_data),row_data[key])
         cell.visible = true
         cell.item_id = row_data.item_id
-        --cell[vDataProvider.ID] = row_data.item_id
         cell:set_value(row_data[key])
       end
-
     end
 
   end
@@ -567,23 +550,19 @@ function vTable:update()
 
 end
 
-
 --------------------------------------------------------------------------------
 -- retrieve direct reference to cell object 
 -- @return vCell or nil
 
 function vTable:get_cell(row_idx,col_idx)
   --TRACE("vTable:get_cell(row_idx,col_idx)",row_idx,col_idx)
-
   if (row_idx > self._num_rows) then
     error("Invalid row index specified, should be less or equal to",self._num_rows)
   end
   if (col_idx > #self.column_defs) then
     error("Invalid column index specified, should be less or equal to",#self.column_defs)
   end
-
   return self.cells[row_idx][col_idx]
-
 end
 
 --------------------------------------------------------------------------------
@@ -592,14 +571,12 @@ end
 
 function vTable:get_content_width()
   --TRACE("vTable:get_content_width()")
-
   local w = 0
   local abs_only = true 
   for i = 1,#self.column_defs do
     w = w + self:get_col_width(i,abs_only)
   end
   return math.max(vTable.TABLE_MIN_W,w)
-
 end
 
 --------------------------------------------------------------------------------
@@ -608,7 +585,6 @@ end
 
 function vTable:set_num_rows(num)
   TRACE("vTable:set_num_rows(num)",num)
-
   num = math.min(num,vTable.MAX_ROWS)
   if (self._num_rows ~= num) then
     self._num_rows = num
@@ -619,15 +595,12 @@ function vTable:set_num_rows(num)
   else
     self._num_rows = num
   end
-
 end
-
 
 function vTable:get_num_rows()
   --TRACE("vTable:set_num_rows()")
   return self._num_rows
 end
-
 
 --------------------------------------------------------------------------------
 -- @param idx (int)
@@ -635,7 +608,6 @@ end
 
 function vTable:get_col_type(idx)
   --TRACE("vTable:get_col_type(idx)")
-
   if self.column_defs[idx] and
     self.column_defs[idx].col_type
   then
@@ -643,7 +615,6 @@ function vTable:get_col_type(idx)
   else
     return vTable.CELLTYPE_DEFAULT
   end
-
 end
 
 --------------------------------------------------------------------------------
@@ -653,13 +624,11 @@ end
 
 function vTable:get_col_key(idx)
   --TRACE("vTable:get_col_key(idx)")
-
   if self.column_defs[idx] and
     self.column_defs[idx].key
   then
     return self.column_defs[idx].key
   end
-
 end
 
 --------------------------------------------------------------------------------
@@ -686,7 +655,6 @@ end
 
 function vTable:get_col_width(idx,abs_only)
   --TRACE("vTable:get_col_width(idx,abs_only)",idx,abs_only)
-
   if self.column_defs[idx] and
     self.column_defs[idx].col_width
   then
@@ -709,7 +677,6 @@ function vTable:get_col_width(idx,abs_only)
   else
     return self:compute_auto_width(idx)
   end
-
 end
 
 --------------------------------------------------------------------------------
@@ -719,23 +686,18 @@ end
 
 function vTable:compute_auto_width(idx)
   --TRACE("vTable:compute_auto_width(idx)",idx)
-
   local abs_width = self._scrollbar_width
   local auto_count = 0
   for k,v in ipairs(self.column_defs) do
-
     -- absolute value
     if (type(v.col_width) == "number") then
       abs_width = abs_width+v.col_width
-
     -- auto/undefined
     elseif (type(v.col_width) == "nil") or
       (v.col_width == "auto") 
     then
       auto_count = auto_count+1
-
     end
-
   end
   return (self._width - abs_width) / auto_count
 
@@ -748,7 +710,6 @@ end
 
 function vTable:get_col_margin(idx)
   --TRACE("vTable:get_col_margin(idx)",idx)
-
   if self.column_defs[idx] and 
     self.column_defs[idx].margin 
   then
@@ -764,9 +725,7 @@ end
 
 function vTable:get_item_by_id(item_id)
   --TRACE("vTable:get_item_by_id(item_id)")
-
   return self.dataprovider:get(item_id)
-
 end
 
 --------------------------------------------------------------------------------
@@ -775,7 +734,6 @@ end
 
 function vTable:get_header_data(key)
   --TRACE("vTable:get_header_data(key)",key)
-
   if self.header_defs[key] and 
     --self.header_defs[key].data
     (type(self.header_defs[key].data) ~= "nil")
@@ -791,7 +749,6 @@ end
 
 function vTable:get_header_ctype(key)
   --TRACE("vTable:get_header_ctype(key)",key)
-
   if self.header_defs[key] and 
     self.header_defs[key].col_type 
   then
@@ -809,7 +766,6 @@ end
 
 function vTable:set_header_def(key,member,value)
   TRACE("vTable:set_header_def(key,member,value)",key,member,value)
-
   self.header_defs[key][member] = value
   local cell = self.header_cells[key]
   self.assign_members(cell,self.header_defs,key,vTable.HEADER_DEF_KEYS)
@@ -823,7 +779,6 @@ end
 
 function vTable:set_column_def(key,member,value)
   TRACE("vTable:set_column_def(key,member,value)",key,member,value)
-
   for k,v in ipairs(self.column_defs) do
     if (v.key == key) then   
       v[member] = value
@@ -844,7 +799,6 @@ end
 
 function vTable:autosize_to_contents()
   TRACE("vTable:autosize_to_contents()")
-
   if not self.autosize then
     return
   end
@@ -864,7 +818,6 @@ end
 
 function vTable:set_width(val)
   TRACE("vTable:set_width(val)",val)
-
   local table_w = math.max(val,self:get_content_width())
   local spacer = self.vb.views[self.spacer_w_id]
   spacer.width = table_w - (self._scrollbar_width + 3)
@@ -876,7 +829,6 @@ end
 
 function vTable:set_height(val)
   TRACE("vTable:set_height(val)",val)
-
   local new_h = val
   local spacer_h = self.vb.views[self.spacer_h_id]
   if self.autosize then
@@ -894,7 +846,6 @@ end
 -- @return int
 function vTable:get_height()
   --TRACE("vTable:get_height()")
-
   if not self.autosize then
     return self._height
   else
@@ -908,7 +859,6 @@ end
 
 function vTable:set_scrollbar_width(val)
   TRACE("vTable:set_scrollbar_width(val)",val)
-
   self._scrollbar_width = val
   if self.scrollbar then
     self.scrollbar.width = val
@@ -923,7 +873,6 @@ end
 
 function vTable:set_row_height(val)
   TRACE("vTable:set_row_height(val)",val)
-
   self._row_height = val
   self:autosize_to_contents()
   self:request_update()
@@ -937,7 +886,6 @@ end
 
 function vTable:set_header_height(val)
   TRACE("vTable:set_header_height(val)",val)
-
   self._header_height = math.max(vTable.HEADER_HEIGHT_MIN,val)
   self:autosize_to_contents()
   self:request_update()
@@ -951,7 +899,6 @@ end
 
 function vTable:set_show_header(val)
   TRACE("vTable:set_show_header(val)",val)
-
   self._show_header = val
   self:autosize_to_contents()
   self:request_update()
@@ -965,7 +912,6 @@ end
 
 function vTable:set_autosize(val)
   TRACE("vTable:set_autosize(val)",val)
-
   self._autosize = val
   self:autosize_to_contents()
   self:request_update()
@@ -979,21 +925,13 @@ end
 
 function vTable:set_row_offset(val)
   TRACE("vTable:set_row_offset(val)",val)
-
-  --print("set_row_offset #A",val)
-
   local data_count = #self.data
-
   if (data_count < self._num_rows) then
     self._row_offset = 0
   else
     self._row_offset = math.max(0,val) 
   end
-
-  --print("set_row_offset #B",self._row_offset)
-
   self:request_update()
-
 end
 
 function vTable:get_row_offset()
@@ -1004,23 +942,19 @@ end
 
 function vTable:set_active(val)
   TRACE("vTable:set_active(val)",val)
-
   for row,_ in ipairs(self.cells) do
     for col,__ in ipairs(self.cells[row]) do
       self.cells[row][col].active = val
     end
   end
   vControl.set_active(self,val)
-
 end
 
 --------------------------------------------------------------------------------
 
 function vTable:update_scrollbar()
   TRACE("vTable:update_scrollbar()")
-
   self.scrollbar.step_count = math.max(0,#self.data - self._num_rows)
   self.scrollbar.active =  (#self.data > self._num_rows) 
-  
 end
   

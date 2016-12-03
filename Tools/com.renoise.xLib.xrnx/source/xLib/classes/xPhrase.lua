@@ -187,14 +187,12 @@ function xPhrase.replace_sample_index(phrase,idx_from,idx_to)
   idx_to = idx_to-1
 
   local phrase_lines = phrase:lines_in_range(1,phrase.number_of_lines)
-  --print("phrase_lines",#phrase_lines,phrase_lines)
   for k2, phrase_line in ipairs(phrase_lines) do
     for k3, note_col in ipairs(phrase_line.note_columns) do
       -- skip hidden note column 
       if (k3 <= phrase.visible_note_columns) then
         if (note_col.instrument_value == idx_from) then
           note_col.instrument_value = idx_to
-          --print("replaced sample index",k2,k3,idx_from,idx_to)
         end
       end
     end
@@ -212,7 +210,6 @@ function xPhrase.note_is_keymapped(note,instr)
   TRACE("xPhrase.note_is_keymapped(note,instr)",note,instr)
 
   for k,v in ipairs(instr.phrase_mappings) do
-    --print("note_range",v.note_range[1],v.note_range[2])
     if (note >= v.note_range[1]) and (note <= v.note_range[2]) then
       return true
     end
@@ -238,7 +235,6 @@ function xPhrase.clear_foreign_commands(phrase)
   }
   
   for k,v in ipairs(phrase.lines) do
-    --print("k,v",k,v)
     if phrase.sample_effects_column_visible then
       for note_col_idx,note_col in ipairs(v.note_columns) do
         if (table.find(blacklist,note_col.effect_number_string)) then
@@ -277,7 +273,6 @@ function xPhrase.stringify(phrase)
     table.insert(rslt,tostring(v))
   end
 
-  --print("*** stringify - rslt",rprint(rslt))
   return table.concat(rslt,"\n")
 
 end
@@ -303,9 +298,6 @@ function xPhrase.apply_to_track(options)
   assert(type(options.insert_zxx)=="boolean")
   assert(type(options.mix_paste)=="boolean")
 
-  --print("options.track_index",options.track_index)
-  --print("options.anchor_to_selection",options.anchor_to_selection)
-
   local track = rns.tracks[options.track_index]
   if not track then
     return false,"The track doesn't exist"
@@ -323,8 +315,6 @@ function xPhrase.apply_to_track(options)
   local start_note_col,end_note_col
   local start_fx_col,end_fx_col
 
-  --print("sel A",rprint(sel))
-
   -- when selection is missing, span the entire track
   if not sel then
     sel = xSelection.get_pattern_track(options.sequence_index,options.track_index)
@@ -335,40 +325,28 @@ function xPhrase.apply_to_track(options)
       sel.end_column = sel.start_column + total_phrase_columns - 1
     end
   end
-  --print("sel B",rprint(sel))
-  --print("sel.start_column,sel.end_column",sel.start_column,sel.end_column)
 
   -- restrict start/end column
   if (sel.start_column <= track.visible_note_columns) then
-    --print("got here 1")
     start_note_col = sel.start_column
     start_fx_col = 1
   else 
-    --print("got here 2")
     start_note_col = nil
     start_fx_col = sel.start_column - track.visible_note_columns
   end
 
   if (sel.end_column <= track.visible_note_columns) then
-    --print("got here 3")
     start_fx_col = nil
     end_note_col = sel.end_column
   else 
-    --print("got here 4")
     end_note_col = sel.start_column + options.phrase.visible_note_columns - 1
     end_fx_col = sel.end_column - (track.visible_note_columns + (start_note_col and 1 or 0))
   end
-
-  --print("start_note_col,end_note_col",start_note_col,end_note_col)
-  --print("start_fx_col,end_fx_col",start_fx_col,end_fx_col)
 
   -- produce output
   
   local num_lines = sel.end_line - sel.start_line + 1
   local phrase_num_lines = options.phrase.number_of_lines
-
-  --print("num_lines",num_lines)
-  --print("phrase_num_lines",phrase_num_lines)
 
   local fully_looped = options.phrase.looping 
     and ((options.phrase.loop_start > 1)
@@ -429,12 +407,6 @@ function xPhrase.apply_to_track(options)
       local col_count = 0
       local start_index = get_start_index(start_note_col)
       local column_offset = get_column_offset(start_note_col)
-      --print(">>> start_index",start_index)
-      --print(">>> column_offset",column_offset)
-      --local start_index = options.anchor_to_selection and start_fx_col or 1
-      --local column_offset = options.anchor_to_selection and start_fx_col or 0
-      --print(">>> start_index")
-      --print(">>> column_offset")
       for col_idx = start_index,renoise.InstrumentPhrase.MAX_NUMBER_OF_NOTE_COLUMNS do
         if (col_idx >= start_note_col) and
           (col_idx <= end_note_col) 
@@ -524,12 +496,6 @@ function xPhrase.apply_to_track(options)
               end  
             end  
 
-            --if options.expand_columns and 
-              --(track.visible_note_columns < col_idx)
-            --then
-              --track.visible_note_columns = col_idx
-            --end
-
             high_note_col = math.max(col_idx,high_note_col)
 
           else
@@ -551,8 +517,6 @@ function xPhrase.apply_to_track(options)
       local col_count = 1
       local start_index = get_start_index(start_fx_col)
       local column_offset = get_column_offset(start_fx_col)
-      --print(">>> start_index",start_index)
-      --print(">>> column_offset",column_offset)
       for col_idx = start_index,renoise.InstrumentPhrase.MAX_NUMBER_OF_EFFECT_COLUMNS do
         if (col_idx >= start_fx_col) and
           (col_idx <= end_fx_col) 
@@ -629,7 +593,6 @@ function xPhrase.export_preset(folder,instr_idx,phrase_idx,overwrite,prefix)
   end
 
   local phrase_path = xPhrase.get_preset_filepath(folder,phrase,prefix and phrase_idx)
-  --print("phrase_path",phrase_path)
   if not overwrite and io.exists(phrase_path) then
     return false, xPhrase.ERROR.FILE_EXISTS
   end
@@ -637,7 +600,6 @@ function xPhrase.export_preset(folder,instr_idx,phrase_idx,overwrite,prefix)
   renoise.app():save_instrument_phrase(phrase_path)
 
 end
-
 
 --------------------------------------------------------------------------------
 -- generate a valid filename (for exporting phrase presets)
@@ -684,7 +646,6 @@ function xPhrase.set_property(phrase,key,val)
   TRACE("xPhrase.set_property(phrase,key,val)",phrase,key,val)
 
   local prop = cDocument.get_property(xPhrase.DOC_PROPS,key)
-  --print("prop",prop)
 
   if not prop then
     error("Could not apply value, missing from DOC_PROPS")

@@ -33,8 +33,6 @@ function xLineAutomation:__init(automation)
     end
   end
 
-  --rprint(automation)
-
 end
 
 -------------------------------------------------------------------------------

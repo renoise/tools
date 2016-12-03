@@ -111,12 +111,10 @@ function vPrompt.prompt_for_color(callback,active_color,palette)
     end
     vb_palette:add_child(vb_row1)
     vb_palette:add_child(vb_row2)
-    --print("vb_palette",vb_palette)
   end
 
 
   local update_preview = function()
-    --TRACE("*** update_preview")
     local view_bt = vb.views["color_preview"]
     view_bt.color = get_active_color()
     local val = cColor.color_table_to_value(view_bt.color)
@@ -124,8 +122,6 @@ function vPrompt.prompt_for_color(callback,active_color,palette)
     suppress_notifier = true
     view_str.text = cColor.value_to_hex_string(val)
     suppress_notifier = false
-    --scheduled_val = val
-    --callback(scheduled_val)
   end
 
   red:add_notifier(update_preview)
@@ -141,9 +137,7 @@ function vPrompt.prompt_for_color(callback,active_color,palette)
   end
   local on_idle = function()
     if scheduled_hex then
-      --print("*** on_idle - scheduled_hex...",scheduled_hex)
       local value = cColor.hex_string_to_value(scheduled_hex)
-      --print("*** on_idle - value",value)
       if value then
         local t = cColor.value_to_color_table(value)
         red.value = t[1]
@@ -192,7 +186,6 @@ function vPrompt.prompt_for_color(callback,active_color,palette)
                 if suppress_notifier then
                   return
                 end
-                --print("scheduled_hex",str_val)
                 scheduled_hex = str_val
               end
             }

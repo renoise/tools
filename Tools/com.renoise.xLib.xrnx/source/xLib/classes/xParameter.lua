@@ -43,21 +43,14 @@ function xParameter.set_value(param,val,mode,val_min,val_max,msg_type)
     if not val_max then val_max = 16383 end
     step_size = param.value_max/16383
   end
-  --print("val_min,val_max",val_min,val_max)
 
   if not mode then
-
-    --print("TODO treat as undefined - floating point")
-
+    -- TODO treat as undefined - floating point 
   elseif mode:find("abs") then
-
-    --print("TODO treat as absolute - using 7/14 bit_depth")
+    -- TODO treat as absolute - using 7/14 bit_depth 
     new_val = cLib.scale_value(val,val_min,val_max,0,param.value_max)
-
   elseif mode:find("rel_7") then
-
-    --print("treat as 7 bit relative control")
-
+    -- treat as 7 bit relative control 
     local num = val --midi_msg[3]
     if (mode == "rel_7_signed") then
       if (num < 64) then
@@ -92,24 +85,16 @@ function xParameter.set_value(param,val,mode,val_min,val_max,msg_type)
         num = 0
       end
     end
-    --print(">>> num",num)
     if (num > 0) then
       new_val = math.min(new_val+(step_size*num),param.value_max)
     elseif (num < 0) then
       new_val = math.max(new_val-(step_size*math.abs(num)),0)
     end
-    --print(">>> relative 7-bit - new_val",new_val)
-
   elseif mode:find("rel_14") then
-
-    --print("treat as 14 bit relative control")
-
+    -- treat as 14 bit relative control 
     local num = val
     local msb,lsb = xMidiMessage.split_mb(val)
-    --print(">>> msb,lsb",msb,lsb)
-
     if (msg_type == xMidiMessage.TYPE.NRPN) then
-
       if (mode == "rel_14_msb") then
         if (msb == 0x7F) then
           num = - (0x80-num)
@@ -129,9 +114,7 @@ function xParameter.set_value(param,val,mode,val_min,val_max,msg_type)
           num = num
         end
       end
-
     elseif (msg_type == xMidiMessage.TYPE.CONTROLLER_CHANGE) then
-
       if (mode == "rel_14_msb") then
         if (msb == 0x7F) then 
           num = - (0x4000-num)
@@ -154,18 +137,13 @@ function xParameter.set_value(param,val,mode,val_min,val_max,msg_type)
     else
       error("Expected CONTROLLER_CHANGE or NRPN as message-type")
     end
-    
-    --print(">>> num",num)
-
     if (num < 0) then
       new_val = math.max(new_val-(step_size*math.abs(num)),0)
     else
       new_val = math.min(new_val+(step_size*num),param.value_max)
     end
-
   end
 
-  --print(">>> new_val",new_val)
   param.value = new_val
 
 end

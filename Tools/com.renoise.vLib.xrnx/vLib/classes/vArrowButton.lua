@@ -54,36 +54,18 @@ function vArrowButton:__init(...)
 	vToggleButton.__init(self,...)
   self:update_text()
 
-  --print(">>> self:update()")
   self:update()
 
 end
 
 --------------------------------------------------------------------------------
---[[
-function vArrowButton:update()
-  TRACE("vArrowButton:update()")
-
-  vToggleButton.update(self)
-
-end
-]]
---------------------------------------------------------------------------------
 
 function vArrowButton:update_text()
-
-  --print("*** update - buttons",rprint(buttons))
-  --print("*** update - flipped",self.flipped)
 
   local buttons = (self.orientation == vArrowButton.ORIENTATION.HORIZONTAL) 
     and vArrowButton.BUTTONS.HORIZONTAL or vArrowButton.BUTTONS.VERTICAL
   self.text_enabled = self.flipped and buttons[2] or buttons[1]
   self.text_disabled = self.flipped and buttons[1] or buttons[2]
-
-  --local bitmaps = (self.orientation == vArrowButton.ORIENTATION.HORIZONTAL) 
-    --and vArrowButton.BITMAPS.HORIZONTAL or vArrowButton.BITMAPS.VERTICAL
-  --self.bitmap_enabled = vLib.imageroot..(self.flipped and bitmaps[2] or bitmaps[1])
-  --self.bitmap_disabled = vLib.imageroot..(self.flipped and bitmaps[1] or bitmaps[2])
 
   self:request_update()
 

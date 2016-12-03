@@ -126,7 +126,6 @@ function cSandbox:__init()
   -- metatable (constants and shorthands)
   setmetatable(self.env,{
     __index = function (t,k)
-      --print("*** sandbox access ",k)
       if table.find(cSandbox.UNTRUSTED,k) then
         error("Property or method is not allowed:"..k)
       else
@@ -138,7 +137,6 @@ function cSandbox:__init()
       end
     end,
     __newindex = function (t,k,v)
-      --print("*** sandbox assign ",k,v)
       if self.properties[k] and self.properties[k].assign then
         self.properties[k].assign(env,v)
       else
@@ -329,7 +327,6 @@ function cSandbox.insert_return(str_fn)
   for k,v in ipairs(t) do
     if not present then
       local ln = cString.trim(v)
-      --print("ln",ln)
       
       if (ln ~= "") then -- skip empty lines
         if (ln:sub(0,2) ~= "--") then -- skip initial comment blocks
@@ -346,8 +343,6 @@ function cSandbox.insert_return(str_fn)
 
     end
   end
-
-  --print(">>> insert_return t",rprint(t))
 
   return table.concat(t,"\n")
 
@@ -367,7 +362,6 @@ function cSandbox.rename_string_token(str_fn,old_name,new_name,prefix)
   local str_patt = "(.?)("..str_search..")([^%w])"
   str_fn = string.gsub(str_fn,str_patt,function(...)
     local c1,c2,c3 = select(1,...),select(2,...),select(3,...)
-    --print("c1,c2,c3",c1,c2,c3)
     local patt = "[%w_]" 
     if string.match(c1,patt) or string.match(c3,patt) then
       return c1..c2..c3

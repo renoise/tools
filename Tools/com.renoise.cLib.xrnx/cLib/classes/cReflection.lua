@@ -32,25 +32,21 @@ function cReflection.copy_object_properties(from_class,to_class,level)
   local capture = cReflection.get_object_info(from_class)
 
   local copy_property = function(val,target_class,prop_name)
-    --print("*** copy_property",prop_name,val,target_class,"current=",target_class[prop_name])
     target_class[prop_name] = val
   end
 
   local iter = capture:gmatch("([%a_]+)")
   for prop in iter do
-    --print("*** prop",prop,type(from_class[prop]),objinfo(from_class[prop]))
     if (prop:find("_observable")) then
       -- skip observables 
     elseif not cReflection.is_standard_type(type(from_class[prop])) then
       if (level < max_level) then
-        --print("*** recursively check",level+1)
         cReflection.copy_object_properties(from_class[prop],to_class[prop],level+1)
       end
     else
       --props_table[prop] = c[prop]
       local success = pcall(copy_property,from_class[prop],to_class,prop)
       if not success then
-        --print("*** failed copy of property",prop)
       end
     end
   end
@@ -107,7 +103,6 @@ function cReflection.get_object_properties(class,level)
   local props_table = {}
   local iter = capture:gmatch("([%a_]+)")
   for prop in iter do
-    --print("*** prop",prop)
     if (prop:find("_observable")) then
       -- skip observables 
     elseif not cReflection.is_standard_type(type(class[prop])) then
@@ -129,7 +124,6 @@ end
 function cReflection.get_object_info(class)
 
   local str = objinfo(class)
-  --print("objinfo",str,class,type(class))
   local begin1,begin2 = str:find("properties:")
   local end1 = str:find("methods:")
   return str:sub(begin2+1,end1-1)
@@ -169,7 +163,6 @@ function cReflection.set_property(str,value)
     loadstring(str .. " = " .. tostring(value))()
   end)
 
-  --print("success,err",success,err)
   if not success then
     return false,err
   else

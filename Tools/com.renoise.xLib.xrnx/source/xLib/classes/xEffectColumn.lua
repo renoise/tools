@@ -98,7 +98,6 @@ function xEffectColumn:__init(args)
 
   for token,value in pairs(args) do
     if (table.find(xEffectColumn.tokens,token)) then
-      --print("*** xEffectColumn:__init - token,value",token,value)
       self[token] = args[token]
     end
   end

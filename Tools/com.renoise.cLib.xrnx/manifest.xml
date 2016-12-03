@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>5</ApiVersion>
+  <Id>com.renoise.cLib</Id>
+  <Version>1.0</Version>
+  <Author>danoise [bjorn.nesby@gmail.com]</Author>
+  <Name>cLib</Name>
+  <Category>Core Library</Category>
+  <Description>The cLib library contains basic functionality (file-system, data-access) for the Renoise API. Launch a demo from Tools &gt; cLib Demo</Description>
+  <Homepage></Homepage>
+</RenoiseScriptingTool>

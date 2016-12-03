@@ -264,9 +264,6 @@ function xRule:__init(def)
   --def.name = cReflection.cast_value(def.name,"string")
   --def.match_any = cReflection.cast_value(def.match_any,"boolean")
   --def.midi_enabled = cReflection.cast_value(def.midi_enabled,"boolean")
-  --print("*** xRule def.midi_enabled",def.midi_enabled,type(def.midi_enabled))
-
-  --print("xRule def...",rprint(def))
 
   -- public -----------------------
 
@@ -355,7 +352,6 @@ function xRule:__init(def)
     -- @param operator (xRule.OPERATOR)
     -- @param precision (number), optional precision factor
     local compare_numbers = function(val1,val2,operator,precision)
-      --print("compare_numbers - val1,val2,operator,precision",val1,val2,operator,precision)
       local is_equal = precision and cLib.float_compare(val1,val2,precision) 
         or val1 == val2
       local operators_table = {
@@ -438,7 +434,6 @@ function xRule:__init(def)
     -- pass message on to a different rule/set
     -- @param val (string), "ruleset_name:rule_name"
     local route_message = function(val)
-      --print("route_message - val",val)
       local routing_values = cString.split(val,":")
       local rule,ruleset,rule_idx,ruleset_idx
       if (routing_values[1] == xRuleset.CURRENT_RULESET) then
@@ -451,11 +446,8 @@ function xRule:__init(def)
         rule,rule_idx = ruleset:get_rule_by_name(routing_values[2])
         --ruleset,ruleset_idx = __xrules:get_ruleset_by_name(routing_values[1])
       else
-        --print("*** failed to locate ruleset: "..routing_values[1])
       end
-      --print(">>> route_message - ruleset,rule", ruleset,rule)
       if ruleset and rule then
-        --print(">>> passing message from one rule to another", ruleset_idx,rule_idx)
         __xrules:match_message(__xmsg,ruleset_idx,rule_idx,true)
       end
     end
@@ -591,12 +583,8 @@ function xRule:__init(def)
     }
   end
 
-  --print("props_table",rprint(props_table))
-
   self.sandbox.properties = props_table
-
   self.sandbox.modified_observable:add_notifier(function()
-    --print(">>> sandbox.modified_observable fired...")
     self.modified_observable:bang()
   end)
 
@@ -678,9 +666,6 @@ end
 
 function xRule:serialize()
 
-  --print(">>> xRule:serialize - self.conditions",rprint(self.conditions))
-  --print(">>> xRule:serialize - self.actions",rprint(self.actions))
-
   local t = {
     ["name"] = self.name,
     ["match_any"] = self.match_any,
@@ -690,8 +675,6 @@ function xRule:serialize()
     ["osc_pattern"] = {
       pattern_in = self.osc_pattern.pattern_in,
       pattern_out = self.osc_pattern.pattern_out,
-      --strict = self.osc_pattern.strict,
-      --precision = self.osc_pattern.precision,
     },
   }
   local max_depth,longstring = nil,true
@@ -730,8 +713,6 @@ function xRule:match(xmsg,xrules,ruleset_idx)
     LOG("*** ",self.sandbox.callback_str)
     return {}
   else
-    --print("callback result - xmsgs,evaluated",xmsgs,evaluated)
-   
     return xmsgs,evaluated
   end
 
@@ -751,7 +732,6 @@ function xRule:fix_conditions()
 
   while not done do
     local v = self.conditions[count]
-    --print("*** PRE count,v",count,rprint(v))
     -- figure out the logic used in this row
     if (#v == 1) then
       -- encountered logic
@@ -782,7 +762,6 @@ function xRule:fix_conditions()
     else
       last_was_logic = false
     end
-    --print(">>> last_was_logic",count,last_was_logic,logic_label,rprint(v))
     if (#v == 0) then
       yet_to_encounter_first_row = false
     end
@@ -810,10 +789,8 @@ function xRule:compile()
   end
 
   local build_sysex_condition = function(k,v)
-    --print("build_sysex_condition",k,v)
 
     local t = cString.split(v," ")
-    --rprint(t)
 
     local str_fn = ""
     local last_was_wildcard = false
@@ -838,12 +815,10 @@ function xRule:compile()
   -- @param k, key (e.g. 'value_1')
   -- @param v, table (e.g. [equal_to] =>  440.4)
   local build_comparison = function(k,v)
-    --print("build_comparison(k,v)",k,rprint(v))
 
     local str_fn = ""
     local count = 0
     for k2,v2 in pairs(v) do
-      --print("k,v,k2,v2",k,v,k2,v2)
 
       if (count > 0) then
         str_fn = str_fn .. "and "
@@ -873,12 +848,6 @@ function xRule:compile()
               precision = self.osc_pattern.precision
             end
           end
-          --[[
-          local basetype = xRule.ASPECT_BASETYPE[string.upper(k)]
-          val = (basetype == "string") and "'"..val.."'" or 
-            (type(val)=="string") and "'"..val.."'" or val
-          ]]
-
         end
       end
 
@@ -892,14 +861,6 @@ function xRule:compile()
         else
           str_fn = str_fn .. "("..k.." ~= "..val..") \n"
         end
-        --[[
-      elseif (k2 == xRule.OPERATOR.NOT_EQUAL_TO) then
-        str_fn = str_fn .. "("..compare_numbers(k,val,xRule.OPERATOR.NOT_EQUAL_TO)..") \n"
-      elseif (k2 == xRule.OPERATOR.LESS_THAN) then
-        str_fn = str_fn .. "("..compare_numbers(k,val,xRule.OPERATOR.LESS_THAN)..") \n"
-      elseif (k2 == xRule.OPERATOR.GREATER_THAN) then
-        str_fn = str_fn .. "("..compare_numbers(k,val,xRule.OPERATOR.GREATER_THAN)..") \n"
-        ]]
       elseif (k2 == xRule.OPERATOR.BETWEEN) then
         str_fn = str_fn 
           .. "("
@@ -914,7 +875,6 @@ function xRule:compile()
       end
       count = count+1
     end
-    --print("str_fn",str_fn)
     return str_fn
   end
 
@@ -1004,14 +964,11 @@ function xRule:compile()
       elseif (k2 == xRule.ACTIONS.CALL_FUNCTION) then
         str_fn = str_fn .. string.format("%s \n",v2)
       else
-        --print("k,v,k2,v2",k,v,k2,v2)
         error("Unknown action")
       end
     end
   end
   str_fn = str_fn .. "end \n"
-
-  --print(">>> lua string:\n",str_fn)
 
   local passed,err = self.sandbox:test_syntax(str_fn) 
   if passed then

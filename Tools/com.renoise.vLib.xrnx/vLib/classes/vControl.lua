@@ -40,18 +40,13 @@ end
 function vControl:request_update()
   TRACE("vControl:request_update()")
   
-  --print("request_update - self",self)
-  --print("request_update - self.update",self.update)
-
   if not self.update then
     return
   end
 
   if not vLib.lazy_updates then
-    --print("no lazy_updates")
     self:update()
   else
-    --print("lazy_updates - set timer")
     if not renoise.tool():has_timer({self,self.perform_update}) then
       renoise.tool():add_timer({self,self.perform_update},10)
     end

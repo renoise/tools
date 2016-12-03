@@ -37,7 +37,6 @@ xOscDevice.DEFAULT_DEVICE_NAME = "Untitled device"
 function xOscDevice:__init(...)
 
 	local args = cLib.unpack_args(...) 
-  --print("args",rprint(args))
 
   --- string, the state of the device
   self.active = property(self.get_active,self.set_active)
@@ -45,7 +44,6 @@ function xOscDevice:__init(...)
 
   --- string, the device name (for display purposes)
   self.name = property(self.get_name,self.set_name)
-  --print("args.name",args.name,type(args.name))
   self.name_observable = renoise.Document.ObservableString(args.name or "")
 
   --- string, the 'prefix' part 
@@ -260,8 +258,6 @@ function xOscDevice:open()
     self:close()
   end
 
-  --print(">>> open OSC connection",self)
-
   assert(((not self.client) or (not self.server)), 
     "Internal Error. Please report: " .. 
     "trying to start an OSC service which is already active")
@@ -374,11 +370,7 @@ function xOscDevice:socket_message(socket, binary_data)
     local messages = table.create()
     self:_unpack_messages(message_or_bundle, messages)
 
-    --print("socket_message - #messages",#messages)
-
     for _,msg in pairs(messages) do
-
-      --print("msg.arguments",rprint(msg.arguments))
 
       if self.callback then
 
@@ -392,7 +384,6 @@ function xOscDevice:socket_message(socket, binary_data)
           -- strip the prefix before continuing
           -- (we need to create a new osc message)
           local msg_pattern = string.sub(msg.pattern,string.len(self.prefix)+1)
-          --print("stripped prefix - msg_pattern is now",msg_pattern)
 
           msg = renoise.Osc.Message(msg_pattern,msg.arguments)
 
@@ -422,11 +413,7 @@ function xOscDevice:send(xmsg)
   end
 
   -- add prefix , if not already added
-  --print("self.prefix",self.prefix,type(self.prefix))
-  --print("xmsg.pattern",xmsg.pattern,type(xmsg.pattern))
-  --print("xmsg.pattern.osc_pattern_out",xmsg.pattern.osc_pattern_out,type(xmsg.pattern.osc_pattern_out))
   local prefix_str = string.sub(xmsg.pattern.osc_pattern_out,0,string.len(self.prefix))
-  --print(">>> xOscDevice:send - prefix_str",prefix_str)
   if (prefix_str ~= self.prefix) then 
     xmsg.pattern.osc_pattern_out = self.prefix .. xmsg.pattern.osc_pattern_out
   end
@@ -434,7 +421,6 @@ function xOscDevice:send(xmsg)
   local msg = xmsg:create_raw_message()
 
   if not self.bundling_enabled then
-    --print(">>> xOscDevice:send - ",msg.pattern,rprint(msg.arguments))
     self.client:send(msg)
   else
     table.insert(self.message_queue,msg)
@@ -468,7 +454,7 @@ end
 --------------------------------------------------------------------------------
 
 function xOscDevice:on_idle()
-  --print("xOscDevice:on_idle()")
+  --TRACE("xOscDevice:on_idle()")
 
   if self._initialize_requested then
     if not self.active then

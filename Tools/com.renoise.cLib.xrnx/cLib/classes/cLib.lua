@@ -31,6 +31,18 @@ function cLib.unpack_args(...)
 end
 
 --------------------------------------------------------------------------------
+-- Call a class method or function and show/log results
+-- Note: currently with a maximum of 8 arguments can be passed (this is a
+-- convenience function after all...)
+-- @params ... (vararg), [class+function or function] + argument(s)
+
+function cLib.invoke_task(...)
+  local fn = select(1,...)
+  fn(select(2,...),select(3,...),select(4,...),select(5,...),
+    select(6,...),select(7,...),select(8,...),select(9,...))
+end
+
+--------------------------------------------------------------------------------
 -- Turn value descriptor into instance
 -- @return cNumber or cValue
 
@@ -70,7 +82,7 @@ end
 -- @return table
 
 function cLib.expand_table(t,k1,k2,k3,k4)
-  --print("cLib.expand_table(t,k1,k2,k3,k4)",t,k1,k2,k3,k4)
+  --TRACE("cLib.expand_table(t,k1,k2,k3,k4)",t,k1,k2,k3,k4)
 
   if not t[k1] then
     t[k1] = {}
@@ -233,7 +245,7 @@ end
 -- compare two numbers with variable precision
 -- @param val1 
 -- @param val2 
--- @param precision
+-- @param precision, '10000000' is suitable for parameter values
 -- @return boolean
 
 function cLib.float_compare(val1,val2,precision)
@@ -340,14 +352,10 @@ function cLib.serialize_table(t,max_depth,longstring)
     local result = ""--"\n"
     indent = indent or string.rep(' ', 2)
     depth = depth or 1 
-    --local ordered = table_is_ordered(t)
-    --print("ordered",ordered)
     local too_deep = (depth > max_depth) and true or false
-    --print("too_deep",too_deep,depth)
     
     local next_indent
     for key, value in pairs(t) do
-      --print("key, value",key,type(key),value)
       local str_key = (type(key) == 'number') and '' or '["'..cLib.serialize_object(key) .. '"] = ' 
       if (type(value) == 'table') then
         if table.is_empty(value) then
@@ -375,8 +383,6 @@ function cLib.serialize_table(t,max_depth,longstring)
   end
 
   rslt = rslt .. rdump(t) .. "}"
-  --print(rslt)
-
   return rslt
 
 end

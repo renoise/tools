@@ -46,7 +46,6 @@ function xAudioDevice.resolve_parameter(param,track_idx,device_idx)
 			end
       return search_device(device,device_idx,track_idx)
     else
-      --print("search devices...")
       for _,device in ipairs(track.devices) do
         local param_idx = search_device(device,device_idx,track_idx)
         if param_idx then
@@ -58,7 +57,6 @@ function xAudioDevice.resolve_parameter(param,track_idx,device_idx)
 
 
   if track_idx and device_idx then
-    --print("search single device - track_idx",track_idx,"device_idx",device_idx)
 		local track = rns.tracks[track_idx]
 		if not track then
 			return
@@ -70,14 +68,12 @@ function xAudioDevice.resolve_parameter(param,track_idx,device_idx)
     return search_device()
 
   elseif track_idx then
-    --print("search single track - track_idx",track_idx)
 		local track = rns.tracks[track_idx]
 		if not track then
 			return
 		end
 		return search_track(track,device_idx,track_idx)
 	else
-    --print("search all tracks")
 		for _,track in ipairs(rns.tracks) do
       local param_idx = search_track(track,device_idx,track_idx)
       if param_idx then
@@ -108,7 +104,6 @@ function xAudioDevice.get_device_routings(device)
       (param.name == "Dest. Track") or
       (param.name == "Receiver")          
     then
-      --print("found a possible linked device",device.name,param.name,param.value)
       if (param.value ~= 0) then
         routings[param.value+1] = true
       end

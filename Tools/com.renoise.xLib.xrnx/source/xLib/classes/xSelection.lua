@@ -220,7 +220,6 @@ end
 function xSelection.includes_note_columns(patt_sel)
 
   local track = rns.tracks[patt_sel.start_track]
-  --print("patt_sel.start_column > track.visible_note_columns",patt_sel.start_column,track.visible_note_columns,patt_sel.start_column > track.visible_note_columns)
   return (patt_sel.start_column <= track.visible_note_columns)
 
 end

@@ -142,7 +142,6 @@ function vMetrics.get_text_width(str,font)
       -- TODO look up multibyte (UTF-8) characters
       width = width+fallback
     end
-    --print("chr,width,byte",chr,width,string.byte(chr))
   end
 
   return width
@@ -172,7 +171,6 @@ function vMetrics.fit_text(str,max_width,font)
     else
       width = width+fallback
     end
-    --print("chr,width",chr,width)
     if (width > max_width) then
       return string.sub(str,1,k-1)
     end

@@ -236,7 +236,6 @@ function xVoiceManager:input_message(xmsg)
   end
 
   local voice_idx = self:get_voice_index(xmsg)
-  --print(">>> voice_idx",voice_idx)
   if voice_idx then
     if (xmsg.message_type == xMidiMessage.TYPE.NOTE_OFF) then
       local _xmsg = self.voices[voice_idx]
@@ -310,8 +309,6 @@ end
 function xVoiceManager:register(xmsg)
   TRACE("xVoiceManager:register(xmsg)",xmsg)
 
-  --print("self.column_allocation",self.column_allocation)
-
   if (self.voice_limit > 0) 
     and (#self.voices == self.voice_limit)
   then
@@ -323,21 +320,17 @@ function xVoiceManager:register(xmsg)
 
   elseif self.column_allocation then
 
-    --print(">>> register - xmsg.note_column_index PRE",xmsg.note_column_index)
     local available_columns = self:get_available_columns(xmsg.track_index)
-    --print("available_columns",rprint(available_columns))
     if not table.is_empty(available_columns) then
       -- use the incoming message's column if available
       local is_available = xmsg.note_column_index 
         and available_columns[xmsg.note_column_index] or false
       if is_available then
-        --print("use the incoming message column",xmsg.note_column_index)
       else
         -- use the first available column, starting from current
         for k = xmsg.note_column_index,12 do
           if available_columns[k] then
             xmsg.note_column_index = k
-            --print("first available column",k)
             break
           end
         end
@@ -347,7 +340,6 @@ function xVoiceManager:register(xmsg)
       self:steal_voice()
       xmsg.note_column_index = 12
     end
-    --print(">>> register - xmsg.note_column_index POST",xmsg.note_column_index)
   end
 
   table.insert(self.voices,xmsg)
@@ -367,7 +359,6 @@ function xVoiceManager:release_all()
 
   for k,v in ripairs(self.voices) do
     self:release(k)
-    --print("released voice #",k)
   end
 
 end
@@ -423,7 +414,6 @@ function xVoiceManager:check_expired()
   for k,v in ripairs(self.voices) do
     local age = os.clock() - v.timestamp
     if (age > self.duration) then
-      --print("release expired voice with age",age)
       self:release(k)
     end
   end
@@ -464,21 +454,18 @@ function xVoiceManager:get_voice_index(xmsg)
           and v._originating_instrument_index 
         then
           _originating_instrument_index = v._originating_instrument_index
-          --print("v._originating_instrument_index",v._originating_instrument_index)
         end
         if not _originating_track_index
           and self.follow_track 
           and v._originating_track_index 
         then
           _originating_track_index = v._originating_track_index
-          --print("v._originating_track_index",v._originating_track_index)
         end
         if not _originating_octave
           and self.follow_octave 
           and v._originating_octave 
         then
           _originating_octave = v._originating_octave
-          --print("v._originating_octave",v._originating_octave)
         end
       end
     end
@@ -492,7 +479,6 @@ function xVoiceManager:get_voice_index(xmsg)
         and xmsg.track_index and ((v.track_index == xmsg.track_index) or (_originating_track_index and v.track_index == _originating_track_index))
         and xmsg.instrument_index and ((v.instrument_index == xmsg.instrument_index) or (_originating_instrument_index and v.instrument_index == _originating_instrument_index))
       then
-        --print("matched voice",k)
         v.octave = _originating_octave or v.octave
         v.track_index = _originating_track_index or v.track_index
         v.instrument_index = _originating_instrument_index or v.instrument_index
@@ -544,38 +530,28 @@ function xVoiceManager:attach_to_song()
 
   rns.instruments_observable:add_notifier(function(arg)
     TRACE("xVoiceManager: instruments_observable fired...",arg)
-
     if (arg.type == "remove") then
       self:release_all_instrument(arg.index)
     elseif (arg.type == "insert") then
       for k,v in ipairs(self.voices) do
         if (v.track_index >= arg.index) then
           v.track_index = v.track_index + 1
-          --print("raise track index by 1")
         end
       end
     end
-
-    --print("instruments_observable - self.voices...",rprint(self.voices))
-
   end)
 
   rns.tracks_observable:add_notifier(function(arg)
     TRACE("xVoiceManager: tracks_observable fired...",arg)
-
     if (arg.type == "remove") then
       self:release_all_track(arg.index)
     elseif (arg.type == "insert") then
       for k,v in ipairs(self.voices) do
         if (v.track_index >= arg.index) then
           v.track_index = v.track_index + 1
-          --print("raise track index by 1")
         end
       end
     end
-
-    --print("tracks_observable - self.voices...",rprint(self.voices))
-
   end)
 
 end
@@ -603,7 +579,6 @@ end
 
 function xVoiceManager:get_higher(idx)
   TRACE("xVoiceManager:get_higher(idx)",idx)
-
   local voice = self.voices[idx]
   if not voice then
     return
@@ -611,7 +586,6 @@ function xVoiceManager:get_higher(idx)
   local base_pitch = voice.values[1]
   local pitch = nil
   for k,v in ipairs(self.voices) do
-    --print("v.values[1]",v.values[1])
     if (v.values[1] > base_pitch) then
       if not pitch then
         pitch = v.values[1]
@@ -619,11 +593,9 @@ function xVoiceManager:get_higher(idx)
       pitch = math.min(pitch,v.values[1])
     end
   end
-  --print("pitch,base_pitch",pitch,base_pitch)
   if pitch then
     return self:get_by_pitch(pitch)
   end
-
 end
 
 -------------------------------------------------------------------------------
@@ -633,11 +605,9 @@ end
 
 function xVoiceManager:get_highest()
   TRACE("xVoiceManager:get_highest()")
-
   local rslt,idx 
   local pitch = 0
   for k,v in ipairs(self.voices) do
-    --print("v.values[1]",v.values[1])
     if (v.values[1] > pitch) then
       rslt = v
       pitch = v.values[1]
@@ -645,7 +615,6 @@ function xVoiceManager:get_highest()
     end
   end
   return rslt,idx
-
 end
 
 -------------------------------------------------------------------------------
@@ -654,7 +623,6 @@ end
 
 function xVoiceManager:get_lower(idx)
   TRACE("xVoiceManager:get_lower(idx)",idx)
-
   local voice = self.voices[idx]
   if not voice then
     return
@@ -672,7 +640,6 @@ function xVoiceManager:get_lower(idx)
   if pitch then
     return self:get_by_pitch(pitch)
   end
-
 end
 
 -------------------------------------------------------------------------------
@@ -681,7 +648,6 @@ end
 
 function xVoiceManager:get_lowest()
   TRACE("xVoiceManager:get_lowest()")
-
   local rslt,idx 
   local pitch = 999
   for k,v in ipairs(self.voices) do
@@ -692,5 +658,4 @@ function xVoiceManager:get_lowest()
     end
   end
   return rslt,idx
-
 end

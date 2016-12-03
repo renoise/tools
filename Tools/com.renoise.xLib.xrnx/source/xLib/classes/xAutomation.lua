@@ -145,7 +145,6 @@ function xAutomation:record(track_idx,param,value,value_mode)
       local line_fract = highres_pos.line + highres_pos.fraction
       self:clear_range(line_fract,self.writeahead,ptrack_auto)
       ptrack_auto:add_point_at(line_fract,value)
-      --print("add point at",highres_pos.line + highres_pos.fraction,value)
     else
       self:clear_range(self.playpos.line,1,ptrack_auto)
       ptrack_auto:add_point_at(self.playpos.line,value)
@@ -153,7 +152,6 @@ function xAutomation:record(track_idx,param,value,value_mode)
   end
 
   if (self.playmode ~= xAutomation.PLAYMODE.AUTOMATIC) then
-    --print("self.playmode",self.playmode)
     ptrack_auto.playmode = self.playmode
   end
 
@@ -175,7 +173,6 @@ function xAutomation:has_automation(track_idx,param)
   local ptrack = rns.patterns[patt_idx]:track(track_idx)
   local ptrack_auto = ptrack:find_automation(param)
 
-  --print("ptrack_auto",ptrack_auto)
   return (ptrack_auto) and true or false
 
 end
@@ -243,7 +240,6 @@ function xAutomation:compute_writeahead()
   --TRACE("xAutomation:compute_writeahead()")
 
   self.writeahead = (rns.transport.bpm * rns.transport.lpb / 200)
-  --print("self.writeahead",self.writeahead)
 
 end
 

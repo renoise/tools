@@ -146,13 +146,11 @@ function vFileBrowser:__init(...)
   -- initialize --
 
   self.selection.index_observable:add_notifier(function()
-    --print("vFileBrowser: selection.index_observable fired...")
   end)
 
   self.selection.doublepress_observable:add_notifier(function()
     local item_idx = self.selection.last_selected_index
     local item = self.vtable:get_item_by_id(item_idx)
-    --print("item_idx,item",item_idx,item)
     if item then
       self:open_item(item)
     end
@@ -206,7 +204,6 @@ function vFileBrowser:__init(...)
     height = vFileBrowser.CONTROL_SIZE,
   }
   self.path_observable:add_notifier(function()
-    --print("vFileBrowser.path_observable fired...")
     local old_w = self.path_textfield.width
     self.path_textfield.text = self.path
     self.path_textfield.width = old_w  -- retain width
@@ -218,7 +215,6 @@ function vFileBrowser:__init(...)
     height = vFileBrowser.CONTROL_SIZE,
   }
   self.selection.index_observable:add_notifier(function()
-    --print("vFileBrowser.selection.index_observable fired...")
     local sel_item = self:get_selected_item()
     if sel_item and (sel_item[vTable.META.TYPE] == vFileBrowser.ITEM_TYPE.FILE) then
       local filename = sel_item[vFileBrowser.COLUMN.NAME]
@@ -246,7 +242,6 @@ function vFileBrowser:open_item(item)
     self:parent_directory()
   elseif (item.item_type == vFileBrowser.ITEM_TYPE.FILE) then
     if self.on_file_open then
-      --print(">>> on_file_open - self,item",self,item)
       self.on_file_open(self,item)
     end
   end
@@ -268,7 +263,6 @@ function vFileBrowser:get_column_def()
   end
 
   local press_item = function(cb_cell)
-    --print("press_item",cb_cell,cb_cell.item_id)
     local item = self.vtable:get_item_by_id(cb_cell[vDataProvider.ID])
     if self.single_select then
       self:open_item(item)
@@ -276,7 +270,6 @@ function vFileBrowser:get_column_def()
       self.selection:set_index(cb_cell[vDataProvider.ID])
       self:update_row_styling()
     end
-    --rprint(self.vtable.data)
     self.vtable:request_update()
 
   end
@@ -323,7 +316,6 @@ function vFileBrowser:get_header_def()
   local header_def = {}
 
   local function select_all(cb_cell,checked)
-    --print("notifier - cb_cell,checked",cb_cell,checked)
     local owner = cb_cell.owner
     local idx = cb_cell[vDataProvider.ID]
     owner.header_defs.checked.data = checked
@@ -406,7 +398,6 @@ function vFileBrowser:build()
     column_defs = self:get_column_def(),
     header_defs = self:get_header_def(),
     on_update_complete = function()
-      --print("*** vFileBrowser.vtable.on_update_complete")
     end,
   }
 
@@ -438,10 +429,7 @@ end
 -- @return table or nil
 
 function vFileBrowser:get_selected_item()
-  --print("vFileBrowser:get_selected_item()",self.selection.index)
-  --print("vFileBrowser:get_item_by_id",self.vtable:get_item_by_id(self.selection.index))
   return self.vtable:get_item_by_id(self.selection.index)
-  --return vVector.match_by_key_value(self.vtable.data,"checked",true)
 end
 
 --------------------------------------------------------------------------------
@@ -465,8 +453,6 @@ function vFileBrowser:delete_selected()
   for k,v in ipairs(self.vtable.data) do
     if (v.checked) then
       local file_path = ("%s%s"):format(self.path_observable.value,v.name)
-      --print("Remove this item",v.item_type,file_path)
-
       local success, err 
       if (v.item_type == vFileBrowser.ITEM_TYPE.FOLDER) then
         success, err = self:delete_folder(file_path) 
@@ -518,42 +504,30 @@ end
 
 function vFileBrowser:match_file_type(file_path)
   --TRACE("vFileBrowser:match_file_type(file_path)",file_path)
-
   local path,file,ext = cFilesystem.get_path_parts(file_path)
-  --print("path,file,ext",path,file,ext)
-
   for k,v in pairs(self._file_types) do
-    --print("k,v",k,v,v.icon)
     if (ext == v.name) then
       return k,v.icon
     end
   end
-
 end
 
 --------------------------------------------------------------------------------
 
 function vFileBrowser:count_checked()
   --TRACE("vFileBrowser:count_checked()")
-
   local data = self:get_items()
-  --print("xLib.count_checked(xdata)",xLib.count_checked(xdata))
   return vVector.count_checked(data)
-
 end
-
 
 --------------------------------------------------------------------------------
 
 function vFileBrowser:browse_path()
   TRACE("vFileBrowser:browse_path()")
-
   local str_path = renoise.app():prompt_for_path("Select a folder")
-  --print("str_path",str_path)
   if (str_path ~= "") then
     self:set_path(str_path)
   end
-
 end
 
 --------------------------------------------------------------------------------
@@ -640,7 +614,6 @@ function vFileBrowser:rename_file()
     return
   end
   local str_name = sel_item.name
-  --print("str_name",str_name)
 
   vb.views[self.textfield_rename_id].text = str_name
 
@@ -648,12 +621,10 @@ function vFileBrowser:rename_file()
     "Rename a file",self.rename_file_view,{"Rename","Cancel"})
 
   if (choice == "Rename") then
-
     local str_new_name = vb.views[self.textfield_rename_id].text
     local str_from = ("%s%s"):format(self.path_observable.value,str_name)
     local str_to = ("%s%s"):format(self.path_observable.value,str_new_name)
     local success,err = os.rename(str_from,str_to) 
-    --print("success,err",success,err)
     if success then
       self:refresh()
     else
@@ -717,9 +688,6 @@ function vFileBrowser:set_path(str)
 
   self.at_root = self:is_root_folder(str)
 
-  --print("dirnames",rprint(dirnames))
-  --print("filenames",rprint(filenames))
-
   local rslt = {}
 
   if not self.at_root and self.show_parent_folder then
@@ -755,22 +723,17 @@ function vFileBrowser:set_path(str)
     })
   end
 
-  --print("rslt",rprint(rslt))
-
   self.path_observable.value = str
 
   -- match with recognized file-types
   for k,v in ipairs(rslt) do
     if (v.item_type == vFileBrowser.ITEM_TYPE.FILE) then
       local ext,icon = self:match_file_type(v.name)
-      --print("ext,icon",ext,icon)
       if ext and icon then
         v.item_icon = icon
       end
     end
   end
-
-  --rprint(rslt)
 
   self.vtable.data = rslt
 
@@ -810,8 +773,6 @@ function vFileBrowser:update_row_styling()
       v.__row_style = vFileBrowser.ROW_STYLE_NORMAL
     end
   end
-
-  --print("self.vtable.data",rprint(self.vtable.data))
 
 end
 
@@ -881,7 +842,6 @@ end
 --------------------------------------------------------------------------------
 
 function vFileBrowser:get_show_parent_folder()
-  --print("vTable:set_show_parent_folder(num)",num)
   return self._show_parent_folder
 end
 

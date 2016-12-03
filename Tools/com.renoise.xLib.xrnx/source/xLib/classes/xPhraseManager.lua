@@ -61,7 +61,6 @@ function xPhraseManager.get_available_slot(instr_idx,keymap_range,keymap_offset)
   local prev_end = nil
 
   for k,v in ipairs(instr.phrase_mappings) do
-    --print(">>> check mapping",v.note_range[1],v.note_range[2])
 
     if (v.note_range[2] >= keymap_offset) then      
 
@@ -75,15 +74,12 @@ function xPhraseManager.get_available_slot(instr_idx,keymap_range,keymap_offset)
       then
         begin_at = prev_end+1
         stop_at = v.note_range[1]-1
-        --print(">>> found room between",begin_at,stop_at)
         phrase_idx = k
         break
       else
-        --print(">>> no room at",v.note_range[1],v.note_range[2])
       end
       prev_end = v.note_range[2]
     else
-      --print(">>> less than keymap_offset")
       local next_mapping = instr.phrase_mappings[k+1]
       if next_mapping 
         and (next_mapping.note_range[1] > keymap_offset)
@@ -101,11 +97,9 @@ function xPhraseManager.get_available_slot(instr_idx,keymap_range,keymap_offset)
     else
       phrase_idx = #instr.phrase_mappings+1
     end
-    --print(">>> found begin_at",begin_at,phrase_idx)
   end
   if not stop_at then
     stop_at = begin_at + keymap_range - 1
-    --print(">>> found stop_at",stop_at)
   end
 
   stop_at = math.min(119,stop_at)
@@ -125,7 +119,6 @@ function xPhraseManager.get_available_slot(instr_idx,keymap_range,keymap_offset)
   end
 
   local note_range = {begin_at,begin_at+keymap_range}
-  --print(">>> note_range...",rprint(note_range))
 
   return note_range,phrase_idx
 
@@ -148,8 +141,6 @@ function xPhraseManager.get_empty_slot(instr_idx,keymap_offset)
     return false,"Could not locate instrument"
   end
 
-  --print("*** get_empty_slot - instr.name",instr.name)
-
   -- provide defaults...
   if not keymap_offset then
     keymap_offset = 0
@@ -159,12 +150,10 @@ function xPhraseManager.get_empty_slot(instr_idx,keymap_offset)
 
   local stop_at = nil
   for k,v in ipairs(instr.phrase_mappings) do
-    --print("*** get_empty_slot - check mapping",v.note_range[1],v.note_range[2])
     if (v.note_range[1] >= keymap_offset) 
       and stop_at 
       and (v.note_range[1] == stop_at+1)
     then
-      --print("*** get_empty_slot - v.phrase.is_empty",v.phrase.is_empty)
       if v.phrase.is_empty then
         return v.note_range,k
       end
@@ -178,7 +167,6 @@ function xPhraseManager.get_empty_slot(instr_idx,keymap_offset)
   -- next, look at the phrase themselves
 
   for k,v in ipairs(instr.phrases) do
-    --print("*** get_empty_slot - v.is_empty",v.is_empty)
     if v.is_empty then
       if v.mapping then
         return v.mapping.note_range,k
@@ -217,7 +205,6 @@ function xPhraseManager.auto_insert_phrase(instr_idx,insert_at_idx,takeover,keym
   local create_keymap = false
   local keymap_range,keymap_offset
   if keymap_args then
-    --print("keymap_args",rprint(keymap_args))
     create_keymap = true
     keymap_range = keymap_args.keymap_range
     keymap_offset = keymap_args.keymap_offset
@@ -238,13 +225,10 @@ function xPhraseManager.auto_insert_phrase(instr_idx,insert_at_idx,takeover,keym
   if takeover then
     vphrase_range,vphrase_idx = xPhraseManager.get_empty_slot(instr_idx,keymap_offset)
     if vphrase_idx then
-      --print("*** auto_insert_phrase - located empty phrase")
       do_create = false
       create_keymap = false
     end
   end
-
-  --print(">>> vphrase_idx #1",vphrase_idx)
 
   if not vphrase_idx then
     if create_keymap then
@@ -256,14 +240,10 @@ function xPhraseManager.auto_insert_phrase(instr_idx,insert_at_idx,takeover,keym
     end
   end
 
-  --print(">>> vphrase_idx #2",vphrase_idx)
-
   local phrase_map_idx = vphrase_idx
 
   vphrase_idx = insert_at_idx and insert_at_idx
     or (#instr.phrases > 0) and #instr.phrases+1 or 1
-
-  --print(">>> vphrase_idx #3",vphrase_idx)
 
   local phrase = nil
   if do_create then
@@ -272,8 +252,6 @@ function xPhraseManager.auto_insert_phrase(instr_idx,insert_at_idx,takeover,keym
       return false,err
     end
     phrase = instr:insert_phrase_at(vphrase_idx)
-    --phrase:clear() -- clear default C-4 
-    --print(">>> inserted phrase at",vphrase_idx,"in",instr.name)
   else
     phrase = instr.phrases[vphrase_idx]
   end
@@ -559,13 +537,11 @@ function xPhraseManager.set_universal_property(instr_idx,phrase_idx,prop_name,pr
   end
 
   local phrase = instr.phrases[phrase_idx]
-  --print("phrase",phrase)
   if phrase then
     phrase[prop_name] = prop_value
   end
   
   local mapping,mapping_idx = xPhraseManager.get_mapping_index_by_phrase_index(instr_idx,phrase_idx)
-  --print("mapping,mapping_idx",mapping,mapping_idx)
   if mapping then
     mapping[prop_name] = prop_value
   end
@@ -737,8 +713,6 @@ end
 
 function xPhraseManager.export_presets(folder,instr_idx,indices,overwrite,prefix)
   TRACE("xPhraseManager.export_presets(folder,instr_idx,indices,overwrite,prefix)",folder,instr_idx,indices,overwrite,prefix)
-  --print("*** export_presets - indices",rprint(indices))
-  --print("*** export_presets - prefix",prefix)
 
   assert(type(folder)=="string")
   assert(type(instr_idx)=="number")
@@ -772,8 +746,6 @@ function xPhraseManager.import_presets(files,instr_idx,insert_at_idx,takeover,ke
   assert(type(instr_idx)=="number")
 
   for k,v in ipairs(files) do
-
-    --print("*** import_presets - k,v",k,v)
 
     local phrase,phrase_idx_or_err = xPhraseManager.auto_insert_phrase(instr_idx,insert_at_idx,takeover,keymap_args)
     if not phrase then

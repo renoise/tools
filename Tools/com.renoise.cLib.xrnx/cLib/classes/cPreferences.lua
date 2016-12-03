@@ -179,7 +179,6 @@ function cPreferences:scan_profiles()
   self.profiles = {}
 
   local str_path = cPreferences.PROFILE_FOLDER
-  --print("str_path",str_path)
   
   if not io.exists(str_path) then
     os.mkdir(str_path)
@@ -187,11 +186,9 @@ function cPreferences:scan_profiles()
 
   local dirnames = os.dirnames(str_path)
   for k,v in ipairs(dirnames) do
-    --print("dirnames k,v",k,v)
     local filenames = os.filenames(str_path..v)
     local has_config,active,mtime = false,false,nil
     for k2,v2 in ipairs(filenames) do
-      --print("filenames k2,v2",k2,v2)
       local filestats = io.stat(str_path..v.."/"..v2)
 
       if (v2 == "preferences.xml") then
@@ -209,8 +206,6 @@ function cPreferences:scan_profiles()
       mtime = mtime,
     })
   end
-
-  --print("self.profiles",rprint(self.profiles))
 
 end
 
@@ -270,16 +265,13 @@ function cPreferences:launch_profile(idx)
     else
       doc = renoise.Document.create("ScriptingToolPreferences"){}
     end
-    --print("doc",doc)
 
     local prefs_path = cPreferences.PROFILE_FOLDER.."/"..profile.name.."/preferences.xml"
-    --print("prefs_path",prefs_path)
     doc:load_from(prefs_path)
 
     -- backup existing preferences 
     local tool_prefs_from = renoise.tool().bundle_path.."preferences.xml"
     local tool_prefs_to = renoise.tool().bundle_path.."preferences.xml.old"
-    --cFilesystem.copy_file(tool_prefs_from,tool_prefs_to)
     os.move(tool_prefs_from,tool_prefs_to)
 
     -- create lock file
@@ -306,7 +298,6 @@ function cPreferences:remove_profile(idx)
   end
 
   local str_path = cPreferences.PROFILE_FOLDER.."/"..profile.name.."/"
-  --print("str_path",str_path)
   local success,err = cFilesystem.rmdir(str_path)
   if not success then
     return false,err
@@ -384,9 +375,6 @@ function cPreferences:update_profile()
     return false,"Can't update, no profile is selected"
   end
   local doc = renoise.tool().preferences
-
-  --print("doc - osc client port",doc:property("osc_client_port").value)
-  --print("prefs - osc client port",doc:property("osc_client_port").value)
 
   local prefs_path = cPreferences.PROFILE_FOLDER.."/"..profile.name.."/preferences.xml"
   local passed,err = doc:save_as(prefs_path)

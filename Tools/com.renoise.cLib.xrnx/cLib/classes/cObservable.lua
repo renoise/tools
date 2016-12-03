@@ -83,12 +83,85 @@ cObservable.SONG = {
     pattern_assignments_observable = {type="Observable"}, -- ?? 
     pattern_slot_mutes_observable = {type="Observable"},
   },
+
 }
+
+--[[
+
+-- refresh when SONG.tracks_observable change
+
+cObservable.Track = {
+  prefx_volume -> DeviceParameter
+  prefx_panning -> DeviceParameter
+  prefx_width -> DeviceParameter
+  column_is_muted_observable
+  column_name_observable
+  name_observable
+  color_observable,
+  color_blend_observable
+  mute_state_observable
+  solo_state_observable
+  collapsed_observable
+  output_routing_observable
+  output_delay_observable
+  visible_effect_columns_observable
+  visible_note_columns_observable
+  volume_column_visible
+  panning_column_visible
+  delay_column_visible
+  sample_effects_column_visible_observable
+  devices__observable
+}
+
+cObservable.AudioDevice = {
+  display_name_observable
+  is_active_observable
+  is_maximized_observable
+  active_preset_observable
+}
+
+cObservable.DeviceParameter = {
+  is_automated_observable
+  is_midi_mapped_observable
+  show_in_mixer_observable
+  value_observable
+  value_string_observable
+}
+
+]]
 
 -- precomputed version
 cObservable.SONG_BY_TYPE = {}
 
+cObservable.MODE = {
+  MANUAL = 1,
+  AUTOMATIC = 2,
+}
+
+cObservable.mode = cObservable.MODE.MANUAL
+
 -------------------------------------------------------------------------------
+-- automatically attach to song (auto-renew registered observables)
+
+function cObservable.set_mode(mode)
+
+  if (cObservable.mode ~= mode) 
+    and (cObservable.mode == cObservable.MODE.AUTOMATIC)
+  then
+    -- remove notifier
+  end
+
+  if (mode == cObservable.MODE.AUTOMATIC) then
+    -- add notifier
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- get a specific type of observable 
+-- @param str_type, string ("boolean","number" or "string")
+-- @param array, list of cObservable descriptors
+-- @return table or nil
 
 function cObservable.get_by_type(str_type,array)
 
@@ -136,13 +209,11 @@ function cObservable.get_by_type_and_name(str_type,str_obs,str_prefix)
   end
 
   local matches = cObservable.get_by_type(str_type)
-  --print(">>> matches",matches,#matches)
 
   -- break string into segments
   local obs_parts = cString.split(str_obs,"%.")
   local tmp = matches[obs_parts[1]]
   local target = tmp
-  --print(">>> target PRE",target,rprint(target))
   local count = 1
   while tmp do
     count = count + 1
@@ -152,7 +223,6 @@ function cObservable.get_by_type_and_name(str_type,str_obs,str_prefix)
     end
   end
 
-  --print(">>> target POST",rprint(target))
   return target or {}
 
 end
@@ -291,8 +361,6 @@ function cObservable.retrieve_observable(obs)
       return false,err
     end
   end
-  --print("obs",obs)
-
   return obs
 
 end
@@ -305,7 +373,6 @@ function cObservable.list_remove(obs,val)
 
   for k = 1,#obs do
     if obs[k] and (val == obs[k].value) then
-      --print(">>> list_remove - obs[k].value",obs[k].value)
       obs:remove(k)
     end
   end

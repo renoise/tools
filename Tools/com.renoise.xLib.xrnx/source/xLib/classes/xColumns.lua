@@ -134,14 +134,12 @@ function xColumns.next_note_column(wrap_pattern,wrap_track,track_index)
   local track = rns.tracks[track_index]
 
   local is_sel_track = (rns.selected_track_index == track_index)
-  --print("is_sel_track",is_sel_track)
 
   -- enter next track?
   local col_idx = rns.selected_note_column_index
   if is_sel_track then
     col_idx = col_idx+1
     if (col_idx > track.visible_note_columns) then
-      --print("entered effect columns in track",track_index)
       col_idx = 1
       if not wrap_track then
         xTrack.next_sequencer_track(wrap_pattern)
@@ -149,11 +147,9 @@ function xColumns.next_note_column(wrap_pattern,wrap_track,track_index)
     end
 
   else
-    --print("arrived in track",track_index)
     rns.selected_track_index = track_index
     col_idx = 1
   end
-  --print("*** next_note_column - set col_idx",col_idx)
   rns.selected_note_column_index = col_idx
 
 end
@@ -175,7 +171,6 @@ function xColumns.previous_note_column(wrap_pattern,wrap_track,track_index)
   local track = rns.tracks[track_index]
 
   local is_sel_track = (rns.selected_track_index == track_index)
-  --print("is_sel_track",is_sel_track)
 
   local col_idx = rns.selected_note_column_index
   if is_sel_track then
@@ -191,11 +186,9 @@ function xColumns.previous_note_column(wrap_pattern,wrap_track,track_index)
     end
 
   else
-    --print("arrived in track",track_index)
     rns.selected_track_index = track_index
     col_idx = 1
   end
-  --print("track_index,col_idx",track_index,col_idx)
   rns.selected_note_column_index = col_idx
 
 end
@@ -210,11 +203,9 @@ function xColumns.shift_note_columns(ptrack_or_phrase,col_idx,amount,line_start,
   local line_rng = ptrack_or_phrase:lines_in_range(line_start,line_end)
   for k,v in ipairs(line_rng) do
     for k2,v2 in ripairs(v.note_columns) do
-      --print("*** shift_note_columns - k2,v2",k2,v2)
       if ((k2-amount) >= col_idx)--(k2 <= col_idx+amount) 
         --and (k2 >= col_idx)
       then
-        --print("copy note-column",k2,"from",k2-amount)
         v2:copy_from(v.note_columns[k2-amount])
       end
     end

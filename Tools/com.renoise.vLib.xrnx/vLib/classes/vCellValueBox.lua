@@ -25,6 +25,9 @@ function vCellValueBox:__init(...)
   self._max = args.max or 100
   self.max = property(self.get_max,self.set_max)
 
+  self.tonumber = vCellValueBox._default_tonumber
+  self.tostring = vCellValueBox._default_tostring
+
   -- (function) callback when value has changed
   -- @param elm (vCellValueBox)
   self.notifier = nil
@@ -38,6 +41,12 @@ function vCellValueBox:__init(...)
       if self.notifier and not self._suppress_notifier then
         self.notifier(self,self.view.value)
       end
+    end,
+    tostring = function(val)
+      return self:tostring(val)
+    end,
+    tonumber = function(val)
+      return self:tonumber(val)
     end
   }
 
@@ -108,3 +117,21 @@ function vCellValueBox:set_active(val)
 	vControl.set_active(self,val)
 
 end
+
+--------------------------------------------------------------------------------
+-- Static methods
+--------------------------------------------------------------------------------
+
+function vCellValueBox._default_tonumber(self,val)
+  local num = tonumber(val)
+  if num then
+    return ("¤%d"):format(num)
+  end
+end
+
+--------------------------------------------------------------------------------
+
+function vCellValueBox._default_tostring(self,val)
+  return ("%d"):format(val)
+end
+

@@ -148,7 +148,6 @@ function cFilesystem.get_parent_directory(file_path)
 
   local folder,filename,extension = cFilesystem.get_path_parts(file_path)
   local path_parts = cFilesystem.get_directories(folder)
-  --print("#path_parts",#path_parts)
   if (#path_parts > 1) then
     table.remove(path_parts) 
     return table.concat(path_parts,"/").."/"
@@ -254,9 +253,7 @@ function cFilesystem.makedir(file_path)
       -- relative path, skip "dot"
     else
       if not io.exists(tmp_path) then
-        --print("about to create folder - tmp_path",tmp_path)
         if cFilesystem.is_root_folder(tmp_path) then
-          --print("skip root",tmp_path)
         else
           local success,err = os.mkdir(tmp_path)
           if not success then
@@ -405,7 +402,6 @@ function cFilesystem.file_strip_extension(file_path,extension)
 
   local patt = "(.*)%.([^.]*)$"
   local everything_else,ext = string.match(file_path,patt)
-  --print("everything_else,ext")
 
   if (string.lower(extension) == string.lower(ext)) then
     return everything_else
@@ -456,9 +452,11 @@ end
 --------------------------------------------------------------------------------
 -- list files in a given folder
 -- @param str_path (string)
--- @param file_ext (table)
+-- @param file_ext (table), valid file extensions 
+-- @param include_path (bool), when true we append path to string
+-- @return table<string> 
 
-function cFilesystem.list_files(str_path,file_ext)
+function cFilesystem.list_files(str_path,file_ext,include_path)
 
   cFilesystem.assert_string(str_path,"str_path")
 
@@ -473,7 +471,11 @@ function cFilesystem.list_files(str_path,file_ext)
   local filenames = os.filenames(str_path,file_ext)
   local rslt = {}
   for k,v in ipairs(filenames) do
-    table.insert(rslt,v)
+    if include_path then
+      table.insert(rslt,str_path.."/"..v)
+    else
+      table.insert(rslt,v)
+    end
   end
   
   return rslt
@@ -488,16 +490,12 @@ end
 -- @return string, error message when failed
 
 function cFilesystem.write_string_to_file(file_path,str)
-  --print("file_path",file_path)
 
   cFilesystem.assert_string(file_path,"file_path")
 
   local success = true
 
-  --print("io.exists",io.exists(file_path))
-
   local handle,err = io.open(file_path,"w")
-  --print(">>> write_string_to_file - handle,err",handle,err)
   if not handle then
     -- often triggered by a folder that does not exist
     return false,err
@@ -534,8 +532,6 @@ function cFilesystem.recurse(str_path,callback_fn,file_ext,level)
     level = 0
   end
   
-  --print("str_path,file_ext")
-
   if not io.exists(str_path) then
     LOG(str_path,"path does not exist, returning")
     return
@@ -543,14 +539,12 @@ function cFilesystem.recurse(str_path,callback_fn,file_ext,level)
 
   local filenames = os.filenames(str_path,file_ext)
   for k,v in ipairs(filenames) do
-    --print("*** recurse - filenames",k,v)
     if not callback_fn(str_path,v,cFilesystem.FILETYPE.FILE) then
       return
     end
   end
   local dirnames = os.dirnames(str_path)
   for k,v in ipairs(dirnames) do
-    --print("*** recurse - dirnames",k,v)
     if not callback_fn(str_path,v,cFilesystem.FILETYPE.FOLDER) then
       return
     end

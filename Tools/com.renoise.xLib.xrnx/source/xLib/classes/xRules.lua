@@ -140,12 +140,12 @@ end
 --------------------------------------------------------------------------------
 
 function xRules:get_selected_ruleset_index()
-  --print("xRules:get_selected_ruleset_index()",self.selected_ruleset_index_observable.value)
+  --TRACE("xRules:get_selected_ruleset_index()",self.selected_ruleset_index_observable.value)
   return self.selected_ruleset_index_observable.value
 end
 
 function xRules:set_selected_ruleset_index(val)
-  --print("xRules:set_selected_ruleset_index(val)",val)
+  --TRACE("xRules:set_selected_ruleset_index(val)",val)
   self.selected_ruleset_index_observable.value = val
 end
 
@@ -211,8 +211,6 @@ function xRules:input_sysex(sysex_msg,port_name)
   assert(type(sysex_msg),"table","Expected sysex_msg to be a table")
   assert(type(port_name),"string","Expected port_name to be a string")
 
-  --print("sysex_msg",rprint(sysex_msg))
-
   self:match_message(xMidiMessage{
     message_type = xMidiMessage.TYPE.SYSEX,
     values = sysex_msg,
@@ -232,22 +230,16 @@ function xRules:input_osc(osc_msg,device)
   assert(type(device),"xOscDevice","Expected device to be an instance of xOscDevice")
 
   local matches = self.osc_router:input(osc_msg)
-  --print(">>> xRules:input_osc - router callback - #matches",#matches,rprint(matches))
-
-  --print(">>> osc_pattern_map",rprint(self.osc_pattern_map))
 
   -- look up osc_pattern_map 
   for k,v in ipairs(matches) do
-    --print(">>> matched v.uid",v.uid)
     if (self.osc_pattern_map[v.uid]) then
       local map = self.osc_pattern_map[v.uid]
-      --print(">>> found entry in osc_pattern_map",rprint(map))
       local xrule = self.rulesets[map.ruleset_index].rules[map.rule_index]
       local values = {}
       for k,v in ipairs(osc_msg.arguments) do
         table.insert(values,v.value)
       end
-      --print("values",rprint(values))
       local xmsg = xOscMessage{
         values = values,
         device_name = device.name,
@@ -286,7 +278,6 @@ function xRules:match_message(xmsg,ruleset_idx,rule_idx,force_midi)
       then
         --LOG("This ruleset is set to ignore OSC messages")
       else
-        --print(">>> xRules:match_message - force_midi",force_midi)
         ruleset:match_message(xmsg,ruleset_idx,rule_idx,force_midi)
       end
     end
@@ -320,27 +311,19 @@ function xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)
   local str_msg 
   local triggered,err
 
-  --print("*** transmit - target",target)
-
   if (target == xRules.OUTPUT_OPTIONS.INTERNAL_AUTO) then
-
     triggered,err = self.osc_client:trigger_auto(xmsg)
     str_msg = "Renoise (AUTO) ↩ " .. tostring(xmsg)
-
   elseif (target == xRules.OUTPUT_OPTIONS.INTERNAL_RAW) then
-
     triggered,err = self.osc_client:trigger_raw(xmsg)
     str_msg = "Renoise (RAW) ↩ " .. tostring(xmsg)
-
   elseif (target == xRules.OUTPUT_OPTIONS.EXTERNAL_MIDI) then
-
     for k,midi_output in pairs(self.midi_outputs) do
       if (k == xmsg.port_name) then
         xmsg.nrpn_order = self.nrpn_order
         xmsg.terminate_nrpns = self.terminate_nrpns
         str_msg = "MIDI ↪ " .. tostring(xmsg)
         local midi_msgs = xmsg:create_raw_message()
-        --print("*** midi_msgs",rprint(midi_msgs))
         for _,midi_msg in ipairs(midi_msgs) do
           midi_output:send(midi_msg)
         end
@@ -348,10 +331,7 @@ function xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)
         break
       end
     end
-
   elseif (target == xRules.OUTPUT_OPTIONS.EXTERNAL_OSC) then
-
-    --str_msg = self:transmit_osc(xmsg)
     for k,osc_device in pairs(self.osc_devices) do
       if (xmsg.device_name == osc_device.name) then
         str_msg = "OSC ↪ " .. tostring(xmsg)
@@ -359,13 +339,10 @@ function xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)
         break
       end
     end
-
-
   else
     -- here for compability reasons (xRules v0.5 did not have output options)
     triggered,err = self.osc_client:trigger_auto(xmsg)
     str_msg = "Renoise (AUTO) ↩ " .. tostring(xmsg)
-
   end
 
   if not triggered then
@@ -374,7 +351,6 @@ function xRules:transmit(out,xmsg_in,ruleset_idx,rule_idx)
 
   -- TODO register with voice-manager
   -- (need incoming as well as outgoing messages)
-
 
   -- invoke callback, i.e. to provide visual feedback
   if self.callback then
@@ -393,7 +369,6 @@ function xRules:remove_osc_patterns(ruleset_idx,rule_idx)
 
   local rslt = {}
   for k,v in pairs(self.osc_pattern_map) do
-    --print(">>> remove_osc_patterns - k,v",k,v)
     if (v.ruleset_index == ruleset_idx) then
       local match_rule_idx
       if not rule_idx then
@@ -403,19 +378,15 @@ function xRules:remove_osc_patterns(ruleset_idx,rule_idx)
       end
       if (v.rule_index == match_rule_idx) then        
         table.insert(rslt,v.router_index)      
-        --table.remove(self.osc_pattern_map,k)
         self.osc_pattern_map[k] = nil
       end
     end
   end
 
-  --print(">>> remove_osc_patterns - osc_pattern_map",rprint(self.osc_pattern_map))
-
   table.sort(rslt)
   for k,v in ripairs(rslt) do
     self.osc_router:remove_pattern(v)
   end
-  --print(">>> remove_osc_patterns - osc_router.patterns",rprint(self.osc_router.patterns))
 
   return rslt[1]
 
@@ -445,10 +416,6 @@ function xRules:maintain_osc_pattern_map(args,route_idx)
     end
   end
 
-  --print(">>> maintain_osc_pattern_map - self.osc_pattern_map",rprint(self.osc_pattern_map))
-
-  --self.osc_router.cache = {}
-
 end
 
 --------------------------------------------------------------------------------
@@ -460,8 +427,6 @@ function xRules:add_osc_patterns(ruleset_idx)
   for k,v in ipairs(ruleset.rules) do
     self:register_with_osc_router(v.osc_pattern,ruleset_idx,k)
   end
-
-  --print(">>> add_osc_patterns - osc_pattern_map",rprint(self.osc_pattern_map))
 
 end
 
@@ -551,8 +516,6 @@ function xRules:add_ruleset(ruleset_def,ruleset_idx)
 
   -- just an extra precaution - we should always have an active ruleset
   --self.selected_ruleset_index_observable.value = val
-  --print("self",self)
-  --print("self.selected_ruleset_index",self.selected_ruleset_index)
   if (self.selected_ruleset_index == 0) then
     self.selected_ruleset_index = 1
   end
@@ -561,9 +524,7 @@ function xRules:add_ruleset(ruleset_def,ruleset_idx)
   self.ruleset_observable:insert(ruleset_idx,1)
 
   ruleset.osc_enabled_observable:add_notifier(function()
-    --print(">>> ruleset.osc_enabled_observable fired...")
     local xruleset = self.selected_ruleset
-    --print(">>> xruleset.suppress_notifier",xruleset.suppress_notifier)
     if xruleset and not xruleset.suppress_notifier then
       local ruleset_idx = self.selected_ruleset_index
       if xruleset.osc_enabled then
@@ -575,7 +536,6 @@ function xRules:add_ruleset(ruleset_def,ruleset_idx)
   end)
 
   ruleset.rules_observable:add_notifier(function(args)
-    --print(">>> ruleset.rules_observable fired...",rprint(args))
     local route_idx = nil
     if (args.type == "remove") then
       local ruleset_idx = self.selected_ruleset_index
@@ -780,10 +740,8 @@ function xRules:add_osc_device(device)
 
   if device_idx then
     local existing = self.osc_devices[device_idx]
-    --print(">>> xRules:add_osc_device - replace existing device",existing)
     self.osc_devices[device_idx]:import(device:export())
   else
-    --print(">>> xRules:add_osc_device - add new device",device)
     self.osc_devices:insert(device)
     self.osc_devices_observable:insert(#self.osc_devices)
   end

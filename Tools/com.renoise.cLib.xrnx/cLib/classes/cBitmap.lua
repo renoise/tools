@@ -185,7 +185,7 @@ function cBitmap:create()
   for i = 55, 55+num_pixel_bytes do 
 
     if (i < write_pos) then
-      --print("wait for counter to catch up",i,write_pos)
+      -- wait for counter to catch up
     else
 
       local bytes_written = 0

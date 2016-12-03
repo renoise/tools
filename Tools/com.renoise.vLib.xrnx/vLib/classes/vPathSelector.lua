@@ -35,6 +35,7 @@ vPathSelector.MODE = {
 }
 
 vPathSelector.BROWSE_BUTTON_W = 55
+vPathSelector.DEFAULT_PLACEHOLDER = "(unspecified)"
 
 --------------------------------------------------------------------------------
 
@@ -42,8 +43,6 @@ function vPathSelector:__init(...)
   TRACE("vPathSelector:__init(...)")
 
   local args = cLib.unpack_args(...)
-
-  --print("args",rprint(args))
 
   --- vPathSelector.MODE
   self.mode = property(self.get_mode,self.set_mode)
@@ -57,15 +56,15 @@ function vPathSelector:__init(...)
   self.path = property(self.get_path,self.set_path)
   self._path = args.path or ""
 
-  self.path_token = property(self.get_path_token,self.set_path_token)
-  self._path_token = args.path_token or "(unspecified)"
+  self.placeholder = property(self.get_placeholder,self.set_placeholder)
+  self._placeholder = args.placeholder or vPathSelector.DEFAULT_PLACEHOLDER
 
   --- function
   self.notifier = args.notifier or nil
 
   --- bool, when true the component will not accept invalid locations
   -- TODO 
-  self.require_existing = args.require_existing or true
+  --self.require_existing = args.require_existing or true
 
   -- internal --
 
@@ -76,9 +75,8 @@ function vPathSelector:__init(...)
 
   vControl.__init(self,...)
 
+  self._width = args.width or 150
   self._height = args.height or vLib.CONTROL_H
-
-  -- done --
 
   self:build()
 
@@ -164,7 +162,7 @@ function vPathSelector:update()
 
   if self.vb_textfield then
     if (self._path == "") then
-      self.vb_textfield.text = self._path_token 
+      self.vb_textfield.text = self._placeholder 
     else
       self.vb_textfield.text = self._path 
     end
@@ -199,41 +197,65 @@ function vPathSelector:path_is_valid()
 end
 
 --------------------------------------------------------------------------------
+-- Getters & Setters
+--------------------------------------------------------------------------------
 
-function vPathSelector:get_mode()
+function vPathSelector:set_active(val)
+  assert(type(val)=="boolean")
+  
+  self.vb_textfield.active = val
+  self.vb_browse_button.active = val
+
+  vControl.set_active(self,val)
 
 end
 
-function vPathSelector:set_mode()
+--------------------------------------------------------------------------------
+function vPathSelector:get_mode()
+  return self._mode
+end
+
+function vPathSelector:set_mode(val)
+  assert(type(val)=="number")
+  
+  self._mode = val
+  -- set to default
+  self:set_path(self._placeholder)
 
 end
 
 --------------------------------------------------------------------------------
 
 function vPathSelector:get_editable()
-
+  return self._editable
 end
 
-function vPathSelector:set_editable()
+function vPathSelector:set_editable(val)
+
+  assert(type(val)=="boolean")
+  self._editable = val
 
 end
 
 --------------------------------------------------------------------------------
 
 function vPathSelector:get_path()
-
   return self._path
-
 end
 
 function vPathSelector:set_path(val)
   TRACE("vPathSelector:set_path(val)",val)
 
   assert(type(val)=="string")
-  self._path = val
+
+  if (val == self._placeholder) then
+    self._path = ""
+  else
+    self._path = val
+  end
 
   if self.notifier then
-    self.notifier(val)
+    self.notifier(self._path)
   end
 
   self:request_update()
@@ -242,16 +264,14 @@ end
 
 --------------------------------------------------------------------------------
 
-function vPathSelector:get_path_token()
-
-  return self._path_token
-
+function vPathSelector:get_placeholder()
+  return self._placeholder
 end
 
-function vPathSelector:set_path_token(val)
+function vPathSelector:set_placeholder(val)
 
   assert(type(val)=="string")
-  self._path_token = val
+  self._placeholder = val
 
   self:request_update()
 

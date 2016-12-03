@@ -26,15 +26,10 @@ class 'xMidiIO'
 function xMidiIO:__init(...)
   TRACE("xMidiIO:__init(...)")
 
-  --xApplication.__init(self,...)
-
 	local args = cLib.unpack_args(...)
 
   assert(type(args.midi_callback_fn)=="function",
     "Required argument 'midi_callback_fn' missing")
-
-  --print("xMidiIO args",rprint(args))
-  --print("args.midi_inputs",args.midi_inputs)
 
   --- table<string> the ports to open 
   self.midi_inputs = property(self.get_midi_input,self.set_midi_inputs)
@@ -67,7 +62,6 @@ function xMidiIO:__init(...)
   end
 
   self.interpretor.callback_fn = function(xmsg)
-    --print("self.interpretor.callback_fn",args.midi_callback_fn,xmsg)
     args.midi_callback_fn(xmsg)
   end
 
@@ -102,30 +96,20 @@ function xMidiIO:open_midi_input(port_name)
 
     self._midi_input_ports[port_name] = renoise.Midi.create_input_device(port_name,
       function(midi_msg)
-        --print("received midi",midi_msg)
-        if not xLib.is_song_available()
-          --or not self.active 
-        then 
+        if not xLib.is_song_available() then 
           return 
         end
         self:input_midi(midi_msg,port_name)
       end,
       function(sysex_msg)
-        --print("received sysex",sysex_msg)
-        if not xLib.is_song_available()
-          --or not self.active 
-        then 
+        if not xLib.is_song_available() then 
           return 
         end
         self:input_sysex(sysex_msg,port_name)
       end
     )
 
-    --self.midi_inputs_observable[#self.midi_inputs_observable] = port_name
     self.midi_inputs_observable = cObservable.list_add(self.midi_inputs_observable,port_name)
-    --self.midi_inputs_observable:insert(port_name)
-
-    --print(">>> obs got added...")
 
   else
     LOG("*** Could not create MIDI input device " .. port_name)
@@ -158,8 +142,6 @@ function xMidiIO:input_sysex(sysex_msg,port_name)
 
   assert(type(sysex_msg),"table","Expected sysex_msg to be a table")
   assert(type(port_name),"string","Expected port_name to be a string")
-
-  --print("sysex_msg",rprint(sysex_msg))
 
   self:match_message(xMidiMessage{
     message_type = xMidiMessage.TYPE.SYSEX,
@@ -248,9 +230,6 @@ function xMidiIO:initialize_midi_devices()
     self:open_midi_output(v.value)
   end
 
-  --print("self._midi_input_ports",rprint(self._midi_input_ports))
-  --print("self._midi_output_ports",rprint(self._midi_output_ports))
-
 end
 
 --------------------------------------------------------------------------------
@@ -262,7 +241,6 @@ function xMidiIO:get_midi_inputs()
 end
 
 function xMidiIO:set_midi_inputs(val)
-  --print("xMidiIO:set_midi_inputs(val)",val)
   self.midi_inputs_observable = val
 end
 

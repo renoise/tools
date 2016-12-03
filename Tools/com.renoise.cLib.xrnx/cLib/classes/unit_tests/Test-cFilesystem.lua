@@ -4,11 +4,11 @@
 
 --]]
 
-_xlib_tests:insert({
+__tests:insert({
 name = "cFilesystem",
 fn = function()
 
-  require (_xlibroot.."cFilesystem")
+  require (_clibroot.."cFilesystem")
 
   local absolute_path = renoise.tool().bundle_path .. "/cFilesystem_test/"
   local relative_path = "./cFilesystem_test/"

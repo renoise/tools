@@ -99,20 +99,12 @@ end
 function vButton:update()
   TRACE("vButton:update()")
 
-  --print(">>> self.view.bitmap",self.view.bitmap)
-  --print(">>> self.view.text",self.view.text)
-  --print(">>> self.view.color",self.view.color)
-  --print(">>> self.view.midi_mapping",self.view.midi_mapping)
-  --print(">>> self.view.width",self.view.width)
-  --print(">>> self.view.height",self.view.height)
-
   if self.text then self.view.text = self.text end
   if self.color then self.view.color = self.color end
   if self.bitmap then self.view.bitmap = self.bitmap end
   if self.midi_mapping then self.view.midi_mapping = self.midi_mapping end
   if self._width then self.view.width = self._width end
   if self._height then self.view.height = self._height end
-
 
 end
 

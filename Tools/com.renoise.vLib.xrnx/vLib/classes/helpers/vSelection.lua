@@ -239,8 +239,6 @@ end
 function vSelection:select_previous()
   TRACE("vSelection:select_previous()")
 
-  --print("*** select_previous - self.index",self.index)
-
   if self.index 
     and (self.index > 1)
   then
@@ -253,9 +251,6 @@ end
 
 function vSelection:select_next()
   TRACE("vSelection:select_next()")
-
-  --print("*** select_next - self.index",self.index)
-  --print("*** select_next - self.num_items",self.num_items)
 
   if self.index and self.num_items
     and (self.index < self.num_items)
@@ -389,7 +384,6 @@ function vSelection:set_index(idx)
     end
   end
 
-  --print("about to set self.index_observable.value",idx)
   self.index_observable.value = idx
 
   if (idx > 0) then
@@ -402,12 +396,10 @@ function vSelection:set_index(idx)
     and (self.last_selected_index == idx) 
   then
     if (os.clock() < self.last_selected_time + self.doublepress_timeout) then
-      --print(">>> vSelection:set_index - doublepress")
       self.doublepress_observable:bang()
       self.last_selected_index = nil
       self.last_selected_time = nil
     else
-      --print(">>> vSelection:set_index - additional press (too slow)")
       self.last_selected_index = idx
       self.last_selected_time = os.clock()
     end
@@ -416,9 +408,7 @@ function vSelection:set_index(idx)
   then
     self.last_selected_index = idx
     self.last_selected_time = os.clock()
-    --print(">>> vSelection:set_index - first press @",self.last_selected_time)
   end
-  --print(">>> vSelection:set_index - self._indices",rprint(self._indices))
 
   return changed,added,removed
 

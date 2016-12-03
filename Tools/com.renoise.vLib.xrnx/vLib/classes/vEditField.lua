@@ -109,9 +109,7 @@ function vEditField:build()
     items = {},    
     notifier = function(idx)
       local op_name = self.vb_ops.items[idx]
-      --print("op_name",op_name)
       local operator_idx = table.find(vEditField.OPERATORS,op_name)
-      --print("operator_idx",operator_idx)
       self:set_operator(operator_idx)
       self:request_update()
     end
@@ -178,7 +176,6 @@ function vEditField:build()
     max = 512,
     notifier = function(val)
       local rslt = self:update_result()
-      --print("vb_valuebox_operator.notifier rslt",rslt)
     end
   }
 
@@ -188,10 +185,6 @@ function vEditField:build()
     min = 0,
     max = 512,
     tonumber = function(val)
-      --print("vb_valuefield_operator.tonumber",val,type(val))
-      --[[
-      return tonumber(val)
-      ]]
       val = tonumber(val)
       if not val then
         return nil
@@ -206,10 +199,6 @@ function vEditField:build()
       end
     end,
     tostring = function(val) 
-      --print("vb_valuefield_operator.tostring",val)
-      --[[
-      return tostring(val)
-      ]]
       if self._value.value_factor 
         and (self._operator == vEditField.OPERATOR.ADD) 
         or (self._operator == vEditField.OPERATOR.SUB) 
@@ -221,7 +210,6 @@ function vEditField:build()
     end,
     notifier = function(val)
       local rslt = self:update_result()
-      --print("vb_valuefield_operator.notifier rslt",rslt)
     end
   }
 
@@ -269,7 +257,6 @@ function vEditField:update()
   self.vb_checkbox_label.visible = false
 
   local ops = self:get_type_ops()
-  --print("ops",rprint(ops))
 
   if (self._operator == vEditField.OPERATOR.SET) then
     self.vb_result.visible = false
@@ -299,24 +286,16 @@ function vEditField:update()
     self.vb_valuefield_operator.visible = not is_integer
   end
 
-
-  --print("vEditField.NUMBER_OPS",rprint(vEditField.NUMBER_OPS))
-
-
   -- update the operator popup 
   local str_ops = {}
   for k,v in ipairs(ops) do
     table.insert(str_ops,vEditField.OPERATORS[v])
   end
   self.vb_ops.items = str_ops
-  --print("str_ops",rprint(str_ops))
 
   local op_name = vEditField.OPERATORS[self._operator]
-  --print("op_name",op_name)
   local operator_idx = table.find(self.vb_ops.items,op_name)
-  --print("operator_idx",operator_idx)
   self.vb_ops.value = operator_idx or vEditField.OPERATOR.SET
-
 
   self:set_height(self._height)
   self:set_width(self._width)
@@ -336,8 +315,6 @@ function vEditField:update_result()
     return
   end
 
-  --print("self:get_result()",self:get_result(),type(self:get_result()))
-  --print("self:value_tostring()",self.value_tostring)
   self.vb_value_result.text = self.value_tostring(self:get_result())
 
 end
@@ -351,13 +328,10 @@ function vEditField:get_result()
   -- work on copy 
   -- TODO other value-types
   local rslt = cNumber(self._value)
-  --print("*** get_result - rslt",rslt)
 
   local operator_val = self.vb_valuebox_operator.visible 
     and self.vb_valuebox_operator.value 
     or self.vb_valuefield_operator.value
-
-  --print("operator_val",operator_val)
 
   if (self._operator == vEditField.OPERATOR.SET) then
   elseif (self._operator == vEditField.OPERATOR.ADD) then
@@ -412,10 +386,7 @@ end
 function vEditField:set_value(cval)
   TRACE("vEditField:set_value(cval)",cval)
 
-  --print("cval",rprint(cval))
   self._value = cLib.create_cvalue(cval)
-  --print("self._value",self._value)
-  --print("self._value.value_type",type(self._value.value),self._value.value)
 
   if (type(self._value.value) == "boolean") then
     self.vb_checkbox.value = self._value.value
@@ -425,7 +396,6 @@ function vEditField:set_value(cval)
   elseif (type(self._value.value) == "number") then
 
     local display_val = self._value.zero_based and self._value.value-1 or self._value.value
-    --print(">>> display_val",display_val)
 
     if self._value.value_enums then
       self.vb_popup.items = self._value.value_enums
@@ -437,7 +407,6 @@ function vEditField:set_value(cval)
       self.value_tonumber = self._value.value_tonumber
     else
       self.value_tonumber = function(val)
-        --print("value_tonumber val",val)
         return val
       end
     end
@@ -445,7 +414,6 @@ function vEditField:set_value(cval)
       self.value_tostring = self._value.value_tostring
     else
       self.value_tostring = function(val)
-        --print("value_tostring val",val)
         if (self._value.value_quantum == 1) then
           return ("%d"):format(val)
         else
@@ -464,7 +432,6 @@ function vEditField:set_value(cval)
   -- fallback to SET operator?
   local ops = self:get_type_ops()
   local str_op = vEditField.OPERATORS[vEditField.OPERATOR.SET]
-  --print("str_op",str_op)
   if not table.find(self.vb_ops.items,str_op) then
     self:set_operator(vEditField.OPERATOR.SET)
   end

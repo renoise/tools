@@ -57,7 +57,7 @@ xSample.BIT_DEPTH = {0,8,16,24,32}
 -- @return int (0 when no sample data)
 
 function xSample.get_bit_depth(sample)
-  --print("xSample.get_bit_depth(sample)",sample)
+  TRACE("xSample.get_bit_depth(sample)",sample)
 
   local function reverse(t)
     local nt = {}
@@ -141,7 +141,7 @@ end
 -- @return enum (xSample.SAMPLE_[...])
 
 function xSample.get_channel_info(sample)
-  --print("xSample.get_channel_info(sample)",sample)
+  TRACE("xSample.get_channel_info(sample)",sample)
 
   local buffer = sample.sample_buffer
   if not buffer.has_sample_data then
@@ -209,7 +209,7 @@ end
 -- @return renoise.Sample or nil (when failed to convert)
 
 function xSample.convert_sample(instr,sample_idx,bit_depth,channel_action,range)
-  --print("xSample.convert_sample(instr,sample_idx,bit_depth,channel_action)",instr,sample_idx,bit_depth,channel_action)
+  TRACE("xSample.convert_sample(instr,sample_idx,bit_depth,channel_action)",instr,sample_idx,bit_depth,channel_action)
 
   local sample = instr.samples[sample_idx]
   local buffer = sample.sample_buffer
@@ -219,8 +219,6 @@ function xSample.convert_sample(instr,sample_idx,bit_depth,channel_action,range)
 
   local num_channels = (channel_action == xSample.SAMPLE_CONVERT.STEREO) and 2 or 1
   local num_frames = (range) and (range.end_frame-range.start_frame+1) or buffer.number_of_frames
-  --print("num_channels",num_channels)
-  --print("num_frames",num_frames)
 
   local new_sample = instr:insert_sample_at(sample_idx+1)
   local new_buffer = new_sample.sample_buffer
@@ -298,7 +296,7 @@ end
 -- @return bool (or nil if no data)
 
 function xSample.sample_buffer_is_silent(buffer,channels)
-  --print("xSample.sample_buffer_is_silent(buffer,channels)",buffer,channels)
+  TRACE("xSample.sample_buffer_is_silent(buffer,channels)",buffer,channels)
 
   if not buffer.has_sample_data then
     return 
@@ -386,7 +384,6 @@ function xSample.get_name_tokens(str)
     -- does not seem to be a plugin
     local matches = str:gmatch("(.-)[_%s]?([^_%s]*)[_%s]?([A-Z]*[-#]?[%d]*)$") 
     local arg1,arg2,arg3 = matches()
-    --print("*** get_name_tokens - not a plugin - arg1,arg2,arg3",arg1,arg2,arg3)
     local arg3_is_note = arg3 and xNoteColumn.note_string_to_value(arg3)
     local arg2_is_note = arg2 and xNoteColumn.note_string_to_value(arg2)
     local arg2_is_velocity = arg2 and tonumber(arg2)

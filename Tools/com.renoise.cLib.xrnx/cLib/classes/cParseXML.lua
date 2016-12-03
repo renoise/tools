@@ -52,10 +52,8 @@ function cParseXML.get_attribute(doc,attr_name)
   end
 
   if not table.is_empty(doc.kids) then
-    --print("#doc",#doc,rprint(table.keys(doc)),"type",print(doc.type),"name",print(doc.name),"kids",rprint(doc.kids))
     for k,v in ipairs(doc.kids) do
       if (v.name == attr_name) then
-        --print("k,v",v.name,k,v)
         return v
       end
     end

@@ -55,5 +55,35 @@ function cValue:set_value(val)
 end
 
 -------------------------------------------------------------------------------
+-- Meta-methods
+-------------------------------------------------------------------------------
+-- not available
 
+--function cValue:__index()
+--end
+
+--function cValue:__newindex()
+--end
+
+-------------------------------------------------------------------------------
+-- when accessing via paranthesis ()
+
+function cValue:__call(key)
+  --TRACE("cValue:__call",key)
+  
+  if not key then
+    return self._value
+  else
+    assert(type(key)=="string")
+    return self[key]
+  end
+
+end
+
+-------------------------------------------------------------------------------
+-- get length (implement for strings, tables)
+
+function cValue:__len()
+  --print("cValue:__len")
+end
 

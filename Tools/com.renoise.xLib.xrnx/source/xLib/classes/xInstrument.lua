@@ -71,12 +71,24 @@ function xInstrument.get_first_available()
   TRACE("xInstrument.get_first_available()")
 
   for k,v in ipairs(rns.instruments) do
-    --print("get_first_available - v.name",v.name)
     if xInstrument.is_empty(v) and (v.name == "") then
       return k
     end
   end
 
+end
+
+--------------------------------------------------------------------------------
+-- resolve the assigned track (midi input properties)
+-- @param instr (renoise.Instrument)
+-- @return number, track index
+
+function xInstrument.resolve_midi_track(instr)
+  if (instr.midi_input_properties.assigned_track == 0) then
+    return rns.selected_track_index
+  else
+    return instr.midi_input_properties.assigned_track
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -101,4 +113,9 @@ function xInstrument.is_empty(instr)
 
 end
 
+--------------------------------------------------------------------------------
+-- TODO reset sample-based part of instrument 
 
+function xInstrument.reset_sampler()
+
+end

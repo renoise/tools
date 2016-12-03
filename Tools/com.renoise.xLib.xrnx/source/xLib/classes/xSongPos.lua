@@ -102,7 +102,6 @@ function xSongPos:get_pos()
     return nil
   end
 	local pos = rns.transport.playback_pos
-  --print("self",self)
 	pos.sequence = self.sequence
 	pos.line = self.line
 	return pos
@@ -112,7 +111,6 @@ function xSongPos:set_pos(seq,ln)
   assert(type(seq) == "number")
   assert(type(ln) == "number")
   self.lines_travelled = 0
-  --print("*** reset lines_travelled")
 	self.sequence = seq
 	self.line = ln
 end
@@ -138,13 +136,12 @@ end
 -- @return int or nil 
 
 function xSongPos.get_pattern_num_lines(seq_idx)
-  --print("xSongPos.get_pattern_num_lines(seq_idx)",seq_idx)
+  --TRACE("xSongPos.get_pattern_num_lines(seq_idx)",seq_idx)
 	
   assert(type(seq_idx) == "number")
 
   local patt_idx = rns.sequencer:pattern(seq_idx)
   if patt_idx then
-    --print("number_of_lines",rns:pattern(patt_idx).number_of_lines)
     return rns:pattern(patt_idx).number_of_lines
   end
 
@@ -248,7 +245,6 @@ function xSongPos.get_line_diff(pos1,pos2)
   else
     early,late = pos1,pos2 
   end
-  --print("*** early,late",early,late)
 
   if (pos1.sequence == pos2.sequence) then
     return late.line - early.line
@@ -291,10 +287,8 @@ function xSongPos:normalize()
   -- check for pattern out-of-bounds ----------------------
   local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
   if (line_idx < 1) then
-    --print("xSongPos:normalize - previous, or out-of-bounds",line_idx-patt_num_lines)
     self:decrease_by_lines(line_idx-patt_num_lines)
   elseif (line_idx > patt_num_lines) then 
-    --print("xSongPos:normalize - next, or out-of-bounds",line_idx)
     self.line = patt_num_lines
     self:increase_by_lines(line_idx-patt_num_lines)
   end
@@ -337,16 +331,9 @@ function xSongPos:increase_by_lines(num_lines)
 
   local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
   if (line_idx+num_lines <= patt_num_lines) or exiting_blockloop then
-    
-    --print("xSongPos:increase_by_lines - within same pattern")
-
     self.sequence = seq_idx
     self.line = self:enforce_block_boundary("increase",self.line,num_lines)
-
   else
-
-    --print("xSongPos:increase_by_lines - spanning patterns")
-
     local lines_remaining = num_lines - (patt_num_lines - line_idx)
     while(lines_remaining > 0) do
       seq_idx = seq_idx + 1
@@ -363,12 +350,10 @@ function xSongPos:increase_by_lines(num_lines)
 
       patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
       lines_remaining = lines_remaining - patt_num_lines
-      --print("*** xSongPos:increase_by_lines -- seq_idx,lines_remaining",seq_idx,lines_remaining)
 
       -- check if we have reached our goal
       if (lines_remaining < 0) then
         line_idx = lines_remaining + patt_num_lines
-        --print("*** xSongPos:increase_by_lines - final seq_idx,line_idx",seq_idx,line_idx)
         break
       end
 
@@ -378,8 +363,6 @@ function xSongPos:increase_by_lines(num_lines)
     self.line=line_idx
   
   end
-
-  --print("*** xSongPos:increase_by_lines - self",self)
 
   if not done then
     self.lines_travelled = self.lines_travelled + num_lines
@@ -413,15 +396,12 @@ function xSongPos:decrease_by_lines(num_lines)
       xBlockLoop.exiting(seq_idx,line_idx,-num_lines) or false
 
   if (self.line-num_lines > 0) or exiting_blockloop then
-    --print("xSongPos:decrease_by_lines - within same pattern")
     self.sequence = seq_idx
     self.line = self:enforce_block_boundary("decrease",self.line,-num_lines)
 
   else
-    --print("xSongPos:decrease_by_lines - spanning patterns")
     local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
     local lines_remaining = num_lines - line_idx
-    --print("lines_remaining",lines_remaining)
 
     -- make sure loop is evaluated at least once
     local first_run = true
@@ -433,7 +413,6 @@ function xSongPos:decrease_by_lines(num_lines)
       seq_idx,line_idx,done = 
         self:enforce_boundary("decrease",seq_idx,lines_remaining)
       if done then
-        --print("decrease - lines_remaining",lines_remaining)
         if (self.bounds_mode == xSongPos.OUT_OF_BOUNDS.CAP) then
           -- reduce num_lines, or lines_travelled will no longer be correct
           num_lines = -1 + num_lines - lines_remaining
@@ -444,7 +423,6 @@ function xSongPos:decrease_by_lines(num_lines)
 
       patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
       lines_remaining = lines_remaining - patt_num_lines
-      --print("seq_idx,lines_remaining",seq_idx,lines_remaining)
 
       -- check if we have reached our goal
       if (lines_remaining <= 0) then
@@ -456,15 +434,12 @@ function xSongPos:decrease_by_lines(num_lines)
           seq_idx = new_pos.sequence
           line_idx = new_pos.line
         end
-        --print("final seq_idx,line_idx",seq_idx,line_idx)
         break
       end
 
     end
-
     self.sequence=seq_idx
     self.line=line_idx
-
   end
   
   if not done then
@@ -498,7 +473,6 @@ function xSongPos:enforce_boundary(direction,seq_idx,line_idx)
   -- (pattern loop takes precedence, just like in Renoise -
   -- we are checking for a sequence loop in the code below)
   if rns.transport.loop_pattern then
-    --print("*** pattern loop wrap")
     seq_idx = (direction == "increase") and 
       (seq_idx - 1) or (seq_idx + 1)
     return seq_idx,line_idx,done
@@ -510,13 +484,11 @@ function xSongPos:enforce_boundary(direction,seq_idx,line_idx)
   -- (looping should work "backwards" too)
   if (rns.transport.loop_sequence_start ~= 0) then
     local hard_boundary = (self.loop_boundary == xSongPos.LOOP_BOUNDARY.HARD)
-    --print("loop_sequence enabled - hard_boundary",hard_boundary)
     if (direction == "increase") then
       local loop_start = hard_boundary and
         rns.transport.loop_sequence_start.sequence or
         self.end_of_sequence_loop(seq_idx-1)
       if loop_start then
-        --print("seq_loop_to_start")
         return loop_start,line_idx,done
       end
     elseif (direction == "decrease") then
@@ -524,7 +496,6 @@ function xSongPos:enforce_boundary(direction,seq_idx,line_idx)
         rns.transport.loop_sequence_end.sequence or 
         self.start_of_sequence_loop(seq_idx+1)
       if loop_end then
-        --print("seq_loop to end")
         return loop_end,line_idx,done
       end
     end
@@ -533,47 +504,33 @@ function xSongPos:enforce_boundary(direction,seq_idx,line_idx)
   -- sequence (entire song) -------------------------------
   if not xSongPos.within_bounds(seq_idx,line_idx) then 
     if (direction == "increase") then
-
       if (self.bounds_mode == xSongPos.OUT_OF_BOUNDS.CAP) then
-        --print("*** increase CAP - seq_idx,line_idx PRE",seq_idx,line_idx)
         seq_idx = #rns.sequencer.pattern_sequence
         local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
         line_idx = patt_num_lines
-        --print("*** increase CAP - patt_num_lines",patt_num_lines)
         done = true
       elseif (self.bounds_mode == xSongPos.OUT_OF_BOUNDS.LOOP) then
-        --print("LOOP",seq_idx,line_idx)
         seq_idx = 1
-        --line_idx = lines_remaining 
       elseif (self.bounds_mode == xSongPos.OUT_OF_BOUNDS.NULL) then
-        --print("NULL",seq_idx,line_idx)
         seq_idx = nil
         line_idx = nil
         done = true
       end
     elseif (direction == "decrease") then
-
       if (self.bounds_mode == xSongPos.OUT_OF_BOUNDS.CAP) then
-        --print("*** decrease CAP",seq_idx,line_idx)
         seq_idx = 1
         line_idx = 1
         done = true
       elseif (self.bounds_mode == xSongPos.OUT_OF_BOUNDS.LOOP) then
-        --print("LOOP pre",seq_idx,line_idx)
         seq_idx = #rns.sequencer.pattern_sequence
         local last_patt_lines = xSongPos.get_pattern_num_lines(seq_idx)
         line_idx = last_patt_lines - line_idx 
-        --done = true
-        --print("LOOP post",seq_idx,line_idx)
       elseif (self.bounds_mode == xSongPos.OUT_OF_BOUNDS.NULL) then
-        --print("NULL",seq_idx,line_idx)
         seq_idx = nil
         line_idx = nil
         done = true
       end
-
     end
-
   end
 
   return seq_idx, line_idx, done
@@ -611,7 +568,6 @@ function xSongPos:enforce_block_boundary(direction,line_idx,line_delta)
       xBlockLoop.within(block_pos.sequence,line_idx,loop_block_end_pos)
     local within_block_post = 
       xBlockLoop.within(block_pos.sequence,line_idx+line_delta,loop_block_end_pos)
-    --print("loop_block_enabled - hard_boundary,within_block/post",hard_boundary,within_block,within_block_post)
     if (direction == "increase") then
       if (hard_boundary and not within_block) then
         return rns.transport.loop_block_start_pos.line
@@ -643,7 +599,6 @@ function xSongPos:next_beat()
   local next_beat = math.floor(self.line/lines_beat)+1
   local next_line = 1 + next_beat*lines_beat
 
-  --print("*** xSongPos:next_beat - about to jump #lines",next_line - self.line)
   self:increase_by_lines(next_line - self.line)
 
 end
@@ -659,7 +614,6 @@ function xSongPos:next_bar()
   local next_beat = math.floor(self.line/lines_bar)+1
   local next_line = 1 + next_beat*lines_bar
 
-  --print("*** xSongPos.get_next_bar - about to jump #lines",self.pos,next_line - self.line)
   self:increase_by_lines(next_line - self.line)
 
 end
@@ -674,7 +628,6 @@ function xSongPos:next_block()
   local next_beat = math.floor(self.line/lines_block)+1
   local next_line = 1 + next_beat*lines_block
 
-  --print("*** xSongPos.get_next_block - about to jump #lines",next_line - self.line)
   self:increase_by_lines(next_line - self.line)
 
 end
@@ -687,7 +640,6 @@ function xSongPos:next_pattern()
   local patt_num_lines = xSongPos.get_pattern_num_lines(self.sequence)
   local next_line = 1 + patt_num_lines
 
-  --print("*** xSongPos.get_next_pattern - about to jump #lines",next_line - self.line)
   self:increase_by_lines(next_line - self.line)
 
 end

@@ -66,29 +66,42 @@ function xTrack.get_track_count(track_type)
 end
 
 --------------------------------------------------------------------------------
---- get_master_track
+--- get the group track associated with the provided track 
+-- @return number, group track index
 
-function xTrack.get_group_track_index(track_index)
-  TRACE("xTrack.get_group_track_index(track_index)",track_index)
+function xTrack.get_group_track_index(track_index,match_self)
+  TRACE("xTrack.get_group_track_index(track_index)",track_index,match_self)
 
-  local track = rns.tracks[track_index]
-  if (track.type == renoise.Track.TRACK_TYPE_GROUP) then
+  local trk = rns.tracks[track_index]
+  local group_trk = trk.group_parent
+
+  if not group_trk and (trk.type == renoise.Track.TRACK_TYPE_GROUP) then
     return track_index
   end
 
-  repeat
-    track_index = track_index+1
-    track = rns.tracks[track_index]
-  until not track 
-    or (track.type == renoise.Track.TRACK_TYPE_GROUP)
-    or (track.type == renoise.Track.TRACK_TYPE_SEND)
-
-  if track and (track.type == renoise.Track.TRACK_TYPE_GROUP) then
-    return track_index
+  for k,v in ipairs(rns.tracks) do
+    if rawequal(v,group_trk) then
+      return k
+    end
   end
 
 end
 
+--------------------------------------------------------------------------------
+--- get the first sequencer-track associated with the provided group 
+
+function xTrack.get_first_sequencer_track_in_group(track_index)
+  TRACE("xTrack.get_first_sequencer_track_in_group(track_index)",track_index)
+  local group_track = rns.tracks[track_index]
+  if (group_track.type ~= renoise.Track.TRACK_TYPE_GROUP) then
+    return nil, "Expected a group track as argument"
+  end
+  for k,v in ipairs(rns.tracks) do
+    if rawequal(v.group_parent,group_track) then
+      return k
+    end
+  end
+end
 
 --------------------------------------------------------------------------------
 --- get the type of track: sequencer/master/send
@@ -122,10 +135,7 @@ function xTrack.next_sequencer_track(wrap_pattern)
 
   repeat
     track_index = track_index+1
-    --local track = rns.tracks[track_index]
-
     if (track_index >= master_idx) then
-      --print("*** master or send track",track_index)
       if wrap_pattern then
         track_index = 1
       else
@@ -137,7 +147,6 @@ function xTrack.next_sequencer_track(wrap_pattern)
       matched = true
     end
   until matched
-  --print("*** next_sequencer_track - set track_index",track_index)
   rns.selected_track_index = track_index
   return true
 
@@ -164,14 +173,11 @@ function xTrack.previous_sequencer_track(wrap_pattern)
       end
     end
     local track_type = xTrack.determine_track_type(track_index)
-    --print("*** track_index,track_type",track_index,track_type)
     if (track_type == renoise.Track.TRACK_TYPE_SEQUENCER) then
       matched = true
     end
   until matched
 
-  --print("*** previous_sequencer_track - selected_track_index",rns.selected_track_index)
-  --print("*** previous_sequencer_track - selected_note_column_index",rns.selected_note_column_index)
   rns.selected_track_index = track_index
   return true
 

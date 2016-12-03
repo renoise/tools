@@ -269,7 +269,6 @@ function vTextField:set_text(val,user_input)
     self._vb_textfield.edit_mode = false
     self._text_scheduled_update = true
   end
-  --print("*** set_text - val,has_linebreak",val,has_linebreak)
 
   -- strip linebreaks
   val = string.gsub(val,"\n","")
@@ -280,16 +279,11 @@ function vTextField:set_text(val,user_input)
 
   self.text_observable.value = val
 
-  --print("*** set_text - got here 1")
-
   if not user_input then 
     self._suppress_notifier = true
     self._vb_textfield.text = self:get_display_text()
     self._suppress_notifier = false
-    --print("self:get_display_text()",self:get_display_text())
   end
-
-  --print("*** set_text - got here 2")
 
   self:auto_resize()
 

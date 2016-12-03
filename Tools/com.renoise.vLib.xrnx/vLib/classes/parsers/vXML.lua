@@ -53,7 +53,6 @@ function vXML:parse(xml_doc)
         rslt.name = xml_doc.name
       end
     end
-
   end
 
   return rslt
@@ -65,16 +64,10 @@ end
 
 function vXML:load_and_parse(file_path)
   TRACE('vXML:parse_to_dom(str_xml)')
-
   local str_xml = io.open(file_path):read('*all')
   local xml_doc = SLAXML:dom(str_xml,{ simple=true,stripWhitespace=true })
-  --rprint(xml_doc)
-
   return self:parse(xml_doc,{})
-
 end
-
-
 
 -------------------------------------------------------------------------------
 --- retrieve named attribute

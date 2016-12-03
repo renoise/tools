@@ -28,7 +28,6 @@ class 'xMessage' -- (xClass)
 --==============================================================================
 
 function xMessage:__init(...)
-  --print("xMessage:__init(...)")
 
 	local args = cLib.unpack_args(...)
 
@@ -105,7 +104,6 @@ end
 --------------------------------------------------------------------------------
 
 function xMessage:get_values()
-  --print("xMessage:get_values()",#self._values)
   return self._values
 end
 

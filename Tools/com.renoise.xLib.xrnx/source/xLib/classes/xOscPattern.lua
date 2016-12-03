@@ -44,7 +44,6 @@ xOscPattern.uid_counter = 0
 function xOscPattern:__init(...)
 
 	local args = cLib.unpack_args(...) 
-  --print("*** args",rprint(args))
 
   --- string, pattern used for matching the input
   self.pattern_in = property(self.get_pattern_in,self.set_pattern_in)
@@ -74,8 +73,6 @@ function xOscPattern:__init(...)
 
   xOscPattern.uid_counter = xOscPattern.uid_counter + 1
   self.uid = "uid_"..tostring(xOscPattern.uid_counter)
-
-  --print(">>> uid",self.uid)
 
   --- boolean, true when we can cache the incoming message
   self.cacheable = false
@@ -110,8 +107,6 @@ function xOscPattern:__init(...)
   if args.arg_names then
     self:set_arg_names(args.arg_names)
   end
-
-  --print(">>> arg_names",rprint(self.arg_names))
 
 end
 
@@ -164,7 +159,6 @@ function xOscPattern:get_arg_names()
   for k,v in ipairs(self.arguments) do
     table.insert(rslt,v.name or "")
   end
-  --print("xOscPattern:get_arg_names - rslt",rslt)
   return rslt
 end
 
@@ -264,7 +258,6 @@ function xOscPattern:parse_input_pattern()
   for var,_ in str_vars do
     if (count == 0) then
       self.osc_pattern_in = var
-      --print("self.osc_pattern_in",self.osc_pattern_in)
     else
       if not string.match(var,"^%%%a") then
         -- literal value
@@ -276,7 +269,6 @@ function xOscPattern:parse_input_pattern()
       else
         -- wildcard, extract tag (%d,%f,etc), optionally name and properties:
         -- "%d:some_int{min=0,max=64}"
-        --print(">>> parse_input_pattern - var",var)
         local str_tag,str_name,str_props
         local comma_index = string.find(var,":",nil,true)
         if comma_index then
@@ -285,15 +277,12 @@ function xOscPattern:parse_input_pattern()
         else
           str_tag = string.sub(var,2)
         end
-        --print("str_tag",str_tag)
-        --print("str_name",str_name)
 
         table.insert(self.arguments,xOscValue{
           tag = str_tag,
           name = str_name,
         })
       end
-      --print("arg #",count,self.arguments[#self.arguments])
     end
     count = count+1
   end
@@ -311,9 +300,6 @@ function xOscPattern:parse_input_pattern()
   end
   self.cacheable = cacheable
 
-  --print(">>> xOscPattern:parse_input_pattern - arguments...",rprint(self.arguments))
-  --print(">>> xOscPattern:parse_input_pattern - cacheable...",self.cacheable)
-  
 end
 
 --------------------------------------------------------------------------------
@@ -327,13 +313,11 @@ function xOscPattern:parse_output_pattern()
 
   if (self.pattern_out == "") then
     -- no output pattern, base on input
-    --print(">>> no output pattern, base on input")
     self.osc_pattern_out = self.osc_pattern_in
     for k,v in ipairs(self.arguments) do
       table.insert(rslt,k)
     end
   else
-    --print(">>> we have an output pattern")
     local str_vars = string.gmatch(self.pattern_out,"[^%s]+")
     for k,_ in str_vars do
       self.osc_pattern_out = k
@@ -347,9 +331,6 @@ function xOscPattern:parse_output_pattern()
   end
 
   self.output_args = rslt
-
-  --print("*** xOscPattern:parse_output_pattern - output_args",rprint(self.output_args))
-  --print("*** xOscPattern:parse_output_pattern - osc_pattern_out",self.osc_pattern_out)
 
 end
 
@@ -396,15 +377,11 @@ function xOscPattern:generate(args)
     if (osc_tag == xOscValue.TAG.NUMBER) then
       osc_tag = self:interpret_literal(tostring(osc_value),true)
     end
-    --print("osc_value",osc_value)
     table.insert(osc_args,{
       tag = osc_tag,
       value = osc_value
     })
   end
-
-  --print("osc_pattern_out",self.osc_pattern_out)
-  --print("osc_args",rprint(osc_args))
 
   return renoise.Osc.Message(self.osc_pattern_out,osc_args)
 

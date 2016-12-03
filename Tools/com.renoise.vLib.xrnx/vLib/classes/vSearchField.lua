@@ -70,12 +70,10 @@ function vSearchField:__init(...)
 
   self.items = self._items
   self.popup = self._popup
-  --self.selected_index = self.selected_index_observable.value
 
   -- customize vTextField
   self._placeholder = args.placeholder or "Search..."
   self._auto_size = true
-  --self._font = "normal"
   self.style = "strong"
 
   self:set_height(self._height)
@@ -83,14 +81,10 @@ function vSearchField:__init(...)
     self:set_width(self._width)
   end
 
-  --self._vb_popup.visible = self._popup
-  --self._vb_popup.items = self._items
 
   -- notifiers -----------------------
 
   self.edit_mode_observable:add_notifier(function()
-    --print(">>> vSearchField.edit_mode_observable fired...")
-    --self._vb_text.visible = self.edit_mode
     self:set_width(self._width)
     if self.edit_mode then
       self:match_item()
@@ -102,19 +96,16 @@ function vSearchField:__init(...)
   end)
 
   self.text_observable:add_notifier(function()
-    --print(">>> vSearchField.text_observable fired...")
     if not self._suppress_notifier then
       self:match_item()
     end
   end)
 
   self.submitted:add_notifier(function()
-    --print(">>> vSearchField.submitted fired...")
     if self._matched_items then
       self:set_index(self._matched_items[1].index)
     end
   end)
-
 
   self:update_text_style()
 
@@ -173,15 +164,10 @@ end
  
 function vSearchField:auto_resize()
   TRACE("vSearchField:auto_resize()")
-
   local popup_w = self.popup and self._height or 0
   local max_w = self._width-popup_w
-
   self._vb_textfield.width = math.min(max_w,self:get_text_width())
-  --print("*** auto_resize - self._vb_textfield.width",self._vb_textfield.width)
-
   self:set_width(self._width)
-
 end
 
 --------------------------------------------------------------------------------
@@ -210,8 +196,6 @@ function vSearchField:match_item()
 
   local matched = self:match_items()
   local str_input = self.text
-
-  --print(">>> matched",rprint(matched))
 
   if table.is_empty(matched) then
     self._vb_text.text = ""
@@ -284,7 +268,6 @@ function vSearchField:match_items()
   TRACE("vSearchField:match_items()")
 
   local str_input = self.text
-  --print("*** match_item - str_input",str_input)
 
   if not self._case_sensitive then
     str_input = string.lower(str_input)    
@@ -384,21 +367,14 @@ function vSearchField:set_width(val)
   end
   
   if not self.edit_mode then
-    --print("got here A - text_w",text_w)
     self._vb_textfield.width = text_w - (self.edit_mode and 1 or 4)
     self._vb_text.width = self.edit_mode and 1 or 4
   else
-    --print("got here B - text_w",text_w)
-    --self._vb_textfield.width = self._vb_textfield.width - 2
     local ctrl_w = text_w - self._vb_textfield.width
     if (ctrl_w > 0) then
       self._vb_text.width = ctrl_w
     end
   end
-
-  --print("*** set_width - self._vb_popup.width",self._vb_popup.width)
-  --print("*** set_width - self._vb_textfield.width",self._vb_textfield.width)
-  --print("*** set_width - self._vb_text.width",self._vb_text.width)
 
   vControl.set_width(self,val)
 

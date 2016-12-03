@@ -31,8 +31,6 @@ function cNumber:__init(...)
 
   local args = cLib.unpack_args(...)
 
-  --print("cNumber",cNumber)
-
   --- cNumber.POLARITY
   self.polarity = args.polarity or cNumber.POLARITY.UNIPOLAR
 
@@ -73,31 +71,51 @@ end
 -------------------------------------------------------------------------------
 
 function cNumber:add(val)
-  --print("cNumber:add(val)",val)
   self:set_value(self._value+val)
 end
 
 function cNumber:subtract(val)
-  --print("cNumber:subtract(val)",val)
   self:set_value(self._value-val)
 end
 
 function cNumber:multiply(val)
-  --print("cNumber:multiply(val)",val)
   self:set_value(self._value*val)
 end
 
 function cNumber:divide(val)
-  --print("cNumber:divide(val)",val)
   self:set_value(self._value/val)
 end
 
 -------------------------------------------------------------------------------
 
 function cNumber:set_value(val)
-  --print("cNumber:set_value(val)",val)
   self._value = cLib.clamp_value(val,self.value_min,self.value_max)
 end
+
+-------------------------------------------------------------------------------
+-- Meta-methods
+-------------------------------------------------------------------------------
+
+function cNumber:__add(val)
+  self:add(val)
+  return self
+end
+
+function cNumber:__sub(val)
+  self:subtract(val)
+  return self
+end
+
+function cNumber:__mul(val)
+  self:multiply(val)
+  return self
+end
+
+function cNumber:__div(val)
+  self:divide(val)
+  return self
+end
+
 
 
 

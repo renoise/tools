@@ -75,7 +75,6 @@ function vLib.get_skin_color(name)
   assert(type(name)=="string")
 
   local default_color = cConfig:get_value("RenoisePrefs/SkinColors/"..name)
-  --print("default_color",default_color)
   if default_color then
     vLib.COLOR_SELECTED = cString.split(default_color,",")
   end

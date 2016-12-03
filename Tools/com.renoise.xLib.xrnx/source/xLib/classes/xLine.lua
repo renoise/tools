@@ -60,8 +60,6 @@ function xLine:__init(args)
     self.automation = xLineAutomation(args.automation)
   end
 
-  --print("created xLine...",self)
-
 end
 
 
@@ -196,7 +194,6 @@ function xLine.do_read(sequence,line,include_hidden,track_idx,phrase)
   local note_cols,fx_cols,automation
 
   if rns_line then
-    --print("rns_line",rns_line)
 
     local max_note_cols,max_fx_cols
     if not include_hidden then

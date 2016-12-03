@@ -93,7 +93,6 @@ xMidiMessage.DEFAULT_NRPN_ORDER = xMidiMessage.NRPN_ORDER.MSB_LSB
 function xMidiMessage:__init(...)
 
 	local args = cLib.unpack_args(...)
-  --print("args",rprint(args))
 
   --- xMidiMessage.TYPE (required)
   -- default to sysex - a neutral default when converting from OSC
@@ -145,7 +144,6 @@ end
 -------------------------------------------------------------------------------
 
 function xMidiMessage:get_definition()
-  --print("xMidiMessage:get_definition()")
 
   local def = xMessage.get_definition(self)
   def.message_type = self.message_type
@@ -245,7 +243,6 @@ function xMidiMessage:create_raw_message()
           }}
         elseif (self.bit_depth == xMidiMessage.BIT_DEPTH.FOURTEEN) then
           local msb,lsb = self.split_mb(self.values[2])
-          --print("msb,lsb",msb,lsb)
           return {
             {
               0xAF + self.channel,

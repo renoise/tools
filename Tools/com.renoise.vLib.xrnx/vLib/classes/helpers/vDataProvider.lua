@@ -44,7 +44,6 @@ function vDataProvider:get(item_id)
     return self.map[item_id].item,self.map[item_id].index
   else
     local item,index = vVector.match_by_key_value(self.data,vDataProvider.ID,item_id)
-    --print("item,index",item,index)
     self.map[item_id] = {
       item = item,
       index = index

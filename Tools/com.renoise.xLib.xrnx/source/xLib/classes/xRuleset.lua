@@ -89,7 +89,6 @@ function xRuleset:__init(xrules,ruleset_def)
 
   self:parse_definition(ruleset_def)
 
-  --print(">>> self.selected_rule_index",self.selected_rule_index)
 
 end
 
@@ -112,12 +111,12 @@ end
 -------------------------------------------------------------------------------
 
 function xRuleset:get_description()
-  --print("xRuleset:get_description",self.description_observable.value)
+  --TRACE("xRuleset:get_description",self.description_observable.value)
   return self.description_observable.value
 end
 
 function xRuleset:set_description(val)
-  --print("xRuleset:set_description",val,self.description_observable.value)
+  --TRACE("xRuleset:set_description",val,self.description_observable.value)
   local modified = (val~=self.description_observable.value)
   self.description_observable.value = val
   if modified then
@@ -181,7 +180,7 @@ function xRuleset:get_selected_rule_index()
 end
 
 function xRuleset:set_selected_rule_index(val)
-  --print("xRuleset:set_selected_rule_index(val)",val)
+  --TRACE("xRuleset:set_selected_rule_index(val)",val)
   self.selected_rule_index_observable.value = val
 end
 
@@ -232,8 +231,6 @@ function xRuleset:rename(new_name)
 
   local old_path = cFilesystem.get_path_parts(self.file_path)
   local new_filepath = cFilesystem.unixslashes(("%s/%s.lua"):format(old_path,new_name))
-  --print(">>> self.file_path",self.file_path)
-  --print(">>> new_filepath",new_filepath)
 
   if io.exists(new_filepath) then
     return false,"A file already exist with that name"
@@ -316,29 +313,15 @@ end
 function xRuleset:match_message(xmsg,ruleset_idx,rule_idx,force_midi)
 
   assert(type(ruleset_idx)=="number","Expected ruleset_idx to be a number")
-  --assert(type(rule_idx)=="number","Expected rule_idx to be a number")
-  --assert(self.xrules.callback,"xRules has not defined a callback method")
-
-  --print(">>> xRuleset:match_message - force_midi",force_midi)
-
-  --[[
-  if not self.xrules.callback then
-    LOG("*** Warning: xRules has no callback, message has nowhere to go...")
-    return
-  end
-  ]]
 
   local function do_match(rule,rule_idx)
     if not force_midi and (not rule.midi_enabled 
       and (type(xmsg)=="xMidiMessage"))
     then
-      --print("*** midi not enabled for this rule",rule.name,force_midi)
       return
     end
     local output,evaluated = rule:match(xmsg,self.xrules,ruleset_idx)
-    --print("*** #output,evaluated",#output,evaluated)
     if evaluated then
-      --print("*** output",rprint(output))
       for _,v in ipairs(output) do
         self.xrules:transmit(v,xmsg,ruleset_idx,rule_idx)
       end
@@ -377,23 +360,15 @@ end
 
 function xRuleset:parse_definition(ruleset_def)
 
-  --print("xRuleset def...",rprint(ruleset_def))
-
   self.rules = {}
-  --self.rules_observable = renoise.Document.ObservableNumberList()
   for k = #self.rules_observable,1,-1 do
     self.rules_observable:remove(k)
   end
-
-  --print("self.suppress_notifier",self.suppress_notifier)
   self.suppress_notifier = true
-
   self.osc_enabled_observable.value = ruleset_def.osc_enabled or false
   self.manage_voices_observable.value = ruleset_def.manage_voices or false
   self.active_observable.value = ruleset_def.active or true
   self.description_observable.value = ruleset_def.description or ""
-
-  --self.name_observable.value = ruleset_def.name or ""
 
   for k,v in ipairs(ruleset_def) do
     -- TODO implement a "looks like rule" 
@@ -401,7 +376,6 @@ function xRuleset:parse_definition(ruleset_def)
   end
 
   self.suppress_notifier = false
-
   return true
 
 end
@@ -509,7 +483,6 @@ function xRuleset:attach_to_rule(rule_idx)
 
   local xrule = self.rules[rule_idx]
   xrule.modified_observable:add_notifier(function()
-    --print("xRuleset rule.modified_observable fired...")
     self.modified = true
   end)
 

@@ -119,7 +119,6 @@ function xPlayPos:get_fractional()
   local beats_scaled = beats * rns.transport.lpb
   local line_in_beat = math.floor(beats_scaled)
   local fraction = cLib.scale_value(beats_scaled,line_in_beat,line_in_beat+1,0,1)
-  --print("fraction",rns.transport.playback_pos,fraction)
 
   return {
     line = self._line,
@@ -150,7 +149,6 @@ function xPlayPos:maintain_position(pos)
   if (line_in_beat < 1) then
     beat_pos_set = true
     self.last_beat_pos = pos
-    --print("on first line of beat",pos,beats)
   end
 
   -- detect when first line in beat is skipped
@@ -162,7 +160,6 @@ function xPlayPos:maintain_position(pos)
       local xpos = xSongPos(pos)
       xpos:decrease_by_lines(math.floor(line_in_beat))
       self.last_beat_pos = xpos.pos
-      --print("last_beat_pos was skipped, set to",self.last_beat_pos)
     end
   end
 

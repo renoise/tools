@@ -275,12 +275,10 @@ function vTabs:set_index(idx)
   TRACE("vTabs:set_index(idx)",idx)
 
   if (idx < 1) then
-    --print("*** Index needs to be > 0")
     return
   end
 
   if (idx > #self.tabs) then
-    --print("*** There is no tab with that index")
     return
   end
 
@@ -475,9 +473,6 @@ function vTabs:set_height(val)
   end
 
   val = math.max(val,vTabs.MINIMUM_H)
-
-  --print("val",val)
-  --print("self._switcher_height",self._switcher_height)
 
   self.spacer_h.height = val - self._switcher_height
 

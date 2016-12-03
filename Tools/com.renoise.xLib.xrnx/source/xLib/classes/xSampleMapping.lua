@@ -22,7 +22,7 @@ class 'xSampleMapping'
 -- @param amt (int)
 
 function xSampleMapping.shift_keyzone_by_semitones(instr,sample_idx_from,amt)
-  --print("xLib.shift_keyzone_by_semitones(instr,sample_idx_from,amt)",instr,sample_idx_from,amt)
+  TRACE("xLib.shift_keyzone_by_semitones(instr,sample_idx_from,amt)",instr,sample_idx_from,amt)
 
   for sample_idx = sample_idx_from,#instr.samples do
     local sample = instr.samples[sample_idx]

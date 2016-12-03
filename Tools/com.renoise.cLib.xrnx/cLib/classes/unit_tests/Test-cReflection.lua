@@ -4,15 +4,13 @@
 
 --]]
 
-_xlib_tests:insert({
+__tests:insert({
 name = "cReflection",
 fn = function()
 
   print(">>> cReflection: starting unit-test...")
 
-  --require (_clibroot.."cDocument") 
   require (_clibroot.."cReflection")
-  --require (_xlibroot.."xOscDevice") 
 
   -- basename
   --[[

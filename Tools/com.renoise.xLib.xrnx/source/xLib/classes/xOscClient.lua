@@ -156,7 +156,6 @@ function xOscClient:trigger_auto(xmsg)
 
   local is_note_on = (xmsg.message_type == xMidiMessage.TYPE.NOTE_ON)
   local is_note_off = (xmsg.message_type == xMidiMessage.TYPE.NOTE_OFF)
-  --print("is_note_on, is_note_off",is_note_on,is_note_off)
 
   if is_note_on or is_note_off then
     local instr_idx = xmsg.instrument_index or rns.selected_instrument_index

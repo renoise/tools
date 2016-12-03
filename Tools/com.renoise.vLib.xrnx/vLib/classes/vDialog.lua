@@ -18,7 +18,6 @@ function vDialog:__init(...)
   TRACE("vDialog:__init()")
 
   local args = cLib.unpack_args(...)
-  --print("vDialog.args",rprint(args))
 
   -- string
   self.dialog_title = args.dialog_title or vDialog.DEFAULT_DIALOG_TITLE
@@ -80,7 +79,6 @@ function vDialog:show()
   end
 
   if not self.dialog or not self.dialog.visible then
-    --print("create, or re-create if hidden")
     if not self.dialog_content then
       self.dialog_content = self:create_dialog()
     end
@@ -90,7 +88,6 @@ function vDialog:show()
       end)
     self.dialog_visible_observable:bang()
   else
-    --print("bring existing/visible dialog to front")
     self.dialog:show()
     self.dialog_became_active_observable:bang()
   end

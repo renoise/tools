@@ -4,13 +4,13 @@
 
 --]]
 
-_xlib_tests:insert({
+__tests:insert({
 name = "cParseXML",
 fn = function()
 
   print (">>> cParseXML: starting unit-test...")
 
-  require (_xlibroot.."cParseXML")
+  require (_clibroot.."cParseXML")
 
   -- First try with some broken XML
 
@@ -88,7 +88,7 @@ fn = function()
 
   -- import XML from a file --
 
-  local file_path = _xlibroot .. "/unit_tests/example_preferences.xml"
+  local file_path = _clibroot .. "/unit_tests/example_preferences.xml"
   local fhandle = io.open(file_path,"r")
   if not fhandle then
     fhandle:close()
@@ -112,7 +112,7 @@ fn = function()
   
   print ("doc",doc)
 
-  local doc_file_out = _xlibroot .. "/unit_tests/example_preferences_output.xml"
+  local doc_file_out = _clibroot .. "/unit_tests/example_preferences_output.xml"
   doc:save_as(doc_file_out)
   ]]
 

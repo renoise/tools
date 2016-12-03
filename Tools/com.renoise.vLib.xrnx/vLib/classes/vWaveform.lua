@@ -75,18 +75,15 @@ function vWaveform:collect_frames()
 
   local instr = rns.instruments[self._instr_index]
   if not instr then
-    --print("*** no instr")
     return
   end
 
   local sample = instr.samples[self._sample_index]
   if not sample then
-    --print("*** no sample")
     return
   end
 
   if not sample.sample_buffer.has_sample_data then
-    --print("*** no sample_buffer")
     return
   end
 

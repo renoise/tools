@@ -590,7 +590,6 @@ function vTree:load_file(file_path)
   end
 
   if not file_path or (file_path == "") then
-    --print("*** no file was selected")
     return
   end
 
@@ -629,8 +628,6 @@ end
 
 function vTree:selection_handler(changed,added,removed)
   TRACE("vTree:selection_handler(changed,added,removed)",changed,added,removed)
-  --print("added",rprint(added))
-  --print("removed",rprint(removed))
 
   if changed then
     for k,v in ipairs(removed) do
@@ -669,11 +666,9 @@ function vTree:set_data(data)
   TRACE("vTree:set_data(data)",data)
 
   if (type(data)~="table") then
-    --print("*** vTree.set_data() - only tables are accepted as data")
     return
   end
   if table.is_empty(data) then
-    --print("*** vTree.set_data() - No data received")
     self.map = {}
   else
     -- add/register unique ID for quick access 
