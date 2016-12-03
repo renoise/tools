@@ -68,7 +68,6 @@ function PhraseMateSmartDialog:__init(...)
     end
 
     if not handled then
-      rprint(key)
       return key
     end
 
@@ -88,10 +87,8 @@ function PhraseMateSmartDialog:__init(...)
   ]]
 
   self.prefs.use_exported_phrases:add_notifier(function()
-    --print("self.prefs.use_exported_phrases fired...")
     self.searchfield.text = ""
     self:update_searchfield()
-    --self.update_requested = true
   end)
 
   renoise.tool().app_new_document_observable:add_notifier(function()
@@ -101,7 +98,6 @@ function PhraseMateSmartDialog:__init(...)
   renoise.tool().app_idle_observable:add_notifier(function()
     if self.update_requested then
       self.update_requested = false
-      --print(">>> self.update_requested ...")
       self:update()
     end
   end)
@@ -287,7 +283,6 @@ function PhraseMateSmartDialog:get_exported_phrases()
   local folder = self.prefs.output_folder.value
   local files = {}
   local handler = function(folder,filename,filetype)
-    --print("folder,filename,filetype",folder,filename,filetype)
     if (filetype == cFilesystem.FILETYPE.FILE) then
       table.insert(files,{
         folder = folder,
@@ -300,7 +295,6 @@ function PhraseMateSmartDialog:get_exported_phrases()
 
   cFilesystem.recurse(folder,handler,{"*.xrnz"})
 
-  --print("*** get_exported_phrases - files",rprint(files))
   self.exported_phrases = files
 
 end
@@ -315,7 +309,6 @@ function PhraseMateSmartDialog:update_searchfield()
   local phrase_list = PhraseMateUI.get_phrase_list(nil,nil,false)
 
   local use_exported = self.prefs.use_exported_phrases.value
-  --print('vb.views["ui_output_src"].value',vb.views["ui_output_src"].value)
   vb.views["ui_output_src"].value = use_exported 
     and PhraseMate.OUTPUT_SOURCE.PRESET 
     or PhraseMate.OUTPUT_SOURCE.SELECTED
@@ -326,7 +319,6 @@ function PhraseMateSmartDialog:update_searchfield()
     self.searchfield.items = phrase_list
   end
 
-  --print("phrase_list",rprint(phrase_list))
   if table.is_empty(self.searchfield.items) then
     self.searchfield.placeholder = "No phrases available"  
     self.searchfield.active = false
@@ -419,8 +411,6 @@ function PhraseMateSmartDialog:apply()
   local source = vb.views["ui_output_src"].value
   local mode = vb.views["ui_output_mode"].value
   local rslt,err
-
-  --print("*** apply - source,mode",source,mode)
 
   if (source == PhraseMate.OUTPUT_SOURCE.SELECTED) then
     local cached_phrase_idx = rns.selected_phrase_index

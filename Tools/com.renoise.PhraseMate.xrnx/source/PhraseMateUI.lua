@@ -160,7 +160,6 @@ function PhraseMateUI:attach_to_song()
   TRACE("PhraseMateUI:attach_to_song()")
 
   local schedule_update = function ()
-    --print("schedule_update()")
     self.vtable_batch.selection.index = rns.selected_phrase_index
     self.update_requested = true
   end
@@ -237,7 +236,7 @@ function PhraseMateUI:create_dialog()
                 height = PhraseMateUI.BUTTON_SIZE,
                 midi_mapping = PhraseMate.MIDI_MAPPING.PREV_PHRASE_IN_INSTR,
                 notifier = function()
-                  self.owner:invoke_task(xPhraseManager.select_previous_phrase())
+                  cLib.invoke_task(xPhraseManager.select_previous_phrase)
                 end
               },
               vb:button{
@@ -248,7 +247,7 @@ function PhraseMateUI:create_dialog()
                 height = PhraseMateUI.BUTTON_SIZE,
                 midi_mapping = PhraseMate.MIDI_MAPPING.NEXT_PHRASE_IN_INSTR,
                 notifier = function()
-                  self.owner:invoke_task(xPhraseManager.select_next_phrase())
+                  cLib.invoke_task(xPhraseManager.select_next_phrase)
                 end
               },
               vb:space{
@@ -416,13 +415,9 @@ function PhraseMateUI:build_props_tab()
     data = {}
   }
   self.vtable_batch.selection.index_observable:add_notifier(function()
-    --print(">>> self.vtable_batch.selection.index_observable fired...")
     rns.selected_phrase_index = self.vtable_batch.selection.index
     self.update_requested = true
   end)
-  --self.vtable_batch.on_scroll:add_notifier(function()
-
-  --end
 
   local property_w = PhraseMateUI.UI_WIDTH - (PhraseMateUI.UI_WIDTH_THIRD + PhraseMateUI.UI_BATCH_APPLY_W + 7)
   local editfield_w = PhraseMateUI.UI_WIDTH - (PhraseMateUI.UI_BATCH_APPLY_W + 15)
@@ -662,7 +657,7 @@ function PhraseMateUI:build_input_tab()
         if self.owner.process_slicer and self.owner.process_slicer:running() then
           self.owner.process_slicer:stop()
         else
-          self.owner:invoke_task(self.owner:collect_phrases())
+          cLib.invoke_task(PhraseMate.collect_phrases,self.owner)
         end
       end
     },
@@ -1164,9 +1159,10 @@ function PhraseMateUI:build_prefs_tab()
             bind = self.prefs.autostart,
           },
           vb:text{
-            text = "Autostart tool with Renoise"
+            text = "Show dialog on launch / new song"
           },
         },
+        --[[
         vb:row{
           tooltip = "Start tool, but keep dialog hidden (Zxx mode still applies)",
           vb:checkbox{
@@ -1176,6 +1172,7 @@ function PhraseMateUI:build_prefs_tab()
             text = "Don't show dialog on autostart"
           },
         },
+        ]]
         vb:row{
           tooltip = "Decide how often to create undo points while processing:"
                 .."\nDisabled - perform processing in a single step"
@@ -1184,7 +1181,7 @@ function PhraseMateUI:build_prefs_tab()
                 .."\n\nEnable this feature if you experience warning dialogs"
                 .."\ncomplaining that 'script is taking too long'",
           vb:text{
-            text = "Processing,undo",
+            text = "Processing,undo buffer",
             --width = PhraseMateUI.UI_KEYMAP_LABEL_W,
           },
           vb:popup{
@@ -1298,7 +1295,6 @@ function PhraseMateUI:show_tab()
   local vb = self.vb
   local tabs = {}
   for k,v in ipairs(PhraseMateUI.TAB_NAMES) do
-    --print("v",k,v)
     table.insert(tabs,vb.views[v])
   end
 
@@ -1341,8 +1337,6 @@ end
 
 function PhraseMateUI:update_realtime()
   TRACE("PhraseMateUI:update_realtime()")
-
-  --print("update_realtime",self)
 
   local vb = self.vb
   local instr = rns.selected_instrument
@@ -1407,9 +1401,6 @@ function PhraseMateUI:update_output_tab_note()
   else
     note = selected_note
   end
-
-  --print("note",note)
-  --print("selected_note",selected_note)
 
   vb.views["ui_output_note_cb"].value = use_custom
   vb.views["ui_output_note"].active = use_custom
@@ -1500,7 +1491,6 @@ function PhraseMateUI:update_batch_table_styling()
   TRACE("PhraseMateUI:update_batch_table_styling()")
 
   local sel_indices = self.vtable_batch.selection.indices
-  --print("sel_indices",rprint(sel_indices))
   for k,v in ipairs(self.vtable_batch.data) do
     if (table.find(sel_indices,v.INDEX)) then
       v.__row_style = PhraseMateUI.ROW_STYLE_SELECTED
@@ -1600,10 +1590,7 @@ end
 function PhraseMateUI:export_presets(indices)
   TRACE("PhraseMateUI:export_presets(indices)",indices)
 
-  --print("indices",rprint(indices))
-
   local rslt,err = self.owner:export_presets(indices)
-  --print("rslt,err",rslt,err)
   if err then
     if (err == xPhrase.ERROR.FILE_EXISTS) then
       local msg = "Do you want to overwrite the existing file(s)?\n\n%s"
@@ -1720,7 +1707,6 @@ function PhraseMateUI:apply_batch_properties()
   else
     table.insert(phrase_indices,rns.selected_phrase_index)
   end
-  --print("phrase_indices",rprint(phrase_indices))
 
   -- if no items are checked, use the selected row 
   if table.is_empty(phrase_indices) then

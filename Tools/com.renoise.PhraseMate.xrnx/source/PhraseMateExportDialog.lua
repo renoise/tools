@@ -59,7 +59,6 @@ function PhraseMateExportDialog:create_dialog()
         col_width = 20, 
         col_type = vTable.CELLTYPE.CHECKBOX,
         notifier = function(elm,checked)
-          --print("notifier...elm,checked",elm,checked)
           local item = elm.owner:get_item_by_id(elm.item_id)
           if item then
             item.CHECKED = checked
