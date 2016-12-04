@@ -63,10 +63,8 @@ function cBitmap:flood(color)
 
   self.pixels = {}
   
-  for row = 1,self.height do
-    for col = 1,self.width do  
-      table.insert(self.pixels,color)
-    end
+  for k = 1,self.height*self.width do
+    self.pixels[k] = color
   end
   
 end
