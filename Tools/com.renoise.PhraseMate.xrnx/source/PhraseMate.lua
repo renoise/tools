@@ -193,11 +193,13 @@ end
 function PhraseMate:progress_handler(msg)
   TRACE("PhraseMate:progress_handler(msg)",msg)
 
-  self.ui.progress_txt_count = self.ui.progress_txt_count+1
-  if (self.ui.progress_txt_count == #PhraseMateUI.UI_PROGRESS_TXT) then
-    self.ui.progress_txt_count = 1
+  if self.ui then
+    self.ui.progress_txt_count = self.ui.progress_txt_count+1
+    if (self.ui.progress_txt_count == #PhraseMateUI.UI_PROGRESS_TXT) then
+      self.ui.progress_txt_count = 1
+    end
+    self.ui.status_update = msg
   end
-  self.ui.status_update = msg
 
 end
 
@@ -206,13 +208,19 @@ end
 function PhraseMate:done_handler(msg)
   TRACE("PhraseMate:done_handler(msg)",msg)
 
-  self.ui.status_update = "(PhraseMate) Done processing!"
+  if self.ui then
+    self.ui.status_update = "(PhraseMate) Done processing!"
+  end
+
   self:initialize_variables()
   collectgarbage()
 
   self.process_slicer = nil
 
-  self.ui:update_submit_buttons()
+  if self.ui then
+    self.ui:update_submit_buttons()
+  end
+
   renoise.app():show_message(msg)
 
 end
@@ -748,6 +756,8 @@ function PhraseMate:collect_from_pattern_selection()
     return false,err
   end
 
+  self:do_finalize()
+
 end
 
 --------------------------------------------------------------------------------
@@ -802,6 +812,8 @@ function PhraseMate:collect_from_track_in_pattern()
     return false,err
   end
 
+  self:do_finalize()
+
 end
 
 --------------------------------------------------------------------------------
@@ -824,6 +836,8 @@ function PhraseMate:collect_from_track_in_song()
     --self:progress_handler(("Collecting phrases : sequence index = %d"):format(seq_idx))
     self:collect_yield_fn(seq_idx)
   end
+
+  self:do_finalize()
 
 end
 
@@ -1048,7 +1062,6 @@ function PhraseMate:do_finalize()
   else
 
     local cached_instr_idx = rns.selected_instrument_index
-
     for instr_idx,collected in pairs(self.collected_phrases) do
       for __,v in pairs(collected) do
 
@@ -1071,7 +1084,6 @@ function PhraseMate:do_finalize()
           else
 
             local phrase_idx = v.phrase_index
-
             collected_instruments[v.instrument_index] = true
             local phrase = instr.phrases[phrase_idx]
               
