@@ -25,7 +25,7 @@ Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/T
 
 _trace_filters = nil
 --_trace_filters = {".*"}
-_trace_filters = {"^PhraseMate"}
+--_trace_filters = {"^PhraseMate"}
 
 _clibroot = 'source/cLib/classes/'
 require (_clibroot..'cLib')
@@ -56,7 +56,6 @@ require (_vlibroot..'vSearchField')
 require (_vlibroot..'vPathSelector')
 require (_vlibroot..'vPopup')
 require (_vlibroot..'vArrowButton')
---require (_vlibroot..'helpers/vMetrics')
 
 require ('source/PhraseMate')
 require ('source/PhraseMateUI')
@@ -77,16 +76,20 @@ local phrasemate = nil
 -- Functions
 --------------------------------------------------------------------------------
 
-function launch(new_song)
+function start()
   rns = renoise.song()
   if not phrasemate then
     phrasemate = PhraseMate{
       app_display_name = "PhraseMate",
     }
   end
-  if not new_song then
-    phrasemate:show_main_dialog()
-  elseif prefs.autostart.value then
+end
+
+function show(new_song)
+  start()
+  if not new_song 
+    or prefs.autostart.value
+  then
     phrasemate:show_main_dialog()
   end
 end
@@ -98,7 +101,7 @@ end
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:PhraseMate...",
   invoke = function() 
-    launch() 
+    show() 
   end
 } 
 
@@ -106,7 +109,7 @@ renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Show Preferences...",
   invoke = function(repeated)
     if (not repeated) then 
-      launch() 
+      show() 
     end
   end
 }
@@ -114,6 +117,7 @@ renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Smart Write...",
   invoke = function(repeated)
     if not repeated then 
+      start()
       cLib.invoke_task(PhraseMate.show_smart_dialog,phrasemate)
     end
   end
@@ -125,6 +129,7 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrase from Selection in Pattern [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
+      start()
       cLib.invoke_task_logged(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.SELECTION_IN_PATTERN)
     end
   end
@@ -132,6 +137,7 @@ renoise.tool():add_midi_mapping{
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Create Phrase from Selection",
   invoke = function() 
+    start()
     cLib.invoke_task(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.SELECTION_IN_PATTERN)
   end
 }
@@ -139,6 +145,7 @@ renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrase from Selection in Pattern",
   invoke = function(repeated)
     if not repeated then 
+      start()
       cLib.invoke_task(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.SELECTION_IN_PATTERN)
     end
   end
@@ -150,6 +157,7 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrase from Selection in Matrix [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
+      start()
       cLib.invoke_task_logged(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.SELECTION_IN_MATRIX)
     end
   end
@@ -157,6 +165,7 @@ renoise.tool():add_midi_mapping{
 renoise.tool():add_menu_entry {
   name = "Pattern Matrix:PhraseMate:Create Phrase from Selection",
   invoke = function() 
+    start()
     cLib.invoke_task(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.SELECTION_IN_MATRIX)
   end
 }
@@ -164,6 +173,7 @@ renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrase from Selection in Matrix",
   invoke = function(repeated)
     if not repeated then 
+      start()
       cLib.invoke_task(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.SELECTION_IN_MATRIX)
     end
   end
@@ -175,13 +185,15 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrase from Track [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
+      start()
       cLib.invoke_task_logged(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.TRACK_IN_PATTERN)
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Create Phrase from Track",
-  invoke = function() 
+  invoke = function()
+    start() 
     cLib.invoke_task(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.TRACK_IN_PATTERN)
   end
 }
@@ -189,6 +201,7 @@ renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrase from Track",
   invoke = function(repeated)
     if not repeated then 
+      start()
       cLib.invoke_task(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.TRACK_IN_PATTERN)
     end
   end
@@ -200,6 +213,7 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Create Phrases from Track in Song [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
+      start()
       cLib.invoke_task_logged(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.TRACK_IN_SONG)
     end
   end
@@ -207,13 +221,15 @@ renoise.tool():add_midi_mapping{
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Create Phrases from Track in Song",
   invoke = function() 
+    start()
     cLib.invoke_task(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.TRACK_IN_SONG)
   end
 }
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Create Phrases from Track in Song",
   invoke = function(repeated)
-    if not repeated then 
+    if not repeated then
+      start()
       cLib.invoke_task(PhraseMate.collect_phrases,phrasemate,PhraseMate.INPUT_SCOPE.TRACK_IN_SONG)
     end
   end
@@ -225,13 +241,15 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Write Phrase to Selection In Pattern [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
+      start()
       cLib.invoke_task_logged(PhraseMate.apply_phrase_to_selection,phrasemate)
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "--- Pattern Editor:PhraseMate:Write Phrase to Selection In Pattern",
-  invoke = function() 
+  invoke = function()
+    start() 
     cLib.invoke_task(PhraseMate.apply_phrase_to_selection,phrasemate)
   end
 } 
@@ -239,6 +257,7 @@ renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Write Phrase to Selection in Pattern",
   invoke = function(repeated)
     if not repeated then 
+      start()
       cLib.invoke_task(PhraseMate.apply_phrase_to_selection,phrasemate)
     end
   end
@@ -250,13 +269,15 @@ renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Write Phrase to Track [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
+      start()
       cLib.invoke_task_logged(PhraseMate.apply_phrase_to_track,phrasemate)
     end
   end
 }
 renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Write Phrase to Track",
-  invoke = function() 
+  invoke = function()
+    start() 
     cLib.invoke_task(PhraseMate.apply_phrase_to_track,phrasemate)
   end
 } 
@@ -264,7 +285,8 @@ renoise.tool():add_menu_entry {
 renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Write Phrase to Track",
   invoke = function(repeated)
-    if not repeated then 
+    if not repeated then
+      start() 
       cLib.invoke_task(PhraseMate.apply_phrase_to_track,phrasemate)
     end
   end
@@ -414,6 +436,7 @@ renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Delete Selected Phrase",
   invoke = function(repeated)
     if (not repeated) then 
+      start()
       cLib.invoke_task(PhraseMate.delete_phrase,phrasemate)
     end
   end
@@ -421,6 +444,7 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping {
   name = PhraseMate.MIDI_MAPPING.DELETE_PHRASE,
   invoke = function(msg)
+    start()
     cLib.invoke_task_logged(PhraseMate.delete_phrase,phrasemate)
   end
 }
@@ -429,6 +453,7 @@ renoise.tool():add_keybinding {
   name = "Global:PhraseMate:Insert New Phrase",
   invoke = function(repeated)
     if not repeated then       
+      start()
       cLib.invoke_task(PhraseMate.insert_phrase,phrasemate)
     end
   end
@@ -436,6 +461,7 @@ renoise.tool():add_keybinding {
 renoise.tool():add_midi_mapping {
   name = PhraseMate.MIDI_MAPPING.INSERT_PHRASE,
   invoke = function(msg)
+    start()
     cLib.invoke_task_logged(PhraseMate.insert_phrase,phrasemate)
   end
 }
@@ -445,13 +471,13 @@ renoise.tool():add_midi_mapping {
 renoise.tool():add_menu_entry {
   name = "--- Pattern Editor:PhraseMate:Adjust settings...",
   invoke = function() 
-    launch()
+    show()
   end
 }
 renoise.tool():add_menu_entry {
   name = "--- Pattern Matrix:PhraseMate:Adjust settings...",
   invoke = function() 
-    launch()
+    show()
   end
 }
 
@@ -462,7 +488,7 @@ renoise.tool():add_menu_entry {
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   if prefs.autostart.value then
-    launch(true)
+    show(true)
   end
 end)
 
