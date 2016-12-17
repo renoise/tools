@@ -1322,11 +1322,13 @@ function NTrap:_process_recording(events)
   --local phrase_lps = get_phrase_lps(self._settings)
   local instr = rns.selected_instrument
   local instr_idx = rns.selected_instrument_index
-  local create_keymap = true
-  local insert_range = NTrap:_get_phrase_range()
-  local keymap_offset = NTrap:_get_phrase_offset()
 
-  local phrase,phrase_idx = xPhraseManager.auto_insert_phrase(instr_idx,create_keymap,insert_range,keymap_offset)
+  local keymap_args = {
+    keymap_range = NTrap:_get_phrase_range(),
+    keymap_offset = NTrap:_get_phrase_offset(),
+  }
+
+  local phrase,phrase_idx = xPhraseManager.auto_insert_phrase(instr_idx,nil,nil,keymap_args)
   if phrase and phrase.mapping then
     self:attach_to_phrase_mapping(phrase.mapping)
   end
