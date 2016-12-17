@@ -92,15 +92,18 @@ end
 
 function xTrack.get_first_sequencer_track_in_group(track_index)
   TRACE("xTrack.get_first_sequencer_track_in_group(track_index)",track_index)
+
   local group_track = rns.tracks[track_index]
   if (group_track.type ~= renoise.Track.TRACK_TYPE_GROUP) then
     return nil, "Expected a group track as argument"
   end
+
   for k,v in ipairs(rns.tracks) do
     if rawequal(v.group_parent,group_track) then
       return k
     end
   end
+
 end
 
 --------------------------------------------------------------------------------
@@ -201,6 +204,39 @@ function xTrack:get_pattern_track(seq_idx,track_index)
   end
 
   return ptrack
+
+end
+
+-------------------------------------------------------------------------------
+-- get column_index, based on visible columns 
+-- (similar to e.g. renoise.song().selection_in_pattern)
+
+function xTrack.get_selected_column_index()
+
+  if rns.selected_note_column then
+    return rns.selected_note_column_index
+  else
+    local track = rns.selected_track 
+    return rns.selected_note_column_index + track.visible_note_columns   
+  end
+end
+
+-------------------------------------------------------------------------------
+-- set column_index, based on visible columns 
+-- (similar to e.g. renoise.song().selection_in_pattern)
+-- @return string, error message when failed 
+
+function xTrack.set_selected_column_index(track,col_idx)
+
+  if (track.type == renoise.Track.TRACK_TYPE_SEQUENCER) 
+    and (track.visible_note_columns >= col_idx) 
+  then
+    rns.selected_note_column_index = col_idx
+  elseif (col_idx < track.visible_note_columns+track.visible_effect_columns) then
+    rns.selected_effect_column_index = col_idx-track.visible_note_columns
+  else
+    return "Can't select this effect column (out of bounds)"
+  end 
 
 end
 
