@@ -420,3 +420,61 @@ function xSample.get_name_tokens(str)
 
 end
 
+-------------------------------------------------------------------------------
+-- select region in waveform editor (clamp to valid range)
+-- @param sample (renoise.Sample)
+-- @param sel_start (int)
+-- @param sel_end (int)
+
+function xSample.set_buffer_selection(sample,sel_start,sel_end)
+  TRACE("xSample.set_buffer_selection()",sample,sel_start,sel_end)
+  
+  local buffer = sample.sample_buffer
+  if not buffer.has_sample_data then
+    return false, "Cannot select, sample has no data"
+  end
+
+  local min = 1
+  local max = buffer.number_of_frames  
+  
+  buffer.selection_start = cLib.clamp_value(sel_start,min,max)
+  buffer.selection_end = cLib.clamp_value(sel_end,min,max)
+
+end
+
+-------------------------------------------------------------------------------
+-- get a buffer position by "line"
+-- note that fractional line values are supported
+-- @param sample (renoise.Sample)
+-- @param line (number) 
+-- @return number or nil if out of bounds/no buffer
+
+function xSample.get_buffer_frame_by_line(sample,line)
+  TRACE("xSample.get_buffer_frame_by_line(line)",line)
+
+  local buffer = sample.sample_buffer
+  if not buffer.has_sample_data then
+    return false, "Sample has no data"
+  end
+
+  local lines_per_minute = (rns.transport.lpb*rns.transport.bpm)
+  local lines_per_sec = 60/lines_per_minute
+  local line_frames = lines_per_sec*buffer.sample_rate
+  return line*line_frames
+
+end
+
+-------------------------------------------------------------------------------
+-- get a buffer position by "beat"
+-- note that fractional beat values are supported
+-- @param beat (number)
+-- @return number or nil if out of bounds/no buffer
+
+function xSample.get_buffer_frame_by_beat(beat)
+  TRACE("xSample.get_buffer_frame_by_beat(beat)",beat)
+  
+  local lpb = rns.transport.lpb
+  return (xSample.get_buffer_frame_by_line(beat*lpb))
+
+end
+
