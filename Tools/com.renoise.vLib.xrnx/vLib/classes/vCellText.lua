@@ -166,3 +166,18 @@ function vCellText:get_notifier()
   return self._notifier
 end
 
+--------------------------------------------------------------------------------
+
+function vCellText:set_width(val)
+  local text_elm = self.vb.views[self.text_elm_id]
+  text_elm.width = val
+  vView.set_width(self,val)
+end
+
+--------------------------------------------------------------------------------
+
+function vView:set_height(val)
+  local text_elm = self.vb.views[self.text_elm_id]
+  text_elm.height = val
+  vView.set_height(self,val)
+end
