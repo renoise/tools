@@ -1,5 +1,5 @@
 --[[============================================================================
-xVoiceSorter
+xPattern
 ============================================================================]]--
 
 --[[--
@@ -8,6 +8,7 @@ Static methods for dealing with a renoise.Pattern
 .
 #
 
+TODO rename to xPatternNavigation
 
 ]]
 
