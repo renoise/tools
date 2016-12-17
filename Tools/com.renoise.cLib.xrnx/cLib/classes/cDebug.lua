@@ -135,19 +135,6 @@ end
 -- Global namespace
 --==============================================================================
 
--- use LOG to print important messages to the console (errors and warnings)
--- @param (vararg)
-
-function LOG(...)
-  local result = ""
-  local n = select('#', ...)
-  for i = 1, n do
-    result = result .. tostring(select(i, ...)) .. "\t"
-  end
-  print (result)
-end
-
---------------------------------------------------------------------------------
 --- TRACE implementation, provide detailed, filtered output 
 -- @param (vararg)
 
