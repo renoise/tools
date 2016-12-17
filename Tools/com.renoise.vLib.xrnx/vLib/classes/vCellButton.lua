@@ -15,6 +15,12 @@ function vCellButton:__init(...)
   self._text = args.text or ""
   self.text = property(self.get_text,self.set_text)
 
+  -- (string) name and path, specify a relative path that uses  Renoise's
+  -- default resource folder as base (like "Icons/ArrowRight.bmp"). Or specify 
+  -- a file relative from your XRNX tool bundle
+  self._bitmap = args.bitmap or nil
+  self.bitmap = property(self.get_bitmap,self.set_bitmap)
+
   -- (function) Handle mouse-press + release
   -- @param elm (vCellValueBox)
   self._notifier = args.notifier or nil
@@ -41,6 +47,7 @@ function vCellButton:__init(...)
 	vCell.__init(self,...)
   self.view = args.vb:button{
     text = self._text,
+    bitmap = self.bitmap,
     pressed = function() 
       if self._pressed then
         self._pressed(self,self.view.text)
@@ -99,6 +106,25 @@ end
 
 function vCellButton:get_text()
   return self._text 
+end
+
+--------------------------------------------------------------------------------
+-- @param str (vCellButton.bitmap)
+
+function vCellButton:set_bitmap(str)
+  self._bitmap = str
+  if not str then
+    return
+  end
+  if self.transform then
+    str = self.transform(str)
+  end
+  self.view.bitmap = str
+	vCell.update(self)
+end
+
+function vCellButton:get_bitmap(str)
+  return self._bitmap
 end
 
 --------------------------------------------------------------------------------
