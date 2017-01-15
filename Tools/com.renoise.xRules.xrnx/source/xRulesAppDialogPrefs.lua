@@ -24,8 +24,6 @@ local OSC_CONTROL_W = 90
 
 function xRulesAppDialogPrefs:__init(ui)
 
-  vDialog.__init(self)
-
   -- xRulesUI, instance of parent class
   self.ui = ui
 
@@ -38,13 +36,15 @@ function xRulesAppDialogPrefs:__init(ui)
   -- xRulesAppPrefs
   self.prefs = self.ui.owner.prefs
 
-  self.title = "xRules preferences"
+  self.dialog_title = "xRules preferences"
 
   -- vLib components
   self.vtable_midi_inputs = nil
   self.vtable_midi_outputs = nil
   self.vtable_osc_devices = nil  
   self.nrpn_toggle = nil
+
+  vDialog.__init(self)
 
   -- initialize --
 
@@ -562,6 +562,15 @@ function xRulesAppDialogPrefs:create_dialog()
     margin = 6,
     width = DIALOG_W,
     mode = "right",
+    -- apply before releasing tool
+    vb:button{
+      text = "Remove TRACEs",
+      height = xRulesUI.CONTROL_H,
+      width = xRulesUI.SUBMIT_BT_W,
+      notifier = function()
+        cDebug.remove_trace_statements()
+      end
+    },
     vb:button{
       text = "Close",
       height = xRulesUI.CONTROL_H,

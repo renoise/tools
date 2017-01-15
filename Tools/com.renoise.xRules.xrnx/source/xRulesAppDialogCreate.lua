@@ -24,15 +24,15 @@ local BROWSER_FILENAME_W = DIALOG_W - 50
 function xRulesAppDialogCreate:__init(ui)
   TRACE("xRulesAppDialogCreate:__init(ui)",ui)  
 
-  vDialogWizard.__init(self)
 
-  self.title = "Import/Create Ruleset"
+  self.dialog_title = "Import/Create Ruleset"
 
   self.ui = ui
   self.owner = self.ui.owner
   self.xrules = self.ui.owner.xrules
   self.vbrowser = nil
 
+  vDialogWizard.__init(self)
 
 end
 

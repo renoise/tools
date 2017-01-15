@@ -93,7 +93,6 @@ function xRulesUI:__init(owner)
   self._create_dialog = xRulesAppDialogCreate(self)
   self._export_dialog = xRulesAppDialogExport(self)
   self._help_dialog   = xRulesAppDialogHelp(self)
-  self._log_dialog    = xRulesAppDialogLog(self)
   self._prefs_dialog  = xRulesAppDialogPrefs(self)
 
   --- xRulesUIEditor
@@ -281,6 +280,17 @@ function xRulesUI:build()
             text = "", 
             font = "italic",
           },
+          vb:checkbox{
+            visible = false,
+            notifier = function()
+              renoise.app():open_url(self.owner.homepage)
+            end
+          },
+          vb:text{
+            --id = "xrules_status_homepage",
+            text = "source and documentation [link]", 
+            font = "italic",
+          },
         },
       },
       vb:row{
@@ -313,14 +323,6 @@ function xRulesUI:build()
           end
         },
 
-        vb:button{
-          text = "Log",
-          width = xRulesUI.CONTROL_H,
-          height = xRulesUI.CONTROL_H,
-          notifier = function()
-            self._log_dialog:show()
-          end,
-        },
         vb:button{
           id = "xrules_compact_button",
           tooltip = "Toggle between normal/minimized user-interface",
@@ -666,7 +668,7 @@ function xRulesUI:update_minimized()
     and "("..self.owner.xprefs.selected_profile.name..")" or ""
   --print("str_profile",str_profile)
 
-  vb_status_text.text = ("- MIDI+OSC utility v%s %s"):format(
+  vb_status_text.text = ("- v%s %s"):format(
     self.owner.version,str_profile)
 
   vb_compact_button.active = (num_rulesets > 0) and true or false

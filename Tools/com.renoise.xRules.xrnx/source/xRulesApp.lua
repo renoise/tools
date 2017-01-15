@@ -19,7 +19,7 @@ class 'xRulesApp'
 function xRulesApp:__init(xprefs)
 
   --- string, current tool version (for display)
-  self.version = "0.77"
+  self.version = "0.7.81"
 
   --- xRulesAppPrefs, current settings
   self.prefs = renoise.tool().preferences
@@ -66,10 +66,7 @@ function xRulesApp:__init(xprefs)
       self.ui:enable_indicator(ruleset_idx,rule_idx,"midi")
     end
     if str_msg then
-      local vlog = self.ui._log_dialog.vlog
-      if vlog then
-        vlog:add(str_msg)
-      end
+      LOG(str_msg)
     end
   end
 

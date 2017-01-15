@@ -14,13 +14,13 @@ class 'xRulesAppDialogHelp' (vDialog)
 
 function xRulesAppDialogHelp:__init(ui)
 
-  vDialog.__init(self)
-
   -- xRulesUI, instance of parent class
   self.ui = ui
 
   -- string
-  self.title = "xRules - help & reference"
+  self.dialog_title = "xRules - help & reference"
+
+  vDialog.__init(self)
 
 end
 

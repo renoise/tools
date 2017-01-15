@@ -86,7 +86,6 @@ require "source/xRulesAppDialogCreate"
 require "source/xRulesAppDialogExport"
 require "source/xRulesAppDialogPrefs"
 require "source/xRulesAppDialogHelp"
-require "source/xRulesAppDialogLog"
 
 --------------------------------------------------------------------------------
 -- main

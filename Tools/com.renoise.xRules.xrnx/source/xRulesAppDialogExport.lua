@@ -19,9 +19,8 @@ local BROWSER_FILENAME_W = DIALOG_W - 50
 
 function xRulesAppDialogExport:__init(ui)
 
-  vDialogWizard.__init(self)
 
-  self.title = "Export Ruleset"
+  self.dialog_title = "Export Ruleset"
 
   self.ui = ui
   self.xrules = self.ui.xrules
@@ -29,6 +28,8 @@ function xRulesAppDialogExport:__init(ui)
   self.vbrowser = nil
 
   --print(">>> self.owner",self.owner)
+
+  vDialogWizard.__init(self)
 
 end
 
