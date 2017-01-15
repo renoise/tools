@@ -59,7 +59,7 @@ function xRulesApp:__init(xprefs)
   -- flash indicator when a message was matched,
   -- and add the result to the log window 
   self.xrules.callback = function(xmsg_in,ruleset_idx,rule_idx,str_msg)
-    --print("self.xrules.callback - xmsg_in,ruleset_idx,rule_idx,str_msg",xmsg_in,ruleset_idx,rule_idx,str_msg)
+    TRACE("xRulesApp - xrules.callback - xmsg_in,ruleset_idx,rule_idx,str_msg",xmsg_in,ruleset_idx,rule_idx,str_msg)
     if (type(xmsg_in) == "xOscMessage") then
       self.ui:enable_indicator(ruleset_idx,rule_idx,"osc")
     elseif (type(xmsg_in) == "xMidiMessage") then

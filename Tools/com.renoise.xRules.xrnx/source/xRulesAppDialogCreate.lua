@@ -22,6 +22,7 @@ local BROWSER_PATH_W = DIALOG_W - 76
 local BROWSER_FILENAME_W = DIALOG_W - 50
 
 function xRulesAppDialogCreate:__init(ui)
+  TRACE("xRulesAppDialogCreate:__init(ui)",ui)  
 
   vDialogWizard.__init(self)
 
@@ -39,6 +40,7 @@ end
 -- (overridden method)
 
 function xRulesAppDialogCreate:show()
+  TRACE("xRulesAppDialogCreate:show()")  
 
   vDialogWizard.show(self)
 
@@ -53,6 +55,7 @@ end
 -- @return renoise.Views.Rack
 
 function xRulesAppDialogCreate:create_dialog()
+  TRACE("xRulesAppDialogCreate:create_dialog()")  
 
   local vb = self.vb
 
@@ -197,6 +200,7 @@ end
 -------------------------------------------------------------------------------
 
 function xRulesAppDialogCreate:update_dialog()
+  TRACE("xRulesAppDialogCreate:update_dialog()")  
 
   local vb = self.vb
 
@@ -250,6 +254,7 @@ end
 -------------------------------------------------------------------------------
 
 function xRulesAppDialogCreate:show_prev_page()
+  TRACE("xRulesAppDialogCreate:show_prev_page()")  
   if (self.dialog_page > 1) then
     self.dialog_page = self.dialog_page - 1
   end
@@ -259,6 +264,7 @@ end
 -------------------------------------------------------------------------------
 
 function xRulesAppDialogCreate:show_next_page()
+  TRACE("xRulesAppDialogCreate:show_next_page()")  
 
   local vb = self.vb
 
@@ -349,7 +355,8 @@ end
 -- @return boolean,string (success,err message)
 
 function xRulesAppDialogCreate:open_ruleset_file(file_path)
- 
+  TRACE("xRulesAppDialogCreate:open_ruleset_file(file_path)",file_path)  
+
   local ruleset_idx 
 
   -- check for paths set in preferences 
@@ -415,6 +422,7 @@ end
 -- @return boolean,string
 
 function xRulesAppDialogCreate:create_ruleset_file(ruleset_name,def)
+  TRACE("xRulesAppDialogCreate:create_ruleset_file(ruleset_name,def,",ruleset_name,def)  
 
   local passed,err = cFilesystem.validate_filename(ruleset_name) 
   if not passed then
@@ -451,6 +459,7 @@ end
 -- create full path to ruleset (default folder + supplied name)
 
 function xRulesAppDialogCreate:generate_ruleset_path(name)
+  TRACE("xRulesAppDialogCreate:generate_ruleset_path(name)",name)  
 
   local default_folder = self.owner.prefs:property("ruleset_folder").value
   return cFilesystem.unixslashes(("%s/%s.lua"):format(default_folder,name))
@@ -463,6 +472,7 @@ end
 -- @return string, error message
 
 function xRulesAppDialogCreate:add_ruleset(def)
+  TRACE("xRulesAppDialogCreate:add_ruleset(def)",def)  
 
   self.ui:clear_rule()
   self.ui:clear_rulesets()
