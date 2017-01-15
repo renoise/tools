@@ -223,4 +223,3 @@ $tmp = trim(
     $footer
     );
 file_put_contents($CONFIG['OUT_DIR'] . '/index.html', $tmp);
-/
