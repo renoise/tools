@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>5</ApiVersion>
+  <Id>com.renoise.SliceMate</Id>
+  <Version>0.1</Version>
+  <Author>danoise [bjorn.nesby@gmail.com]</Author>
+  <Name>SliceMate</Name>
+  <Category>Pattern Editor, Sample, Slice</Category>
+  <Description>A tool that makes it easy to slice and trigger samples/phrases within the pattern editor. To use the tool, search for SliceMate in Renoise preferences > keyboard shortcuts </Description>
+  <Homepage></Homepage>
+</RenoiseScriptingTool>
