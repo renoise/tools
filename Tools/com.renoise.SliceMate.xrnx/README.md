@@ -9,7 +9,7 @@ Use it to remix and re-arrange existing (rendered) songs, or to extract snippets
 
 * Automatically track position in waveform, even with tuned/transposed slices
 * Supports the use of delay column for precisely triggered/inserted notes 
-* Very compact GUI, can be operated via MIDI/keyboard shortcut as well...
+* Compact GUI, fully operational via MIDI/keyboard shortcuts 
 
 ## Quickstart
 
