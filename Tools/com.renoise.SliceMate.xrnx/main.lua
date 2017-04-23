@@ -23,6 +23,7 @@ _xlibroot = 'source/xLib/classes/'
 
 require (_clibroot..'cLib')
 require (_clibroot..'cDebug')
+require (_clibroot..'cReflection')
 
 require (_vlibroot..'vLib')
 require (_vlibroot..'vDialog')

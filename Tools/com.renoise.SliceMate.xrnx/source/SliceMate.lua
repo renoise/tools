@@ -423,7 +423,8 @@ function SliceMate:insert_slice()
         -- transpose of the slice that they were derived from 
         if (#instr.samples > 1) then          
           local new_sample = instr.samples[slice_idx+1]
-          new_sample.transpose = sample.transpose
+          cReflection.copy_object_properties(sample,new_sample)
+          xSample.initialize_loop(new_sample)
         end
 
         if self.prefs.insert_note.value then
