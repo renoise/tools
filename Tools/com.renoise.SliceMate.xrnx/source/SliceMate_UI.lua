@@ -58,7 +58,7 @@ function SliceMate_UI:__init(...)
 
   -- notifiers --
 
-  self.owner.focused_instrument:add_notifier(function()
+  self.owner.instrument_index:add_notifier(function()
     self:update_instrument()
   end)
 
@@ -66,7 +66,7 @@ function SliceMate_UI:__init(...)
     self:update_instrument()
   end)
 
-  self.owner.slice_status:add_notifier(function()
+  self.owner.slice_index:add_notifier(function()
     self:update_instrument()
   end)
 
@@ -117,13 +117,13 @@ function SliceMate_UI:update_instrument()
   TRACE("SliceMate_UI:update_instrument()")
 
   local instr_status = self.owner.instrument_status.value
-  local instr_idx = self.owner.focused_instrument.value
+  local instr_idx = self.owner.instrument_index.value
   local instr = rns.instruments[instr_idx]
-  local slice = self.owner.slice_status.value
+  local slice_index = self.owner.slice_index.value
   local frame = self.owner.position_slice.value
   local root_frame = self.owner.position_root.value
 
-  local ctrl = self.vb.views["focused_instrument"]
+  local ctrl = self.vb.views["instrument_index"]
   if ctrl then
     local instr_name = instr and instr.name or "Instrument N/A"
     if (instr_name == "") then
@@ -143,7 +143,7 @@ function SliceMate_UI:update_instrument()
   local ctrl = self.vb.views["position_slice"]
   if ctrl then
     local str_status = ""
-    if (slice == 0) then
+    if (slice_index == 0) then
       str_status = (frame == -1) and "-" or frame
     else
       str_status = (frame == -1) and "-" or ("%d / %d"):format(frame,root_frame)
@@ -161,7 +161,7 @@ function SliceMate_UI:update_instrument()
     if not frame then
       str_status = instr and "0 (not sliced)" or "-"
     else
-      str_status = (slice == -1) and "-" or ("%d / %d"):format(slice,slice_count)
+      str_status = (slice_index == -1) and "-" or ("%d / %d"):format(slice_index,slice_count)
     end
     str_status = ("Active slice: %s"):format(str_status)
     ctrl.tooltip = str_status
@@ -238,7 +238,7 @@ function SliceMate_UI:build()
           vb:row{
             width = self.dialog_width-12,
             vb:text{
-              id = "focused_instrument",
+              id = "instrument_index",
               text = "",
               font = "bold"
             },
@@ -248,7 +248,7 @@ function SliceMate_UI:build()
               },
               vb:bitmap{
                 id = "instrument_status",
-                bitmap = "./icons/warning.bmp",
+                bitmap = "./source/icons/warning.bmp",
                 mode = "transparent",
                 width = 20,
                 notifier = function()
@@ -257,7 +257,7 @@ function SliceMate_UI:build()
               }
             },
             vb:button{
-              bitmap = "./icons/detach.bmp",
+              bitmap = "./source/icons/detach.bmp",
               midi_mapping = "Tools:SliceMate:Detach Sampler... [Trigger]",
               notifier = function()
                 self.owner:detach_sampler()
