@@ -20,29 +20,26 @@ function SliceMate:__init(...)
 
   --- SliceMate_Prefs, current settings
   self.prefs = renoise.tool().preferences
-  --- string
+
+  --- the name of the application (dialog title)
   self.app_display_name = args.app_display_name
+
   -- number, number of samples that control slice "snapping"
   self.slice_snap_threshold = 200
+
   -- 'focused' instrument (0 = none)
-  self.focused_instrument = renoise.Document.ObservableNumber(0)
+  self.instrument_index = renoise.Document.ObservableNumber(0)
+
   -- instr. status (empty string means no problems)
   self.instrument_status = renoise.Document.ObservableString("")
-  self.slice_status = renoise.Document.ObservableNumber(-1)
+  self.slice_index = renoise.Document.ObservableNumber(-1)
+
+  -- the computed slice and root positions (in frames)
   self.position_slice = renoise.Document.ObservableNumber(-1)
   self.position_root = renoise.Document.ObservableNumber(-1)
 
-  --- configure user-interface
-  self.ui = SliceMate_UI{
-    dialog_title = self.app_display_name,
-    owner = self,
-    waiting_to_show_dialog = args.show_dialog,
-    --[[
-    dialog_keyhandler = function(self,dialog,key)
-      return key
-    end
-    ]]
-  }
+  -- the edited pattern (bound with line notifiers)
+  self.pattern_index = renoise.Document.ObservableNumber(-1)
 
   -- used for determining when to update 
   -- renoise.songpos (either playpos or editpos)
@@ -53,70 +50,60 @@ function SliceMate:__init(...)
   -- delayed execution (idle updates)
   self.select_requested = false
 
-  -- comparison function - an(y) instrument value
+  -- contains our observable sample properties 
+  self._sample_observables = table.create()
+
+  -- contains our observable instr. properties 
+  self._instrument_observables = table.create()
+
+  -- contains our observable song properties 
+  self._song_observables = table.create()
+
+
+  -- initialize ---------------------------------
+
+  --- configure user-interface
+  self.ui = SliceMate_UI{
+    dialog_title = self.app_display_name,
+    owner = self,
+    waiting_to_show_dialog = args.show_dialog,
+  }
+
+  -- comparison function for xNoteCapture - 
+  -- match notes in the pattern which also specifies an instrument 
   self.compare_fn = function(notecol)
-    local matched = nil
-    local match_all = self.prefs.match_all_criteria.value
-    if self.prefs.note.value then
-      if match_all and matched ~= nil then
-        return false
+    local matched = false 
+    local match_note = true
+    local match_instr = true
+    local match_all = true -- need both note AND instrument
+    if match_note then
+      if match_all and matched then
+        return true
       else
         matched = notecol.note_value < 121
       end
+      --[[
       if matched and not match_all then
         return true
       end
+      ]]
     end
-    if self.prefs.instrument.value then
-      if match_all and matched ~= nil then
-        return false
+    if match_instr then
+      if match_all and matched then
+        return true
       else
         matched = notecol.instrument_value < 255
       end
+      --[[
       if matched and not match_all then
         return true
       end
+      ]]
     end
-    if self.prefs.volume.value then
-      if match_all and not matched then
-        return false
-      else
-        matched = notecol.volume_value < 255
-      end
-      if matched and not match_all then
-        return true
-      end
-    end
-    if self.prefs.panning.value then
-      matched = notecol.panning_value < 255
-      if matched and not match_all then
-        return true
-      end
-    end
-    if self.prefs.delay.value then
-      matched = notecol.delay_value > 0
-      if matched and not match_all then
-        return true
-      end
-    end
-    --[[
-    if self.prefs.effect_number.value then
-      matched = notecol.effect_number_value > 0
-      if matched and not match_all then
-        return true
-      end
-    end
-    if self.prefs.effect_amount.value then
-      matched = notecol.effect_amount_value > 0
-      if matched and not match_all then
-        return true
-      end
-    end
-    ]]
     return matched
   end
 
-  -- notifications --------------------
+  -- notifications ------------------------------
 
   renoise.tool().app_new_document_observable:add_notifier(function()
     rns = renoise.song()
@@ -139,10 +126,26 @@ function SliceMate:__init(...)
     self:on_idle()
   end)
 
+  self.slice_index:add_notifier(function()    
+    self:attach_to_sample()
+  end)
+
+  self.instrument_index:add_notifier(function()    
+    self:attach_to_instrument()
+  end)
+
+  renoise.tool().app_new_document_observable:add_notifier(function()
+    self:attach_to_song()
+  end)
+
   -- initialize -----------------------
 
   self.ui:build()
   self.cursor_pos = self:get_cursor()
+
+  self:attach_to_song()
+  self:attach_to_pattern()
+  self:attach_to_sample()
 
 end
 
@@ -159,17 +162,13 @@ function SliceMate:get_buffer_frame_by_notepos(pos)
 
   local notecol = line.note_columns[pos.column]
   if not notecol then
-    return false, "Could not resolve note-column",{
-      note_column_index = pos.column,
-    }
+    return false, "Could not resolve note-column"
   end
 
   local instr_idx = notecol.instrument_value+1
   local instr = rns.instruments[instr_idx]
   if not instr then
-    return false,"Could not resolve instrument",{
-      instrument_index = instr_idx,
-    }
+    return false,"Could not resolve instrument"
   end
 
   local instr_name = (instr.name == "") and "Untitled instrument" or instr.name
@@ -183,7 +182,9 @@ function SliceMate:get_buffer_frame_by_notepos(pos)
   -- resolve sample by looking at notecol 
   local sample_idx = xInstrument.get_sample_idx_from_note(instr,notecol.note_value) 
   if not sample_idx then
-    return false, "Could not resolve sample from note"
+    return false, "Could not resolve sample from note -"
+      ..("\nplease ensure that the note (%s) is mapped to a sample"):format(notecol.note_string)
+      .."\n(this can be verified from the sampler's keyzone tab)"
   end
 
   local sample = instr.samples[sample_idx]
@@ -198,7 +199,7 @@ function SliceMate:get_buffer_frame_by_notepos(pos)
   end
 
   if not sample.sample_buffer.has_sample_data then
-    return false, "Can't determine position - please use a non-empty sample"
+    return false, "Can't determine position - sample is empty (does not contain audio)"
   end
 
   -- Don't trigger via phrase 
@@ -254,20 +255,17 @@ function SliceMate:select(user_selected)
   local pos = xNoteCapture.nearest(self.compare_fn)
   if not pos then
     self.instrument_status.value = ""
-    self.focused_instrument.value = 0  
+    self.instrument_index.value = 0  
   else
     local frame,sample_idx,instr_idx,notecol = self:get_buffer_frame_by_notepos(pos)
     if not frame and sample_idx then
       local notecol = pos:get_column()
-      self.focused_instrument.value = notecol and notecol.instrument_value+1 or 0      
-      self.instrument_status.value = sample_idx
-      self.position_slice.value = frame and math.ceil(frame) or -1
-      self.position_slice.value = frame and math.ceil(frame) or -1
-      self.slice_status.value = frame and sample_idx-1 or -1
+      self.position_slice.value = -1
+      self.slice_index.value = -1
+      self.instrument_status.value = sample_idx -- error message
+      self.instrument_index.value = notecol and notecol.instrument_value+1 or 0      
     elseif sample_idx then
       local instr = rns.instruments[instr_idx]
-      self.focused_instrument.value = instr_idx 
-      self.instrument_status.value = ""
       if user_selected or self.prefs.autoselect_instr.value then
         rns.selected_instrument_index = instr_idx
       end
@@ -283,7 +281,7 @@ function SliceMate:select(user_selected)
       end
       self.position_root.value = math.ceil(frame+root_frame) 
       self.position_slice.value = math.ceil(frame)
-      self.slice_status.value = frame and sample_idx-1 
+      self.slice_index.value = frame and sample_idx-1 
       if user_selected or self.prefs.autoselect_in_wave.value then
         local sample = instr.samples[sample_idx]
         if (rns.selected_sample_index == 1) then
@@ -294,6 +292,8 @@ function SliceMate:select(user_selected)
         if error then
           renoise.app():show_status(error)
         end
+      self.instrument_status.value = ""
+      self.instrument_index.value = instr_idx 
       end -- /autoselect_in_wave
     end
   end 
@@ -351,7 +351,6 @@ function SliceMate:detach_sampler()
 
 end
 
-
 ---------------------------------------------------------------------------------------------------
 -- insert slice at the cursor-position 
 -- @return boolean, false when slicing failed
@@ -403,7 +402,6 @@ function SliceMate:insert_slice()
           -- remember the difference between keyzone transpose and C-4 
           -- (not converted automatically when creating slice)
           local base_note = instr.samples[1].sample_mapping.base_note
-          -- apply the difference between the triggering note and C-4
           local trigger_note = 48 - notecol.note_value 
           transpose_offset = 48 - base_note - trigger_note
           instr.samples[1].transpose = instr.samples[1].transpose + transpose_offset
@@ -420,7 +418,8 @@ function SliceMate:insert_slice()
         end
 
         -- as we add additional slices, make sure they inherit the 
-        -- transpose of the slice that they were derived from 
+        -- properties of the slice that they were derived from 
+        -- (usually, they inherit from the root sample)
         if (#instr.samples > 1) then          
           local new_sample = instr.samples[slice_idx+1]
           cReflection.copy_object_properties(sample,new_sample)
@@ -481,6 +480,181 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+function SliceMate:get_instrument()
+  TRACE("SliceMate:get_instrument()")
+
+  local instr = rns.instruments[self.instrument_index.value]
+  if not instr then 
+    return false, "Could not resolve instrument with index "..self.instrument_index.value
+  end 
+  return instr
+end
+
+---------------------------------------------------------------------------------------------------
+
+function SliceMate:get_sample()
+  TRACE("SliceMate:get_sample()")
+
+  local instr,err = self:get_instrument()
+  if not instr then return false,err end
+
+  local sample = instr.samples[self.slice_index.value+1]
+  if not sample then
+    return false, "Could not resolve slice with index "..self.slice_index.value
+  end 
+  return sample
+end
+
+---------------------------------------------------------------------------------------------------
+
+function SliceMate:attach_to_song()
+
+  if self._song_observables.length then
+    for _,observable in pairs(self._song_observables) do
+      pcall(function() observable:remove_notifier(self) end)
+    end
+  end
+  self._song_observables:clear()
+
+  local update = function()
+    print(">>> a song_observable was fired...")
+    self.select_requested = true
+  end
+
+  self._song_observables:insert(rns.transport.bpm_observable)
+  rns.transport.bpm_observable:add_notifier(self, update)
+
+  self._song_observables:insert(rns.transport.lpb_observable)
+  rns.transport.lpb_observable:add_notifier(self, update)
+
+  rns.selected_pattern_index_observable:add_notifier(function()
+    --print(">>> selected_pattern_index_observable fired...")
+    self:attach_to_pattern()
+  end)
+
+  rns.selected_instrument_index_observable:add_notifier(function()    
+    -- detach/attach to sample 
+    --print(">>> selected_instrument_index_observable fired...",self.instrument_index.value)
+    local attached,err = self:attach_to_instrument()
+    if not attached and err then 
+      LOG("*** "..err)
+    end
+  end)
+
+  rns.selected_sample_observable:add_notifier(function()
+    --print(">>> selected_pattern_index_observable fired...")
+    self:attach_to_sample()
+  end)
+
+end
+
+
+---------------------------------------------------------------------------------------------------
+-- attach to instrument + sample 
+-- (basically, everything that can affect the status of an instrument)
+
+function SliceMate:attach_to_instrument()
+
+  local attach,err = self:attach_to_sample()
+  if not attach and err then
+   LOG("*** "..err)
+   return
+  end
+
+  local instr,err = self:get_instrument()
+  if not instr then
+   LOG("*** "..err)
+   return
+  end
+
+  if self._instrument_observables.length then
+    for _,observable in pairs(self._instrument_observables) do
+      pcall(function() observable:remove_notifier(self) end)
+    end
+  end
+  self._sample_observables:clear()
+
+  local update = function()
+    --print(">>> an instrument observable was fired...",instr.name)
+    self.select_requested = true
+  end
+
+  self._instrument_observables:insert(instr.samples_observable)
+  instr.samples_observable:add_notifier(self, update)
+
+  self._instrument_observables:insert(instr.phrase_playback_mode_observable)
+  instr.phrase_playback_mode_observable:add_notifier(self, update)
+
+end
+
+---------------------------------------------------------------------------------------------------
+
+function SliceMate:attach_to_sample()
+  TRACE("SliceMate:attach_to_sample()")
+
+  --local sample,err = self:get_sample()
+  local sample = rns.selected_sample
+  if not sample then return false, "Could not attach to sample - none selected" end 
+
+  if self._sample_observables.length then
+    for _,observable in pairs(self._sample_observables) do
+      pcall(function() observable:remove_notifier(self) end)
+    end
+  end
+  self._sample_observables:clear()
+
+  local update = function()
+    --print(">>> a sample observable was fired...",sample.name)
+    self.select_requested = true
+  end
+
+  self._sample_observables:insert(sample.autoseek_observable)
+  sample.autoseek_observable:add_notifier(self, update)
+
+  self._sample_observables:insert(sample.beat_sync_enabled_observable)
+  sample.beat_sync_enabled_observable:add_notifier(self, update)
+
+  self._sample_observables:insert(sample.fine_tune_observable)
+  sample.fine_tune_observable:add_notifier(self, update)
+
+  self._sample_observables:insert(sample.transpose_observable)
+  sample.transpose_observable:add_notifier(self, update)
+
+  self._sample_observables:insert(sample.sample_mapping.base_note_observable)
+  sample.sample_mapping.base_note_observable:add_notifier(self, update)
+
+  self._sample_observables:insert(sample.sample_mapping.note_range_observable)
+  sample.sample_mapping.note_range_observable:add_notifier(self, update)
+
+
+end
+
+---------------------------------------------------------------------------------------------------
+
+function SliceMate:handle_pattern_change()
+  TRACE("SliceMate:handle_pattern_change()",self)
+
+  self.select_requested = true
+
+end
+
+---------------------------------------------------------------------------------------------------
+
+function SliceMate:attach_to_pattern()
+  TRACE("SliceMate:attach_to_pattern()")
+
+  local patt = rns.selected_pattern
+
+  if patt:has_line_notifier(self,self.handle_pattern_change) then
+    patt:remove_line_notifier(self,self.handle_pattern_change)
+  end
+
+  patt:add_line_notifier(self,self.handle_pattern_change)
+
+end
+
+---------------------------------------------------------------------------------------------------
+
 function SliceMate:on_idle()
   --TRACE("SliceMate:on_idle()")
 
@@ -505,6 +679,11 @@ function SliceMate:on_idle()
         self.select_requested = false
       end
     end
+    -- still not processed? do it now...
+    if self.select_requested then 
+      self:select()
+      self.select_requested = false
+    end 
     self.cursor_pos = curr_cursor_pos
     self.track_idx = rns.selected_track_index
     self.notecol_idx = rns.selected_note_column_index
