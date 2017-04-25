@@ -1,15 +1,13 @@
 # SliceMate 
 
 This tool makes it easy to slice a sample from within the pattern editor. 
-Just move the edit cursor somewhere - if the slice button is enabled, this means that the tool can insert a slice at the given position.
-
 Use it to remix and re-arrange existing (rendered) songs, or to extract snippets. 
 
 ## Features
 
 * Automatically track position in waveform, even with tuned/transposed slices
+* The current position can be visualized in the waveform editor (updates selection)
 * Supports the use of delay column for precisely triggered/inserted notes 
-* Compact GUI, fully operational via MIDI/keyboard shortcuts 
 
 ## Quickstart
 
