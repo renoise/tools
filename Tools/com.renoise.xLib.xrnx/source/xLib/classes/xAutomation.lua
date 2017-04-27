@@ -8,9 +8,6 @@ Easy control of parameter automation
 .
 #
 
-### Requires
-@{xPlayPos}
-
 ]]
 
 class 'xAutomation'
@@ -74,25 +71,6 @@ function xAutomation:__init(...)
 
   -- internal --
 
-  self.playpos = xPlayPos()
-
-  --- table, keep track of where we last recorded
-  --  {
-  --    track_idx = {
-  --      [parameter] = {
-  --        sequence (int)
-  --        line (int)
-  --      }
-  --    }
-  --  }
-  --self.active_parameters = {}
-
-  -- initialize --
-
-  renoise.tool().app_idle_observable:add_notifier(function()
-    self.playpos:update()
-  end)
-
   renoise.tool().app_new_document_observable:add_notifier(function()
     self:attach_to_song()
   end)
@@ -141,13 +119,13 @@ function xAutomation:record(track_idx,param,value,value_mode)
     ptrack_auto:add_point_at(pos.line,value)
   else
     if self.highres_mode then
-      local highres_pos = self.playpos:get_fractional()
+      local highres_pos = xNotePos.get_highres_pos()
       local line_fract = highres_pos.line + highres_pos.fraction
       self:clear_range(line_fract,self.writeahead,ptrack_auto)
       ptrack_auto:add_point_at(line_fract,value)
     else
-      self:clear_range(self.playpos.line,1,ptrack_auto)
-      ptrack_auto:add_point_at(self.playpos.line,value)
+      self:clear_range(rns.playback_pos.line,1,ptrack_auto)
+      ptrack_auto:add_point_at(rns.playback_pos.line,value)
     end
   end
 
