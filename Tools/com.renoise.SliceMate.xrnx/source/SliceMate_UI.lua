@@ -143,8 +143,8 @@ function SliceMate_UI:update_instrument()
   local ctrl = self.vb.views["position_slice"]
   if ctrl then
     local str_status = ""
-    if (slice_index == 0) then
-      str_status = (frame == -1) and "-" or frame
+    if (instr_idx == 0) then
+      str_status = "-" 
     else
       str_status = (frame == -1) and "-" or ("%d / %d"):format(frame,root_frame)
     end
@@ -158,7 +158,7 @@ function SliceMate_UI:update_instrument()
     local slice_count = instr and (#instr.samples > 1) 
       and #instr.samples[1].slice_markers or 0
     local str_status = ""
-    if not frame then
+    if (instr_idx == 0) then
       str_status = instr and "0 (not sliced)" or "-"
     else
       str_status = (slice_index == -1) and "-" or ("%d / %d"):format(slice_index,slice_count)
@@ -354,7 +354,7 @@ function SliceMate_UI:build()
           vb:row{
             vb:button{
               width = self.dialog_width - 32,
-              text = "Insert Slice",
+              text = "Slice at Cursor",
               midi_mapping = "Tools:SliceMate:Insert Slice [Trigger]",
               notifier = function()
                 local success,err = self.owner:insert_slice()
@@ -372,20 +372,25 @@ function SliceMate_UI:build()
             vb:column{
               vb:row{
                 vb:checkbox{
+                  bind = self.prefs.quantize_enabled
+                },
+                vb:text{
+                  text = "Quantize to "
+                },
+                vb:popup{
+                  items = SliceMate_Prefs.QUANTIZE_LABELS,
+                  bind = self.prefs.quantize_amount,
+                  width = 76,
+                }
+              },
+              vb:row{
+                vb:checkbox{
                   bind = self.prefs.insert_note
                 },
                 vb:text{
                   text = "Insert note"
                 }
               },            
-              vb:row{
-                vb:checkbox{
-                  bind = self.prefs.quantize_enabled
-                },
-                vb:text{
-                  text = "Quantize note"
-                }
-              },
               vb:row{
                 vb:checkbox{
                   bind = self.prefs.propagate_vol_pan
