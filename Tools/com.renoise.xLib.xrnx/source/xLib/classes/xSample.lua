@@ -414,9 +414,7 @@ function xSample.get_name_tokens(str)
     end
   end
 
-  return {
-    --sample_name = str
-  }
+  return {}
 
 end
 
@@ -437,8 +435,10 @@ function xSample.set_buffer_selection(sample,sel_start,sel_end)
   local min = 1
   local max = buffer.number_of_frames  
   
-  buffer.selection_start = cLib.clamp_value(sel_start,min,max)
-  buffer.selection_end = cLib.clamp_value(sel_end,min,max)
+  buffer.selection_range = {
+    cLib.clamp_value(sel_start,min,max),
+    cLib.clamp_value(sel_end,min,max),
+  }
 
 end
 
@@ -475,6 +475,156 @@ function xSample.get_buffer_frame_by_beat(beat)
   
   local lpb = rns.transport.lpb
   return (xSample.get_buffer_frame_by_line(beat*lpb))
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- obtain the buffer frame, from a particular position in the song
+-- @param pos (xNotePos), position to measure from 
+-- @param quantized_pos (xNotePos), the current position - optional, use when quantizing 
+-- @return table{
+--  frame (number)
+--  sample_idx (number)
+--  instr_idx (number)
+--  notecol (renoise.NoteColumn)
+-- } or false,error (string) when failed
+
+function xSample.get_buffer_frame_by_notepos(pos,quantized_pos)
+  TRACE("xSample.get_buffer_frame_by_notepos(pos,quantized_pos)",pos,quantized_pos)
+
+  local patt_idx,patt,track,ptrack,line = pos:resolve()
+  if not line then
+    return false,"Could not resolve pattern-line"                    
+  end
+
+  local notecol = line.note_columns[pos.column]
+  if not notecol then
+    return false, "Could not resolve note-column"
+  end
+
+  local instr_idx = notecol.instrument_value+1
+  local instr = rns.instruments[instr_idx]
+  if not instr then
+    return false,"Could not resolve instrument"
+  end
+
+  local instr_name = (instr.name == "") and "Untitled instrument" or instr.name
+  local is_sliced = xInstrument.is_sliced(instr)
+
+  if (#instr.samples == 0) or (not is_sliced and #instr.samples > 1) then
+    return false, "Instrument needs to contain a single sample,"
+      ..("\nbut '%s' contains %d"):format(instr_name,#instr.samples)
+  end
+
+  -- resolve sample by looking at notecol 
+  local sample_idx = xInstrument.get_sample_idx_from_note(instr,notecol.note_value) 
+  if not sample_idx then
+    return false, "Could not resolve sample from note -"
+      ..("\nplease ensure that the note (%s) is mapped to a sample"):format(notecol.note_string)
+      .."\n(this can be verified from the sampler's keyzone tab)"
+  end
+
+  local sample = instr.samples[sample_idx]
+
+  if not sample.autoseek then
+    return false, "Can't determine position - please enable auto-seek on the sample"
+  end
+
+  -- TODO support beatsync (different pitch)
+  if sample.beat_sync_enabled then
+    return false, "Can't determine position - please disable beat-sync on the sample"
+  end
+
+  if not sample.sample_buffer.has_sample_data then
+    return false, "Can't determine position - sample is empty (does not contain audio)"
+  end
+
+  -- Don't trigger via phrase 
+  -- TODO allow if available on keyboard while in keymapped mode
+  if xInstrument.is_triggering_phrase(instr) then
+    return false, "Can't determine position - please avoid using phrases to trigger notes"
+  end
+  
+  -- get number of lines to the trigger note
+  local quantized_pos = xSongPos(quantized_pos or rns.transport.edit_pos)
+  local nearest_pos = xSongPos(pos)
+  local diff = xSongPos.get_line_diff(quantized_pos,nearest_pos)
+
+  -- precise position: subtrack the delay column 
+  -- from the original, triggering note
+  if track.delay_column_visible then
+    if (notecol.delay_value > 0) then
+      diff = diff - (notecol.delay_value / 255)
+    end
+  end
+  -- precise position: apply fractional line 
+  -- (skip when quantized)
+  if not quantized_pos then
+    diff = diff + pos.fraction
+  end
+
+  local frame = xSample.get_buffer_frame_by_line(sample,diff)
+  frame = xSample.get_transposed_frame(notecol.note_value,frame,sample)
+
+  return frame,sample_idx,instr_idx,notecol
+
+end
+
+--------------------------------------------------------------------------------
+-- transpose the number of frames 
+
+function xSample.get_transposed_frame(note_value,frame,sample)
+  TRACE("xSample.get_transposed_frame(note_value,frame,sample)",note_value,frame,sample)
+  
+  local transposed_note = xSample.get_transposed_note(note_value,sample)
+  local transp_hz = cLib.note_to_hz(transposed_note)
+  local base_hz = cLib.note_to_hz(48) -- middle C-4 note
+  local ratio = base_hz / transp_hz
+  frame = frame / ratio
+  return frame
+
+end
+
+-------------------------------------------------------------------------------
+-- obtain the transposed note. Final pitch of the played sample is:
+--   played_note - mapping.base_note + sample.transpose + sample.finetune 
+-- @param played_note (number)
+-- @param sample (Renoise.Sample)
+-- @return number (natural number = pitch, fraction = finetune)
+
+function xSample.get_transposed_note(played_note,sample)
+  TRACE("xSample.get_transposed_note(played_note,sample)",played_note,sample)
+
+  local mapping_note = sample.sample_mapping.base_note
+  local sample_transpose = sample.transpose + (sample.fine_tune/128)
+  return 48 + played_note - mapping_note + sample_transpose
+end
+
+-------------------------------------------------------------------------------
+-- obtain the note which is used when synced across a number of lines
+-- (depends on sample length and playback speed)
+
+function xSample.get_beatsynced_note(bpm,sample)
+  TRACE("xSample.get_beatsynced_note(bpm,sample)",bpm,sample)
+  
+  local bpm = rns.transport.bpm
+  local lpb = rns.transport.lpb
+  return cLib.lines_to_note(sample.beat_sync_lines,bpm,lpb)
+
+end
+
+-------------------------------------------------------------------------------
+-- initialize loop to full range, using the provided mode
+
+function xSample.initialize_loop(sample,loop_mode)
+
+  local num_frames = 0
+  if sample.sample_buffer.has_sample_data then
+    num_frames = sample.sample_buffer.number_of_frames
+  end
+  sample.loop_start = 1
+  sample.loop_end = num_frames or 1
+  sample.loop_mode = loop_mode or renoise.Sample.LOOP_MODE_OFF
 
 end
 
