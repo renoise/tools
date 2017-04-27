@@ -126,6 +126,16 @@ function SliceMate:__init(...)
     self:on_idle()
   end)
 
+  self.prefs.quantize_enabled:add_notifier(function()
+    self.cursor_pos = nil
+    self:on_idle()
+  end)
+
+  self.prefs.quantize_amount:add_notifier(function()
+    self.cursor_pos = nil
+    self:on_idle()
+  end)
+
   self.slice_index:add_notifier(function()    
     self:attach_to_sample()
   end)
@@ -174,9 +184,7 @@ function SliceMate:select(user_selected)
     self.instrument_status.value = ""
     self.instrument_index.value = 0  
   else
-    local quantize = self.prefs.quantize_enabled.value
-    local frame,sample_idx,instr_idx,notecol = 
-      xSample.get_buffer_frame_by_notepos(pos,quantize and xnotepos)
+    local frame,sample_idx,instr_idx,notecol = xSample.get_buffer_frame_by_notepos(pos,xnotepos)
     if not frame and sample_idx then
       local notecol = pos:get_column()
       self.position_slice.value = -1
@@ -221,6 +229,8 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function SliceMate:previous_column()
+  TRACE("SliceMate:previous_column()")
+
   xColumns.previous_note_column()
   self.select_requested = true
 end
@@ -228,6 +238,8 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function SliceMate:next_column()
+  TRACE("SliceMate:next_column()")
+
   xColumns.next_note_column()
   self.select_requested = true
 end
@@ -235,6 +247,8 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function SliceMate:previous_note()
+  TRACE("SliceMate:previous_note()")
+
   local pos = xNoteCapture.previous(self.compare_fn)
   if pos then
     pos:select()
@@ -245,6 +259,8 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function SliceMate:next_note()
+  TRACE("SliceMate:next_note()")
+
   local pos = xNoteCapture.next(self.compare_fn)
   if pos then
     pos:select()
@@ -270,6 +286,7 @@ end
 -- @return xnotepos (xNotePos)
 
 function SliceMate:get_position()
+  TRACE("SliceMate:get_position()")
 
   local xnotepos = xNotePos()
   if not self.prefs.quantize_enabled.value then
@@ -293,6 +310,7 @@ function SliceMate:get_position()
     choices[self.prefs.quantize_amount.value]()
     xnotepos.line = xsongpos.line
     xnotepos.sequence = xsongpos.sequence    
+    xnotepos.fraction = 0    
     return xnotepos
   else 
     error("Unexpected quantize amount")
@@ -309,14 +327,12 @@ function SliceMate:insert_slice()
   TRACE("SliceMate:insert_slice()")
 
   local xnotepos = self:get_position()
-  local pos = xNoteCapture.nearest(self.compare_fn,xnotepos)
+  local pos = xNoteCapture.nearest(self.compare_fn)
   if not pos then
     return false,"Could not find a sample to slice,"
       .."\nperhaps the track doesn't contain any notes?"
   else
-    local quantize = self.prefs.quantize_enabled.value
-    local frame,sample_idx,instr_idx,notecol = 
-      xSample.get_buffer_frame_by_notepos(pos,quantize and xnotepos)
+    local frame,sample_idx,instr_idx,notecol = xSample.get_buffer_frame_by_notepos(pos,xnotepos)
     if not frame and sample_idx then 
       return false, ("Unable to insert slice:\n%s"):format(sample_idx) -- error message
     elseif sample_idx then
