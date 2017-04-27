@@ -15,14 +15,17 @@ fn = function()
 
 
   -- create temporary patterns
-  if (#renoise.song().sequencer.pattern_sequence < 3) then
+  if (#rns.sequencer.pattern_sequence < 3) then
     local str_msg = "The xSongPos unit-test requires three patterns to be"
                   .."created during the test - do you want to proceed?"
     local choice = renoise.app():show_prompt("Create patterns",str_msg,{"OK","Cancel"})
     if (choice == "OK") then
       print("xSongPos: creating patterns...")
-      renoise.song().sequencer:insert_new_pattern_at(1)
-      renoise.song().sequencer:insert_new_pattern_at(1)
+      rns.sequencer:insert_new_pattern_at(1)
+      rns.sequencer:insert_new_pattern_at(1)
+
+      rns.transport.playing = false
+      
     else
       print("xSongPos: aborted unit-test...")
     end
@@ -68,7 +71,7 @@ fn = function()
 
   new_pos = xSongPos({sequence=1,line=1})
 
-  -- increase
+  -- increase (lines)
 
   new_pos = xSongPos({sequence=1,line=1})
   assert((new_pos.sequence==1),"expected sequence to be 1")
@@ -124,7 +127,214 @@ fn = function()
   new_pos:increase_by_lines(total_lines)
   assert((new_pos.sequence==nil),"expected sequence to be NULL")
 
-  -- decrease
+  -- increase (beat)
+
+  rns.transport.lpb = 4
+  rns.transport.metronome_beats_per_bar = 4
+
+  new_pos = xSongPos({sequence=1,line=0})
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==0),"expected line to be 0")
+
+  new_pos:next_beat()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==1),"expected line to be 1")
+
+  new_pos:next_beat()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==5),"expected line to be 5")
+
+  new_pos = xSongPos({sequence=1,line=1})
+  new_pos:next_beat()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==5),"expected line to be 5")
+
+  new_pos = xSongPos({sequence=1,line=2})
+  new_pos:next_beat()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==5),"expected line to be 5")
+
+  new_pos = xSongPos({sequence=1,line=3})
+  new_pos:next_beat()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==5),"expected line to be 5")
+
+  new_pos = xSongPos({sequence=1,line=4})
+  new_pos:next_beat()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==5),"expected line to be 5")
+
+  new_pos = xSongPos({sequence=1,line=5})
+  new_pos:next_beat()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==9),"expected line to be 9")
+
+  -- increase (bar)
+
+  rns.transport.lpb = 4
+  rns.transport.metronome_beats_per_bar = 4
+
+  new_pos = xSongPos({sequence=1,line=0})
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==0),"expected line to be 0")
+
+  new_pos:next_bar()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==1),"expected line to be 1")
+
+  new_pos:next_bar()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==17),"expected line to be 17")
+
+  new_pos:next_bar()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==33),"expected line to be 33")
+
+  new_pos:next_bar()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==49),"expected line to be 49")
+
+  new_pos:next_bar()
+  assert((new_pos.sequence==2),"expected sequence to be 2")
+  assert((new_pos.line==1),"expected line to be 1")
+
+  new_pos = xSongPos({sequence=1,line=1})
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==1),"expected line to be 1")
+  new_pos:next_bar()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==17),"expected line to be 17")
+
+  new_pos = xSongPos({sequence=1,line=16})
+  new_pos:next_bar()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==17),"expected line to be 17")
+
+  new_pos = xSongPos({sequence=1,line=17})
+  new_pos:next_bar()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==33),"expected line to be 33")
+
+  new_pos = xSongPos({sequence=1,line=64})
+  new_pos:next_bar()
+  assert((new_pos.sequence==2),"expected sequence to be 2")
+  assert((new_pos.line==1),"expected line to be 1")
+
+  rns.transport.lpb = 4
+  rns.transport.metronome_beats_per_bar = 3
+
+  new_pos = xSongPos({sequence=1,line=0})
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==0),"expected line to be 0")
+
+  new_pos:next_bar()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==1),"expected line to be 1")
+
+  new_pos:next_bar()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==13),"expected line to be 13")
+
+  new_pos = xSongPos({sequence=3,line=64})
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP  
+  new_pos:next_block()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==1),"expected line to be 1")
+  
+  new_pos = xSongPos({sequence=3,line=60})
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP  
+  new_pos:next_block()
+  assert((new_pos.sequence==3),"expected sequence to be 3")
+  assert((new_pos.line==64),"expected line to be 64")
+  
+  new_pos = xSongPos({sequence=3,line=60})
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.NULL  
+  new_pos:next_block()
+  assert((new_pos.sequence==nil),"expected sequence to be nil")
+  assert((new_pos.line==nil),"expected line to be nil")
+  
+
+  -- increase (block)
+
+  rns.transport.lpb = 3
+  rns.transport.metronome_beats_per_bar = 3
+
+  new_pos = xSongPos({sequence=1,line=0})
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==0),"expected line to be 0")
+
+  new_pos:next_block()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==1),"expected line to be 1")
+  
+  new_pos:next_block()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==17),"expected line to be 17")
+  
+  new_pos = xSongPos({sequence=1,line=64})
+  new_pos:next_block()
+  assert((new_pos.sequence==2),"expected sequence to be 2")
+  assert((new_pos.line==1),"expected line to be 1")
+
+  new_pos = xSongPos({sequence=3,line=64})
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP  
+  new_pos:next_block()
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==1),"expected line to be 1")
+  
+  new_pos = xSongPos({sequence=3,line=60})
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP  
+  new_pos:next_block()
+  assert((new_pos.sequence==3),"expected sequence to be 3")
+  assert((new_pos.line==64),"expected line to be 64")
+  
+  new_pos = xSongPos({sequence=3,line=60})
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.NULL  
+  new_pos:next_block()
+  assert((new_pos.sequence==nil),"expected sequence to be nil")
+  assert((new_pos.line==nil),"expected line to be nil")
+  
+  
+  -- increase (pattern)
+
+  new_pos = xSongPos({sequence=1,line=0})
+  assert((new_pos.sequence==1),"expected sequence to be 1")
+  assert((new_pos.line==0),"expected line to be 0")
+
+  new_pos:next_pattern()
+  assert((new_pos.sequence==2),"expected sequence to be 2")
+  assert((new_pos.line==1),"expected line to be 1")
+  
+  new_pos:next_pattern()
+  assert((new_pos.sequence==3),"expected sequence to be 3")
+  assert((new_pos.line==1),"expected line to be 1")
+
+  new_pos = xSongPos({sequence=3,line=1})
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP
+  new_pos:next_pattern()
+  assert((new_pos.sequence==3),"expected sequence to be 3:"..new_pos.sequence)
+  assert((new_pos.line==64),"expected line to be 64:"..new_pos.line)
+  
+  new_pos = xSongPos({sequence=3,line=64})  
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP
+  new_pos:next_pattern()
+  assert((new_pos.sequence==3),"expected sequence to be 3:"..new_pos.sequence)
+  assert((new_pos.line==64),"expected line to be 64:"..new_pos.line)
+  
+  new_pos = xSongPos({sequence=3,line=64})    
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
+  new_pos:next_pattern()
+  assert((new_pos.sequence==1),"expected sequence to be 1:"..new_pos.sequence)
+  assert((new_pos.line==1),"expected line to be 1:"..new_pos.line)
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
+
+  new_pos = xSongPos({sequence=3,line=64})    
+  new_pos.bounds_mode = xSongPos.OUT_OF_BOUNDS.NULL
+  new_pos:next_pattern()
+  assert((new_pos.sequence==nil),"expected sequence to be nil")
+  assert((new_pos.line==nil),"expected line to be nil")
+
+  -- decrease (lines)
 
   new_pos = xSongPos({sequence=3,line=2})
   assert((new_pos.sequence==3),"expected sequence to be 3")
