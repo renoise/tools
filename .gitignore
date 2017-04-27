@@ -42,3 +42,10 @@ Tools/com.renoise.xLib.xrnx/source/cLib
 Tools/com.renoise.xRules.xrnx/source/cLib
 Tools/com.renoise.xCleaner.xrnx/source/cLib
 Tools/com.renoise.xStream.xrnx/source/cLib
+Tools/com.renoise.MidiPerformer.xrnx/source/cLib
+Tools/com.renoise.MidiPerformer.xrnx/source/vLib
+Tools/com.renoise.MidiPerformer.xrnx/source/xLib
+Tools/com.renoise.xRules.xrnx/profiles
+Tools/com.renoise.SliceMate.xrnx/source/cLib
+Tools/com.renoise.SliceMate.xrnx/source/vLib
+Tools/com.renoise.SliceMate.xrnx/source/xLib
