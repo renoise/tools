@@ -335,8 +335,9 @@ function xRule:__init(def)
     self.modified_observable:bang()
   end)
 
-  --- configure sandbox
-  -- (add basic variables and a few utility methods)
+  --- configure sandbox:
+  --  add basic variables and a few utility methods
+  --  (be very careful that all code can access used classes and methods)
 
   self.sandbox = cSandbox()
   self.sandbox.compile_at_once = true
@@ -492,8 +493,13 @@ function xRule:__init(def)
       end,
     },
 
-    -- Static access to xLib classes 
-
+    -- Static class access 
+    ["cLib"] = {
+      access = function(env) return cLib end,
+    },
+    ["cString"] = {
+      access = function(env) return cString end,
+    },
     ["xLib"] = {
       access = function(env) return xLib end,
     },
