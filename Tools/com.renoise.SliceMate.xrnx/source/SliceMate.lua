@@ -150,90 +150,6 @@ function SliceMate:__init(...)
 end
 
 ---------------------------------------------------------------------------------------------------
--- the main method - obtain the buffer frame from xNotePos
-
-function SliceMate:get_buffer_frame_by_notepos(pos)
-  TRACE("SliceMate:get_buffer_frame_by_notepos(pos)",pos)
-
-  local patt_idx,patt,track,ptrack,line = pos:resolve()
-  if not line then
-    return false,"Could not resolve pattern-line"                    
-  end
-
-  local notecol = line.note_columns[pos.column]
-  if not notecol then
-    return false, "Could not resolve note-column"
-  end
-
-  local instr_idx = notecol.instrument_value+1
-  local instr = rns.instruments[instr_idx]
-  if not instr then
-    return false,"Could not resolve instrument"
-  end
-
-  local instr_name = (instr.name == "") and "Untitled instrument" or instr.name
-  local is_sliced = xInstrument.is_sliced(instr)
-
-  if (#instr.samples == 0) or (not is_sliced and #instr.samples > 1) then
-    return false, "Instrument needs to contain a single sample,"
-      ..("\nbut '%s' contains %d"):format(instr_name,#instr.samples)
-  end
-
-  -- resolve sample by looking at notecol 
-  local sample_idx = xInstrument.get_sample_idx_from_note(instr,notecol.note_value) 
-  if not sample_idx then
-    return false, "Could not resolve sample from note -"
-      ..("\nplease ensure that the note (%s) is mapped to a sample"):format(notecol.note_string)
-      .."\n(this can be verified from the sampler's keyzone tab)"
-  end
-
-  local sample = instr.samples[sample_idx]
-
-  if not sample.autoseek then
-    return false, "Can't determine position - please enable auto-seek on the sample"
-  end
-
-  -- TODO support beatsync (different pitch)
-  if sample.beat_sync_enabled then
-    return false, "Can't determine position - please disable beat-sync on the sample"
-  end
-
-  if not sample.sample_buffer.has_sample_data then
-    return false, "Can't determine position - sample is empty (does not contain audio)"
-  end
-
-  -- Don't trigger via phrase 
-  -- TODO allow if available on keyboard while in keymapped mode
-  if xInstrument.is_triggering_phrase(instr) then
-    return false, "Can't determine position - please avoid using phrases to trigger notes"
-  end
-  
-  -- get number of lines to the trigger note
-  local current_pos = xSongPos(rns.transport.edit_pos)
-  local nearest_pos = xSongPos(pos)
-  local diff = xSongPos.get_line_diff(current_pos,nearest_pos)
-
-  -- precise position: subtrack the delay column 
-  -- from the original, triggering note
-  if track.delay_column_visible then
-    if (notecol.delay_value > 0) then
-      diff = diff - (notecol.delay_value / 255)
-    end
-  end
-  -- precise position: apply fractional line 
-  -- (skip when quantized)
-  if not self.prefs.quantize_enabled.value then
-    diff = diff + pos.fraction
-  end
-
-  local frame = xSample.get_buffer_frame_by_line(sample,diff)
-  frame = xSample.get_transposed_frame(notecol.note_value,frame,sample)
-
-  return frame,sample_idx,instr_idx,notecol
-
-end
-
----------------------------------------------------------------------------------------------------
 -- @return Renoise.SongPos
 
 function SliceMate:get_cursor()
@@ -252,12 +168,15 @@ end
 function SliceMate:select(user_selected)
   TRACE("SliceMate:select(user_selected)",user_selected)
 
+  local xnotepos = self:get_position()
   local pos = xNoteCapture.nearest(self.compare_fn)
   if not pos then
     self.instrument_status.value = ""
     self.instrument_index.value = 0  
   else
-    local frame,sample_idx,instr_idx,notecol = self:get_buffer_frame_by_notepos(pos)
+    local quantize = self.prefs.quantize_enabled.value
+    local frame,sample_idx,instr_idx,notecol = 
+      xSample.get_buffer_frame_by_notepos(pos,quantize and xnotepos)
     if not frame and sample_idx then
       local notecol = pos:get_column()
       self.position_slice.value = -1
@@ -339,15 +258,45 @@ function SliceMate:detach_sampler()
   TRACE("SliceMate:detach_sampler()")
 
   local enum_sampler = renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_SAMPLE_EDITOR
-  local detached = renoise.app().window.instrument_editor_is_detached
   local middle_frame = renoise.app().window.active_middle_frame
-  if (middle_frame ~= enum_sampler) then
-    renoise.app().window.active_middle_frame = enum_sampler
-  else 
-    renoise.app().window.instrument_editor_is_detached = not detached
-  end  
-
+  renoise.app().window.instrument_editor_is_detached = true
+  renoise.app().window.active_middle_frame = enum_sampler
   renoise.app().window.active_middle_frame = middle_frame
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- obtain current (quantized) position 
+-- @return xnotepos (xNotePos)
+
+function SliceMate:get_position()
+
+  local xnotepos = xNotePos()
+  if not self.prefs.quantize_enabled.value then
+    return xnotepos
+  end
+
+  local xsongpos = xSongPos(xnotepos)
+  if not rns.transport.playing then 
+    xsongpos:decrease_by_lines(1)
+  end 
+
+  local choices = {
+    [self.prefs.QUANTIZE_AMOUNT.BEAT] = function() xsongpos:next_beat() end,
+    [self.prefs.QUANTIZE_AMOUNT.BAR] = function() xsongpos:next_bar() end,
+    [self.prefs.QUANTIZE_AMOUNT.BLOCK] = function() xsongpos:next_block() end,
+    [self.prefs.QUANTIZE_AMOUNT.PATTERN] = function() xsongpos:next_pattern() end,
+    [self.prefs.QUANTIZE_AMOUNT.LINE] = function() xsongpos:increase_by_lines(1) end,
+  }
+
+  if (choices[self.prefs.quantize_amount.value]) then 
+    choices[self.prefs.quantize_amount.value]()
+    xnotepos.line = xsongpos.line
+    xnotepos.sequence = xsongpos.sequence    
+    return xnotepos
+  else 
+    error("Unexpected quantize amount")
+  end
 
 end
 
@@ -359,13 +308,15 @@ end
 function SliceMate:insert_slice()
   TRACE("SliceMate:insert_slice()")
 
-  local xnotepos = xNotePos()
+  local xnotepos = self:get_position()
   local pos = xNoteCapture.nearest(self.compare_fn,xnotepos)
   if not pos then
     return false,"Could not find a sample to slice,"
       .."\nperhaps the track doesn't contain any notes?"
   else
-    local frame,sample_idx,instr_idx,notecol = self:get_buffer_frame_by_notepos(pos)
+    local quantize = self.prefs.quantize_enabled.value
+    local frame,sample_idx,instr_idx,notecol = 
+      xSample.get_buffer_frame_by_notepos(pos,quantize and xnotepos)
     if not frame and sample_idx then 
       return false, ("Unable to insert slice:\n%s"):format(sample_idx) -- error message
     elseif sample_idx then
@@ -373,8 +324,11 @@ function SliceMate:insert_slice()
       local sample = instr.samples[sample_idx]
 
       if (frame == 0) then
-        return false, "Can't insert slice where notes are present - "
-          .."\nplease set the cursor somewhere else"
+        return false -- fail silently (existing note?)
+        --[[
+        return false, "Can't insert slice at the very beginning - "
+          .."\nplease move the cursor somewhere else"
+          ]]
       end
 
       -- if the sample is a slice, offset frame by it's pos
@@ -393,8 +347,10 @@ function SliceMate:insert_slice()
 
       local snap = self.slice_snap_threshold
       local slice_idx = xInstrument.get_slice_marker_at_pos(instr,frame,snap)
-      if not slice_idx then
-
+      if slice_idx then
+        -- existing marker
+      else 
+      
         local transpose_offset = 0
         
         -- about to add first slice?
@@ -426,12 +382,13 @@ function SliceMate:insert_slice()
           xSample.initialize_loop(new_sample)
         end
 
-        if self.prefs.insert_note.value then
-          self:insert_sliced_note(xnotepos,instr_idx,slice_idx,notecol)
-        end
+      end
 
-      else 
-        -- existing marker
+      if self.prefs.insert_note.value then
+        local inserted,err = self:insert_sliced_note(xnotepos,instr_idx,slice_idx,notecol)
+        if not inserted and err then 
+          return false,err
+        end 
       end
 
     end
@@ -517,7 +474,7 @@ function SliceMate:attach_to_song()
   self._song_observables:clear()
 
   local update = function()
-    print(">>> a song_observable was fired...")
+    --print(">>> a song_observable was fired...")
     self.select_requested = true
   end
 
