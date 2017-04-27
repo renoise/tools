@@ -210,7 +210,7 @@ function xPhrase.note_is_keymapped(note,instr)
   TRACE("xPhrase.note_is_keymapped(note,instr)",note,instr)
 
   for k,v in ipairs(instr.phrase_mappings) do
-    if (note >= v.note_range[1]) and (note <= v.note_range[2]) then
+    if xSampleMapping.within_note_range(note,v) then
       return true
     end
   end
