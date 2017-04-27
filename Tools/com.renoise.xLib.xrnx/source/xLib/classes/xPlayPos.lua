@@ -8,6 +8,10 @@ Extended play-position which support fractional time (between lines)
 .
 #
 
+### When to use
+
+  When running some real-time process that can't rely on querying the normal 
+  renoise playback_pos (as this can change during execution of script)
 
 ### How to use
 
@@ -88,7 +92,7 @@ end
 -- @param pos (SongPos)
 
 function xPlayPos:set(pos)
-  TRACE("xPlayPos:set(pos)",pos.sequence,pos.line)
+  --TRACE("xPlayPos:set(pos)",pos.sequence,pos.line)
 
   if self:has_changed(pos) then
     self:maintain_position(pos)
@@ -111,11 +115,12 @@ function xPlayPos:get()
 end
 
 -------------------------------------------------------------------------------
+-- note: a realtime version of this method exists in xNotePos
 -- @return table (like SongPos but with extra 'fraction' field)
 
 function xPlayPos:get_fractional()
 
-  local beats = cLib.fraction(rns.transport.playback_pos_beats)
+  local beats = cLib.fraction(self.last_beat)
   local beats_scaled = beats * rns.transport.lpb
   local line_in_beat = math.floor(beats_scaled)
   local fraction = cLib.scale_value(beats_scaled,line_in_beat,line_in_beat+1,0,1)
