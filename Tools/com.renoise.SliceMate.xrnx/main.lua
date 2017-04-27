@@ -16,6 +16,7 @@ This tool provides handy features for working with sample-slices
 rns = nil
 _trace_filters = nil
 --_trace_filters = {".*"}
+--_trace_filters = {"^xSample"}
 
 _clibroot = 'source/cLib/classes/'
 _vlibroot = 'source/vLib/classes/'
@@ -36,7 +37,6 @@ require (_xlibroot..'xSongPos')
 require (_xlibroot..'xBlockLoop')
 require (_xlibroot..'xNotePos')
 require (_xlibroot..'xInstrument')
-require (_xlibroot..'xAutomation')
 require (_xlibroot..'xNoteCapture')
 require (_xlibroot..'xColumns')
 require (_xlibroot..'xSample')
