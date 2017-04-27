@@ -52,6 +52,76 @@ function xInstrument.is_keyzone_available(instr)
 end
 
 --------------------------------------------------------------------------------
+
+function xInstrument.is_triggering_phrase(instr)
+
+  if (#instr.phrases == 0) then
+    return false
+  end
+  
+  if (instr.phrase_playback_mode == renoise.Instrument.PHRASES_OFF) then
+    return false
+  end
+
+  if (instr.phrase_playback_mode == renoise.Instrument.PHRASES_PLAY_SELECTIVE) then
+    return true
+  end
+
+  -- TODO check for keymapped phrases 
+  -- for now, assume that we are triggering a phrase 
+  return true
+
+end
+
+-------------------------------------------------------------------------------
+-- detect if there is a slice marker *approximately* at the sample pos
+
+function xInstrument.get_slice_marker_at_pos(instr,pos,threshold)
+  TRACE("xInstrument.get_slice_marker_at_pos(instr,pos,threshold)",instr,pos,threshold)
+
+  if not xInstrument.is_sliced(instr) then
+    return false, "Instrument contains no slices"
+  end
+
+  local sample = instr.samples[1]
+  local max = pos + threshold
+  local min = pos - threshold
+
+  for marker_idx = 1,#sample.slice_markers do
+    local marker = sample.slice_markers[marker_idx]
+    if (marker < max) and (marker > min) then
+      return marker_idx
+    end
+  end
+
+end
+
+
+--------------------------------------------------------------------------------
+-- figure out which sample index belong to the given note
+-- @return number (slice index), nil, or false,error message
+function xInstrument.get_sample_idx_from_note(instr,note)
+
+  for sample_idx = 1,#instr.samples do 
+    local sample = instr.samples[sample_idx]
+    if xSampleMapping.within_note_range(note,sample.sample_mapping) then
+      return sample_idx
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
+function xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)
+  TRACE("xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)",instr,sample_idx)
+
+  local markers = instr.samples[1].slice_markers
+  return markers[sample_idx-1]
+
+end
+
+--------------------------------------------------------------------------------
 -- perform a simple autocapture and return the instrument 
 -- @return int or nil 
 
