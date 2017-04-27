@@ -84,7 +84,7 @@ fn = function()
 	assert(notepos.line == 1)
 	assert(notepos.column == 1)
 
-  local column,err = notepos:resolve()
+  local column,err = notepos:get_column()
   assert(column,"NoteColumn",err)
   assert(column.note_value == 1)
   assert(column.volume_value == 1)
@@ -96,7 +96,7 @@ fn = function()
     column = 2,
   }
 
-  local column,err = notepos:resolve()
+  local column,err = notepos:get_column()
   assert(column,"NoteColumn",err)
   assert(column.note_value == 2)
   assert(column.volume_value == 2)
@@ -108,7 +108,7 @@ fn = function()
     column = 3,
   }
 
-  local column,err = notepos:resolve()
+  local column,err = notepos:get_column()
   assert(column,"EffectColumn",err)
   assert(column.number_value == 11)
   assert(column.amount_value == 11)
@@ -119,7 +119,7 @@ fn = function()
     line = 16,
     column = 1,
   }
-  local column,err = notepos:resolve()
+  local column,err = notepos:get_column()
   assert(column,"NoteColumn",err)
   assert(column.note_value == 3)
   assert(column.volume_value == 3)
@@ -130,7 +130,7 @@ fn = function()
     line = 16,
     column = 2,
   }
-  local column,err = notepos:resolve()
+  local column,err = notepos:get_column()
   assert(column,"NoteColumn",err)
   assert(column.note_value == 4)
   assert(column.volume_value == 4)
@@ -143,7 +143,7 @@ fn = function()
     line = 16,
     column = 2,
   }
-  local column,err = notepos:resolve()
+  local column,err = notepos:get_column()
   assert(not column,"Unexpected match")
 
   local notepos = xNotePos{
@@ -152,7 +152,7 @@ fn = function()
     line = 16,
     column = 2,
   }
-  local column,err = notepos:resolve()
+  local column,err = notepos:get_column()
   assert(not column,"Unexpected match")
 
   local notepos = xNotePos{
@@ -161,7 +161,7 @@ fn = function()
     line = 9999,
     column = 2,
   }
-  local column,err = notepos:resolve()
+  local column,err = notepos:get_column()
   assert(not column,"Unexpected match")
 
   local notepos = xNotePos{
@@ -170,7 +170,7 @@ fn = function()
     line = 1,
     column = 9999, 
   }
-  local column,err = notepos:resolve()
+  local column,err = notepos:get_column()
   assert(not column,"Unexpected match")
 
 
@@ -190,7 +190,7 @@ fn = function()
 	assert(notepos.line == 1)
 	assert(notepos.column == 1)
 
-  local column,err = notepos:resolve()
+  local column,err = notepos:get_column()
   assert(column,"NoteColumn",err)
   assert(column.note_value == 1)
   assert(column.volume_value == 1)
