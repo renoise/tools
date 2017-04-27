@@ -166,6 +166,56 @@ function xLine:clear_pattern_line(sequence,line,track_idx,phrase)
 end
 
 -------------------------------------------------------------------------------
+-- resolve a column (note or effect), optionally a similar approach to that
+-- used by "selection_in_pattern" - meaning that, if a given line contains
+-- two visible note columns and some effect columns then "col_idx=3" will 
+-- indicate the first effect column  
+-- @param line (renoise.PatternLine)
+-- @param col_idx (number)
+-- @param track (renoise.Track) 
+-- @param visible_only (boolean), default is true
+-- @return renoise.NoteColumn/renoise.EffectColumn or nil 
+
+function xLine.get_column(line,col_idx,track,visible_only)
+  --TRACE("xLine.get_column(line,col_idx,track,visible_only)",line,col_idx,track,visible_only)
+
+  assert(type(line)=="PatternLine","Expected 'PatternLine' as argument")
+  assert(type(col_idx)=="number","Expected 'col_idx' to be a number")
+  assert(type(track)=="Track","Expected 'Track' as argument")
+
+  if not visible_only then
+    visible_only = true
+  end
+
+  if not visible_only then
+    -- UNTESTED
+    if (track.max_note_columns > 0) 
+      and (col_idx <= track.visible_note_columns)
+    then -- sequencer track 
+      return line.note_columns[col_idx]
+    else -- other track type (group, send, master...)
+      return line.effect_columns[col_idx]
+    end
+  else
+    local column = nil
+    if (track.max_note_columns > 0)  
+      and (col_idx <= track.visible_note_columns) 
+    then
+      return line.note_columns[col_idx]
+    elseif 
+      (col_idx <= (track.visible_note_columns + track.visible_effect_columns)) 
+    then
+      return line.effect_columns[col_idx-track.visible_note_columns]    
+    else
+      return nil, "Could not resolve column"
+    end  
+  end
+
+  error("Should not get here")
+
+end
+
+-------------------------------------------------------------------------------
 -- read from song, return a descriptive table 
 -- @param sequence (int)
 -- @param line (int)
