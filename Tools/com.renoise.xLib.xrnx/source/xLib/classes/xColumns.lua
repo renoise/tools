@@ -189,7 +189,9 @@ function xColumns.previous_note_column(wrap_pattern,wrap_track,track_index)
     rns.selected_track_index = track_index
     col_idx = 1
   end
-  rns.selected_note_column_index = col_idx
+  if (col_idx < track.max_note_columns and col_idx > 0) then
+    rns.selected_note_column_index = col_idx
+  end
 
 end
 
