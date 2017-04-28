@@ -178,13 +178,13 @@ end
 function SliceMate:select(user_selected)
   TRACE("SliceMate:select(user_selected)",user_selected)
 
-  local xnotepos = self:get_position()
+  local slice_xnotepos = self:get_position()
   local pos = xNoteCapture.nearest(self.compare_fn)
   if not pos then
     self.instrument_status.value = ""
     self.instrument_index.value = 0  
   else
-    local frame,sample_idx,instr_idx,notecol = xSample.get_buffer_frame_by_notepos(pos,xnotepos)
+    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(pos,slice_xnotepos)
     if not frame and sample_idx then
       local notecol = pos:get_column()
       self.position_slice.value = -1
@@ -225,6 +225,36 @@ function SliceMate:select(user_selected)
     end
   end 
 end                  
+
+---------------------------------------------------------------------------------------------------
+-- 
+
+function SliceMate:remove_active_slice()
+
+  if (self.instrument_index.value == 0) then 
+    return false,"No active instrument to remove slice from"
+  end 
+
+  if (self.slice_index.value == -1) then 
+    return false,"No active slice to remove"
+  end
+
+  if (self.slice_index.value < 1) then 
+    return false,"Can't remove root sample"
+  end
+  
+  local instr = self:get_instrument()
+  local sample = instr and instr.samples[1]
+  if not instr or not sample then 
+    return 
+  end   
+
+  local marker_pos = xInstrument.get_slice_marker_by_sample_idx(instr,self.slice_index+1)
+  if marker_pos then
+    sample:delete_slice_marker(marker_pos)
+  end
+
+end
 
 ---------------------------------------------------------------------------------------------------
 
@@ -282,19 +312,72 @@ function SliceMate:detach_sampler()
 end
 
 ---------------------------------------------------------------------------------------------------
+-- determine if we can slice the provided instrument 
+-- @param instr (renoise.Instrument) 
+-- @param attempt_fix (boolean), attempt to fix problems as they are encountered 
+-- @return boolean, true when sliceable/convertable 
+-- @return string, error message 
+
+function SliceMate.is_sliceable(instr,attempt_fix)
+  TRACE("SliceMate.is_sliceable(instr,attempt_fix)",instr,attempt_fix)
+
+  local instr_name = (instr.name == "") and "Untitled instrument" or instr.name
+  local is_sliced = xInstrument.is_sliced(instr)
+
+  if (#instr.samples == 0) or (not is_sliced and #instr.samples > 1) then
+    return false, "Instrument needs to contain a single sample,"
+      ..("\nbut '%s' contains %d"):format(instr_name,#instr.samples)
+  end
+
+  -- Don't trigger via phrase 
+  -- TODO allow if available on keyboard while in keymapped mode
+  if xInstrument.is_triggering_phrase(instr) then
+    return false, "Please avoid using phrases to trigger notes"
+  end
+
+  local sample = instr.samples[1]
+
+  if not sample.sample_buffer.has_sample_data then
+    return false, "Sample is empty (does not contain audio)"
+  end
+
+  if not sample.autoseek then
+    if attempt_fix then 
+      sample.autoseek = true 
+    else
+      return false, "Please enable auto-seek on the sample"
+    end
+  end
+
+  -- TODO support beatsync (different pitch)
+  if sample.beat_sync_enabled then
+    if attempt_fix then 
+      sample.beat_sync_enabled = false 
+    else
+      return false, "Please disable beat-sync on the sample"
+    end
+  end
+
+  return true
+
+end
+
+---------------------------------------------------------------------------------------------------
 -- obtain current (quantized) position 
--- @return xnotepos (xNotePos)
+-- @return xNotePos
 
 function SliceMate:get_position()
   TRACE("SliceMate:get_position()")
 
-  local xnotepos = xNotePos()
+  local slice_xnotepos = xNotePos()
   if not self.prefs.quantize_enabled.value then
-    return xnotepos
+    return slice_xnotepos
   end
 
-  local xsongpos = xSongPos(xnotepos)
-  if not rns.transport.playing then 
+  local xsongpos = xSongPos(slice_xnotepos)
+  if not rns.transport.playing  
+    or (rns.transport.playing and not rns.transport.follow_player) 
+  then 
     xsongpos:decrease_by_lines(1)
   end 
 
@@ -308,10 +391,10 @@ function SliceMate:get_position()
 
   if (choices[self.prefs.quantize_amount.value]) then 
     choices[self.prefs.quantize_amount.value]()
-    xnotepos.line = xsongpos.line
-    xnotepos.sequence = xsongpos.sequence    
-    xnotepos.fraction = 0    
-    return xnotepos
+    slice_xnotepos.line = xsongpos.line
+    slice_xnotepos.sequence = xsongpos.sequence    
+    slice_xnotepos.fraction = 0    
+    return slice_xnotepos
   else 
     error("Unexpected quantize amount")
   end
@@ -319,20 +402,98 @@ function SliceMate:get_position()
 end
 
 ---------------------------------------------------------------------------------------------------
+-- obtain the sample buffer position from the position of the triggering note / cursor 
+-- (perform a few checks before calling the xSample method)
+-- @return {
+--  frame,
+--  sample_idx,
+--  instr_idx,
+--  notecol
+--}
+
+function SliceMate:get_buffer_position(trigger_pos,slice_xnotepos,autofix)
+  TRACE("SliceMate:get_buffer_position(trigger_pos,slice_xnotepos,autofix)",trigger_pos,slice_xnotepos,autofix)
+
+  local patt_idx,patt,track,ptrack,line = trigger_pos:resolve()
+  if not line then
+    return false,"Could not resolve pattern-line"                    
+  end
+
+  local notecol = line.note_columns[trigger_pos.column]
+  if not notecol then
+    return false, "Could not resolve note-column"
+  end
+
+  local instr_idx = notecol.instrument_value+1
+  local instr = rns.instruments[instr_idx]
+  if not instr then
+    return false,"Could not resolve instrument"
+  end
+
+  -- check if instrument is valid and sliceable
+  local is_sliceable,err = SliceMate.is_sliceable(instr,autofix) 
+  if not is_sliceable then
+    return false, err
+  end
+  
+  -- resolve sample by looking at notecol 
+  local sample,sample_idx = nil
+  local samples = xInstrument.get_samples_mapped_to_note(instr,notecol.note_value) 
+  if not table.is_empty(samples) then
+    sample_idx = samples[1]
+  end
+  local sample = instr.samples[sample_idx]
+  if not sample and autofix then 
+    sample_idx = 1
+    sample = instr.samples[sample_idx]
+  end
+  if not sample then 
+    return false, "Could not resolve sample from note -"
+      ..("\nplease ensure that the note (%s) is mapped to a sample"):format(notecol.note_string)
+      .."\n(this can be verified from the sampler's keyzone tab)"
+  end
+  
+  -- fetch the position 
+  local frame,notecol = xSample.get_buffer_frame_by_notepos(sample,trigger_pos,slice_xnotepos)
+  return frame,sample_idx,instr_idx,notecol
+
+end 
+
+---------------------------------------------------------------------------------------------------
 -- insert slice at the cursor-position 
--- @return boolean, false when slicing failed
+-- @return boolean, false when slicing failed, nil when handled elsewhere (e.g. note insert)
 -- @return string, error message when failed
 
 function SliceMate:insert_slice()
   TRACE("SliceMate:insert_slice()")
 
-  local xnotepos = self:get_position()
+  local autofix = self.prefs.autofix_instr.value
+  local slice_xnotepos = self:get_position()
   local pos = xNoteCapture.nearest(self.compare_fn)
   if not pos then
-    return false,"Could not find a sample to slice,"
-      .."\nperhaps the track doesn't contain any notes?"
+    -- offer to insert note when nothing was found 
+    local is_sliceable,err = SliceMate.is_sliceable(rns.selected_instrument,autofix) 
+    err = err and "\n\nThe error message received was:\n"..err or ""
+    if not is_sliceable and autofix then
+      return false,"Unable to insert slice - no notes found near cursor,"
+        .."\nand instrument could not automatically be made sliceable."
+        ..err
+    elseif not is_sliceable then 
+      return false,"Unable to insert slice - no notes found near cursor,"
+        .."\nand instrument doesn't seem to be sliceable."
+        ..err
+        .."\n\nHint: enable 'Auto-fix instrument' to fix these issues"
+        .."\nautomatically, as they are encountered"
+    elseif is_sliceable and self.ui:promp_initial_note_insert() then
+      local instr_idx = rns.selected_instrument_index
+      local inserted,err = self:insert_sliced_note(slice_xnotepos,instr_idx,1)
+      if not inserted and err then 
+        return false,err
+      end   
+    end 
   else
-    local frame,sample_idx,instr_idx,notecol = xSample.get_buffer_frame_by_notepos(pos,xnotepos)
+
+    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(pos,slice_xnotepos,autofix)
     if not frame and sample_idx then 
       return false, ("Unable to insert slice:\n%s"):format(sample_idx) -- error message
     elseif sample_idx then
@@ -341,10 +502,6 @@ function SliceMate:insert_slice()
 
       if (frame == 0) then
         return false -- fail silently (existing note?)
-        --[[
-        return false, "Can't insert slice at the very beginning - "
-          .."\nplease move the cursor somewhere else"
-          ]]
       end
 
       -- if the sample is a slice, offset frame by it's pos
@@ -401,7 +558,7 @@ function SliceMate:insert_slice()
       end
 
       if self.prefs.insert_note.value then
-        local inserted,err = self:insert_sliced_note(xnotepos,instr_idx,slice_idx,notecol)
+        local inserted,err = self:insert_sliced_note(slice_xnotepos,instr_idx,slice_idx+1,notecol)
         if not inserted and err then 
           return false,err
         end 
@@ -415,38 +572,44 @@ function SliceMate:insert_slice()
 end
 
 ---------------------------------------------------------------------------------------------------
+-- @param slice_xnotepos (xNotePos), where to insert 
+-- @param instr_idx (number), instrument index 
+-- @param sample_idx (number), sample index - mapping decides which note to insert
+-- @param [src_notecol] (renoise.NoteColumn), carry over volume/panning when set 
 
-function SliceMate:insert_sliced_note(xnotepos,instr_idx,slice_idx,src_notecol)
-  TRACE("SliceMate:insert_sliced_note(xnotepos,instr_idx,slice_idx,src_notecol)",xnotepos,instr_idx,slice_idx,src_notecol)
+
+function SliceMate:insert_sliced_note(slice_xnotepos,instr_idx,sample_idx,src_notecol)
+  TRACE("SliceMate:insert_sliced_note(slice_xnotepos,instr_idx,sample_idx,src_notecol)",slice_xnotepos,instr_idx,sample_idx,src_notecol)
 
   local instr = rns.instruments[instr_idx]
-  local sample_idx = slice_idx+1
   local sample = instr.samples[sample_idx]
-  if (sample) then
-    local patt_idx,patt,track,ptrack,line = xnotepos:resolve()
-    if not line then
-        return false,"Could not resolve pattern-line"                    
+  if not sample then
+    return false,"Could not resolve sample"
+  end
+
+  local patt_idx,patt,track,ptrack,line = slice_xnotepos:resolve()
+  if not line then
+    return false,"Could not resolve pattern-line"                    
+  end
+  local notecol = line.note_columns[slice_xnotepos.column]
+  if not notecol then
+    return false,"Could not resolve note-column"
+  end 
+
+  notecol.note_value = sample.sample_mapping.note_range[1]
+  notecol.instrument_value = instr_idx-1
+  if not self.prefs.quantize_enabled.value then
+    local delay_val = math.floor(slice_xnotepos.fraction * 255)
+    notecol.delay_value = delay_val
+    if (delay_val > 0) then
+      track.delay_column_visible = true
     end
-    local notecol = line.note_columns[xnotepos.column]
-    if notecol then
-      notecol.note_value = sample.sample_mapping.note_range[1]
-      notecol.instrument_value = instr_idx-1
-      if not self.prefs.quantize_enabled.value then
-        local delay_val = math.floor(xnotepos.fraction * 255)
-        notecol.delay_value = delay_val
-        if (delay_val > 0) then
-          track.delay_column_visible = true
-        end
-      end
-      if self.prefs.propagate_vol_pan.value then
-        notecol.volume_value = src_notecol.volume_value
-        notecol.panning_value = src_notecol.panning_value
-      else
-        if rns.transport.keyboard_velocity_enabled then
-          notecol.volume_value = rns.transport.keyboard_velocity 
-        end
-      end
-    end
+  end
+  if self.prefs.propagate_vol_pan.value and src_notecol then
+    notecol.volume_value = src_notecol.volume_value
+    notecol.panning_value = src_notecol.panning_value
+  elseif rns.transport.keyboard_velocity_enabled then
+    notecol.volume_value = rns.transport.keyboard_velocity 
   end
 
 end
@@ -503,6 +666,10 @@ function SliceMate:attach_to_song()
   rns.selected_pattern_index_observable:add_notifier(function()
     --print(">>> selected_pattern_index_observable fired...")
     self:attach_to_pattern()
+  end)
+
+  rns.selected_track_index_observable:add_notifier(function()
+    self.ui:update_slice_button()  
   end)
 
   rns.selected_instrument_index_observable:add_notifier(function()    
