@@ -86,6 +86,33 @@ function SliceMate_UI:__init(...)
 end
 
 ---------------------------------------------------------------------------------------------------
+-- show this prompt when pressing slice in an empty track 
+
+function SliceMate_UI:promp_initial_note_insert()
+
+  local vb = self.vb
+  local view = vb:text{
+    text = "The track does not seem to contain any notes?"
+      .."\nPress 'Insert Note' to insert one using the selected instrument."
+  }
+
+  local choice = renoise.app():show_custom_prompt("SliceMate",view,{"Insert Note","Cancel"})
+  return  (choice == "Insert Note") 
+
+end
+
+---------------------------------------------------------------------------------------------------
+
+function SliceMate_UI:update_slice_button()
+
+  local ctrl = self.vb.views["insert_slice_button"]
+  if ctrl then 
+    ctrl.active = (rns.selected_track.type == renoise.Track.TRACK_TYPE_SEQUENCER)
+  end 
+
+end
+
+---------------------------------------------------------------------------------------------------
 
 function SliceMate_UI:update_slice_options()
 
@@ -158,14 +185,20 @@ function SliceMate_UI:update_instrument()
     local slice_count = instr and (#instr.samples > 1) 
       and #instr.samples[1].slice_markers or 0
     local str_status = ""
-    if (instr_idx == 0) then
-      str_status = instr and "0 (not sliced)" or "-"
+    if (instr_idx == 0) or ((slice_index == 0) and (slice_count == 0)) then
+      str_status = instr and "0" or "-"
     else
       str_status = (slice_index == -1) and "-" or ("%d / %d"):format(slice_index,slice_count)
     end
     str_status = ("Active slice: %s"):format(str_status)
     ctrl.tooltip = str_status
     ctrl.text = str_status
+
+    local rmv_bt = self.vb.views["remove_slice_button"]
+    if rmv_bt then 
+      rmv_bt.visible = (instr_idx > 0 and slice_index > 0)
+    end 
+
   end
 
 end
@@ -266,11 +299,25 @@ function SliceMate_UI:build()
             
           },
           vb:row{
+            --mode = "justify",
             vb:text{
               id = "slice_status",
               text = "",
-              width = self.dialog_width-31,
+              width = self.dialog_width-39,
             },
+            vb:button{
+              id = "remove_slice_button",
+              text = "Del",
+              tooltip = "Remove this slice",
+              notifier = function()
+                local removed,err = self.owner:remove_active_slice()
+                if not removed and err then 
+                  renoise.app():show_error(err)
+                else
+                  self.owner.select_requested = true
+                end 
+              end,
+            }
           },
           vb:row{
             vb:text{
@@ -353,6 +400,7 @@ function SliceMate_UI:build()
           width = self.dialog_width,
           vb:row{
             vb:button{
+              id = "insert_slice_button",
               width = self.dialog_width - 32,
               text = "Slice at Cursor",
               midi_mapping = "Tools:SliceMate:Insert Slice [Trigger]",
@@ -422,7 +470,16 @@ function SliceMate_UI:build()
                 vb:text{
                   text = "Auto-select in waveform"
                 }
-              },             
+              },       
+              vb:row{
+                vb:checkbox{
+                  bind = self.prefs.autofix_instr
+                },
+                vb:text{
+                  text = "Auto-fix instrument"
+                }
+              },
+                    
             }
           },
         },
@@ -433,6 +490,7 @@ function SliceMate_UI:build()
 
   self:update_instrument()
   self:update_slice_options()
+  self:update_slice_button()
   self:update_tool_options()
 
 end
