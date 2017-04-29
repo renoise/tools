@@ -25,8 +25,8 @@ class 'vDialogWizard' (vDialog)
 vDialogWizard.SUBMIT_BT_W = 82
 vDialogWizard.LARGE_BUTTON_H = 22
 
-function vDialogWizard:__init()
-  TRACE("vDialogWizard:__init()")
+function vDialogWizard:__init(...)
+  TRACE("vDialogWizard:__init(...)")
 
   self.dialog_page = nil
   self.dialog_option = nil
@@ -40,7 +40,7 @@ function vDialogWizard:__init()
 
   -- init --
  
-  vDialog.__init(self)
+  vDialog.__init(self,...)
 
 end
 
