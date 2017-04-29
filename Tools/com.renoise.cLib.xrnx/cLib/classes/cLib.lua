@@ -8,6 +8,8 @@ This is the core cLib class, containing a bunch of static helper methods
 .
 #
 
+Note that several classes might make calls to the LOG/TRACE methods - 
+it is recommended that any cLib-powered tool includes this file
 
 ]]
 
@@ -19,21 +21,30 @@ require (_clibroot.."cNumber")
 class 'cLib'
 
 --------------------------------------------------------------------------------
--- use LOG to print important messages to the console (errors and warnings)
--- @param (vararg)
+-- Logging and Tracing 
 
 function LOG(...)
+  -- proxy method which forwards logging calls to cLib.log() 
+  -- having it as a proxy allows you to define a custom implementation  
+  cLib.log(...)
+end
+
+function TRACE(...) 
+  -- this is just a placeholder function,
+  -- include cDebug to enable full tracing...
+end
+
+--------------------------------------------------------------------------------
+-- Print important messages to the console (errors and warnings)
+-- @param (vararg)
+
+function cLib.log(...)
   local result = ""
   local n = select('#', ...)
   for i = 1, n do
     result = result .. tostring(select(i, ...)) .. "\t"
   end
   print (result)
-end
-
-function TRACE(...) 
-  -- this is just a placeholder function,
-  -- include cDebug to enable full tracing...
 end
 
 --------------------------------------------------------------------------------
@@ -218,6 +229,19 @@ end
 
 function cLib.clamp_value(value, min_value, max_value)
   return math.min(max_value, math.max(value, min_value))
+end
+
+-------------------------------------------------------------------------------
+--- convert between note/hertz
+
+function cLib.note_to_hz(note)
+  TRACE('cLib.note_to_hz(note)',note)
+  return math.pow(2, (note - 45) / 12) * 440;
+end
+
+function cLib.hz_to_note(freq)
+  TRACE('cLib.hz_to_note(freq)',freq)
+  return (math.log(freq) - math.log(440)) / math.log(2) + 4;
 end
 
 --------------------------------------------------------------------------------
