@@ -98,16 +98,18 @@ end
 
 
 --------------------------------------------------------------------------------
--- figure out which sample index belong to the given note
--- @return number (slice index), nil, or false,error message
-function xInstrument.get_sample_idx_from_note(instr,note)
+-- figure out which samples are mapped to the provided note
+-- @return table<number>, slice indices 
+function xInstrument.get_samples_mapped_to_note(instr,note)
 
+  local rslt = table.create()
   for sample_idx = 1,#instr.samples do 
     local sample = instr.samples[sample_idx]
     if xSampleMapping.within_note_range(note,sample.sample_mapping) then
-      return sample_idx
+      rslt:insert(sample_idx)
     end
   end
+  return rslt
 
 end
 
