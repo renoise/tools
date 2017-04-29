@@ -57,9 +57,7 @@ function VR_UI:__init(...)
   local args = cLib.unpack_args(...)
   assert(type(args.owner)=="VR","Expected 'owner' to be a class instance")
 
-  args.dialog_keyhandler = function(dlg,key)
-    --print("dlg,key",dlg,rprint(key))
-    --print("key.modifiers",type(key.modifiers),key.modifiers)
+  args.dialog_keyhandler = function(__self,dlg,key)
     
     if (key.modifiers == "") then
       local handlers = {
