@@ -444,6 +444,7 @@ function SliceMate:get_buffer_position(trigger_pos,slice_xnotepos,autofix)
   end
   local sample = instr.samples[sample_idx]
   if not sample and autofix then 
+    -- don't be so restrictive while autofixing (accept any note)
     sample_idx = 1
     sample = instr.samples[sample_idx]
   end
@@ -452,8 +453,23 @@ function SliceMate:get_buffer_position(trigger_pos,slice_xnotepos,autofix)
       ..("\nplease ensure that the note (%s) is mapped to a sample"):format(notecol.note_string)
       .."\n(this can be verified from the sampler's keyzone tab)"
   end
-  
-  local ignore_sxx = (sample_idx == 1) -- ignore Sxx command for root sample 
+
+  -- ignore Sxx command for root sample 
+  local ignore_sxx = (sample_idx == 1) and (#instr.samples > 1) and true or false 
+
+  -- if instr. is sliced and note was a root sample triggered using Sxx, 
+  -- we should be looking for a different sample altogether
+  if (sample_idx == 1) and (#instr.samples > 0) then 
+    local matched_sxx = xLinePattern.get_effect_command(track,line,"0S",trigger_pos.column,true)
+    if not table.is_empty(matched_sxx) then 
+      local applied_sxx = matched_sxx[#matched_sxx].value
+      if (applied_sxx < #instr.samples) then 
+        sample_idx = applied_sxx+1
+        ignore_sxx = true
+      end 
+    end 
+  end 
+
   local frame,notecol = 
     xSample.get_buffer_frame_by_notepos(sample,trigger_pos,slice_xnotepos,ignore_sxx)
   return frame,sample_idx,instr_idx,notecol
