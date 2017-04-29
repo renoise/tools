@@ -87,11 +87,10 @@ function VR:__init(...)
   --- string
   self.app_display_name = args.app_display_name
 
-  --- bool, retain the number of selected columns on 'select'
-  --self.maintain_selected_columns = self.prefs.maintain_selected_columns.value
+  --- bool
   self.select_all_columns = self.prefs.select_all_columns.value
 
-  --- bool, 
+  --- bool
   self.toggle_line_selection = self.prefs.toggle_line_selection.value
 
   --- bool, whether to prompt user when 'too many columns' occur
@@ -134,22 +133,9 @@ function VR:__init(...)
 
   -- notifications --------------------
 
-  --renoise.tool().app_idle_observable:add_notifier(function()
-    ---- 
-  --end)
-
   renoise.tool().app_new_document_observable:add_notifier(function()
     rns = renoise.song()
-    self:attach_to_song()
   end)
-
-  renoise.tool().app_release_document_observable:add_notifier(function()
-    self:detach_from_song()
-  end)
-
-  --self.prefs.maintain_selected_columns:add_notifier(function()
-    --self.maintain_selected_columns = self.prefs.maintain_selected_columns.value
-  --end)
 
   self.prefs.select_all_columns:add_notifier(function()
     self.select_all_columns = self.prefs.select_all_columns.value
@@ -228,23 +214,6 @@ function VR:__init(...)
   -- initialize -----------------------
 
   self.ui:build()
-
-  self:attach_to_song()
-
-end
-
---------------------------------------------------------------------------------
--- handlers
---------------------------------------------------------------------------------
-
-function VR:attach_to_song()
-
-end
-
-
---------------------------------------------------------------------------------
-
-function VR:detach_from_song()
 
 end
 
@@ -406,8 +375,6 @@ function VR:do_process(scope,sel,seq_idx,trk_idx)
     if not ptrack_or_phrase then
       return false,"Unable to process: couldn't locate pattern-track"
     end
-    --print("*** do_process - pattern track: trk_idx,seq_idx",trk_idx,seq_idx)
-    --print("*** do_process - pattern track: sel...",rprint(sel))
   end
   
   local rslt,err 
@@ -551,7 +518,8 @@ function VR:process_column_in_pattern()
 end
 
 --------------------------------------------------------------------------------
---[[
+-- TODO
+--[[  
 function VR:process_column_in_phrase()
   TRACE("VR:process_column_in_phrase()")
 
@@ -675,16 +643,10 @@ end
 -------------------------------------------------------------------------------
 
 function VR:select_in_pattern(patt_sel)
+  TRACE("VR:select_in_pattern(patt_sel)",patt_sel,rprint(patt_sel))
 
   if not table.is_empty(patt_sel) then
-    --[[
-    if self.maintain_selected_columns 
-      and rns.selection_in_pattern
-    then
-      patt_sel.start_column = rns.selection_in_pattern.start_column
-      patt_sel.end_column = rns.selection_in_pattern.end_column
-    end
-    ]]
+
     if self.select_all_columns then
       local track = rns.selected_track
       local total_cols = track.visible_note_columns + track.visible_effect_columns
@@ -706,14 +668,12 @@ function VR:select_voice_run(prevent_toggle)
   local trk_idx = rns.selected_track_index
   local col_idx = rns.selected_note_column_index
   local voice_run = self.runner:collect_at_cursor()
-  --print("*** select_voice_run - voice_run...",rprint(voice_run))
 
   if voice_run then
     if self.toggle_line_selection and not prevent_toggle then
       self.select_all_columns = not self.select_all_columns
     end
     local patt_sel = xVoiceRunner.get_voice_run_selection(voice_run,trk_idx,col_idx)
-    --print("*** select_voice_run - patt_sel",rprint(patt_sel))
     self:select_in_pattern(patt_sel)
   else
     renoise.app():show_status(
@@ -735,7 +695,7 @@ function VR:select_next_voice_run()
   local col_idx = rns.selected_note_column_index
 
   local voice_run = self.runner:collect_below_cursor()
-  --print("*** select_next_voice_run - voice_run",voice_run)
+  
   if voice_run then
     local patt_sel = xVoiceRunner.get_voice_run_selection(voice_run,trk_idx,col_idx)
     self:select_in_pattern(patt_sel)
@@ -760,7 +720,7 @@ function VR:select_previous_voice_run()
   local col_idx = rns.selected_note_column_index
 
   local voice_run = self.runner:collect_above_cursor()
-  --print("*** select_previous_voice_run - voice_run",voice_run)
+
   if voice_run then
     local patt_sel = xVoiceRunner.get_voice_run_selection(voice_run,trk_idx,col_idx)
     self:select_in_pattern(patt_sel)
@@ -794,7 +754,7 @@ end
 
 --------------------------------------------------------------------------------
 -- for testing...
-
+--[[
 function VR:test_list_info()
   TRACE("VR:test_list_info()")
 
@@ -831,15 +791,12 @@ function VR:test_list_info()
   --print(">>> matched_columns",rprint(matched_columns))
 
 end
-
+]]
 --------------------------------------------------------------------------------
 -- check if phrase editor is visible
 
 function VR:phrase_editor_visible()
 
-  --print("rns.selected_instrument.phrase_editor_visible",rns.selected_instrument.phrase_editor_visible)
-  --print("renoise.app().window.instrument_editor_is_detached",renoise.app().window.instrument_editor_is_detached)
-  --print("renoise.app().window.active_middle_frame",renoise.app().window.active_middle_frame,renoise.ApplicationWindow.MIDDLE_FRAME_INSTRUMENT_PHRASE_EDITOR)
   if renoise.app().window.instrument_editor_is_detached then
     if not rns.selected_instrument.phrase_editor_visible then
       return false
