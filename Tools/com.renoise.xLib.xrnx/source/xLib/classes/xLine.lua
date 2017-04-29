@@ -177,11 +177,11 @@ end
 -- @return renoise.NoteColumn/renoise.EffectColumn or nil 
 
 function xLine.get_column(line,col_idx,track,visible_only)
-  --TRACE("xLine.get_column(line,col_idx,track,visible_only)",line,col_idx,track,visible_only)
+  TRACE("xLine.get_column(line,col_idx,track,visible_only)",line,col_idx,track,visible_only)
 
   assert(type(line)=="PatternLine","Expected 'PatternLine' as argument")
   assert(type(col_idx)=="number","Expected 'col_idx' to be a number")
-  assert(type(track)=="Track","Expected 'Track' as argument")
+  assert(type(track)=="Track" or type(track)=="GroupTrack","Expected 'Track' as argument")
 
   if not visible_only then
     visible_only = true
