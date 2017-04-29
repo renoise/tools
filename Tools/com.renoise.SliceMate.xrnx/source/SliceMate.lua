@@ -453,8 +453,9 @@ function SliceMate:get_buffer_position(trigger_pos,slice_xnotepos,autofix)
       .."\n(this can be verified from the sampler's keyzone tab)"
   end
   
-  -- fetch the position 
-  local frame,notecol = xSample.get_buffer_frame_by_notepos(sample,trigger_pos,slice_xnotepos)
+  local ignore_sxx = (sample_idx == 1) -- ignore Sxx command for root sample 
+  local frame,notecol = 
+    xSample.get_buffer_frame_by_notepos(sample,trigger_pos,slice_xnotepos,ignore_sxx)
   return frame,sample_idx,instr_idx,notecol
 
 end 
@@ -596,7 +597,8 @@ function SliceMate:insert_sliced_note(slice_xnotepos,instr_idx,sample_idx,src_no
     return false,"Could not resolve note-column"
   end 
 
-  notecol.note_value = sample.sample_mapping.note_range[1]
+  notecol.note_value = sample.sample_mapping.base_note
+  --notecol.note_value = sample.sample_mapping.note_range[1]
   notecol.instrument_value = instr_idx-1
   if not self.prefs.quantize_enabled.value then
     local delay_val = math.floor(slice_xnotepos.fraction * 255)
@@ -653,7 +655,7 @@ function SliceMate:attach_to_song()
   self._song_observables:clear()
 
   local update = function()
-    --print(">>> a song_observable was fired...")
+    TRACE("SliceMate: song_observable was fired...")
     self.select_requested = true
   end
 
@@ -664,7 +666,7 @@ function SliceMate:attach_to_song()
   rns.transport.lpb_observable:add_notifier(self, update)
 
   rns.selected_pattern_index_observable:add_notifier(function()
-    --print(">>> selected_pattern_index_observable fired...")
+    TRACE("SliceMate: selected_pattern_index_observable fired...")
     self:attach_to_pattern()
   end)
 
@@ -674,7 +676,7 @@ function SliceMate:attach_to_song()
 
   rns.selected_instrument_index_observable:add_notifier(function()    
     -- detach/attach to sample 
-    --print(">>> selected_instrument_index_observable fired...",self.instrument_index.value)
+    TRACE("SliceMate: selected_instrument_index_observable fired...",self.instrument_index.value)
     local attached,err = self:attach_to_instrument()
     if not attached and err then 
       LOG("*** "..err)
@@ -682,7 +684,7 @@ function SliceMate:attach_to_song()
   end)
 
   rns.selected_sample_observable:add_notifier(function()
-    --print(">>> selected_pattern_index_observable fired...")
+    TRACE("SliceMate: selected_pattern_index_observable fired...")
     self:attach_to_sample()
   end)
 
@@ -715,7 +717,7 @@ function SliceMate:attach_to_instrument()
   self._sample_observables:clear()
 
   local update = function()
-    --print(">>> an instrument observable was fired...",instr.name)
+    TRACE("SliceMate: an instrument observable was fired...",instr.name)
     self.select_requested = true
   end
 
@@ -744,7 +746,7 @@ function SliceMate:attach_to_sample()
   self._sample_observables:clear()
 
   local update = function()
-    --print(">>> a sample observable was fired...",sample.name)
+    TRACE("SliceMate: a sample observable was fired...",sample.name)
     self.select_requested = true
   end
 
