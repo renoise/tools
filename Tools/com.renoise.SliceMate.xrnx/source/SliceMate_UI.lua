@@ -91,9 +91,13 @@ end
 function SliceMate_UI:promp_initial_note_insert()
 
   local vb = self.vb
-  local view = vb:text{
-    text = "The track does not seem to contain any notes?"
-      .."\nPress 'Insert Note' to insert one using the selected instrument."
+  local view = vb:row{
+    margin = 10,
+    vb:text{    
+      text = "The track does not seem to contain any notes,"
+        .."\npress 'Insert Note' to insert the basenote of" 
+        .."\nthe currently selected instrument."
+    }
   }
 
   local choice = renoise.app():show_custom_prompt("SliceMate",view,{"Insert Note","Cancel"})
@@ -358,6 +362,7 @@ function SliceMate_UI:build()
           width = self.dialog_width-4,
           vb:row{
             vb:button{
+              tooltip = "Go to previous note-column",
               height = 36,
               text = "◀",
               midi_mapping = "Tools:SliceMate:Previous Column [Trigger]",
@@ -367,6 +372,7 @@ function SliceMate_UI:build()
             },
             vb:column{
               vb:button{
+                tooltip = "Go to previous note",
                 width = self.dialog_width-52,
                 midi_mapping = "Tools:SliceMate:Previous Note [Trigger]",
                 text = "Previous note",
@@ -375,6 +381,7 @@ function SliceMate_UI:build()
                 end
               },
               vb:button{
+                tooltip = "Go to next note",
                 width = self.dialog_width-52,
                 midi_mapping = "Tools:SliceMate:Next Note [Trigger]",
                 text = "Next note",
@@ -384,6 +391,7 @@ function SliceMate_UI:build()
               },
             },
             vb:button{
+              tooltip = "Go to next note-column",
               height = 36,
               text = "▶",
               midi_mapping = "Tools:SliceMate:Next Column [Trigger]",
@@ -419,6 +427,7 @@ function SliceMate_UI:build()
             id = "slice_panel",
             vb:column{
               vb:row{
+                tooltip = "Decide if slices should be quantized, and by how large an amount",
                 vb:checkbox{
                   bind = self.prefs.quantize_enabled
                 },
@@ -432,14 +441,16 @@ function SliceMate_UI:build()
                 }
               },
               vb:row{
+                tooltip = "Insert a note into the pattern when slicing sample",
                 vb:checkbox{
                   bind = self.prefs.insert_note
                 },
                 vb:text{
-                  text = "Insert note"
+                  text = "Insert note when slicing"
                 }
               },            
               vb:row{
+                tooltip = "Carry over VOL/PAN from previous note (if any)",
                 vb:checkbox{
                   bind = self.prefs.propagate_vol_pan
                 },
@@ -448,6 +459,7 @@ function SliceMate_UI:build()
                 }
               }, 
               vb:row{
+                tooltip = "Automatically select instrument underneath cursor",
                 vb:checkbox{
                   bind = self.prefs.autoselect_instr
                 },
@@ -456,6 +468,7 @@ function SliceMate_UI:build()
                 }
               },
               vb:row{
+                tooltip = "Automatically select sample in instr. sample-list",
                 vb:checkbox{
                   bind = self.prefs.autoselect_in_list
                 },
@@ -464,6 +477,7 @@ function SliceMate_UI:build()
                 }
               },
               vb:row{
+                tooltip = "Visualize the computed playback position in the waveform editor",
                 vb:checkbox{
                   bind = self.prefs.autoselect_in_wave
                 },
@@ -472,6 +486,7 @@ function SliceMate_UI:build()
                 }
               },       
               vb:row{
+                tooltip = "Attempt to correct issues with instruments as they are sliced",
                 vb:checkbox{
                   bind = self.prefs.autofix_instr
                 },
