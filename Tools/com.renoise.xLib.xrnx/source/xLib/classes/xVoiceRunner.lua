@@ -245,11 +245,13 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
             = self:detect_run_condition(notecol,col_idx,vol_visible,pan_visible,collecting_from_pattern)
 
           local assign_instr_and_note = function()
+            TRACE("xVoiceRunner:collect() - assign_instr_and_note")
             instr_idx = has_instr_val and instr_idx or xVoiceRunner.GHOST_NOTE
             note_val = has_note_on and note_val or nil
           end
 
           local handle_note_off_cut = function()
+            TRACE("xVoiceRunner:collect() - handle_note_off_cut")
             actual_noteoff_col = xNoteColumn(xNoteColumn.do_read(notecol))
             stop_voice_run = true
             instr_idx = self.voice_columns[col_idx].instrument_index
@@ -257,11 +259,13 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
           end
 
           local handle_offed_run = function()
+            TRACE("xVoiceRunner:collect() - handle_offed_run")
             self.voice_columns[col_idx].offed = true
             instr_idx = self.voice_columns[col_idx].instrument_index
           end
 
           local handle_create_voice_run = function()
+            TRACE("xVoiceRunner:collect() - handle_create_voice_run")
             assign_instr_and_note()
             begin_voice_run = true
             self.voice_columns[col_idx] = {
@@ -271,6 +275,7 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
           end
 
           local handle_create_orphan_run = function()
+            TRACE("xVoiceRunner:collect() - handle_create_orphan_run")
             begin_voice_run = true
             orphaned = true
             instr_idx = 0
@@ -280,6 +285,7 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
           end
 
           local handle_split_at_note_or_change = function()
+            TRACE("xVoiceRunner:collect() - handle_split_at_note_or_change")
             assign_instr_and_note()
             implied_noteoff = not self.voice_columns[col_idx].offed and true or false
             begin_voice_run = true
@@ -290,6 +296,7 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
           end
 
           local handle_instrument_change = function()
+            TRACE("xVoiceRunner:collect() - handle_instrument_change")
             implied_noteoff = not self.voice_columns[col_idx].offed and true or false 
             begin_voice_run = true
             self.voice_columns[col_idx] = {
@@ -299,6 +306,7 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
           end
 
           local handle_continue_orphan_run = function()
+            TRACE("xVoiceRunner:collect() - handle_continue_orphan_run")
             self.voice_columns[col_idx] = {
               instrument_index = instr_idx,
               note_value = note_val,
@@ -306,14 +314,17 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
           end
 
           local handle_continue_voice_run = function()
+            TRACE("xVoiceRunner:collect() - handle_continue_voice_run")
             instr_idx = self.voice_columns[col_idx].instrument_index
           end
 
           local handle_continue_ghost_note = function()
+            TRACE("xVoiceRunner:collect() - handle_continue_ghost_note")
             assign_instr_and_note()
           end
 
           local handle_continue_glide_note = function()
+            TRACE("xVoiceRunner:collect() - handle_continue_glide_note")
             assign_instr_and_note()
           end
 
@@ -351,6 +362,14 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
               voice_run.implied_noteoff = implied_noteoff
             end
 
+            print(">>> voice_run",voice_run)
+            print(">>> col_idx",col_idx)
+            print(">>> notecol",notecol)
+            print(">>> begin_voice_run",begin_voice_run)
+            print(">>> stop_voice_run",stop_voice_run)
+            print(">>> has_note_cut",has_note_cut)
+            print(">>> has_note_off",has_note_off)
+
             -- opportune moment to compute number of lines: before a new run
             if voice_run and begin_voice_run 
               and not voice_run.number_of_lines
@@ -382,13 +401,17 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
             end
 
             if has_note_cut or has_note_off then
-              if (self.stop_at_note_off and has_note_off)
-                or (self.stop_at_note_cut and has_note_cut)
-              then
-                self.voice_columns[col_idx] = nil
-              else
-                self.voice_columns[col_idx].offed = true
-              end
+              if self.voice_columns[col_idx] then 
+                if (self.stop_at_note_off and has_note_off)
+                  or (self.stop_at_note_cut and has_note_cut)
+                then
+                  self.voice_columns[col_idx] = nil
+                else
+                  self.voice_columns[col_idx].offed = true
+                end
+              else 
+                LOG("*** xVoiceRunner: tried to access non-existing voice column")
+              end 
             end
 
             if actual_noteoff_col then
@@ -400,6 +423,7 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
             end
 
             -- if we've got a template, check whether to include this run 
+            --[[
             if begin_voice_run and has_note_on and self.template then
               local entries,indices = self.template:get_entries({
                 note_value = note_val,
@@ -415,9 +439,11 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
                 end
               end
             end
+            ]]
 
           end
 
+          -- register unique notes as they are encountered
           if include_as_unique then
             if note_val and instr_idx then
               cLib.expand_table(self.unique_notes,note_val,instr_idx-1)
@@ -460,21 +486,31 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
                or (final_off and self.stop_at_note_off))
               then
                 run.number_of_lines = 1+selection.end_line-high_line
+                TRACE("xVoiceRunner:collect() - post-process, assigned length to open voice",run.number_of_lines)
               else
                 -- extend to the selection boundary (actual length)
                 local run_length = self:detect_run_length(ptrack_or_phrase,col_idx,high_line,num_lines,vol_visible,pan_visible)
                 run.number_of_lines = high_line - low_line + run_length
                 run.open_ended = ((low_line + run.number_of_lines - 1) >= selection.end_line)
+                TRACE("xVoiceRunner:collect() - post-process, extend length to selection boundary",run.number_of_lines)
               end
 
             else
               run.number_of_lines = high_line-low_line
+              TRACE("xVoiceRunner:collect() - post-process, set length",run.number_of_lines)
             end
           else
             -- implied note-off
           end
         end
       end
+
+      -- purge zero-length runs - 
+      -- can be caused e.g. by orphaned note-offs with #instrument  
+      if (run.number_of_lines == 0) then
+        self.voice_runs[col_idx][run_idx] = nil
+        TRACE("xVoiceRunner:collect() - post-process, removed zero-length run")
+      end 
 
     end
   end
@@ -569,6 +605,9 @@ function xVoiceRunner:collect_below_cursor()
 
   self:reset()
   self:collect(ptrack_or_phrase,xVoiceRunner.COLLECT_MODE.CURSOR)
+  print(">>> post-collect self.voice_runs...")
+  rprint(self.voice_runs)
+
   local in_range = xVoiceRunner.in_range(self.voice_runs,line_idx,patt.number_of_lines,{
     restrict_to_column = col_idx,
     include_before = true,
@@ -968,11 +1007,14 @@ function xVoiceRunner.get_voice_run_selection(vrun,trk_idx,col_idx)
 
   local low,high = cLib.get_table_bounds(vrun)
   local end_line = low + vrun.number_of_lines - 1
+
+  print()
+
   end_line = ((vrun.implied_noteoff and not vrun.actual_noteoff_col)
       or vrun.open_ended  
       or not vrun.actual_noteoff_col
-      or vrun.single_line_trigger) and end_line 
-    or end_line+1
+      or vrun.single_line_trigger) and end_line or end_line+1
+
   return {
     start_line = low,
     start_track = trk_idx,
@@ -1122,6 +1164,7 @@ end
 -- @return table
 
 function xVoiceRunner.create_voice(voice_run,col_idx,run_idx,line_idx)
+  TRACE("xVoiceRunner.create_voice(voice_run,col_idx,run_idx,line_idx)",voice_run,col_idx,run_idx,line_idx)
 
   assert(type(voice_run)=="table")
   assert(type(col_idx)=="number")
