@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xSample
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -51,7 +51,7 @@ xSample.BIT_DEPTH = {0,8,16,24,32}
 
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- credit goes to dblue
 -- @param sample (renoise.Sample)
 -- @return int (0 when no sample data)
@@ -115,7 +115,7 @@ function xSample.get_bit_depth(sample)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- convert any bit-depth to a valid xSample representation
 -- @param num_bits (int)
 -- @return int (xSample.BIT_DEPTH)
@@ -134,7 +134,7 @@ function xSample.bits_to_xbits(num_bits)
 end
 
 
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- check if sample has duplicate channel data, is hard-panned or silent
 -- (several detection functions in one means less methods are needed...)
 -- @param sample  (renoise.Sample)
@@ -198,7 +198,7 @@ function xSample.get_channel_info(sample)
 
 end
 
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- convert sample: change bit-depth, perform channel operations, crop etc.
 -- (jumping through a few hoops to keep keyzone and phrases intact...)
 -- @param instr (renoise.Instrument)
@@ -289,7 +289,7 @@ function xSample.convert_sample(instr,sample_idx,bit_depth,channel_action,range)
 
 end
 
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- check if the indicated sample buffer is silent
 -- @param buffer (renoise.SampleBuffer)
 -- @param channels (xSample.SAMPLE_CHANNELS)
@@ -330,7 +330,7 @@ function xSample.sample_buffer_is_silent(buffer,channels)
 
 end
 
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- extract tokens from a sample name 
 -- @param string, e.g. "VST: Synth1 VST (Honky Piano)_0x7F_C-5" 
 -- @return table, {
@@ -418,7 +418,7 @@ function xSample.get_name_tokens(str)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- select region in waveform editor (clamp to valid range)
 -- @param sample (renoise.Sample)
 -- @param sel_start (int)
@@ -442,7 +442,7 @@ function xSample.set_buffer_selection(sample,sel_start,sel_end)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- get a buffer position by "line"
 -- note that fractional line values are supported
 -- @param sample (renoise.Sample)
@@ -464,7 +464,7 @@ function xSample.get_buffer_frame_by_line(sample,line)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- get a buffer position by "beat"
 -- note that fractional beat values are supported
 -- @param beat (number)
@@ -479,98 +479,62 @@ function xSample.get_buffer_frame_by_beat(beat)
 end
 
 ---------------------------------------------------------------------------------------------------
--- obtain the buffer frame, from a particular position in the song
--- @param pos (xNotePos), position to measure from 
--- @param quantized_pos (xNotePos), the current position - optional, use when quantizing 
+-- obtain the buffer frame from a particular position in the song
+-- @param sample (renoise.Sample)
+-- @param trigger_pos (xNotePos), triggering position + note/pitch/delay/offset
+-- @param end_pos (xNotePos), the end position
+-- @param [ignore_sxx] (boolean), handle special case with sliced instruments, where Sxx is 
+--  used on the root sample for triggering individual slices 
 -- @return table{
 --  frame (number)
---  sample_idx (number)
---  instr_idx (number)
 --  notecol (renoise.NoteColumn)
 -- } or false,error (string) when failed
 
-function xSample.get_buffer_frame_by_notepos(pos,quantized_pos)
-  TRACE("xSample.get_buffer_frame_by_notepos(pos,quantized_pos)",pos,quantized_pos)
+function xSample.get_buffer_frame_by_notepos(sample,trigger_pos,end_pos,ignore_sxx)
+  TRACE("xSample.get_buffer_frame_by_notepos(sample,trigger_pos,end_pos,ignore_sxx)",sample,trigger_pos,end_pos,ignore_sxx)
 
-  local patt_idx,patt,track,ptrack,line = pos:resolve()
+  local patt_idx,patt,track,ptrack,line = trigger_pos:resolve()
   if not line then
     return false,"Could not resolve pattern-line"                    
   end
 
-  local notecol = line.note_columns[pos.column]
+  local notecol = line.note_columns[trigger_pos.column]
   if not notecol then
     return false, "Could not resolve note-column"
   end
 
-  local instr_idx = notecol.instrument_value+1
-  local instr = rns.instruments[instr_idx]
-  if not instr then
-    return false,"Could not resolve instrument"
-  end
-
-  local instr_name = (instr.name == "") and "Untitled instrument" or instr.name
-  local is_sliced = xInstrument.is_sliced(instr)
-
-  if (#instr.samples == 0) or (not is_sliced and #instr.samples > 1) then
-    return false, "Instrument needs to contain a single sample,"
-      ..("\nbut '%s' contains %d"):format(instr_name,#instr.samples)
-  end
-
-  -- resolve sample by looking at notecol 
-  local sample_idx = xInstrument.get_sample_idx_from_note(instr,notecol.note_value) 
-  if not sample_idx then
-    return false, "Could not resolve sample from note -"
-      ..("\nplease ensure that the note (%s) is mapped to a sample"):format(notecol.note_string)
-      .."\n(this can be verified from the sampler's keyzone tab)"
-  end
-
-  local sample = instr.samples[sample_idx]
-
-  if not sample.autoseek then
-    return false, "Can't determine position - please enable auto-seek on the sample"
-  end
-
-  -- TODO support beatsync (different pitch)
-  if sample.beat_sync_enabled then
-    return false, "Can't determine position - please disable beat-sync on the sample"
-  end
-
-  if not sample.sample_buffer.has_sample_data then
-    return false, "Can't determine position - sample is empty (does not contain audio)"
-  end
-
-  -- Don't trigger via phrase 
-  -- TODO allow if available on keyboard while in keymapped mode
-  if xInstrument.is_triggering_phrase(instr) then
-    return false, "Can't determine position - please avoid using phrases to trigger notes"
-  end
-  
   -- get number of lines to the trigger note
-  local quantized_pos = xSongPos(quantized_pos or rns.transport.edit_pos)
-  local nearest_pos = xSongPos(pos)
-  local diff = xSongPos.get_line_diff(quantized_pos,nearest_pos)
+  local line_diff = xSongPos.get_line_diff(xSongPos(trigger_pos),xSongPos(end_pos))
 
-  -- precise position: subtrack the delay column 
-  -- from the original, triggering note
+  -- precise position #1: subtract delay from triggering note
   if track.delay_column_visible then
     if (notecol.delay_value > 0) then
-      diff = diff - (notecol.delay_value / 255)
+      line_diff = line_diff - (notecol.delay_value / 255)
     end
   end
-  -- precise position: apply fractional line 
-  -- (skip when quantized)
-  if not quantized_pos then
-    diff = diff + pos.fraction
-  end
+  -- precise position #2: add fractional line 
+  line_diff = line_diff + end_pos.fraction
 
-  local frame = xSample.get_buffer_frame_by_line(sample,diff)
+  local frame = xSample.get_buffer_frame_by_line(sample,line_diff)
   frame = xSample.get_transposed_frame(notecol.note_value,frame,sample)
 
-  return frame,sample_idx,instr_idx,notecol
+  -- increase frame if the sample was triggered using Sxx command 
+  if not ignore_sxx and sample.sample_buffer.has_sample_data then 
+    local matched_sxx = xLinePattern.get_effect_command(track,line,"0S",trigger_pos.column,true)
+    if not table.is_empty(matched_sxx) then 
+      -- the last matched value is the one affecting playback 
+      local total_frames = sample.sample_buffer.number_of_frames       
+      local applied_sxx = matched_sxx[#matched_sxx].value
+      frame = frame + ((total_frames/256) * applied_sxx)
+    end 
+  end 
+
+
+  return frame,notecol
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- transpose the number of frames 
 
 function xSample.get_transposed_frame(note_value,frame,sample)
@@ -585,7 +549,7 @@ function xSample.get_transposed_frame(note_value,frame,sample)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- obtain the transposed note. Final pitch of the played sample is:
 --   played_note - mapping.base_note + sample.transpose + sample.finetune 
 -- @param played_note (number)
@@ -600,7 +564,7 @@ function xSample.get_transposed_note(played_note,sample)
   return 48 + played_note - mapping_note + sample_transpose
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- obtain the note which is used when synced across a number of lines
 -- (depends on sample length and playback speed)
 
@@ -613,7 +577,7 @@ function xSample.get_beatsynced_note(bpm,sample)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- initialize loop to full range, using the provided mode
 
 function xSample.initialize_loop(sample,loop_mode)
