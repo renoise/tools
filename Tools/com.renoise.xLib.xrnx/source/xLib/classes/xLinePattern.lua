@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xLinePattern
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -32,7 +32,7 @@ xLinePattern.EFFECT_CHARS = {
   "W","X","Y","Z"                  
 }
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- constructor
 -- @param note_columns (table<xNoteColumn descriptor>)
 -- @param effect_columns (table<xEffectColumn descriptor>)
@@ -63,7 +63,7 @@ function xLinePattern:__init(note_columns,effect_columns)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- convert descriptors into class instances (empty tables are left as-is)
 -- @param note_columns (xNoteColumn or table)
 -- @param effect_columns (xEffectColumn or table)
@@ -100,7 +100,7 @@ function xLinePattern:apply_descriptor(note_columns,effect_columns)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- combined method for writing to pattern or phrase
 -- @param sequence (int)
 -- @param line (int)
@@ -168,7 +168,7 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- write to either note or effect column
 -- @param rns_columns (array<renoise.NoteColumn>) 
 -- @param rns_track_or_phrase (renoise.Track or renoise.InstrumentPhrase) 
@@ -242,7 +242,7 @@ function xLinePattern:process_columns(
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param rns_line (renoise.PatternLine)
 -- @param max_note_cols (int)
 -- @param max_fx_cols (int)
@@ -268,22 +268,107 @@ function xLinePattern.do_read(rns_line,max_note_cols,max_fx_cols)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- look for a specific type of effect command, return all matches
+-- (the number of characters in 'fx_type' decides if we search columns or sub-columns)
+-- @param line (renoise.PatternLine)
+-- @param fx_type (number), e.g. "0S" or "B" 
+-- @param notecol_idx (number), note-column index
+-- @param [visible_only] (boolean), restrict search to visible columns in track 
+-- @return table<{
+--  index: note/effect column index (across visible columns)
+--  value: number 
+--  string: string 
+-- }>
 
-function xLinePattern:__tostring()
+function xLinePattern.get_effect_command(track,line,fx_type,notecol_idx,visible_only)
+  --TRACE("xLinePattern.get_effect_command(track,line,fx_type,notecol_idx,visible_only)")
 
-  return type(self)
-    ..":column#1="..tostring(self.note_columns[1])
+  assert(type(track)=="Track","Expected renoise.Track as argument")
+  assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
+  assert(type(fx_type)=="string","Expected string as argument")
+  assert(type(notecol_idx)=="number","Expected number as argument")
+
+  if (#fx_type == 1) then 
+    return xLinePattern.get_effect_subcolumn_command(track,line,fx_type,notecol_idx,visible_only)
+  elseif (#fx_type == 2) then 
+    return xLinePattern.get_effect_column_command(track,line,fx_type,notecol_idx,visible_only)
+  else 
+    error("Unexpected effects type")
+  end 
+
+  return {}
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- get effect command using single-digit syntax 
+-- (look through vol/pan subcolumns in note-columns)
+-- @args: same as xLinePattern.get_effect_command()
+
+function xLinePattern.get_effect_subcolumn_command(track,line,fx_type,notecol_idx,visible_only)
+  TRACE("xLinePattern.get_effect_subcolumn_command(track,line,fx_type,notecol_idx,visible_only)",track,line,fx_type,notecol_idx,visible_only)
+
+    error("Not yet implemented")
+
+end 
+
+---------------------------------------------------------------------------------------------------
+-- get effect command using two-digit syntax 
+-- (look through note effect-columns and effect-columns)
+-- @args: same as xLinePattern.get_effect_command()
+
+function xLinePattern.get_effect_column_command(track,line,fx_type,notecol_idx,visible_only)
+  TRACE("xLinePattern.get_effect_column_command(track,line,fx_type,notecol_idx,visible_only)",track,line,fx_type,notecol_idx,visible_only)
+
+  local matches = table.create()
+  local col_idx = 1
+
+  if track.sample_effects_column_visible then
+    for k,notecol in ipairs(line.note_columns) do
+      if visible_only and (k > track.visible_note_columns) then
+        break
+      else
+        if (k == notecol_idx) then 
+          if (notecol.effect_number_string == fx_type) then
+            matches:insert({
+              index = col_idx,
+              value = notecol.effect_amount_value,
+              string = notecol.effect_amount_string
+            })
+          end
+        end
+        col_idx = col_idx + 1
+      end
+    end
+  end 
+
+  for k,fxcol in ipairs(line.effect_columns) do
+    if visible_only and (k > track.visible_effect_columns) then 
+      break 
+    else
+      if (fxcol.number_string == fx_type) then
+        matches:insert({
+          index = col_idx,
+          value = fxcol.amount_value,
+          string = fxcol.amount_string
+        })
+      end
+      col_idx = col_idx + 1
+    end
+  end
+
+  return matches 
+
+end 
+
+---------------------------------------------------------------------------------------------------
 -- get midi command from line
 -- (look in last note-column, panning + first effect column)
 -- @return xMidiCommand or nil if not found
 
 function xLinePattern.get_midi_command(track,line)
-  --TRACE("xLinePattern.get_midi_command(track,line)",track,line)
+  TRACE("xLinePattern.get_midi_command(track,line)",track,line)
 
   assert(type(track)=="Track","Expected renoise.Track as argument")
   assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
@@ -305,26 +390,31 @@ function xLinePattern.get_midi_command(track,line)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- set midi command (write to pattern)
 -- @param track renoise.Track
 -- @param line renoise.PatternLine
 -- @param cmd xMidiCommand
-
+--[[
 function xLinePattern.set_midi_command(track,line,cmd)
 
   assert(type(track)=="Track","Expected renoise.Track as argument")
   assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
 
   local note_col = line.note_columns[#track.visible_note_columns]
-  --[[
-  if not note_col then
-    LOG("*** Could not locate note-column")
-  end
-  ]]
   
   -- TODO
 
+
+end
+]]
+
+---------------------------------------------------------------------------------------------------
+
+function xLinePattern:__tostring()
+
+  return type(self)
+    ..":column#1="..tostring(self.note_columns[1])
 
 end
 
