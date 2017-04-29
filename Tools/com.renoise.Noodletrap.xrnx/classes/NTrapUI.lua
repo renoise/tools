@@ -473,8 +473,6 @@ function NTrapUI:_build_tab_inputs()
         width = MIDDLE_W,
         value = 1,
         notifier = function(idx)
-          TRACE("*** ntrap_midi_in_popup.notifier",idx)
-          TRACE("*** input_devices",input_devices)
           self._ntrap:_close_midi_port()
           local port_name = input_devices[idx]
           if (idx > 1) then
@@ -1379,7 +1377,6 @@ function NTrapUI:update_phrase_bar()
     --self._ntrap:_get_phrase_range()
 
   local vrange = xPhraseManager.get_available_slot(instr_idx,phrase_range,phrase_offset)
-  print("vrange...",rprint(vrange))
   local instr_name = (instr and instr.name ~= "") and instr.name or "(empty)"
   ui_target_instr.text = string.format(
     "Target instrument: %02d - %.30s", 
@@ -1427,7 +1424,7 @@ function NTrapUI:update_phrase_bar()
 
 
   local function build_empty_or_virtual(from,to)
-    print("build_empty_or_virtual(from,to)",from,to)
+    TRACE("build_empty_or_virtual(from,to)",from,to)
   
     local build_empty = function (empty_from,empty_to)
       local button = build_button(empty_from,empty_to,COLOR_PHRASE_EMPTY,nil,false)
@@ -1444,7 +1441,7 @@ function NTrapUI:update_phrase_bar()
       and vrange[1] == from
       and vrange[2] == to
     then
-      print("virtual + empty")
+      --print("virtual + empty")
       build_virtual()
     elseif vrange 
       and vrange[1] >= from
@@ -1453,23 +1450,23 @@ function NTrapUI:update_phrase_bar()
       if (from == vrange[1]) 
         and (to > vrange[2])
       then 
-        print("virtual + empty")
+        --print("virtual + empty")
         build_virtual()
         build_empty(vrange[2]+1,to)
       elseif (from < vrange[1])
         and (to == vrange[2]) 
       then 
-        print("empty + virtual")
+        --print("empty + virtual")
         build_empty(from,vrange[1]-1)
         build_virtual()  
       else
-        print("empty + virtual + empty")
+        --print("empty + virtual + empty")
         build_empty(from,vrange[1]-1)
         build_virtual()
         build_empty(vrange[2]+1,to)
       end
     else -- empty space
-      print(">>> empty")
+      --print(">>> empty")
       build_empty(from,to)
     end
 
@@ -1532,9 +1529,6 @@ function NTrapUI:update_phrase_bar()
   if not prev_end then
     prev_end = -1
   end
-
-  print(">>> phrase_bar - prev_end",prev_end)
-  --print(">>> phrase_bar - self._phrase_buttons",rprint(self._phrase_buttons))
 
   -- trailing space
   if (prev_end < 119) then
