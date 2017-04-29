@@ -1,0 +1,3 @@
+-- TODO test static methods 
+-- get_effect_command
+-- get_midi_command
