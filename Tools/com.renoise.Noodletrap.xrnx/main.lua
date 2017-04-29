@@ -16,6 +16,7 @@ _trace_filters = nil
 -- includes ---------------------------
 
 _clibroot = "classes/cLib/classes/"
+require (_clibroot.."cLib")
 require (_clibroot.."cDebug")
 require (_clibroot.."cProcessSlicer")
 
@@ -27,28 +28,6 @@ require "classes/NTrapEvent"
 require "classes/NTrap"
 require "classes/NTrapPrefs"
 require "classes/NTrapUI"
-
---------------------------------------------------------------------------------
--- debug
---------------------------------------------------------------------------------
-
---[[
-TRACE = function(...)
-  if ntrap then
-    ntrap:log_string(...)
-  else
-    print(...)
-  end
-end
-
-LOG = function(...)
-  if ntrap then
-    ntrap:log_string(...)
-  else
-    print(...)
-  end
-end
-]]
 
 --------------------------------------------------------------------------------
 -- initialize
