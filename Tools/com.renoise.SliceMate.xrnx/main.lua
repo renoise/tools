@@ -32,6 +32,7 @@ require (_vlibroot..'vTable')
 require (_vlibroot..'vToggleButton')
 
 require (_xlibroot..'xLine')
+require (_xlibroot..'xLinePattern')
 require (_xlibroot..'xTrack')
 require (_xlibroot..'xSongPos')
 require (_xlibroot..'xBlockLoop')
