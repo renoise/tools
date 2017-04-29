@@ -56,7 +56,7 @@ end
 --------------------------------------------------------------------------------
 
 function vButton:build()
-  TRACE(">>> vButton:build()")
+  TRACE("vButton:build()")
 
 	local vb = self.vb
   if not self.view then
@@ -84,7 +84,7 @@ end
 --------------------------------------------------------------------------------
 
 function vButton:release()
-  TRACE(">>> vButton:release()")
+  TRACE("vButton:release()")
 
   if self.released then
     self:released()
@@ -161,7 +161,7 @@ end
 --------------------------------------------------------------------------------
 
 function vButton:set_width(val)
-  TRACE(">>> vButton:set_width(val)")
+  TRACE("vButton:set_width(val)")
 
   assert(type(val)=="number")
   self.view.width = val
@@ -171,7 +171,7 @@ end
 --------------------------------------------------------------------------------
 
 function vButton:set_height(val)
-  TRACE(">>> vButton:set_height(val)")
+  TRACE("vButton:set_height(val)")
 
   assert(type(val)=="number")
   self.view.height = val
