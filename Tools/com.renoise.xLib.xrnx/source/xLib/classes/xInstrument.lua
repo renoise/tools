@@ -99,7 +99,8 @@ end
 
 --------------------------------------------------------------------------------
 -- figure out which samples are mapped to the provided note
--- @return table<number>, slice indices 
+-- @return table<number>, sample indices 
+
 function xInstrument.get_samples_mapped_to_note(instr,note)
 
   local rslt = table.create()
@@ -118,8 +119,12 @@ end
 function xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)
   TRACE("xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)",instr,sample_idx)
 
-  local markers = instr.samples[1].slice_markers
-  return markers[sample_idx-1]
+  assert(type(instr)=="Instrument","Expected renoise.Instrument as argument")
+  assert(type(sample_idx)=="number","Expected number as argument")
+
+  if instr.samples[1] then
+    return instr.samples[1].slice_markers[sample_idx-1]
+  end 
 
 end
 
