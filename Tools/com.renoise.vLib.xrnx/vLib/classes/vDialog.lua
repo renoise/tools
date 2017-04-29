@@ -20,7 +20,7 @@ function vDialog:__init(...)
   local args = cLib.unpack_args(...)
 
   -- string
-  self.dialog_title = args.dialog_title or vDialog.DEFAULT_DIALOG_TITLE
+  self.dialog_title = self.dialog_title and self.dialog_title or args.dialog_title or vDialog.DEFAULT_DIALOG_TITLE
 
   -- renoise.View
   self.dialog_content = args.dialog_content or nil
