@@ -20,7 +20,6 @@ function xNotePos:__init(...)
   --TRACE("xNotePos:__init(...)")
 
   local args = cLib.unpack_args(...)
-  TRACE("xNotePos:__init - args #1",args)
 
   -- if no args, provide cursor position 
   if type(args)=="table" 
@@ -36,8 +35,6 @@ function xNotePos:__init(...)
       column = xTrack.get_selected_column_index(),
     }
   end
-
-  TRACE("xNotePos:__init - args #2",args)
 
   -- number, sequence index of pattern
   self.sequence = args.sequence 
@@ -101,6 +98,7 @@ end
 -- @return 
 
 function xNotePos.get_highres_pos()
+  TRACE("xNotePos:get_highres_pos()")
 
   local pos = rns.transport.playback_pos
   local beats = cLib.fraction(rns.transport.playback_pos_beats)
@@ -121,6 +119,7 @@ end
 -- @return string, error message if failed 
 
 function xNotePos:get_column()
+  TRACE("xNotePos:get_column()")
 
   local patt_idx,patt_or_err,track,ptrack,line = self:resolve()
   if not patt_idx then
@@ -129,7 +128,6 @@ function xNotePos:get_column()
 
   return xLine.get_column(line,self.column,track)
 
-
 end
 
 -------------------------------------------------------------------------------
@@ -137,6 +135,7 @@ end
 -- @return string, error message if failed 
 
 function xNotePos:select()
+  TRACE("xNotePos:select()")
 
   local patt_idx,patt_or_err,track,ptrack,line = self:resolve()
   if not patt_idx then
