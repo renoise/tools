@@ -287,7 +287,7 @@ end
 -- @return int (octave) or nil
 
 function xNoteColumn.note_string_to_value(str_val)
-  --TRACE("xNoteColumn.note_string_to_value(str_val)",str_val,type(str_val))
+  TRACE("xNoteColumn.note_string_to_value(str_val)",str_val,type(str_val))
 
   str_val = string.upper(str_val)
 
@@ -324,6 +324,7 @@ end
 -------------------------------------------------------------------------------
 
 function xNoteColumn.note_value_to_string(val)
+  TRACE("xNoteColumn.note_value_to_string(val)",val)
 
   -- renoise accepts floats
   val = math.floor(val)
@@ -349,10 +350,12 @@ end
 -- @return int (0-255)
 
 function xNoteColumn.instr_string_to_value(str)
+  TRACE("xNoteColumn.instr_string_to_value(str)",str)
   return (str == "..") and 255 or tonumber(str)
 end
 
 function xNoteColumn.instr_value_to_string(val)
+  TRACE("xNoteColumn.instr_value_to_string(val)",val)
   return (val == 255) and ".." or ("%.2X"):format(val)
 end
 
@@ -361,6 +364,7 @@ end
 -- @return int (0-255)
 
 function xNoteColumn.delay_string_to_value(str)
+  TRACE("xNoteColumn.delay_string_to_value(str)",str)
   return (str == "..") and 0 or tonumber(str)
 end
 -------------------------------------------------------------------------------
@@ -368,24 +372,27 @@ end
 -- @return string
 
 function xNoteColumn.delay_value_to_string(val)
+  TRACE("xNoteColumn.delay_value_to_string(val)",val)
   return (val == 255) and ".." or ("%.2X"):format(val)
 end
 
 -------------------------------------------------------------------------------
--- convert instr/vol/panning into a numeric value
+-- convert vol/panning into a numeric value
+-- (everything above 0x80 is interpreted as an fx command)
 -- @param str_val (string), for example "40", "G5" or ".."
 -- @param empty (int), the default empty value to return
 -- @return int
 
 function xNoteColumn.column_string_to_value(str_val,empty)
+  TRACE("xNoteColumn.column_string_to_value(str_val,empty)",str_val,empty)
 
   if (str_val == "..") then
     return empty
   end
 
-  local numeric = tonumber(str_val)
-  if numeric then
-    return tonumber("0x"..str_val)
+  local numeric = tonumber("0x"..str_val)
+  if numeric and (numeric <= 0x80) then
+    return numeric --tonumber("0x"..str_val)
   else
     return xNoteColumn.convert_fx_to_value(str_val)
   end
@@ -399,6 +406,7 @@ end
 -- @return value
 
 function xNoteColumn.column_value_to_string(val,empty)
+  TRACE("xNoteColumn.column_value_to_string(val,empty)",val,empty)
 
   if (val == xLinePattern.EMPTY_VALUE) then
     return empty
@@ -419,6 +427,7 @@ end
 -- @return value or nil
 
 function xNoteColumn.convert_fx_to_value(str_val)
+  TRACE("xNoteColumn.convert_fx_to_value(str_val)",str_val)
 
   local fx_num = string.sub(str_val,1,1)
   local fx_amt = string.sub(str_val,2,2)
@@ -436,6 +445,7 @@ end
 -- @return string
 
 function xNoteColumn.convert_fx_to_string(val)
+  TRACE("xNoteColumn.convert_fx_to_string(val)",val)
 
   local first = math.floor(val/256)
   local second = val-(first*256)
@@ -451,6 +461,7 @@ end
 -- @return table 
 
 function xNoteColumn.do_read(note_col,tokens)
+  TRACE("xNoteColumn.do_read(note_col,tokens)",note_col,tokens)
 
   if not tokens then
     tokens = xNoteColumn.tokens
@@ -472,6 +483,7 @@ end
 -- @param clear_undefined (bool) clear existing data when ours is nil
 
 function xNoteColumn:do_write(note_col,tokens,clear_undefined)
+  TRACE("xNoteColumn.do_write(note_col,tokens,clear_undefined)",note_col,tokens,clear_undefined)
 
   if not tokens then
     tokens = xNoteColumn.output_tokens
