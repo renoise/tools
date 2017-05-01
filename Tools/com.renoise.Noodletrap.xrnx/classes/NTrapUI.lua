@@ -912,9 +912,10 @@ function NTrapUI:_build_tab_settings()
         width = 6,
       },
       vb:text{
-        text = "Lower = less CPU usage while creating phrases, \nHigher = fewer undo points"
+        text = "Lower = less CPU usage while recording, \nHigher = fewer undo points"
       },
     },
+    --[[
     vb:row{
       width = CONTENT_W,
       --margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
@@ -934,6 +935,7 @@ function NTrapUI:_build_tab_settings()
         text = "Align MIDI keyboard with the octave in Renoise",
       },
     },
+    ]]
     vb:row{
       width = CONTENT_W,
       --margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
