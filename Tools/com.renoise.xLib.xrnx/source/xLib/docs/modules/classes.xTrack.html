@@ -1,0 +1,452 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/classes.xAudioDevice.html">classes.xAudioDevice</a></li>
+  <li><a href="../modules/classes.xAutomation.html">classes.xAutomation</a></li>
+  <li><a href="../modules/classes.xBlockLoop.html">classes.xBlockLoop</a></li>
+  <li><a href="../modules/classes.xColumns.html">classes.xColumns</a></li>
+  <li><a href="../modules/classes.xEffectColumn.html">classes.xEffectColumn</a></li>
+  <li><a href="../modules/classes.xInstrument.html">classes.xInstrument</a></li>
+  <li><a href="../modules/classes.xLib.html">classes.xLib</a></li>
+  <li><a href="../modules/classes.xLine.html">classes.xLine</a></li>
+  <li><a href="../modules/classes.xLineAutomation.html">classes.xLineAutomation</a></li>
+  <li><a href="../modules/classes.xLinePattern.html">classes.xLinePattern</a></li>
+  <li><a href="../modules/classes.xMessage.html">classes.xMessage</a></li>
+  <li><a href="../modules/classes.xMidiCommand.html">classes.xMidiCommand</a></li>
+  <li><a href="../modules/classes.xMidiInput.html">classes.xMidiInput</a></li>
+  <li><a href="../modules/classes.xMidiIO.html">classes.xMidiIO</a></li>
+  <li><a href="../modules/classes.xMidiMessage.html">classes.xMidiMessage</a></li>
+  <li><a href="../modules/classes.xNoteCapture.html">classes.xNoteCapture</a></li>
+  <li><a href="../modules/classes.xNoteColumn.html">classes.xNoteColumn</a></li>
+  <li><a href="../modules/classes.xNotePos.html">classes.xNotePos</a></li>
+  <li><a href="../modules/classes.xOscClient.html">classes.xOscClient</a></li>
+  <li><a href="../modules/classes.xOscDevice.html">classes.xOscDevice</a></li>
+  <li><a href="../modules/classes.xOscMessage.html">classes.xOscMessage</a></li>
+  <li><a href="../modules/classes.xOscPattern.html">classes.xOscPattern</a></li>
+  <li><a href="../modules/classes.xOscRouter.html">classes.xOscRouter</a></li>
+  <li><a href="../modules/classes.xOscValue.html">classes.xOscValue</a></li>
+  <li><a href="../modules/classes.xParameter.html">classes.xParameter</a></li>
+  <li><a href="../modules/classes.xPattern.html">classes.xPattern</a></li>
+  <li><a href="../modules/classes.xPatternSequencer.html">classes.xPatternSequencer</a></li>
+  <li><a href="../modules/classes.xPhrase.html">classes.xPhrase</a></li>
+  <li><a href="../modules/classes.xPhraseManager.html">classes.xPhraseManager</a></li>
+  <li><a href="../modules/classes.xPlayPos.html">classes.xPlayPos</a></li>
+  <li><a href="../modules/classes.xRule.html">classes.xRule</a></li>
+  <li><a href="../modules/classes.xRules.html">classes.xRules</a></li>
+  <li><a href="../modules/classes.xRuleset.html">classes.xRuleset</a></li>
+  <li><a href="../modules/classes.xSample.html">classes.xSample</a></li>
+  <li><a href="../modules/classes.xSampleMapping.html">classes.xSampleMapping</a></li>
+  <li><a href="../modules/classes.xScale.html">classes.xScale</a></li>
+  <li><a href="../modules/classes.xSelection.html">classes.xSelection</a></li>
+  <li><a href="../modules/classes.xSongPos.html">classes.xSongPos</a></li>
+  <li><a href="../modules/classes.xStreamPos.html">classes.xStreamPos</a></li>
+  <li><strong>classes.xTrack</strong></li>
+  <li><a href="../modules/classes.xTransport.html">classes.xTransport</a></li>
+  <li><a href="../modules/classes.xValue.html">classes.xValue</a></li>
+  <li><a href="../modules/classes.xVoiceManager.html">classes.xVoiceManager</a></li>
+  <li><a href="../modules/classes.xVoiceRunner.html">classes.xVoiceRunner</a></li>
+  <li><a href="../modules/classes.xVoiceSorter.html">classes.xVoiceSorter</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>classes.xTrack</code></h1>
+<p>Static Methods for working with renoise.Tracks objects
+.</p>
+<p>
+
+<h1></h1>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#get_master_track_index">get_master_track_index ()</a></td>
+	<td class="summary">get<em>master</em>track_index</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_master_track">get_master_track ()</a></td>
+	<td class="summary">get<em>master</em>track</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_send_track">get_send_track (send_index)</a></td>
+	<td class="summary">get send track</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_track_count">get_track_count (track_type)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_group_track_index">get_group_track_index (track_index, match_self)</a></td>
+	<td class="summary">get the group track associated with the provided track</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_first_sequencer_track_in_group">get_first_sequencer_track_in_group (track_index)</a></td>
+	<td class="summary">get the first sequencer-track associated with the provided group</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#determine_track_type">determine_track_type (track_index)</a></td>
+	<td class="summary">get the type of track: sequencer/master/send</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#next_sequencer_track">next_sequencer_track (wrap_pattern)</a></td>
+	<td class="summary">navigate to the next sequencer track (skip other types)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#previous_sequencer_track">previous_sequencer_track (wrap_pattern)</a></td>
+	<td class="summary">navigate to the previous sequencer track (skip other types)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_pattern_track">get_pattern_track (seq_idx, track_index)</a></td>
+	<td class="summary">obtain a specific pattern-track</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_selected_column_index">get_selected_column_index ()</a></td>
+	<td class="summary">get column_index, based on visible columns
+ (similar to e.g.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_selected_column_index">set_selected_column_index (track, col_idx)</a></td>
+	<td class="summary">set column_index, based on visible columns
+ (similar to e.g.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "get_master_track_index"></a>
+    <strong>get_master_track_index ()</strong>
+    </dt>
+    <dd>
+    get<em>master</em>track_index
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_master_track"></a>
+    <strong>get_master_track ()</strong>
+    </dt>
+    <dd>
+    get<em>master</em>track
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_send_track"></a>
+    <strong>get_send_track (send_index)</strong>
+    </dt>
+    <dd>
+    get send track
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">send_index</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int, number of tracks matching the type
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_track_count"></a>
+    <strong>get_track_count (track_type)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_type</span>
+         (renoise.Track.TRACK<em>TYPE</em>xxx)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int, number of tracks matching the type
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_group_track_index"></a>
+    <strong>get_group_track_index (track_index, match_self)</strong>
+    </dt>
+    <dd>
+    get the group track associated with the provided track
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_index</span>
+
+
+
+        </li>
+        <li><span class="parameter">match_self</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        number, group track index
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_first_sequencer_track_in_group"></a>
+    <strong>get_first_sequencer_track_in_group (track_index)</strong>
+    </dt>
+    <dd>
+    get the first sequencer-track associated with the provided group
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_index</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "determine_track_type"></a>
+    <strong>determine_track_type (track_index)</strong>
+    </dt>
+    <dd>
+    get the type of track: sequencer/master/send
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_index</span>
+         (int)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "next_sequencer_track"></a>
+    <strong>next_sequencer_track (wrap_pattern)</strong>
+    </dt>
+    <dd>
+    navigate to the next sequencer track (skip other types)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">wrap_pattern</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "previous_sequencer_track"></a>
+    <strong>previous_sequencer_track (wrap_pattern)</strong>
+    </dt>
+    <dd>
+    navigate to the previous sequencer track (skip other types)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">wrap_pattern</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_pattern_track"></a>
+    <strong>get_pattern_track (seq_idx, track_index)</strong>
+    </dt>
+    <dd>
+    obtain a specific pattern-track
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seq_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">track_index</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        PatternTrack or nil (when failed)</li>
+        <li>
+        string, error message when failed</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_selected_column_index"></a>
+    <strong>get_selected_column_index ()</strong>
+    </dt>
+    <dd>
+    get column<em>index, based on visible columns
+ (similar to e.g.  renoise.song().selection</em>in_pattern)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_selected_column_index"></a>
+    <strong>set_selected_column_index (track, col_idx)</strong>
+    </dt>
+    <dd>
+    set column<em>index, based on visible columns
+ (similar to e.g.  renoise.song().selection</em>in_pattern)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track</span>
+
+
+
+        </li>
+        <li><span class="parameter">col_idx</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string, error message when failed
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

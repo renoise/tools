@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xVoiceRunner
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -40,7 +40,7 @@ xVoiceRunner.CONDITIONS = {
 
 xVoiceRunner.GHOST_NOTE = 256
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xVoiceRunner:__init(...)
   TRACE("xVoiceRunner:__init(...)",...)
@@ -146,7 +146,7 @@ function xVoiceRunner:__init(...)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- reset variables to initial state before starting to process
 
 function xVoiceRunner:reset()
@@ -158,7 +158,7 @@ function xVoiceRunner:reset()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- prepare for next pattern by removing all terminated voices/voice-runs
 
 function xVoiceRunner:purge_voices()
@@ -168,13 +168,13 @@ function xVoiceRunner:purge_voices()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- gather voice-runs according to the specified settings
--- @param ptrack_or_phrase (renoise.PatternTrack)
+-- @param ptrack_or_phrase (renoise.PatternTrack or renoise.InstrumentPhrase)
 -- @param collect_mode (xVoiceRunner.COLLECT_MODE)
+-- @param selection (table), xSelection: pattern-selection
 -- @param trk_idx (int)
 -- @param seq_idx (int)
--- @param selection (table)
 
 function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,seq_idx)
   TRACE("xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,seq_idx)",ptrack_or_phrase,collect_mode,selection,trk_idx,seq_idx)
@@ -523,7 +523,7 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- select the voice-run directly below the cursor position
 -- @return table or nil
 
@@ -549,7 +549,7 @@ function xVoiceRunner:collect_at_cursor()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- select the voice-run directly above the cursor position
 -- @return table or nil
 
@@ -589,7 +589,7 @@ function xVoiceRunner:collect_above_cursor()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- select the voice-run directly below the cursor position
 -- @return table or nil
 
@@ -635,7 +635,7 @@ function xVoiceRunner:collect_below_cursor()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- detect what action to take on a given note-column
 -- @return xVoiceRunner.CONDITIONS.XX
 
@@ -723,7 +723,7 @@ function xVoiceRunner:detect_run_condition(notecol,col_idx,vol_visible,pan_visib
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- check when a voice-run ends by examining the pattern-track
 -- @param ptrack_or_phrase, renoise.PatternTrack
 -- @param col_idx (int)
@@ -778,7 +778,7 @@ function xVoiceRunner:detect_run_length(ptrack_or_phrase,col_idx,start_line,end_
 end
 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- get a specific note-column and its index
 -- @param col_idx (int)
 -- @param line_idx (int)
@@ -801,7 +801,7 @@ function xVoiceRunner:resolve_notecol(col_idx,line_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- merge columns: rightmost notes in selection overrides earlier ones
 
 function xVoiceRunner:merge_columns(ptrack_or_phrase,selection,trk_idx,seq_idx)
@@ -862,7 +862,7 @@ function xVoiceRunner:merge_columns(ptrack_or_phrase,selection,trk_idx,seq_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- if voice-run is longer than num_lines, shorten it 
 -- (remove lines/note-columns, update #lines, set to implied off)
 
@@ -882,7 +882,7 @@ function xVoiceRunner.shorten_run(voice_run,num_lines)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- write the current voice-runs to the provided pattern-track
 -- @param ptrack_or_phrase (renoise.PatternTrack or renoise.InstrumentPhrase)
 -- @param selection (table)
@@ -997,9 +997,12 @@ function xVoiceRunner:write(ptrack_or_phrase,selection,trk_idx)
 end
 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Static Methods
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- @param vrun (table)
+-- @param trk_idx (number)
+-- @param col_idx (number)
 -- @return table, pattern selection spanning the provided voice-run
 
 function xVoiceRunner.get_voice_run_selection(vrun,trk_idx,col_idx)
@@ -1026,8 +1029,9 @@ function xVoiceRunner.get_voice_run_selection(vrun,trk_idx,col_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- figure out if a given range contains any voice-runs
+-- @param voice_runs (table)
 -- @param line_start (int)
 -- @param col_idx (int)
 -- @param num_lines (int)
@@ -1052,9 +1056,9 @@ function xVoiceRunner.has_room(voice_runs,line_start,col_idx,num_lines)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- collect runs that are triggered during a particular range of lines
--- @param t (voice_runs)
+-- @param voice_runs (table)
 -- @param line_start (int)
 -- @param line_end (int)
 -- @param args (table)
@@ -1136,8 +1140,9 @@ function xVoiceRunner.in_range(voice_runs,line_start,line_end,args)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- collect runs that begin on a specific line 
+-- @param voice_runs (table)
 -- @param line_idx (int)
 -- @return table - see xVoiceRunner.create_voice()
 
@@ -1159,8 +1164,12 @@ function xVoiceRunner.get_runs_on_line(voice_runs,line_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- create a voice table (to ensure correct variable types...)
+-- @param voice_run (table)
+-- @param col_idx (number)
+-- @param run_idx (number)
+-- @param line_idx (number)
 -- @return table
 
 function xVoiceRunner.create_voice(voice_run,col_idx,run_idx,line_idx)
@@ -1180,9 +1189,9 @@ function xVoiceRunner.create_voice(voice_run,col_idx,run_idx,line_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Voice-run methods
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param voice_run, table
 -- @return int, note value or nil
 -- @return int, line index
@@ -1195,9 +1204,9 @@ function xVoiceRunner.get_initial_notecol(voice_run)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Voice-run (column methods)
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- retrieve the previous run if it overlaps with the provided line
 -- @param run_col (table)
 -- @param line_start (int)
@@ -1217,7 +1226,7 @@ function xVoiceRunner.get_open_run(run_col,line_start)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- find occurrences of notes which are higher than the specified one
 -- (NB: will only look for the _initial_ note)
 -- @param run_col (table)
@@ -1245,7 +1254,7 @@ function xVoiceRunner.get_higher_notes_in_column(run_col,note_val)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- find the index of the most recent run at the provided line
 -- @param run_col (table)
 -- @param line_idx (int)
@@ -1279,7 +1288,7 @@ function xVoiceRunner.get_most_recent_run_index(run_col,line_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- check the lowest/highest note-values for a given column
 -- @param run_col (table), required
 -- @param line_start (int)
@@ -1323,8 +1332,9 @@ function xVoiceRunner.get_high_low_note_values(run_col,line_start,line_end)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- retrieve the first and last line in column
+-- @param run_col (table), "voice-run column"
 
 function xVoiceRunner.get_column_start_end_line(run_col)
   TRACE("xVoiceRunner.get_column_start_end_line(run_col)",run_col)
@@ -1343,8 +1353,11 @@ function xVoiceRunner.get_column_start_end_line(run_col)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param voice_run, table
+-- @param respect_visibility (bool)
+-- @param vol_visible (bool)
+-- @param pan_visible (bool)
 -- @return vararg - see xVoiceRunner.get_notecol_info()
 
 function xVoiceRunner.get_final_notecol_info(voice_run,respect_visibility,vol_visible,pan_visible)
@@ -1355,12 +1368,12 @@ function xVoiceRunner.get_final_notecol_info(voice_run,respect_visibility,vol_vi
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- obtain a bunch of useful info about a note-column
 -- @param notecol (renoise.NoteColumn or xNoteColumn)
+-- @param respect_visibility (bool)
 -- @param vol_visible (bool)
 -- @param pan_visible (bool)
--- @param respect_visibility (bool)
 
 function xVoiceRunner.get_notecol_info(notecol,respect_visibility,vol_visible,pan_visible)
   TRACE("xVoiceRunner.get_notecol_info(notecol,respect_visibility,vol_visible,pan_visible)",notecol,respect_visibility,vol_visible,pan_visible)
@@ -1403,8 +1416,14 @@ function xVoiceRunner.get_notecol_info(notecol,respect_visibility,vol_visible,pa
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- terminate the note by whichever means
+-- @param notecol (renoise.NoteColumn or xNoteColumn)
+-- @param reveal_subcolumns (boolean)
+-- @param vol_visible (boolean)
+-- @param pan_visible (boolean)
+-- @param dly_visible (boolean)
+-- @param track_or_phrase (renoise.PatternTrack or renoise.InstrumentPhrase)
 
 function xVoiceRunner.terminate_note(notecol,reveal_subcolumns,vol_visible,pan_visible,dly_visible,track_or_phrase)
   TRACE("xVoiceRunner.terminate_note(notecol,reveal_subcolumns,vol_visible,pan_visible,dly_visible,track_or_phrase)",notecol,reveal_subcolumns,vol_visible,pan_visible,dly_visible,track_or_phrase)

@@ -213,19 +213,21 @@ function xSelection.is_single_track(patt_sel)
 end
 
 -------------------------------------------------------------------------------
--- TODO support track-spanning selections
 -- @param patt_sel (table ) 
 -- @return bool
 
 function xSelection.includes_note_columns(patt_sel)
 
+  -- TODO support track-spanning selections
+  
   local track = rns.tracks[patt_sel.start_track]
   return (patt_sel.start_column <= track.visible_note_columns)
 
 end
 
 -------------------------------------------------------------------------------
--- @param patt_sel (table ) 
+-- @param patt_sel (table) 
+-- @param number_of_columns (number)
 -- @return bool
 
 function xSelection.spans_entire_line(patt_sel,number_of_columns)

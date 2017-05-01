@@ -1,0 +1,1314 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/classes.xAudioDevice.html">classes.xAudioDevice</a></li>
+  <li><a href="../modules/classes.xAutomation.html">classes.xAutomation</a></li>
+  <li><a href="../modules/classes.xBlockLoop.html">classes.xBlockLoop</a></li>
+  <li><a href="../modules/classes.xColumns.html">classes.xColumns</a></li>
+  <li><a href="../modules/classes.xEffectColumn.html">classes.xEffectColumn</a></li>
+  <li><a href="../modules/classes.xInstrument.html">classes.xInstrument</a></li>
+  <li><a href="../modules/classes.xLib.html">classes.xLib</a></li>
+  <li><a href="../modules/classes.xLine.html">classes.xLine</a></li>
+  <li><a href="../modules/classes.xLineAutomation.html">classes.xLineAutomation</a></li>
+  <li><a href="../modules/classes.xLinePattern.html">classes.xLinePattern</a></li>
+  <li><a href="../modules/classes.xMessage.html">classes.xMessage</a></li>
+  <li><a href="../modules/classes.xMidiCommand.html">classes.xMidiCommand</a></li>
+  <li><a href="../modules/classes.xMidiInput.html">classes.xMidiInput</a></li>
+  <li><a href="../modules/classes.xMidiIO.html">classes.xMidiIO</a></li>
+  <li><a href="../modules/classes.xMidiMessage.html">classes.xMidiMessage</a></li>
+  <li><a href="../modules/classes.xNoteCapture.html">classes.xNoteCapture</a></li>
+  <li><a href="../modules/classes.xNoteColumn.html">classes.xNoteColumn</a></li>
+  <li><a href="../modules/classes.xNotePos.html">classes.xNotePos</a></li>
+  <li><a href="../modules/classes.xOscClient.html">classes.xOscClient</a></li>
+  <li><a href="../modules/classes.xOscDevice.html">classes.xOscDevice</a></li>
+  <li><a href="../modules/classes.xOscMessage.html">classes.xOscMessage</a></li>
+  <li><a href="../modules/classes.xOscPattern.html">classes.xOscPattern</a></li>
+  <li><a href="../modules/classes.xOscRouter.html">classes.xOscRouter</a></li>
+  <li><a href="../modules/classes.xOscValue.html">classes.xOscValue</a></li>
+  <li><a href="../modules/classes.xParameter.html">classes.xParameter</a></li>
+  <li><a href="../modules/classes.xPattern.html">classes.xPattern</a></li>
+  <li><a href="../modules/classes.xPatternSequencer.html">classes.xPatternSequencer</a></li>
+  <li><a href="../modules/classes.xPhrase.html">classes.xPhrase</a></li>
+  <li><a href="../modules/classes.xPhraseManager.html">classes.xPhraseManager</a></li>
+  <li><a href="../modules/classes.xPlayPos.html">classes.xPlayPos</a></li>
+  <li><a href="../modules/classes.xRule.html">classes.xRule</a></li>
+  <li><a href="../modules/classes.xRules.html">classes.xRules</a></li>
+  <li><a href="../modules/classes.xRuleset.html">classes.xRuleset</a></li>
+  <li><a href="../modules/classes.xSample.html">classes.xSample</a></li>
+  <li><a href="../modules/classes.xSampleMapping.html">classes.xSampleMapping</a></li>
+  <li><a href="../modules/classes.xScale.html">classes.xScale</a></li>
+  <li><a href="../modules/classes.xSelection.html">classes.xSelection</a></li>
+  <li><a href="../modules/classes.xSongPos.html">classes.xSongPos</a></li>
+  <li><a href="../modules/classes.xStreamPos.html">classes.xStreamPos</a></li>
+  <li><a href="../modules/classes.xTrack.html">classes.xTrack</a></li>
+  <li><a href="../modules/classes.xTransport.html">classes.xTransport</a></li>
+  <li><a href="../modules/classes.xValue.html">classes.xValue</a></li>
+  <li><a href="../modules/classes.xVoiceManager.html">classes.xVoiceManager</a></li>
+  <li><strong>classes.xVoiceRunner</strong></li>
+  <li><a href="../modules/classes.xVoiceSorter.html">classes.xVoiceSorter</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>classes.xVoiceRunner</code></h1>
+<p>This class converts pattern-tracks into 'voice-runs' - small note sequences
+.</p>
+<p>
+
+<h1></h1>
+
+<h2>About</h2>
+
+<p>xVoiceRunner provides a highly configurable method for extracting pattern data. </p>
+
+<p>See also: xVoiceSorter</p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#reset">reset ()</a></td>
+	<td class="summary">reset variables to initial state before starting to process</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#purge_voices">purge_voices ()</a></td>
+	<td class="summary">prepare for next pattern by removing all terminated voices/voice-runs</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#collect">collect (ptrack_or_phrase, collect_mode, selection, trk_idx, seq_idx)</a></td>
+	<td class="summary">gather voice-runs according to the specified settings</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#collect_at_cursor">collect_at_cursor ()</a></td>
+	<td class="summary">select the voice-run directly below the cursor position</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#collect_above_cursor">collect_above_cursor ()</a></td>
+	<td class="summary">select the voice-run directly above the cursor position</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#collect_below_cursor">collect_below_cursor ()</a></td>
+	<td class="summary">select the voice-run directly below the cursor position</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#detect_run_condition">detect_run_condition (notecol, col_idx, vol_visible, pan_visible, from_pattern)</a></td>
+	<td class="summary">detect what action to take on a given note-column</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#detect_run_length">detect_run_length (ptrack_or_phrase, col_idx, start_line, end_line, vol_visible, pan_visible)</a></td>
+	<td class="summary">check when a voice-run ends by examining the pattern-track</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#resolve_notecol">resolve_notecol (col_idx, line_idx)</a></td>
+	<td class="summary">get a specific note-column and its index</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#merge_columns">merge_columns (ptrack_or_phrase, selection, trk_idx, seq_idx)</a></td>
+	<td class="summary">merge columns: rightmost notes in selection overrides earlier ones</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#shorten_run">shorten_run (voice_run, num_lines)</a></td>
+	<td class="summary">if voice-run is longer than num_lines, shorten it
+ (remove lines/note-columns, update #lines, set to implied off)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#write">write (ptrack_or_phrase, selection, trk_idx)</a></td>
+	<td class="summary">write the current voice-runs to the provided pattern-track</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_voice_run_selection">get_voice_run_selection (vrun, trk_idx, col_idx)</a></td>
+	<td class="summary">Static Methods</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#has_room">has_room (voice_runs, line_start, col_idx, num_lines)</a></td>
+	<td class="summary">figure out if a given range contains any voice-runs</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#in_range">in_range (voice_runs, line_start, line_end, args)</a></td>
+	<td class="summary">collect runs that are triggered during a particular range of lines</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_runs_on_line">get_runs_on_line (voice_runs, line_idx)</a></td>
+	<td class="summary">collect runs that begin on a specific line</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#create_voice">create_voice (voice_run, col_idx, run_idx, line_idx)</a></td>
+	<td class="summary">create a voice table (to ensure correct variable types...)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_initial_notecol">get_initial_notecol (voice_run)</a></td>
+	<td class="summary">Voice-run methods</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_open_run">get_open_run (run_col, line_start)</a></td>
+	<td class="summary">Voice-run (column methods)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_higher_notes_in_column">get_higher_notes_in_column (run_col, note_val)</a></td>
+	<td class="summary">find occurrences of notes which are higher than the specified one
+ (NB: will only look for the <em>initial</em> note)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_most_recent_run_index">get_most_recent_run_index (run_col, line_idx)</a></td>
+	<td class="summary">find the index of the most recent run at the provided line</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_high_low_note_values">get_high_low_note_values (run_col, line_start, line_end)</a></td>
+	<td class="summary">check the lowest/highest note-values for a given column</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_column_start_end_line">get_column_start_end_line (run_col)</a></td>
+	<td class="summary">retrieve the first and last line in column</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_final_notecol_info">get_final_notecol_info (voice_run, respect_visibility, vol_visible, pan_visible)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_notecol_info">get_notecol_info (notecol, respect_visibility, vol_visible, pan_visible)</a></td>
+	<td class="summary">obtain a bunch of useful info about a note-column</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#terminate_note">terminate_note (notecol, reveal_subcolumns, vol_visible, pan_visible, dly_visible, track_or_phrase)</a></td>
+	<td class="summary">terminate the note by whichever means</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.voice_runs">self.voice_runs</a></td>
+	<td class="summary">
+<p>table of xNoteColumns, active voice from trigger to (implied) release
+ table = {
+  [column_index] = {                  -- pairs</p>
+<pre><code>[voice_run_index] = {             -- pairs
+  [number_of_lines] = int or nil  -- always set, including trailing blank space
+  [implied_noteoff] = bool or nil -- set when switching note/instr while having an active (non-offed) voice - see also split_on_note_xx options
+  [open_ended] = bool or nil      -- set when voice extends beyond selection/pattern boundary
+  [orphaned] = bool or nil        -- set on data with no prior voice (such as when we stop at note-off, note-cut...)
+  [actual_noteoff_col] = xNoteColumn or nil -- set when note-off/cut is explicit
+  [single_line_trigger] = bool or nil -- set when Cx on same line as note (only possible when stop_at_note_cut is true)
+  [__skip_template] = bool or nil -- true when the template tell us to ignore this note
+  [line_idx] =                    -- xNoteColumn
+  [line_idx] =                    -- xNoteColumn
+  [line_idx] =                    -- etc...
+</code></pre>
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.unique_notes">self.unique_notes</a></td>
+	<td class="summary">table, keep track of unique note/instrument combinations
+ table{</p>
+<pre><code>[note_value] = {
+  [instrument_value] = true
+}
+</code></pre>
+<p>  ]</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.split_at_note">self.split_at_note</a></td>
+	<td class="summary">bool, split a voice-run when note switches</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.split_at_note_change">self.split_at_note_change</a></td>
+	<td class="summary">bool, split a voice-run when note switches</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.split_at_instrument_change">self.split_at_instrument_change</a></td>
+	<td class="summary">bool, split a voice-run when instrument switches</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.link_ghost_notes">self.link_ghost_notes</a></td>
+	<td class="summary">bool, stop voice-run when encountering a NOTE-OFF</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.link_ghost_notes">self.link_ghost_notes</a></td>
+	<td class="summary">bool, stop voice-run when encountering a NOTE-OFF</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.stop_at_note_off">self.stop_at_note_off</a></td>
+	<td class="summary">bool, stop voice-run when encountering a NOTE-OFF</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.stop_at_note_cut">self.stop_at_note_cut</a></td>
+	<td class="summary">bool, stop voice-run when encountering a NOTE-OFF</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.remove_orphans">self.remove_orphans</a></td>
+	<td class="summary">bool, remove orphaned runs as they are encountered</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.wrap_around_jump">self.wrap_around_jump</a></td>
+	<td class="summary">bool, decide whether 'next/previous' jumps will wrap in pattern</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.compact_columns">self.compact_columns</a></td>
+	<td class="summary">bool, compact runs when collecting (remove empty columns)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.template">self.template</a></td>
+	<td class="summary">xVoiceRunnerTemplate, decides which notes to collect (optional)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.low_column">self.low_column</a></td>
+	<td class="summary">int, remember the collected columns indices
+  (used for clearing leftovers on output)</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "reset"></a>
+    <strong>reset ()</strong>
+    </dt>
+    <dd>
+    reset variables to initial state before starting to process
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "purge_voices"></a>
+    <strong>purge_voices ()</strong>
+    </dt>
+    <dd>
+    prepare for next pattern by removing all terminated voices/voice-runs
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "collect"></a>
+    <strong>collect (ptrack_or_phrase, collect_mode, selection, trk_idx, seq_idx)</strong>
+    </dt>
+    <dd>
+    gather voice-runs according to the specified settings
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ptrack_or_phrase</span>
+         (renoise.PatternTrack or renoise.InstrumentPhrase)
+        </li>
+        <li><span class="parameter">collect_mode</span>
+         (xVoiceRunner.COLLECT_MODE)
+        </li>
+        <li><span class="parameter">selection</span>
+         (table), xSelection: pattern-selection
+        </li>
+        <li><span class="parameter">trk_idx</span>
+         (int)
+        </li>
+        <li><span class="parameter">seq_idx</span>
+         (int)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "collect_at_cursor"></a>
+    <strong>collect_at_cursor ()</strong>
+    </dt>
+    <dd>
+    select the voice-run directly below the cursor position
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "collect_above_cursor"></a>
+    <strong>collect_above_cursor ()</strong>
+    </dt>
+    <dd>
+    select the voice-run directly above the cursor position
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "collect_below_cursor"></a>
+    <strong>collect_below_cursor ()</strong>
+    </dt>
+    <dd>
+    select the voice-run directly below the cursor position
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "detect_run_condition"></a>
+    <strong>detect_run_condition (notecol, col_idx, vol_visible, pan_visible, from_pattern)</strong>
+    </dt>
+    <dd>
+    detect what action to take on a given note-column
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">notecol</span>
+
+
+
+        </li>
+        <li><span class="parameter">col_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">vol_visible</span>
+
+
+
+        </li>
+        <li><span class="parameter">pan_visible</span>
+
+
+
+        </li>
+        <li><span class="parameter">from_pattern</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        xVoiceRunner.CONDITIONS.XX
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "detect_run_length"></a>
+    <strong>detect_run_length (ptrack_or_phrase, col_idx, start_line, end_line, vol_visible, pan_visible)</strong>
+    </dt>
+    <dd>
+    check when a voice-run ends by examining the pattern-track
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ptrack_or_phrase</span>
+        , renoise.PatternTrack
+        </li>
+        <li><span class="parameter">col_idx</span>
+         (int)
+        </li>
+        <li><span class="parameter">start_line</span>
+         (int), the line where the voice got triggered
+        </li>
+        <li><span class="parameter">end_line</span>
+         (int), iterate until this
+        </li>
+        <li><span class="parameter">vol_visible</span>
+         (bool)
+        </li>
+        <li><span class="parameter">pan_visible</span>
+         (bool)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int, line index
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "resolve_notecol"></a>
+    <strong>resolve_notecol (col_idx, line_idx)</strong>
+    </dt>
+    <dd>
+    get a specific note-column and its index
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">col_idx</span>
+         (int)
+        </li>
+        <li><span class="parameter">line_idx</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        xNoteColumn or nil</li>
+        <li>
+        int (run index) or nil</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "merge_columns"></a>
+    <strong>merge_columns (ptrack_or_phrase, selection, trk_idx, seq_idx)</strong>
+    </dt>
+    <dd>
+    merge columns: rightmost notes in selection overrides earlier ones
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ptrack_or_phrase</span>
+
+
+
+        </li>
+        <li><span class="parameter">selection</span>
+
+
+
+        </li>
+        <li><span class="parameter">trk_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">seq_idx</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "shorten_run"></a>
+    <strong>shorten_run (voice_run, num_lines)</strong>
+    </dt>
+    <dd>
+    if voice-run is longer than num_lines, shorten it
+ (remove lines/note-columns, update #lines, set to implied off)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">voice_run</span>
+
+
+
+        </li>
+        <li><span class="parameter">num_lines</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "write"></a>
+    <strong>write (ptrack_or_phrase, selection, trk_idx)</strong>
+    </dt>
+    <dd>
+    write the current voice-runs to the provided pattern-track
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ptrack_or_phrase</span>
+         (renoise.PatternTrack or renoise.InstrumentPhrase)
+        </li>
+        <li><span class="parameter">selection</span>
+         (table)
+        </li>
+        <li><span class="parameter">trk_idx</span>
+         (int)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_voice_run_selection"></a>
+    <strong>get_voice_run_selection (vrun, trk_idx, col_idx)</strong>
+    </dt>
+    <dd>
+    Static Methods
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">vrun</span>
+         (table)
+        </li>
+        <li><span class="parameter">trk_idx</span>
+         (number)
+        </li>
+        <li><span class="parameter">col_idx</span>
+         (number)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table, pattern selection spanning the provided voice-run
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "has_room"></a>
+    <strong>has_room (voice_runs, line_start, col_idx, num_lines)</strong>
+    </dt>
+    <dd>
+    figure out if a given range contains any voice-runs
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">voice_runs</span>
+         (table)
+        </li>
+        <li><span class="parameter">line_start</span>
+         (int)
+        </li>
+        <li><span class="parameter">col_idx</span>
+         (int)
+        </li>
+        <li><span class="parameter">num_lines</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        bool, true when no runs</li>
+        <li>
+        table, voice-runs in range</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "in_range"></a>
+    <strong>in_range (voice_runs, line_start, line_end, args)</strong>
+    </dt>
+    <dd>
+    collect runs that are triggered during a particular range of lines
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">voice_runs</span>
+         (table)
+        </li>
+        <li><span class="parameter">line_start</span>
+         (int)
+        </li>
+        <li><span class="parameter">line_end</span>
+         (int)
+        </li>
+        <li><span class="parameter">args</span>
+         (table)
+  exclude<em>columns (table)
+  restrict</em>to<em>column (int)
+  include</em>before (bool), include runs that started before line<em>start
+  include</em>after (bool), include runs that continue beyond line<em>end
+  matched</em>columns (table), set when called recursively
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        table</li>
+        <li>
+        matched_columns</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_runs_on_line"></a>
+    <strong>get_runs_on_line (voice_runs, line_idx)</strong>
+    </dt>
+    <dd>
+    collect runs that begin on a specific line
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">voice_runs</span>
+         (table)
+        </li>
+        <li><span class="parameter">line_idx</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table - see xVoiceRunner.create_voice()
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "create_voice"></a>
+    <strong>create_voice (voice_run, col_idx, run_idx, line_idx)</strong>
+    </dt>
+    <dd>
+    create a voice table (to ensure correct variable types...)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">voice_run</span>
+         (table)
+        </li>
+        <li><span class="parameter">col_idx</span>
+         (number)
+        </li>
+        <li><span class="parameter">run_idx</span>
+         (number)
+        </li>
+        <li><span class="parameter">line_idx</span>
+         (number)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_initial_notecol"></a>
+    <strong>get_initial_notecol (voice_run)</strong>
+    </dt>
+    <dd>
+    Voice-run methods
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">voice_run</span>
+        , table
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        int, note value or nil</li>
+        <li>
+        int, line index</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_open_run"></a>
+    <strong>get_open_run (run_col, line_start)</strong>
+    </dt>
+    <dd>
+    Voice-run (column methods)  retrieve the previous run if it overlaps with the provided line
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">run_col</span>
+         (table)
+        </li>
+        <li><span class="parameter">line_start</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_higher_notes_in_column"></a>
+    <strong>get_higher_notes_in_column (run_col, note_val)</strong>
+    </dt>
+    <dd>
+    find occurrences of notes which are higher than the specified one
+ (NB: will only look for the <em>initial</em> note)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">run_col</span>
+         (table)
+        </li>
+        <li><span class="parameter">note_val</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        int, run index or nil</li>
+        <li>
+        int, line index or nil</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_most_recent_run_index"></a>
+    <strong>get_most_recent_run_index (run_col, line_idx)</strong>
+    </dt>
+    <dd>
+    find the index of the most recent run at the provided line
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">run_col</span>
+         (table)
+        </li>
+        <li><span class="parameter">line_idx</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_high_low_note_values"></a>
+    <strong>get_high_low_note_values (run_col, line_start, line_end)</strong>
+    </dt>
+    <dd>
+    check the lowest/highest note-values for a given column
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">run_col</span>
+         (table), required
+        </li>
+        <li><span class="parameter">line_start</span>
+         (int)
+        </li>
+        <li><span class="parameter">line_end</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        int, low note-value or nil</li>
+        <li>
+        int, high note-value or nil</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_column_start_end_line"></a>
+    <strong>get_column_start_end_line (run_col)</strong>
+    </dt>
+    <dd>
+    retrieve the first and last line in column
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">run_col</span>
+         (table), "voice-run column"
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        vararg - see xVoiceRunner.get<em>notecol</em>info()
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_final_notecol_info"></a>
+    <strong>get_final_notecol_info (voice_run, respect_visibility, vol_visible, pan_visible)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">voice_run</span>
+        , table
+        </li>
+        <li><span class="parameter">respect_visibility</span>
+         (bool)
+        </li>
+        <li><span class="parameter">vol_visible</span>
+         (bool)
+        </li>
+        <li><span class="parameter">pan_visible</span>
+         (bool)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        vararg - see xVoiceRunner.get<em>notecol</em>info()
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_notecol_info"></a>
+    <strong>get_notecol_info (notecol, respect_visibility, vol_visible, pan_visible)</strong>
+    </dt>
+    <dd>
+    obtain a bunch of useful info about a note-column
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">notecol</span>
+         (renoise.NoteColumn or xNoteColumn)
+        </li>
+        <li><span class="parameter">respect_visibility</span>
+         (bool)
+        </li>
+        <li><span class="parameter">vol_visible</span>
+         (bool)
+        </li>
+        <li><span class="parameter">pan_visible</span>
+         (bool)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "terminate_note"></a>
+    <strong>terminate_note (notecol, reveal_subcolumns, vol_visible, pan_visible, dly_visible, track_or_phrase)</strong>
+    </dt>
+    <dd>
+    terminate the note by whichever means
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">notecol</span>
+         (renoise.NoteColumn or xNoteColumn)
+        </li>
+        <li><span class="parameter">reveal_subcolumns</span>
+         (boolean)
+        </li>
+        <li><span class="parameter">vol_visible</span>
+         (boolean)
+        </li>
+        <li><span class="parameter">pan_visible</span>
+         (boolean)
+        </li>
+        <li><span class="parameter">dly_visible</span>
+         (boolean)
+        </li>
+        <li><span class="parameter">track_or_phrase</span>
+         (renoise.PatternTrack or renoise.InstrumentPhrase)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.voice_runs"></a>
+    <strong>self.voice_runs</strong>
+    </dt>
+    <dd>
+    table of xNoteColumns, active voice from trigger to (implied) release
+ table = {
+  [column_index] = {                  -- pairs</p>
+<pre><code>[voice_run_index] = {             -- pairs
+  [number_of_lines] = int or nil  -- always set, including trailing blank space
+  [implied_noteoff] = bool or nil -- set when switching note/instr while having an active (non-offed) voice - see also split_on_note_xx options
+  [open_ended] = bool or nil      -- set when voice extends beyond selection/pattern boundary
+  [orphaned] = bool or nil        -- set on data with no prior voice (such as when we stop at note-off, note-cut...)
+  [actual_noteoff_col] = xNoteColumn or nil -- set when note-off/cut is explicit
+  [single_line_trigger] = bool or nil -- set when Cx on same line as note (only possible when stop_at_note_cut is true)
+  [__skip_template] = bool or nil -- true when the template tell us to ignore this note
+  [line_idx] =                    -- xNoteColumn
+  [line_idx] =                    -- xNoteColumn
+  [line_idx] =                    -- etc...
+ }
+</code></pre>
+<p>   }
+ }
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.unique_notes"></a>
+    <strong>self.unique_notes</strong>
+    </dt>
+    <dd>
+    table, keep track of unique note/instrument combinations
+ table{</p>
+<pre><code>[note_value] = {
+  [instrument_value] = true
+}
+</code></pre>
+<p>  ]
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.split_at_note"></a>
+    <strong>self.split_at_note</strong>
+    </dt>
+    <dd>
+    bool, split a voice-run when note switches
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.split_at_note_change"></a>
+    <strong>self.split_at_note_change</strong>
+    </dt>
+    <dd>
+    bool, split a voice-run when note switches
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.split_at_instrument_change"></a>
+    <strong>self.split_at_instrument_change</strong>
+    </dt>
+    <dd>
+    bool, split a voice-run when instrument switches
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.link_ghost_notes"></a>
+    <strong>self.link_ghost_notes</strong>
+    </dt>
+    <dd>
+    bool, stop voice-run when encountering a NOTE-OFF
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.link_ghost_notes"></a>
+    <strong>self.link_ghost_notes</strong>
+    </dt>
+    <dd>
+    bool, stop voice-run when encountering a NOTE-OFF
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.stop_at_note_off"></a>
+    <strong>self.stop_at_note_off</strong>
+    </dt>
+    <dd>
+    bool, stop voice-run when encountering a NOTE-OFF
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.stop_at_note_cut"></a>
+    <strong>self.stop_at_note_cut</strong>
+    </dt>
+    <dd>
+    bool, stop voice-run when encountering a NOTE-OFF
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.remove_orphans"></a>
+    <strong>self.remove_orphans</strong>
+    </dt>
+    <dd>
+    bool, remove orphaned runs as they are encountered
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.wrap_around_jump"></a>
+    <strong>self.wrap_around_jump</strong>
+    </dt>
+    <dd>
+    bool, decide whether 'next/previous' jumps will wrap in pattern
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.compact_columns"></a>
+    <strong>self.compact_columns</strong>
+    </dt>
+    <dd>
+    bool, compact runs when collecting (remove empty columns)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.template"></a>
+    <strong>self.template</strong>
+    </dt>
+    <dd>
+    xVoiceRunnerTemplate, decides which notes to collect (optional)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.low_column"></a>
+    <strong>self.low_column</strong>
+    </dt>
+    <dd>
+    int, remember the collected columns indices
+  (used for clearing leftovers on output)
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

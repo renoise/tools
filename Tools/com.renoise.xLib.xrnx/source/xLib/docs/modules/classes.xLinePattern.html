@@ -1,0 +1,554 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/classes.xAudioDevice.html">classes.xAudioDevice</a></li>
+  <li><a href="../modules/classes.xAutomation.html">classes.xAutomation</a></li>
+  <li><a href="../modules/classes.xBlockLoop.html">classes.xBlockLoop</a></li>
+  <li><a href="../modules/classes.xColumns.html">classes.xColumns</a></li>
+  <li><a href="../modules/classes.xEffectColumn.html">classes.xEffectColumn</a></li>
+  <li><a href="../modules/classes.xInstrument.html">classes.xInstrument</a></li>
+  <li><a href="../modules/classes.xLib.html">classes.xLib</a></li>
+  <li><a href="../modules/classes.xLine.html">classes.xLine</a></li>
+  <li><a href="../modules/classes.xLineAutomation.html">classes.xLineAutomation</a></li>
+  <li><strong>classes.xLinePattern</strong></li>
+  <li><a href="../modules/classes.xMessage.html">classes.xMessage</a></li>
+  <li><a href="../modules/classes.xMidiCommand.html">classes.xMidiCommand</a></li>
+  <li><a href="../modules/classes.xMidiInput.html">classes.xMidiInput</a></li>
+  <li><a href="../modules/classes.xMidiIO.html">classes.xMidiIO</a></li>
+  <li><a href="../modules/classes.xMidiMessage.html">classes.xMidiMessage</a></li>
+  <li><a href="../modules/classes.xNoteCapture.html">classes.xNoteCapture</a></li>
+  <li><a href="../modules/classes.xNoteColumn.html">classes.xNoteColumn</a></li>
+  <li><a href="../modules/classes.xNotePos.html">classes.xNotePos</a></li>
+  <li><a href="../modules/classes.xOscClient.html">classes.xOscClient</a></li>
+  <li><a href="../modules/classes.xOscDevice.html">classes.xOscDevice</a></li>
+  <li><a href="../modules/classes.xOscMessage.html">classes.xOscMessage</a></li>
+  <li><a href="../modules/classes.xOscPattern.html">classes.xOscPattern</a></li>
+  <li><a href="../modules/classes.xOscRouter.html">classes.xOscRouter</a></li>
+  <li><a href="../modules/classes.xOscValue.html">classes.xOscValue</a></li>
+  <li><a href="../modules/classes.xParameter.html">classes.xParameter</a></li>
+  <li><a href="../modules/classes.xPattern.html">classes.xPattern</a></li>
+  <li><a href="../modules/classes.xPatternSequencer.html">classes.xPatternSequencer</a></li>
+  <li><a href="../modules/classes.xPhrase.html">classes.xPhrase</a></li>
+  <li><a href="../modules/classes.xPhraseManager.html">classes.xPhraseManager</a></li>
+  <li><a href="../modules/classes.xPlayPos.html">classes.xPlayPos</a></li>
+  <li><a href="../modules/classes.xRule.html">classes.xRule</a></li>
+  <li><a href="../modules/classes.xRules.html">classes.xRules</a></li>
+  <li><a href="../modules/classes.xRuleset.html">classes.xRuleset</a></li>
+  <li><a href="../modules/classes.xSample.html">classes.xSample</a></li>
+  <li><a href="../modules/classes.xSampleMapping.html">classes.xSampleMapping</a></li>
+  <li><a href="../modules/classes.xScale.html">classes.xScale</a></li>
+  <li><a href="../modules/classes.xSelection.html">classes.xSelection</a></li>
+  <li><a href="../modules/classes.xSongPos.html">classes.xSongPos</a></li>
+  <li><a href="../modules/classes.xStreamPos.html">classes.xStreamPos</a></li>
+  <li><a href="../modules/classes.xTrack.html">classes.xTrack</a></li>
+  <li><a href="../modules/classes.xTransport.html">classes.xTransport</a></li>
+  <li><a href="../modules/classes.xValue.html">classes.xValue</a></li>
+  <li><a href="../modules/classes.xVoiceManager.html">classes.xVoiceManager</a></li>
+  <li><a href="../modules/classes.xVoiceRunner.html">classes.xVoiceRunner</a></li>
+  <li><a href="../modules/classes.xVoiceSorter.html">classes.xVoiceSorter</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>classes.xLinePattern</code></h1>
+<p>This class represents a 'virtual' renoise.PatternLine
+.</p>
+<p>
+
+<h1></h1>
+
+<p>Create instances as needed, through the constructor method </p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#__init">__init (note_columns, effect_columns)</a></td>
+	<td class="summary">constructor</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#apply_descriptor">apply_descriptor (note_columns, effect_columns)</a></td>
+	<td class="summary">convert descriptors into class instances (empty tables are left as-is)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#do_write">do_write (sequence, line, track_idx, phrase, tokens, include_hidden, expand_columns, clear_undefined)</a></td>
+	<td class="summary">combined method for writing to pattern or phrase</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#process_columns">process_columns (rns_columns, rns_track_or_phrase, xline_columns, include_hidden, expand_columns, visible_cols, tokens, clear_undefined, col_type)</a></td>
+	<td class="summary">write to either note or effect column</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#do_read">do_read (rns_line, max_note_cols, max_fx_cols)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_effect_command">get_effect_command (track, line, fx_type, notecol_idx, visible_only)</a></td>
+	<td class="summary">look for a specific type of effect command, return all matches
+ (the number of characters in 'fx_type' decides if we search columns or sub-columns)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_effect_subcolumn_command">get_effect_subcolumn_command (track, line, fx_type, notecol_idx, visible_only)</a></td>
+	<td class="summary">get effect command using single-digit syntax
+ (look through vol/pan subcolumns in note-columns)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_effect_column_command">get_effect_column_command (track, line, fx_type, notecol_idx, visible_only)</a></td>
+	<td class="summary">get effect command using two-digit syntax
+ (look through note effect-columns and effect-columns)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_midi_command">get_midi_command (track, line)</a></td>
+	<td class="summary">get midi command from line
+ (look in last note-column, panning + first effect column)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set_midi_command">set_midi_command (track, line, cmd)</a></td>
+	<td class="summary">set midi command (write to pattern)</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.effect_columns">self.effect_columns</a></td>
+	<td class="summary">table<xEffectColumn></td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "__init"></a>
+    <strong>__init (note_columns, effect_columns)</strong>
+    </dt>
+    <dd>
+    constructor
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">note_columns</span>
+         (table<xNoteColumn descriptor>)
+        </li>
+        <li><span class="parameter">effect_columns</span>
+         (table<xEffectColumn descriptor>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "apply_descriptor"></a>
+    <strong>apply_descriptor (note_columns, effect_columns)</strong>
+    </dt>
+    <dd>
+    convert descriptors into class instances (empty tables are left as-is)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">note_columns</span>
+         (xNoteColumn or table)
+        </li>
+        <li><span class="parameter">effect_columns</span>
+         (xEffectColumn or table)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "do_write"></a>
+    <strong>do_write (sequence, line, track_idx, phrase, tokens, include_hidden, expand_columns, clear_undefined)</strong>
+    </dt>
+    <dd>
+    combined method for writing to pattern or phrase
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sequence</span>
+         (int)
+        </li>
+        <li><span class="parameter">line</span>
+         (int)
+        </li>
+        <li><span class="parameter">track_idx</span>
+         (int), when writing to pattern
+        </li>
+        <li><span class="parameter">phrase</span>
+         (renoise.InstrumentPhrase), when writing to phrase
+        </li>
+        <li><span class="parameter">tokens</span>
+         (table<string>) process these tokens ("note_value", etc)
+        </li>
+        <li><span class="parameter">include_hidden</span>
+         (bool) apply to hidden columns as well
+        </li>
+        <li><span class="parameter">expand_columns</span>
+         (bool) reveal columns as they are written to
+        </li>
+        <li><span class="parameter">clear_undefined</span>
+         (bool) clear existing data when ours is nil
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "process_columns"></a>
+    <strong>process_columns (rns_columns, rns_track_or_phrase, xline_columns, include_hidden, expand_columns, visible_cols, tokens, clear_undefined, col_type)</strong>
+    </dt>
+    <dd>
+    write to either note or effect column
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">rns_columns</span>
+         (array<renoise.NoteColumn>)
+        </li>
+        <li><span class="parameter">rns_track_or_phrase</span>
+         (renoise.Track or renoise.InstrumentPhrase)
+        </li>
+        <li><span class="parameter">xline_columns</span>
+         (table<xNoteColumn or xEffectColumn>)
+        </li>
+        <li><span class="parameter">include_hidden</span>
+         (bool) apply to hidden columns as well
+        </li>
+        <li><span class="parameter">expand_columns</span>
+         (bool) reveal columns as they are written to
+        </li>
+        <li><span class="parameter">visible_cols</span>
+         (int) number of visible note/effect columns
+        </li>
+        <li><span class="parameter">tokens</span>
+         (table<string>) process these tokens ("note_value", etc)
+        </li>
+        <li><span class="parameter">clear_undefined</span>
+         (bool) clear existing data when ours is nil
+        </li>
+        <li><span class="parameter">col_type</span>
+         (xLinePattern.COLUMN_TYPES)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        table, note columns</li>
+        <li>
+        table, effect columns</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "do_read"></a>
+    <strong>do_read (rns_line, max_note_cols, max_fx_cols)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">rns_line</span>
+         (renoise.PatternLine)
+        </li>
+        <li><span class="parameter">max_note_cols</span>
+         (int)
+        </li>
+        <li><span class="parameter">max_fx_cols</span>
+         (int)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        table, note columns</li>
+        <li>
+        table, effect columns</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_effect_command"></a>
+    <strong>get_effect_command (track, line, fx_type, notecol_idx, visible_only)</strong>
+    </dt>
+    <dd>
+    look for a specific type of effect command, return all matches
+ (the number of characters in 'fx_type' decides if we search columns or sub-columns)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track</span>
+         (renoise.Track)
+        </li>
+        <li><span class="parameter">line</span>
+         (renoise.PatternLine)
+        </li>
+        <li><span class="parameter">fx_type</span>
+         (number), e.g. "0S" or "B"
+        </li>
+        <li><span class="parameter">notecol_idx</span>
+         (number), note-column index
+        </li>
+        <li><span class="parameter">visible_only</span>
+        ] (boolean), restrict search to visible columns in track
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         table&lt;{
+  index: note/effect column index (across visible columns)
+  value: number
+  string: string
+ }>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_effect_subcolumn_command"></a>
+    <strong>get_effect_subcolumn_command (track, line, fx_type, notecol_idx, visible_only)</strong>
+    </dt>
+    <dd>
+    get effect command using single-digit syntax
+ (look through vol/pan subcolumns in note-columns)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track</span>
+
+
+
+        </li>
+        <li><span class="parameter">line</span>
+
+
+
+        </li>
+        <li><span class="parameter">fx_type</span>
+
+
+
+        </li>
+        <li><span class="parameter">notecol_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">visible_only</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_effect_column_command"></a>
+    <strong>get_effect_column_command (track, line, fx_type, notecol_idx, visible_only)</strong>
+    </dt>
+    <dd>
+    get effect command using two-digit syntax
+ (look through note effect-columns and effect-columns)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track</span>
+
+
+
+        </li>
+        <li><span class="parameter">line</span>
+
+
+
+        </li>
+        <li><span class="parameter">fx_type</span>
+
+
+
+        </li>
+        <li><span class="parameter">notecol_idx</span>
+
+
+
+        </li>
+        <li><span class="parameter">visible_only</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_midi_command"></a>
+    <strong>get_midi_command (track, line)</strong>
+    </dt>
+    <dd>
+    get midi command from line
+ (look in last note-column, panning + first effect column)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track</span>
+
+
+
+        </li>
+        <li><span class="parameter">line</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        xMidiCommand or nil if not found
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set_midi_command"></a>
+    <strong>set_midi_command (track, line, cmd)</strong>
+    </dt>
+    <dd>
+    set midi command (write to pattern)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track</span>
+         renoise.Track
+        </li>
+        <li><span class="parameter">line</span>
+         renoise.PatternLine
+        </li>
+        <li><span class="parameter">cmd</span>
+         xMidiCommand
+[[
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.effect_columns"></a>
+    <strong>self.effect_columns</strong>
+    </dt>
+    <dd>
+    table<xEffectColumn>
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

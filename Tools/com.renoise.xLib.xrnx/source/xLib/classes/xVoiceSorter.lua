@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xVoiceSorter
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -39,7 +39,7 @@ xVoiceSorter.ERROR_CODE = {
   CANT_PRESERVE_EXISTING = 2,
 }
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xVoiceSorter:__init(...)
   TRACE("xVoiceSorter:__init(...)")
@@ -94,7 +94,7 @@ function xVoiceSorter:__init(...)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- call before a sort operation
 
 function xVoiceSorter:reset()
@@ -106,11 +106,12 @@ function xVoiceSorter:reset()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- main function - sort a pattern-track, or part thereof
--- @param ptrack, renoise.PatternTrack or renoise.InstrumentPhrase
--- @param trk_idx, int 
--- @param selection, table (pattern-selection)
+-- @param ptrack_or_phrase (renoise.PatternTrack or renoise.InstrumentPhrase)
+-- @param selection (table), pattern-selection
+-- @param trk_idx (number)
+-- @param seq_idx (number)
 -- @return bool, true or false if failed/require user input
 
 function xVoiceSorter:sort(ptrack_or_phrase,selection,trk_idx,seq_idx)
@@ -289,7 +290,7 @@ function xVoiceSorter:sort(ptrack_or_phrase,selection,trk_idx,seq_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- sort line runs according to note and (optionally) instrument
 
 function xVoiceSorter:sort_line_runs(t,line_idx)
@@ -319,7 +320,7 @@ function xVoiceSorter:sort_line_runs(t,line_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- sorting by note-value, one line at a time
 -- @param line_runs (table), see get_runs_on_line()
 -- @param line_idx (int) the line index
@@ -376,7 +377,7 @@ function xVoiceSorter:sort_by_note(line_runs,line_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- look for a matching note column (with or without available space)
 -- @return bool, true when column has space 
 -- @return int, column index (when no space, "where to create column")
@@ -559,7 +560,7 @@ function xVoiceSorter:find_note_column(note_value,line_idx,num_lines)
 end
 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- look for previous notes which are equal/higher, move to target column 
 -- (important: target should be empty or voice-runs could be overwritten)
 -- return bool (true when shifting took place)
@@ -623,7 +624,7 @@ function xVoiceSorter:shift_runs(note_value,source_col_idx,target_col_idx,line_i
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- convenience method, clear a given run 
 -- + will also remove the column if no runs are left...
 
@@ -643,7 +644,7 @@ function xVoiceSorter:clear_temp_run(col_idx,run_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- remove temp column, maintain high/low table
 
 function xVoiceSorter:remove_temp_column(col_idx)
@@ -654,7 +655,7 @@ function xVoiceSorter:remove_temp_column(col_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- insert temp column, maintain high/low table
 
 function xVoiceSorter:insert_temp_column(col_idx,voice_run)
@@ -670,7 +671,7 @@ function xVoiceSorter:insert_temp_column(col_idx,voice_run)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- maintain high/low note-values in column
 -- @param col_idx (int)
 -- @param high_note (int)
@@ -728,7 +729,7 @@ function xVoiceSorter:set_high_low_column(col_idx,high_note,low_note,force,line_
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- insert a voice-run, and shift existing entries if needed
 -- invoked by sort_by_note() - 
 
@@ -759,7 +760,7 @@ function xVoiceSorter:insert_note_run(col_idx,voice_run,line_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- sort note-values, unique style 
 -- @param line_runs (table)
 -- @param line_idx (int)
@@ -797,7 +798,7 @@ function xVoiceSorter:sort_unique(line_runs,line_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- look for remap column (matching note) with free space
 -- @return bool, true when column exist + has available space 
 -- @return int, column index (last matching column or column with room)
@@ -843,7 +844,7 @@ function xVoiceSorter:find_unique_column(notecol,line_idx,num_lines)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- check if a notecol belongs to a given unique column 
 -- @param notecol (xNoteColumn)
 -- @param col_idx (int)
@@ -876,7 +877,7 @@ function xVoiceSorter:matches_unique_column(notecol,col_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- sort note-values, compact style
 -- @param line_runs (table)
 -- @param line_idx (int)
@@ -903,7 +904,7 @@ function xVoiceSorter:sort_compact(line_runs,line_idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @return int, column index
 
 function xVoiceSorter:find_compact_column(line_idx,num_lines)
@@ -924,9 +925,9 @@ function xVoiceSorter:find_compact_column(line_idx,num_lines)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Meta-methods
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xVoiceSorter:__tostring()
 

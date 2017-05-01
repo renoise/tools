@@ -8,7 +8,7 @@ Static Methods for working with note/effect-columns
 .
 #
 
-@Requires xTrack
+Requires xTrack
 
 --]]
 
@@ -120,9 +120,9 @@ end
 --------------------------------------------------------------------------------
 -- navigate through note-columns - if the track is selected, use the  
 -- selected note column as basis (else, the first one...)
--- @param track_index
--- @param wrap_track (bool)
 -- @param wrap_pattern (bool) 
+-- @param wrap_track (bool)
+-- @param track_index (number)
 
 function xColumns.next_note_column(wrap_pattern,wrap_track,track_index)
   TRACE("xColumns.next_note_column(wrap_pattern,wrap_track,track_index)",wrap_pattern,wrap_track,track_index)
@@ -157,9 +157,9 @@ end
 --------------------------------------------------------------------------------
 -- navigate through note-columns - if the track is selected, use the  
 -- selected note column as basis (else, the first one...)
--- @param track_index
--- @param wrap_track (bool)
 -- @param wrap_pattern (bool) 
+-- @param wrap_track (bool)
+-- @param track_index (number)
 
 function xColumns.previous_note_column(wrap_pattern,wrap_track,track_index)
   TRACE("xColumns.previous_note_column(wrap_pattern,wrap_track,track_index)",track_index,wrap_track,wrap_pattern)

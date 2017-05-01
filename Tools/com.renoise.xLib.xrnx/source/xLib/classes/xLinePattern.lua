@@ -271,6 +271,7 @@ end
 ---------------------------------------------------------------------------------------------------
 -- look for a specific type of effect command, return all matches
 -- (the number of characters in 'fx_type' decides if we search columns or sub-columns)
+-- @param track (renoise.Track)
 -- @param line (renoise.PatternLine)
 -- @param fx_type (number), e.g. "0S" or "B" 
 -- @param notecol_idx (number), note-column index
@@ -304,7 +305,6 @@ end
 ---------------------------------------------------------------------------------------------------
 -- get effect command using single-digit syntax 
 -- (look through vol/pan subcolumns in note-columns)
--- @args: same as xLinePattern.get_effect_command()
 
 function xLinePattern.get_effect_subcolumn_command(track,line,fx_type,notecol_idx,visible_only)
   TRACE("xLinePattern.get_effect_subcolumn_command(track,line,fx_type,notecol_idx,visible_only)",track,line,fx_type,notecol_idx,visible_only)
@@ -316,7 +316,6 @@ end
 ---------------------------------------------------------------------------------------------------
 -- get effect command using two-digit syntax 
 -- (look through note effect-columns and effect-columns)
--- @args: same as xLinePattern.get_effect_command()
 
 function xLinePattern.get_effect_column_command(track,line,fx_type,notecol_idx,visible_only)
   TRACE("xLinePattern.get_effect_column_command(track,line,fx_type,notecol_idx,visible_only)",track,line,fx_type,notecol_idx,visible_only)

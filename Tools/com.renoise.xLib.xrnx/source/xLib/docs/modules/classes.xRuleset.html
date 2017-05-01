@@ -1,0 +1,780 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/classes.xAudioDevice.html">classes.xAudioDevice</a></li>
+  <li><a href="../modules/classes.xAutomation.html">classes.xAutomation</a></li>
+  <li><a href="../modules/classes.xBlockLoop.html">classes.xBlockLoop</a></li>
+  <li><a href="../modules/classes.xColumns.html">classes.xColumns</a></li>
+  <li><a href="../modules/classes.xEffectColumn.html">classes.xEffectColumn</a></li>
+  <li><a href="../modules/classes.xInstrument.html">classes.xInstrument</a></li>
+  <li><a href="../modules/classes.xLib.html">classes.xLib</a></li>
+  <li><a href="../modules/classes.xLine.html">classes.xLine</a></li>
+  <li><a href="../modules/classes.xLineAutomation.html">classes.xLineAutomation</a></li>
+  <li><a href="../modules/classes.xLinePattern.html">classes.xLinePattern</a></li>
+  <li><a href="../modules/classes.xMessage.html">classes.xMessage</a></li>
+  <li><a href="../modules/classes.xMidiCommand.html">classes.xMidiCommand</a></li>
+  <li><a href="../modules/classes.xMidiInput.html">classes.xMidiInput</a></li>
+  <li><a href="../modules/classes.xMidiIO.html">classes.xMidiIO</a></li>
+  <li><a href="../modules/classes.xMidiMessage.html">classes.xMidiMessage</a></li>
+  <li><a href="../modules/classes.xNoteCapture.html">classes.xNoteCapture</a></li>
+  <li><a href="../modules/classes.xNoteColumn.html">classes.xNoteColumn</a></li>
+  <li><a href="../modules/classes.xNotePos.html">classes.xNotePos</a></li>
+  <li><a href="../modules/classes.xOscClient.html">classes.xOscClient</a></li>
+  <li><a href="../modules/classes.xOscDevice.html">classes.xOscDevice</a></li>
+  <li><a href="../modules/classes.xOscMessage.html">classes.xOscMessage</a></li>
+  <li><a href="../modules/classes.xOscPattern.html">classes.xOscPattern</a></li>
+  <li><a href="../modules/classes.xOscRouter.html">classes.xOscRouter</a></li>
+  <li><a href="../modules/classes.xOscValue.html">classes.xOscValue</a></li>
+  <li><a href="../modules/classes.xParameter.html">classes.xParameter</a></li>
+  <li><a href="../modules/classes.xPattern.html">classes.xPattern</a></li>
+  <li><a href="../modules/classes.xPatternSequencer.html">classes.xPatternSequencer</a></li>
+  <li><a href="../modules/classes.xPhrase.html">classes.xPhrase</a></li>
+  <li><a href="../modules/classes.xPhraseManager.html">classes.xPhraseManager</a></li>
+  <li><a href="../modules/classes.xPlayPos.html">classes.xPlayPos</a></li>
+  <li><a href="../modules/classes.xRule.html">classes.xRule</a></li>
+  <li><a href="../modules/classes.xRules.html">classes.xRules</a></li>
+  <li><strong>classes.xRuleset</strong></li>
+  <li><a href="../modules/classes.xSample.html">classes.xSample</a></li>
+  <li><a href="../modules/classes.xSampleMapping.html">classes.xSampleMapping</a></li>
+  <li><a href="../modules/classes.xScale.html">classes.xScale</a></li>
+  <li><a href="../modules/classes.xSelection.html">classes.xSelection</a></li>
+  <li><a href="../modules/classes.xSongPos.html">classes.xSongPos</a></li>
+  <li><a href="../modules/classes.xStreamPos.html">classes.xStreamPos</a></li>
+  <li><a href="../modules/classes.xTrack.html">classes.xTrack</a></li>
+  <li><a href="../modules/classes.xTransport.html">classes.xTransport</a></li>
+  <li><a href="../modules/classes.xValue.html">classes.xValue</a></li>
+  <li><a href="../modules/classes.xVoiceManager.html">classes.xVoiceManager</a></li>
+  <li><a href="../modules/classes.xVoiceRunner.html">classes.xVoiceRunner</a></li>
+  <li><a href="../modules/classes.xVoiceSorter.html">classes.xVoiceSorter</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>classes.xRuleset</code></h1>
+<p>This is a supporting class for xRules
+.</p>
+<p>
+
+<h1></h1>
+
+<h3>See also</h3>
+<p><a href="../modules/classes.xRules.html">xRules</a>
+<a href="../modules/classes.xRule.html">xRule</a></p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#__init">__init (xrules, ruleset_def)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#rename">rename (new_name)</a></td>
+	<td class="summary">rename a ruleset - will attempt to rename the file itself</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#remove_rule">remove_rule (idx)</a></td>
+	<td class="summary">remove a rule from this set</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_rule_name">get_rule_name (rule_idx)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_rule_by_name">get_rule_by_name (str_name)</a></td>
+	<td class="summary">get rule by name, including display names</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#match_message">match_message (xmsg, ruleset_idx, rule_idx, force_midi)</a></td>
+	<td class="summary">pass message into rules, invoke callback when matched</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#compile">compile ()</a></td>
+	<td class="summary">compile each of the rules within this set</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#parse_definition">parse_definition (ruleset_def)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#load_definition">load_definition (file_path)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#serialize">serialize ()</a></td>
+	<td class="summary">serialize entire ruleset</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#save_definition">save_definition (file_path)</a></td>
+	<td class="summary">save the definition to a file
+ note: saving the definition will NOT update the file_path property,
+  so you can safely use this method to export a ruleset</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#looks_like_definition">looks_like_definition (str_def)</a></td>
+	<td class="summary">Static methods</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_suggested_name">get_suggested_name (str_name)</a></td>
+	<td class="summary">ensure that the name is unique (among the saved files)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_normalized_file_path">get_normalized_file_path (str_name)</a></td>
+	<td class="summary">return the path to the internal models</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.rules">self.rules</a></td>
+	<td class="summary">array containing xRule instances</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.xrules">self.xrules</a></td>
+	<td class="summary">xRules</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.name">self.name</a></td>
+	<td class="summary">string, name of this ruleset (derived from file_path)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.description">self.description</a></td>
+	<td class="summary">string, description of this ruleset</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.osc_enabled">self.osc_enabled</a></td>
+	<td class="summary">boolean, make rules able to specify an osc pattern</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.manage_voices">self.manage_voices</a></td>
+	<td class="summary">boolean, when true the voice-manager is enabled for this set</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.suppress_notifier">self.suppress_notifier</a></td>
+	<td class="summary">boolean, suppress while adding/removing/swapping</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.modified">self.modified</a></td>
+	<td class="summary">boolean</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.active">self.active</a></td>
+	<td class="summary">boolean, when false the ruleset should be ignored</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.selected_rule_index">self.selected_rule_index</a></td>
+	<td class="summary">int, selected rule</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.file_path">self.file_path</a></td>
+	<td class="summary">string, full path to location on disk</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "__init"></a>
+    <strong>__init (xrules, ruleset_def)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">xrules</span>
+         (xRules) owner
+        </li>
+        <li><span class="parameter">ruleset_def</span>
+         (table), optional
+  {</p>
+<pre><code>name = "Name of Ruleset",
+active = false,
+osc_enabled = false,
+{rule_def},{rule_def},{...} -- see xRule
+</code></pre>
+<p>  }
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "rename"></a>
+    <strong>rename (new_name)</strong>
+    </dt>
+    <dd>
+    rename a ruleset - will attempt to rename the file itself
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">new_name</span>
+         (string)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean,string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "remove_rule"></a>
+    <strong>remove_rule (idx)</strong>
+    </dt>
+    <dd>
+    remove a rule from this set
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string, a display name such as "Rule #01"
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_rule_name"></a>
+    <strong>get_rule_name (rule_idx)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">rule_idx</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string, a display name such as "Rule #01"
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_rule_by_name"></a>
+    <strong>get_rule_by_name (str_name)</strong>
+    </dt>
+    <dd>
+    get rule by name, including display names
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str_name</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        xRule,int(index) or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "match_message"></a>
+    <strong>match_message (xmsg, ruleset_idx, rule_idx, force_midi)</strong>
+    </dt>
+    <dd>
+    pass message into rules, invoke callback when matched
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">xmsg</span>
+         (xMidiMessage or xOscMessage)
+        </li>
+        <li><span class="parameter">ruleset_idx</span>
+         (int), passed back to callback
+        </li>
+        <li><span class="parameter">rule_idx</span>
+         (int), only check this rule (optional)
+        </li>
+        <li><span class="parameter">force_midi</span>
+         (boolean) force match (used by routings)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+  table<xMidiMessage or xOscMessage>
+  xMidiMessage or xOscMessage (original message)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "compile"></a>
+    <strong>compile ()</strong>
+    </dt>
+    <dd>
+    compile each of the rules within this set
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        boolean, true when passed</li>
+        <li>
+        string, error message when failed</li>
+        <li>
+        boolean, true when file was succesfully loaded</li>
+        <li>
+        err, string containing error message</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "parse_definition"></a>
+    <strong>parse_definition (ruleset_def)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ruleset_def</span>
+         (table)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        boolean, true when passed</li>
+        <li>
+        string, error message when failed</li>
+        <li>
+        boolean, true when file was succesfully loaded</li>
+        <li>
+        err, string containing error message</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "load_definition"></a>
+    <strong>load_definition (file_path)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file_path</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        boolean, true when file was succesfully loaded</li>
+        <li>
+        err, string containing error message</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "serialize"></a>
+    <strong>serialize ()</strong>
+    </dt>
+    <dd>
+    serialize entire ruleset
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "save_definition"></a>
+    <strong>save_definition (file_path)</strong>
+    </dt>
+    <dd>
+    save the definition to a file
+ note: saving the definition will NOT update the file_path property,
+  so you can safely use this method to export a ruleset
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file_path</span>
+        , path to file (optional)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        boolean, true when succesfully saved</li>
+        <li>
+        string, error message when failed</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "looks_like_definition"></a>
+    <strong>looks_like_definition (str_def)</strong>
+    </dt>
+    <dd>
+    Static methods  ensure that a definition is "likely" valid before loading
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str_def</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_suggested_name"></a>
+    <strong>get_suggested_name (str_name)</strong>
+    </dt>
+    <dd>
+    ensure that the name is unique (among the saved files)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str_name</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_normalized_file_path"></a>
+    <strong>get_normalized_file_path (str_name)</strong>
+    </dt>
+    <dd>
+    return the path to the internal models
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str_name</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.rules"></a>
+    <strong>self.rules</strong>
+    </dt>
+    <dd>
+    array containing xRule instances
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.xrules"></a>
+    <strong>self.xrules</strong>
+    </dt>
+    <dd>
+    xRules
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.name"></a>
+    <strong>self.name</strong>
+    </dt>
+    <dd>
+    string, name of this ruleset (derived from file_path)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.description"></a>
+    <strong>self.description</strong>
+    </dt>
+    <dd>
+    string, description of this ruleset
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.osc_enabled"></a>
+    <strong>self.osc_enabled</strong>
+    </dt>
+    <dd>
+    boolean, make rules able to specify an osc pattern
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.manage_voices"></a>
+    <strong>self.manage_voices</strong>
+    </dt>
+    <dd>
+    boolean, when true the voice-manager is enabled for this set
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.suppress_notifier"></a>
+    <strong>self.suppress_notifier</strong>
+    </dt>
+    <dd>
+    boolean, suppress while adding/removing/swapping
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.modified"></a>
+    <strong>self.modified</strong>
+    </dt>
+    <dd>
+    boolean
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.active"></a>
+    <strong>self.active</strong>
+    </dt>
+    <dd>
+    boolean, when false the ruleset should be ignored
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.selected_rule_index"></a>
+    <strong>self.selected_rule_index</strong>
+    </dt>
+    <dd>
+    int, selected rule
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.file_path"></a>
+    <strong>self.file_path</strong>
+    </dt>
+    <dd>
+    string, full path to location on disk
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

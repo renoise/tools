@@ -332,7 +332,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 -- extract tokens from a sample name 
--- @param string, e.g. "VST: Synth1 VST (Honky Piano)_0x7F_C-5" 
+-- @param str, e.g. "VST: Synth1 VST (Honky Piano)_0x7F_C-5" 
 -- @return table, {
 --    sample_name = string ("Recorded sample 01"),
 --    plugin_type = string ("VST" or "AU"),

@@ -1,0 +1,741 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/classes.xAudioDevice.html">classes.xAudioDevice</a></li>
+  <li><a href="../modules/classes.xAutomation.html">classes.xAutomation</a></li>
+  <li><a href="../modules/classes.xBlockLoop.html">classes.xBlockLoop</a></li>
+  <li><a href="../modules/classes.xColumns.html">classes.xColumns</a></li>
+  <li><a href="../modules/classes.xEffectColumn.html">classes.xEffectColumn</a></li>
+  <li><a href="../modules/classes.xInstrument.html">classes.xInstrument</a></li>
+  <li><a href="../modules/classes.xLib.html">classes.xLib</a></li>
+  <li><a href="../modules/classes.xLine.html">classes.xLine</a></li>
+  <li><a href="../modules/classes.xLineAutomation.html">classes.xLineAutomation</a></li>
+  <li><a href="../modules/classes.xLinePattern.html">classes.xLinePattern</a></li>
+  <li><a href="../modules/classes.xMessage.html">classes.xMessage</a></li>
+  <li><a href="../modules/classes.xMidiCommand.html">classes.xMidiCommand</a></li>
+  <li><a href="../modules/classes.xMidiInput.html">classes.xMidiInput</a></li>
+  <li><a href="../modules/classes.xMidiIO.html">classes.xMidiIO</a></li>
+  <li><a href="../modules/classes.xMidiMessage.html">classes.xMidiMessage</a></li>
+  <li><a href="../modules/classes.xNoteCapture.html">classes.xNoteCapture</a></li>
+  <li><a href="../modules/classes.xNoteColumn.html">classes.xNoteColumn</a></li>
+  <li><a href="../modules/classes.xNotePos.html">classes.xNotePos</a></li>
+  <li><a href="../modules/classes.xOscClient.html">classes.xOscClient</a></li>
+  <li><a href="../modules/classes.xOscDevice.html">classes.xOscDevice</a></li>
+  <li><a href="../modules/classes.xOscMessage.html">classes.xOscMessage</a></li>
+  <li><a href="../modules/classes.xOscPattern.html">classes.xOscPattern</a></li>
+  <li><a href="../modules/classes.xOscRouter.html">classes.xOscRouter</a></li>
+  <li><a href="../modules/classes.xOscValue.html">classes.xOscValue</a></li>
+  <li><a href="../modules/classes.xParameter.html">classes.xParameter</a></li>
+  <li><a href="../modules/classes.xPattern.html">classes.xPattern</a></li>
+  <li><a href="../modules/classes.xPatternSequencer.html">classes.xPatternSequencer</a></li>
+  <li><a href="../modules/classes.xPhrase.html">classes.xPhrase</a></li>
+  <li><a href="../modules/classes.xPhraseManager.html">classes.xPhraseManager</a></li>
+  <li><a href="../modules/classes.xPlayPos.html">classes.xPlayPos</a></li>
+  <li><a href="../modules/classes.xRule.html">classes.xRule</a></li>
+  <li><a href="../modules/classes.xRules.html">classes.xRules</a></li>
+  <li><a href="../modules/classes.xRuleset.html">classes.xRuleset</a></li>
+  <li><a href="../modules/classes.xSample.html">classes.xSample</a></li>
+  <li><a href="../modules/classes.xSampleMapping.html">classes.xSampleMapping</a></li>
+  <li><a href="../modules/classes.xScale.html">classes.xScale</a></li>
+  <li><a href="../modules/classes.xSelection.html">classes.xSelection</a></li>
+  <li><a href="../modules/classes.xSongPos.html">classes.xSongPos</a></li>
+  <li><a href="../modules/classes.xStreamPos.html">classes.xStreamPos</a></li>
+  <li><a href="../modules/classes.xTrack.html">classes.xTrack</a></li>
+  <li><a href="../modules/classes.xTransport.html">classes.xTransport</a></li>
+  <li><a href="../modules/classes.xValue.html">classes.xValue</a></li>
+  <li><strong>classes.xVoiceManager</strong></li>
+  <li><a href="../modules/classes.xVoiceRunner.html">classes.xVoiceRunner</a></li>
+  <li><a href="../modules/classes.xVoiceSorter.html">classes.xVoiceSorter</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>classes.xVoiceManager</code></h1>
+<p>This class keeps track of active, playing voices as they are triggered.</p>
+<p>
+
+<p>.</p>
+<h1></h1>
+
+<h3>In more detail</h3>
+
+<p>This class offers advanced voice-management for your own applications. This includes the ability to trigger and release specific instruments in specific tracks, while preserving the ability to freely move around in Renoise while doing so. </p>
+
+<p>Without voice-management it would be too easy to create hanging notes. Everything from switching track, instrument or octave while playing, to having multiple MIDI sources could cause trouble. A good voice-manager will understand this and be able to determine the originating 'place' where the voice got triggered. </p>
+
+<h3>Column allocation</h3>
+
+<p>The class is able to assist with automatic note-column allocation while recording. It's a basic approach, but close enough to how Renoise usually works to feel familiar. </p>
+
+<ul>
+    <li>Recordings start from the currently selected note column </li>
+    <li>New note columns (voices) are allocated as new notes arrive</li>
+    <li>Voices stay within their column as other voices are released/removed</li>
+</ul>
+
+<h3>Polyphony limits</h3>
+
+<p>In Renoise, you can play a maximum of 12 voices in a single track (equal to the maximum number of note-columns). </p>
+
+<p>If you are familiar with MIDI recording in Renoise, you probably have noticed that there exist a monophonic trigger option. Enabling this option will restrict the number of possible voices (and note-columns) during a recording session. xVoiceManager has no "monophonic" mode as such, but setting the voice_limit to 1 will yield the same result. </p>
+
+<h3>Column allocation</h3>
+
+<p>When automatic column-allocation is enabled, new note columns are allocated as the need arises. When this feature is enabled, the polyphonic limit can never be larger than the number of available columns, starting from the column_index of the first voice. So if you start recording while in note-column 11, you have a maximum polyphony of 2 voices before voice stealing kicks in.</p>
+
+<h3>Voice stealing</h3>
+
+<p>Voice stealing takes effect the moment you feed a xVoiceManager with more voices than the current polyphony limit allows. xVoiceManager is using a simple heuristic which will replace the oldest voice with the new one (just like how Renoise does it). </p>
+
+<h3>Observable events</h3>
+
+<p>Attach notifiers to detect when voices are triggered or released. </p>
+
+<p><code>triggered_observable</code> -> fired right <em>after</em> a voice starts playing <br/>
+<code>released_observable</code> -> fired right <em>before</em> a voice is released  </p>
+
+<p>After you have attached a notifier, you will receive a 'bang', but no argument. Instead, you should look for the <code>triggered/released_index</code> properties - they will contain the value you need.</p>
+
+<h3>Usage example</h3>
+
+<p>How to instantiate a copy of this class, and feed xMidiMessages into it:</p>
+
+<pre><code>local voicemgr = xVoiceManager{
+  follow_track = false,
+}
+
+voicemgr.triggered_observable:add_notifier(function()
+  -- use 'voicemgr.triggered_index'
+end)
+voicemgr.released_observable:add_notifier(function()
+  -- use 'voicemgr.released_index'
+end)
+
+local xmsg = some_note_on_message -- provide your own message
+voicemgr:input_message(xmsg) -- should trigger our notifier
+</code></pre>
+
+
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#input_note_column">input_note_column (xnotecol, col_idx, line_idx)</a></td>
+	<td class="summary">alternative input method, convert notecol to xmsg (when possible)
+ and invoke input_message</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#register">register (xmsg)</a></td>
+	<td class="summary">register/add a voice</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#release_all">release_all ()</a></td>
+	<td class="summary">Release all active voices</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#release_all_instrument">release_all_instrument (instr_idx)</a></td>
+	<td class="summary">Release all voices associated with a specific instrument</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#release_all_track">release_all_track (track_idx)</a></td>
+	<td class="summary">Release all voices associated with a specific track</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#release">release (voice_idx)</a></td>
+	<td class="summary">release specific voice</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#check_expired">check_expired ()</a></td>
+	<td class="summary">check if any voices have expired (when duration is set)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_voice_index">get_voice_index (xmsg)</a></td>
+	<td class="summary">locate among active voices, taking the pitch + track + instrument into
+ consideration (if all match, the voice is considered active...)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_available_columns">get_available_columns (track_idx)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#steal_voice">steal_voice ()</a></td>
+	<td class="summary">Release the oldest voice (release, then trigger stolen_observable)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#attach_to_song">attach_to_song ()</a></td>
+	<td class="summary">Monitor changes to tracks and instruments</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_by_pitch">get_by_pitch (pitch)</a></td>
+	<td class="summary">Get a voice with a specific pitch</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_higher">get_higher (idx)</a></td>
+	<td class="summary">Get a voice which has a higher pitch than the provided one</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_highest">get_highest ()</a></td>
+	<td class="summary">Get the voice with the highest pitch</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_lower">get_lower (idx)</a></td>
+	<td class="summary">Get a voice which has a lower pitch than the provided one</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_lowest">get_lowest ()</a></td>
+	<td class="summary">Get the voice with the lowest pitch</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.voices">self.voices</a></td>
+	<td class="summary">table<xMidiMessage>, active voices</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.voice_limit">self.voice_limit</a></td>
+	<td class="summary">the maximum number of voices (0 = 'unlimited')</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.duration">self.duration</a></td>
+	<td class="summary">number, note duration in seconds (0 = infinite)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.column_allocation">self.column_allocation</a></td>
+	<td class="summary">bool, whether to use automatic column allocation or not</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.released_index">self.released_index</a></td>
+	<td class="summary">voice about to be released (0 = none)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.triggered_index">self.triggered_index</a></td>
+	<td class="summary">newly triggered voice (0 = none)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.stolen_index">self.stolen_index</a></td>
+	<td class="summary">when voice got stolen (refer to released_index)</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "input_note_column"></a>
+    <strong>input_note_column (xnotecol, col_idx, line_idx)</strong>
+    </dt>
+    <dd>
+    alternative input method, convert notecol to xmsg (when possible)
+ and invoke input_message
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">xnotecol</span>
+         (xNoteColumn)
+        </li>
+        <li><span class="parameter">col_idx</span>
+         (number)
+        </li>
+        <li><span class="parameter">line_idx</span>
+         (number)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "register"></a>
+    <strong>register (xmsg)</strong>
+    </dt>
+    <dd>
+    register/add a voice
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">xmsg</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "release_all"></a>
+    <strong>release_all ()</strong>
+    </dt>
+    <dd>
+    Release all active voices
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "release_all_instrument"></a>
+    <strong>release_all_instrument (instr_idx)</strong>
+    </dt>
+    <dd>
+    Release all voices associated with a specific instrument
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">instr_idx</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "release_all_track"></a>
+    <strong>release_all_track (track_idx)</strong>
+    </dt>
+    <dd>
+    Release all voices associated with a specific track
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_idx</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "release"></a>
+    <strong>release (voice_idx)</strong>
+    </dt>
+    <dd>
+    release specific voice
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">voice_idx</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "check_expired"></a>
+    <strong>check_expired ()</strong>
+    </dt>
+    <dd>
+    check if any voices have expired (when duration is set)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_voice_index"></a>
+    <strong>get_voice_index (xmsg)</strong>
+    </dt>
+    <dd>
+    locate among active voices, taking the pitch + track + instrument into
+ consideration (if all match, the voice is considered active...)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">xmsg</span>
+         (xMidiMessage) should be a MIDI note-message
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        number or nil</li>
+        <li>
+        table</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_available_columns"></a>
+    <strong>get_available_columns (track_idx)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">track_idx</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "steal_voice"></a>
+    <strong>steal_voice ()</strong>
+    </dt>
+    <dd>
+    Release the oldest voice (release, then trigger stolen_observable)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "attach_to_song"></a>
+    <strong>attach_to_song ()</strong>
+    </dt>
+    <dd>
+    Monitor changes to tracks and instruments
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_by_pitch"></a>
+    <strong>get_by_pitch (pitch)</strong>
+    </dt>
+    <dd>
+    Get a voice with a specific pitch
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pitch</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        xMidiMessage or nil</li>
+        <li>
+        int or nil</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_higher"></a>
+    <strong>get_higher (idx)</strong>
+    </dt>
+    <dd>
+    Get a voice which has a higher pitch than the provided one
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        xMidiMessage or nil</li>
+        <li>
+        int or nil</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_highest"></a>
+    <strong>get_highest ()</strong>
+    </dt>
+    <dd>
+    Get the voice with the highest pitch
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        xMidiMessage or nil</li>
+        <li>
+        int or nil</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_lower"></a>
+    <strong>get_lower (idx)</strong>
+    </dt>
+    <dd>
+    Get a voice which has a lower pitch than the provided one
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        xMidiMessage or nil
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_lowest"></a>
+    <strong>get_lowest ()</strong>
+    </dt>
+    <dd>
+    Get the voice with the lowest pitch
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        xMidiMessage or nil
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.voices"></a>
+    <strong>self.voices</strong>
+    </dt>
+    <dd>
+    table<xMidiMessage>, active voices
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.voice_limit"></a>
+    <strong>self.voice_limit</strong>
+    </dt>
+    <dd>
+    the maximum number of voices (0 = 'unlimited')
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.duration"></a>
+    <strong>self.duration</strong>
+    </dt>
+    <dd>
+    number, note duration in seconds (0 = infinite)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.column_allocation"></a>
+    <strong>self.column_allocation</strong>
+    </dt>
+    <dd>
+    bool, whether to use automatic column allocation or not
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.released_index"></a>
+    <strong>self.released_index</strong>
+    </dt>
+    <dd>
+    voice about to be released (0 = none)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.triggered_index"></a>
+    <strong>self.triggered_index</strong>
+    </dt>
+    <dd>
+    newly triggered voice (0 = none)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.stolen_index"></a>
+    <strong>self.stolen_index</strong>
+    </dt>
+    <dd>
+    when voice got stolen (refer to released_index)
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

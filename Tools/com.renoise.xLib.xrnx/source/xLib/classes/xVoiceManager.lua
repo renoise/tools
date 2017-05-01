@@ -273,10 +273,12 @@ end
 -------------------------------------------------------------------------------
 -- alternative input method, convert notecol to xmsg (when possible)
 -- and invoke input_message
--- @param xnotecol, xNoteColumn
+-- @param xnotecol (xNoteColumn)
+-- @param col_idx (number)
+-- @param line_idx (number)
 
-function xVoiceManager:input_note_column(xnotecol,col_idx,line_index)
-  TRACE("xVoiceManager:input_note_column(xnotecol,col_idx,line_index)",xnotecol,col_idx,line_index)
+function xVoiceManager:input_note_column(xnotecol,col_idx,line_idx)
+  TRACE("xVoiceManager:input_note_column(xnotecol,col_idx,line_idx)",xnotecol,col_idx,line_idx)
 
   local values = {xnotecol.note_value,xnotecol.volume_value}
   local instr_idx = xnotecol.instrument_value+1
@@ -286,7 +288,7 @@ function xVoiceManager:input_note_column(xnotecol,col_idx,line_index)
     values = values,
     instrument_index = instr_idx,
     note_column_index = col_idx,
-    line_index = line_index,
+    line_index = line_idx,
   }
   if (xnotecol.note_value < renoise.PatternLine.NOTE_OFF) then
     xmsg.message_type = xMidiMessage.TYPE.NOTE_ON

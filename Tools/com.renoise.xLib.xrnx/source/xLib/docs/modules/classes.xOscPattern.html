@@ -1,0 +1,597 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>xLib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../modules/classes.xAudioDevice.html">classes.xAudioDevice</a></li>
+  <li><a href="../modules/classes.xAutomation.html">classes.xAutomation</a></li>
+  <li><a href="../modules/classes.xBlockLoop.html">classes.xBlockLoop</a></li>
+  <li><a href="../modules/classes.xColumns.html">classes.xColumns</a></li>
+  <li><a href="../modules/classes.xEffectColumn.html">classes.xEffectColumn</a></li>
+  <li><a href="../modules/classes.xInstrument.html">classes.xInstrument</a></li>
+  <li><a href="../modules/classes.xLib.html">classes.xLib</a></li>
+  <li><a href="../modules/classes.xLine.html">classes.xLine</a></li>
+  <li><a href="../modules/classes.xLineAutomation.html">classes.xLineAutomation</a></li>
+  <li><a href="../modules/classes.xLinePattern.html">classes.xLinePattern</a></li>
+  <li><a href="../modules/classes.xMessage.html">classes.xMessage</a></li>
+  <li><a href="../modules/classes.xMidiCommand.html">classes.xMidiCommand</a></li>
+  <li><a href="../modules/classes.xMidiInput.html">classes.xMidiInput</a></li>
+  <li><a href="../modules/classes.xMidiIO.html">classes.xMidiIO</a></li>
+  <li><a href="../modules/classes.xMidiMessage.html">classes.xMidiMessage</a></li>
+  <li><a href="../modules/classes.xNoteCapture.html">classes.xNoteCapture</a></li>
+  <li><a href="../modules/classes.xNoteColumn.html">classes.xNoteColumn</a></li>
+  <li><a href="../modules/classes.xNotePos.html">classes.xNotePos</a></li>
+  <li><a href="../modules/classes.xOscClient.html">classes.xOscClient</a></li>
+  <li><a href="../modules/classes.xOscDevice.html">classes.xOscDevice</a></li>
+  <li><a href="../modules/classes.xOscMessage.html">classes.xOscMessage</a></li>
+  <li><strong>classes.xOscPattern</strong></li>
+  <li><a href="../modules/classes.xOscRouter.html">classes.xOscRouter</a></li>
+  <li><a href="../modules/classes.xOscValue.html">classes.xOscValue</a></li>
+  <li><a href="../modules/classes.xParameter.html">classes.xParameter</a></li>
+  <li><a href="../modules/classes.xPattern.html">classes.xPattern</a></li>
+  <li><a href="../modules/classes.xPatternSequencer.html">classes.xPatternSequencer</a></li>
+  <li><a href="../modules/classes.xPhrase.html">classes.xPhrase</a></li>
+  <li><a href="../modules/classes.xPhraseManager.html">classes.xPhraseManager</a></li>
+  <li><a href="../modules/classes.xPlayPos.html">classes.xPlayPos</a></li>
+  <li><a href="../modules/classes.xRule.html">classes.xRule</a></li>
+  <li><a href="../modules/classes.xRules.html">classes.xRules</a></li>
+  <li><a href="../modules/classes.xRuleset.html">classes.xRuleset</a></li>
+  <li><a href="../modules/classes.xSample.html">classes.xSample</a></li>
+  <li><a href="../modules/classes.xSampleMapping.html">classes.xSampleMapping</a></li>
+  <li><a href="../modules/classes.xScale.html">classes.xScale</a></li>
+  <li><a href="../modules/classes.xSelection.html">classes.xSelection</a></li>
+  <li><a href="../modules/classes.xSongPos.html">classes.xSongPos</a></li>
+  <li><a href="../modules/classes.xStreamPos.html">classes.xStreamPos</a></li>
+  <li><a href="../modules/classes.xTrack.html">classes.xTrack</a></li>
+  <li><a href="../modules/classes.xTransport.html">classes.xTransport</a></li>
+  <li><a href="../modules/classes.xValue.html">classes.xValue</a></li>
+  <li><a href="../modules/classes.xVoiceManager.html">classes.xVoiceManager</a></li>
+  <li><a href="../modules/classes.xVoiceRunner.html">classes.xVoiceRunner</a></li>
+  <li><a href="../modules/classes.xVoiceSorter.html">classes.xVoiceSorter</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>classes.xOscPattern</code></h1>
+<p>This class defines a simple syntax for matching/extracting and generating OSC messages.</p>
+<p>To start with, you define an "input pattern" for matching values - either a literal value (number or string), or a "wildcard". For example:</p>
+
+<pre><code>  -- Match message with four integers, third one equal to 48
+  "/renoise/trigger/note_on %i %i 48 %i"
+</code></pre>
+
+<h2>Wildcard and literal values</h2>
+
+<p>A wildcard is one of the supported OSC tags preceded by a percent sign. For example, the wildcard <code>%f</code> will match any floating point value. It's possible to mix literal values and wildcards. </p>
+
+<p>Depending on how literal values are specified, and whether <a href="../modules/classes.xOscPattern.html#self.strict">strict</a>  is set to true, they are interpreted as specific types:</p>
+
+<pre><code>"/some/integer 1"   &lt;-- integer(strict)/number
+"/some/integer 0x1" &lt;-- integer(strict)/number
+"/some/float 1.0"   &lt;-- float(strict)/number
+"/some/string true" &lt;-- string
+</code></pre>
+
+<h2>Strict mode and caching</h2>
+
+<p>Strict mode will look "more closely" at the literal values. This makes it possible to define a more restrictive/precise pattern and by default, is turned on. </p>
+
+<p>A special tag (NUMBER) exists, which can accept any type of value which can be translated into a number. An example would be if you have a device which transmit integers as floating point, or vice versa. </p>
+
+<p>Disabling strict interpretation will basically set all numeric tags to NUMBER instead of their more <a href="../modules/classes.xOscPattern.html#self.strict">strict</a>  counterpart. The downside is that using a NUMBER will make the pattern unable to use caching.</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#get_arg_names">get_arg_names ()</a></td>
+	<td class="summary">get/set "display name" for each captured part, e.g.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#get_complete">get_complete ()</a></td>
+	<td class="summary">test the input/output pattern and return the result (validate)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#parse_input_pattern">parse_input_pattern ()</a></td>
+	<td class="summary">Define the OSC pattern and wildcards/literal values
+ + also determines if pattern is cacheable</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#parse_output_pattern">parse_output_pattern ()</a></td>
+	<td class="summary">Decide how outgoing messages are constructed
+ + define a new "osc pattern"
+ + rearrange the order of values via "$n" tokens</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#purely_literal">purely_literal ()</a></td>
+	<td class="summary">Check if the pattern contains only literal values (no wildcards/tokens)
+ return boolean</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#generate">generate (args)</a></td>
+	<td class="summary">Create a new OSC message from internal or provided values</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#test_pattern">test_pattern (str_pattern)</a></td>
+	<td class="summary">Static methods</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#types_are_matching">types_are_matching (this, that)</a></td>
+	<td class="summary">Check if pattern is matching same type of values as another pattern,
+ disregarding any literal values being set - only look for the type/tag.</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.arguments">self.arguments</a></td>
+	<td class="summary">table<xOscValue>, value is undefined when wildcard</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#self.pattern_in">self.pattern_in</a></td>
+	<td class="summary">string, pattern used for matching the input</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.pattern_out">self.pattern_out</a></td>
+	<td class="summary">string, pattern for constructing new messages</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.complete">self.complete</a></td>
+	<td class="summary">boolean, true when message contain functioning patterns</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.before_modified_observable">self.before_modified_observable</a></td>
+	<td class="summary">called when patterns are changed</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.strict">self.strict</a></td>
+	<td class="summary">boolean, whether to interpret literal values strictly or not
+  (if false, use xOscValue.TAG.NUMBER to represent all numbers)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.precision">self.precision</a></td>
+	<td class="summary">number, avoid rounding errors when comparing floats</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.uid">self.uid</a></td>
+	<td class="summary">string, unique identifier for the pattern</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.cacheable">self.cacheable</a></td>
+	<td class="summary">boolean, true when we can cache the incoming message</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.arg_names">self.arg_names</a></td>
+	<td class="summary">renoise.Document.ObservableStringList
+ (this is just a convenience method for getting/setting the
+  'name' part of our xOscValues)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.osc_pattern_in">self.osc_pattern_in</a></td>
+	<td class="summary">string, input pattern (set via 'pattern_in')</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.osc_pattern_out">self.osc_pattern_out</a></td>
+	<td class="summary">string, output pattern (set via 'pattern<em>in' or 'pattern</em>out')</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#self.output_args">self.output_args</a></td>
+	<td class="summary">table<int> output arguments/order
+ e.g.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+    <dl class="function">
+    <dt>
+    <a name = "get_arg_names"></a>
+    <strong>get_arg_names ()</strong>
+    </dt>
+    <dd>
+    get/set "display name" for each captured part, e.g.  {"x","y","z"}
+ (always matching the number of arguments - undefined names are left empty)
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table<string>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "get_complete"></a>
+    <strong>get_complete ()</strong>
+    </dt>
+    <dd>
+    test the input/output pattern and return the result (validate)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "parse_input_pattern"></a>
+    <strong>parse_input_pattern ()</strong>
+    </dt>
+    <dd>
+    Define the OSC pattern and wildcards/literal values
+ + also determines if pattern is cacheable
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "parse_output_pattern"></a>
+    <strong>parse_output_pattern ()</strong>
+    </dt>
+    <dd>
+    Decide how outgoing messages are constructed
+ + define a new "osc pattern"
+ + rearrange the order of values via "$n" tokens
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "purely_literal"></a>
+    <strong>purely_literal ()</strong>
+    </dt>
+    <dd>
+    Check if the pattern contains only literal values (no wildcards/tokens)
+ return boolean
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "generate"></a>
+    <strong>generate (args)</strong>
+    </dt>
+    <dd>
+    Create a new OSC message from internal or provided values
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">args</span>
+         (table<xOscValue>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        renoise.Osc.Message or nil when failed</li>
+        <li>
+        string, message when failed</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "test_pattern"></a>
+    <strong>test_pattern (str_pattern)</strong>
+    </dt>
+    <dd>
+    Static methods  Check if the syntax is fundamentally flawed
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str_pattern</span>
+        check for initial forward slash
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean,string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "types_are_matching"></a>
+    <strong>types_are_matching (this, that)</strong>
+    </dt>
+    <dd>
+    Check if pattern is matching same type of values as another pattern,
+ disregarding any literal values being set - only look for the type/tag. <br/>
+ For example, "/test %i" would match "/test 42" as they have the same path
+ and are both matching an integer value...
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">this</span>
+         (xOscPattern)
+        </li>
+        <li><span class="parameter">that</span>
+         (xOscPattern)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean,string
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.arguments"></a>
+    <strong>self.arguments</strong>
+    </dt>
+    <dd>
+    table<xOscValue>, value is undefined when wildcard
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+    <dl class="function">
+    <dt>
+    <a name = "self.pattern_in"></a>
+    <strong>self.pattern_in</strong>
+    </dt>
+    <dd>
+    string, pattern used for matching the input
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.pattern_out"></a>
+    <strong>self.pattern_out</strong>
+    </dt>
+    <dd>
+    string, pattern for constructing new messages
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.complete"></a>
+    <strong>self.complete</strong>
+    </dt>
+    <dd>
+    boolean, true when message contain functioning patterns
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.before_modified_observable"></a>
+    <strong>self.before_modified_observable</strong>
+    </dt>
+    <dd>
+    called when patterns are changed
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.strict"></a>
+    <strong>self.strict</strong>
+    </dt>
+    <dd>
+    boolean, whether to interpret literal values strictly or not
+  (if false, use xOscValue.TAG.NUMBER to represent all numbers)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.precision"></a>
+    <strong>self.precision</strong>
+    </dt>
+    <dd>
+    number, avoid rounding errors when comparing floats
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.uid"></a>
+    <strong>self.uid</strong>
+    </dt>
+    <dd>
+    string, unique identifier for the pattern
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.cacheable"></a>
+    <strong>self.cacheable</strong>
+    </dt>
+    <dd>
+    boolean, true when we can cache the incoming message
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.arg_names"></a>
+    <strong>self.arg_names</strong>
+    </dt>
+    <dd>
+    renoise.Document.ObservableStringList
+ (this is just a convenience method for getting/setting the
+  'name' part of our xOscValues)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.osc_pattern_in"></a>
+    <strong>self.osc_pattern_in</strong>
+    </dt>
+    <dd>
+    string, input pattern (set via 'pattern_in')
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.osc_pattern_out"></a>
+    <strong>self.osc_pattern_out</strong>
+    </dt>
+    <dd>
+    string, output pattern (set via 'pattern<em>in' or 'pattern</em>out')
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "self.output_args"></a>
+    <strong>self.output_args</strong>
+    </dt>
+    <dd>
+    table<int> output arguments/order
+ e.g.  "/some/pattern $3 $1 $2" --> {3,1,2}
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.2</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

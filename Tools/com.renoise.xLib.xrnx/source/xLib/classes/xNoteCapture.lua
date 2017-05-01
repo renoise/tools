@@ -42,6 +42,7 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- capture the previous note, starting from (but not including) pos
+-- @param compare_fn (function)
 -- @param notepos (xNotePos)
 -- @param end_seq_idx (int)[optional], stop searching at this sequence index
 -- @return xNotePos or nil if not matched
@@ -80,6 +81,7 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- capture the next note, starting from (but not including) pos
+-- @param compare_fn (function)
 -- @param notepos (xNotePos)
 -- @param end_seq_idx (int)[optional], stop searching at this sequence index
 -- @return xNotePos or nil if not matched
@@ -115,7 +117,7 @@ end
 ---------------------------------------------------------------------------------------------------
 -- iterate from notepos to end of pattern, or when reversed, from notepos to start of pattern 
 -- @param notepos (xNotePos)
--- @param compare_fn (provide a boolean return value)
+-- @param compare_fn (function)
 -- @param reverse (boolean) reverse iteration
 -- @return xNotePos or nil if not matched
 
@@ -164,6 +166,13 @@ function xNoteCapture.search_track(notepos, compare_fn, reverse)
 end
 
 ---------------------------------------------------------------------------------------------------
+-- invoke the callback method to compare a given line 
+-- @param lines (table<renoise.PatternLine>)
+-- @param count (number)
+-- @param line_idx (number)
+-- @param notepos (xNotePos)
+-- @param compare_fn (function)
+-- @return xNotePos or nil if not matched
 
 function xNoteCapture.compare_line(lines,count,line_idx,notepos,compare_fn)
   TRACE("xNoteCapture.compare_line(lines,count,line_idx,notepos,compare_fn)",count,line_idx,notepos,compare_fn)

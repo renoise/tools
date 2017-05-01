@@ -12,23 +12,22 @@ Static methods for working with the renoise.PatternSequence
 
 class 'xPatternSequencer' 
 
+--[[
 -------------------------------------------------------------------------------
-
+-- TODO
 function xPatternSequencer:get_next_pattern()
-
-  -- TODO
 
 end
 
 -------------------------------------------------------------------------------
+-- TODO
 
 function xPatternSequencer:get_previous_pattern()
 
-  -- TODO
-
 end
-
+]]
 -------------------------------------------------------------------------------
+-- Enable loop for the section that playback is currently located in
 
 function xPatternSequencer.loop_current_section()
   local seq_pos = rns.transport.edit_pos.sequence
@@ -37,6 +36,7 @@ function xPatternSequencer.loop_current_section()
 end
 
 -------------------------------------------------------------------------------
+-- Loop the specified section 
 
 function xPatternSequencer.loop_section_by_index(section_index)
 
@@ -97,6 +97,7 @@ function xPatternSequencer.loop_section_by_index(section_index)
 end
 
 -------------------------------------------------------------------------------
+-- Retrieve indices for sections in pattern-sequence
 
 function xPatternSequencer.gather_section_positions()
   local positions = {}
@@ -109,6 +110,7 @@ function xPatternSequencer.gather_section_positions()
 end
 
 -------------------------------------------------------------------------------
+-- Retrieve section-index for a given position in the pattern-sequence
 
 function xPatternSequencer.get_section_index_by_seq_pos(seq_pos)
   local positions = xPatternSequencer.gather_section_positions()
@@ -126,9 +128,10 @@ function xPatternSequencer.get_section_index_by_seq_pos(seq_pos)
 end
 
 -------------------------------------------------------------------------------
+-- Schedule a given section-index for playback 
 
 function xPatternSequencer.set_scheduled_section(section_index)
-  local xPatternSequencer.positions = gather_section_positions()
+  local positions = gather_section_positions()
   if positions[section_index] then
     rns.transport:set_scheduled_sequence(positions[section_index])
   end

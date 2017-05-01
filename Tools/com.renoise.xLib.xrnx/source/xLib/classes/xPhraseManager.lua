@@ -533,7 +533,8 @@ end
 
 --------------------------------------------------------------------------------
 -- API5: Assign a property value to both the phrase and it's mapping (if any)
--- @param phrase_idx (int)
+-- @param instr_idx (number)
+-- @param phrase_idx (number)
 -- @param prop_name (string)
 -- @param prop_value (number/string/boolean)
 
