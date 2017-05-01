@@ -417,12 +417,15 @@ function xStreamPresets:import(file_path,clear_existing)
   if not success then
     return false, rslt
   end
-  --print("rslt",rprint(rslt))
 
   if clear_existing then
     for i = #self.presets,1,-1 do
       self:remove_preset(i)
     end
+  end
+
+  if table.is_empty(rslt) then
+    return false,"no presets available in file"
   end
 
   local last_inserted_preset_index = 0
@@ -431,7 +434,6 @@ function xStreamPresets:import(file_path,clear_existing)
   for _,arg in ipairs(self.model.args.args) do
     table.insert(arg_names,arg.name)
   end
-  --print("arg_names",rprint(arg_names))
 
   for _,v in ipairs(rslt) do
     if (v.label == "xStreamPresets") then
