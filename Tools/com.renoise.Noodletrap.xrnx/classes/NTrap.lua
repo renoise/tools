@@ -14,7 +14,7 @@ Renoise: [Tool page](http://www.renoise.com/tools/noodletrap/)
 
 Renoise Forum: [Feedback and bugs](http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/)
 
-Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Noodletrap.xrnx) 
+Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Noodletrap.xrnx)
 
 
 
@@ -28,7 +28,7 @@ function NTrap:__init(prefs)
   TRACE("NTrap:__init(prefs)",prefs)
 
   assert(type(prefs) == "NTrapPrefs",
-    "Settings needs to be an instance of NTrapPrefs") 
+    "Settings needs to be an instance of NTrapPrefs")
 
   --- (NTrapPrefs) current settings
   self._settings = prefs
@@ -48,8 +48,8 @@ function NTrap:__init(prefs)
   --- (renoise.Midi.MidiInputDevice)
   self._midi_in = nil
 
-  --- (table) note events 
-  --  { 
+  --- (table) note events
+  --  {
   --    [timestamp] = NTrapEvent,
   --    [timestamp] = NTrapEvent,
   --    etc
@@ -68,12 +68,12 @@ function NTrap:__init(prefs)
   --- (bool) true when ready to receive input
   self._record_armed = false
 
-  --- (bool) true while actively recording 
+  --- (bool) true while actively recording
   self._recording = false
 
   --- (bool) true when a recording has been requested to stop
   self._stop_requested = false
-  
+
   --- (number) the time when recording began
   self._recording_begin = nil
 
@@ -90,20 +90,20 @@ function NTrap:__init(prefs)
   self._recording_stop = nil
 
   --- (number) update on idle loop
-  self._playpos = nil 
+  self._playpos = nil
 
-  --- (table) 
+  --- (table)
   self._song_notifiers = table.create()
-  --- (table) 
+  --- (table)
   self._patt_notifiers = table.create()
-  --- (table) 
+  --- (table)
   self._instr_notifiers = table.create()
-  --- (table) 
+  --- (table)
   self._phrase_notifiers = table.create()
 
-  --- (bool) 
+  --- (bool)
   self._update_requested = false
-  --- (bool) 
+  --- (bool)
   self._update_record_requested = false
 
   -- (ProcessSlicer) for dealing with CPU intensive tasks
@@ -1102,7 +1102,7 @@ end
 function NTrap:_get_phrase_length()
   TRACE("NTrap:_get_phrase_length()")
 
-  local phrase = xPhraseManager.get_selected_phrase()
+  local phrase = rns.selected_phrase
   if phrase then
     return phrase.number_of_lines
   end
@@ -1117,7 +1117,7 @@ end
 function NTrap:_get_phrase_lpb()
   TRACE("NTrap:_get_phrase_lpb()")
 
-  local phrase = xPhraseManager.get_selected_phrase()
+  local phrase = rns.selected_phrase
   if phrase then
     return phrase.lpb
   end
