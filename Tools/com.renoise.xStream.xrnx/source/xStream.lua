@@ -405,10 +405,6 @@ function xStream:__init(...)
     TRACE("*** xStream - ui.dialog_became_active_observable fired...")
   end)
 
-  self.ui.dialog_resigned_active_observable:add_notifier(function()
-    TRACE("*** xStream - ui.dialog_resigned_active_observable fired...")
-  end)
-
   -- midi I/O --
 
   self.midi_io.midi_inputs_observable:add_notifier(function(arg)
