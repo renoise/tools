@@ -308,6 +308,27 @@ function xPhraseManager.can_select_previous_phrase()
 end
 
 --------------------------------------------------------------------------------
+-- API5: Using the mapping index to specify the selected phrase
+
+function xPhraseManager.set_selected_phrase_by_mapping_index(idx)
+  TRACE("xPhraseManager.set_selected_phrase_by_mapping_index(idx)",idx)
+
+  local instr = rns.selected_instrument
+  local mapping = instr.phrase_mappings[idx]
+  if not mapping then
+    LOG("*** Could not find the specified phrase mapping")
+    return
+  end
+  
+  for k,v in ipairs(instr.phrases) do
+    if (rawequal(v,mapping.phrase)) then
+      rns.selected_phrase_index = k
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
 -- Select previous/next phrase 
 -- @return int (phrase index) or nil if no phrase was selected
 
