@@ -5,6 +5,9 @@
 --[[--
 The StateController handles states within a display/controlmap
 
+.
+#
+
 A state can toggle any part of a control-map on/off while a device configuration is running. They represent a separate mapping layer, independantly of the device configuration, and are especially useful when you are running out of space on the controller - or when an application does not provide you with enough flexibility. 
 
 Adding a state is done via the special <Stage> tag - however, a state will not do anything by itself. You still need to associate the state with one or more 'triggers', buttons that share their value with the state. 
@@ -22,12 +25,11 @@ Most nodes can be prefixed: Group, Row, Column and Param (but not SubParam). For
 
 --==============================================================================
 
-
 class 'StateController'
 
 --------------------------------------------------------------------------------
-
---- Initialize the StateController class
+-- [Constructor] Initialize the StateController class
+-- @param display (Duplex.Display)
 
 function StateController:__init(display)
   TRACE('StateController:__init')
@@ -64,8 +66,7 @@ function StateController:__init(display)
 end
 
 --------------------------------------------------------------------------------
-
---- interpret an incoming message, update display accordingly
+-- [Class] Interpret an incoming message, update display accordingly
 -- (this method is invoked when the MessageStream receive a message)
 
 function StateController:handle_message(msg)
@@ -123,8 +124,9 @@ function StateController:handle_message(msg)
 end
 
 --------------------------------------------------------------------------------
-
---- add a state 
+-- [Class] Add a state 
+-- @param xarg (table)
+-- @param t (table)
 
 function StateController:add_state(xarg,t)
   TRACE("StateController:add_state",xarg,t)
@@ -161,8 +163,7 @@ function StateController:add_state(xarg,t)
 end
 
 --------------------------------------------------------------------------------
-
---- match states with message - discover if message is a trigger
+-- [Class] Match states with message - discover if message is a trigger
 -- @return table
 
 function StateController:match(msg)
@@ -182,8 +183,7 @@ function StateController:match(msg)
 end
 
 --------------------------------------------------------------------------------
-
---- called once the display has created the virtual control surface
+-- [Class] Called once the display has created the virtual control surface
 
 function StateController:initialize()
   TRACE("StateController:initialize()")
@@ -206,8 +206,7 @@ function StateController:initialize()
 end
 
 --------------------------------------------------------------------------------
-
---- associate a parameter with a named state
+-- [Class] Associate a parameter with a named state
 -- @param state_id (string) unique name/id for the state
 -- @param view (table) control-map parameter
 
@@ -222,8 +221,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- toggle a named state
+-- [Class] toggle a named state
 -- @param state_id (string) unique name/id for the state
 
 function StateController:toggle(state_id)
@@ -242,8 +240,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- activate a named state
+-- [Class] Activate a named state
 -- @param state_id (string) unique name/id for the state
 
 function StateController:enable(state_id)
@@ -350,8 +347,7 @@ function StateController:enable(state_id)
 end
 
 --------------------------------------------------------------------------------
-
---- deactivate a named state
+-- [Class] Deactivate a named state
 -- @param state_id (string) unique name/id for the state
 
 function StateController:disable(state_id)
@@ -397,12 +393,11 @@ function StateController:disable(state_id)
 end
 
 --------------------------------------------------------------------------------
-
---- update the display of a trigger-button
+-- [Class] Update the display of a trigger-button
 -- @param ui_obj (@{Duplex.UIButton})
--- @color (table) 8-bit r/g/b values
--- @text (string) button or label text 
--- @value (number or table) as defined by the UIComponent
+-- @param color (table) 8-bit r/g/b values
+-- @param text (string) button or label text 
+-- @param val (number or table) as defined by the UIComponent
 
 function StateController:update_trigger(ui_obj,color,text,val)
   TRACE("StateController:update_trigger(ui_obj,color,text,val)",ui_obj,color,text,val)
