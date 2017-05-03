@@ -377,11 +377,6 @@ function NotesOnWheels:__init(...)
   -- (tracked in realtime via the sample_mappings property)
   self.white_keys_only = true
 
-  --- list of white keys
-  -- @field ... lot of keys
-  -- @table white_keys
-  self.white_keys = {0,2,4,5,7,9,11,12,14,16,17,19,21,23,24,26,28,29,31,33,35,36,38,40,41,43,45,47,48,50,52,53,55,57,59,60,62,64,65,67,69,71,72,74,76,77,79,81,83,84,86,88,89,91,93,95,96,98,100,101,103,105,107,108,110,112,113,115,117,119}
-
   --- reference to the instrument observable
   --self._attached_instr_observable = nil
 
@@ -1098,7 +1093,7 @@ function NotesOnWheels:detect_slices()
     self.number_of_slices = #mappings
     self.white_keys_only = true
     for k,map in ipairs(mappings) do
-      if not table.find(self.white_keys,map.base_note) then
+      if not table.find(xScale.WHITE_KEYS,map.base_note) then
         self.white_keys_only = false
       end
     end
@@ -1125,15 +1120,15 @@ function NotesOnWheels:to_sliced_pitch_range(int_val,invert)
     return self.upper_note
   end
   if invert then
-    int_val = math.floor(scale_value(int_val,self.lower_note,self.upper_note,1,121))
+    int_val = math.floor(cLib.scale_value(int_val,self.lower_note,self.upper_note,1,121))
   else
-    int_val = math.floor(scale_value(int_val,1,121,self.lower_note,self.upper_note))
+    int_val = math.floor(cLib.scale_value(int_val,1,121,self.lower_note,self.upper_note))
     if self.white_keys_only then
-      if not table.find(self.white_keys,int_val) then
+      if not table.find(xScale.WHITE_KEYS,int_val) then
         int_val = int_val-1
       end
     end
-    int_val = clamp_value(int_val,self.lower_note,self.upper_note)
+    int_val = cLib.clamp_value(int_val,self.lower_note,self.upper_note)
   end
   return int_val
 end
@@ -2082,6 +2077,7 @@ NOW_Sequence.DEFAULT_RETRIG_ADJUST = 1/NOW_Sequence.MAX_RETRIGS
 function NOW_Sequence:__init(owner)
   TRACE("NOW_Sequence:__init()")
   
+  -- TODO refactor to xLib? 
   local api_version = renoise.API_VERSION
   if (api_version>=3) then
     self.GATE_PAN_LOWER = 3072
@@ -2156,7 +2152,7 @@ end
 -- @param int_val (int), range 0-121
 function NOW_Sequence:set_pitch(idx,int_val,update,multi)
   TRACE("NOW_Sequence:set_pitch",idx,int_val,update,multi)
-  int_val = clamp_value(int_val,0,121)
+  int_val = cLib.clamp_value(int_val,0,121)
   local display_val = int_val
   if (update or multi) and (self.owner.number_of_slices>0) then
     display_val = self.owner:to_sliced_pitch_range(int_val,true)
@@ -2186,7 +2182,7 @@ end
 -- @param int_val (int), range 0-127
 function NOW_Sequence:set_velocity(idx,int_val,update,multi)
   TRACE("NOW_Sequence:set_velocity",idx,int_val,update,multi)
-  int_val = clamp_value(int_val,0,127)
+  int_val = cLib.clamp_value(int_val,0,127)
   if update then
     self:update_velocity_ctrl(int_val,self.owner._controls.velocity_sliders[idx])
   end
@@ -2208,7 +2204,7 @@ end
 -- @param int_val (int) between 0-255
 function NOW_Sequence:set_offset(idx,int_val,update,multi)
   TRACE("NOW_Sequence:set_offset",idx,int_val,update,multi)
-	int_val = clamp_value(int_val,0,255)
+	int_val = cLib.clamp_value(int_val,0,255)
 
   if update then
     self:update_offset_ctrl(int_val,self.owner._controls.offset_sliders[idx])
@@ -2231,7 +2227,7 @@ end
 -- @param int_val (int), range 0-255
 function NOW_Sequence:set_gate(idx,int_val,update,multi)
   TRACE("NOW_Sequence:set_gate",idx,int_val,update,multi)
-	int_val = clamp_value(int_val,0,255)
+	int_val = cLib.clamp_value(int_val,0,255)
   if update then
     self:update_gate_ctrl(int_val,self.owner._controls.gate_sliders[idx])
   end
@@ -2255,7 +2251,7 @@ end
 -- @param invert_scale (bool), inverse-scale the value 
 function NOW_Sequence:set_retrig(idx,int_val,update,multi)
   TRACE("NOW_Sequence:set_retrig",idx,int_val,update,multi)
-  --int_val = clamp_value(int_val,1,NOW_Sequence.MAX_RETRIGS)
+  --int_val = cLib.clamp_value(int_val,1,NOW_Sequence.MAX_RETRIGS)
   if update or multi then
     local display_val = int_val
     if (int_val>0) then
@@ -2348,7 +2344,7 @@ end
 function NOW_Sequence:set_num_steps(int_val,update)
   TRACE("NOW_Sequence:set_num_steps",int_val,update)
 
-  int_val = clamp_value(int_val,1,NOW_Sequence.MAX_NUM_STEPS)
+  int_val = cLib.clamp_value(int_val,1,NOW_Sequence.MAX_NUM_STEPS)
 
   local skip_event = true
   if update then
@@ -2387,7 +2383,7 @@ function NOW_Sequence:set_num_steps(int_val,update)
       end
     end
 
-    self:mute_columns(int_val)
+    xTrack.set_column_mute(idx)
 
     local msg = string.format("Notes On Wheels: Number of steps was set to %d",int_val)
     renoise.app():show_status(msg)
@@ -2399,19 +2395,6 @@ function NOW_Sequence:set_num_steps(int_val,update)
 
 end
 
-function NOW_Sequence:mute_columns(idx)
-
-    --	mute/unmute note columns
-    -- prevent from writing in master/send track 
-    local track_idx = renoise.song().selected_track_index
-    if (track_idx<get_master_track_index()) then
-      for i = 1,12 do
-        local muted = (i > idx)
-        renoise.song().tracks[track_idx]:mute_column(i, muted)
-      end
-    end
-
-end
 
 -- TODO set sequence to specific number of lines
 -- @param update (bool, when control needs update)
@@ -2654,7 +2637,7 @@ function NOW_Sequence:get_expanded_retrig_rate(val)
       return val
     end
     local new_retrig = ((math.floor(val+1)*2)-1)
-    return clamp_value(new_retrig,0,NOW_Sequence.MAX_RETRIGS)
+    return cLib.clamp_value(new_retrig,0,NOW_Sequence.MAX_RETRIGS)
 end
 
 -- apply the current adjustment to the provided retrigger value
@@ -2668,7 +2651,7 @@ end
 -- @return (int) between 0-MAX_RETRIGS
 function NOW_Sequence:get_num_retrigs(val)
   local tmp = renoise.song().transport.tpl/val
-  return clamp_value(math.floor(tmp*self.num_lines),0,NOW_Sequence.MAX_RETRIGS)
+  return cLib.clamp_value(math.floor(tmp*self.num_lines),0,NOW_Sequence.MAX_RETRIGS)
 end
 
 -- get the current pattern sequence position
@@ -2697,7 +2680,7 @@ end
 function NOW_Sequence:fast_retrigger(val)
   --TRACE("NOW_Sequence:fast_retrigger",val)
   local tmp = renoise.song().transport.tpl/val
-  local frac = (fraction(tmp)>0) and 1 or 0
+  local frac = (cLib.fraction(tmp)>0) and 1 or 0
   return self.RETRIG_PAN_LOWER+math.floor(tmp)+frac
 end
 
@@ -2717,7 +2700,7 @@ function NOW_Sequence:write_note(val,note_column,skip_instr)
       note_column.instrument_value = instr_index
     end
   else
-    note_column.note_value = clamp_value(val+self.transpose,0,121)		
+    note_column.note_value = cLib.clamp_value(val+self.transpose,0,121)		
     if not skip_instr then
       note_column.instrument_value = instr_index
     end
@@ -2731,7 +2714,7 @@ function NOW_Sequence:write_velocity(val,note_column)
   if val then
     val = math.floor(val*self.velocity_adjust)
     if not (val==127 or val==255) then
-      note_column.volume_value  = clamp_value(val,0,127)
+      note_column.volume_value  = cLib.clamp_value(val,0,127)
     end
   end
 end
@@ -3062,7 +3045,7 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
   TRACE("NOW_Sequence:write_to_pattern",patt_idx,begin_line,seq_step,mask_type,stream,recursive,line_offset)
 
   -- prevent from writing in master/send track 
-	if (renoise.song().selected_track_index>=get_master_track_index()) then
+	if (renoise.song().selected_track_index>=xTrack.get_master_track_index()) then
 		return
 	end
 
@@ -3149,7 +3132,7 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
             while (line<self.num_lines) do
               line = (self.num_lines/(val+1))*#branch
               local line_adj = math.floor((line+((idx-1)*self.spacing))%self.num_lines)+1
-              branch:insert({line=line_adj,delay=fraction(line)})
+              branch:insert({line=line_adj,delay=cLib.fraction(line)})
             end
             branch:remove() -- pop last element
           end
@@ -3462,9 +3445,9 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
 									val=255
 								end
                 if (self.owner.options.offset_wrap.value == WRAP_OFFSET_ON) then
-  								val = wrap_value(val+(math.floor(self.offset_adjust*255)),0,255)	
+  								val = cLib.wrap_value(val+(math.floor(self.offset_adjust*255)),0,255)	
                 else
-                  val = clamp_value(val+(math.floor(self.offset_adjust*255)),0,255)	
+                  val = cLib.clamp_value(val+(math.floor(self.offset_adjust*255)),0,255)	
                 end
 								if val ~= 0 then
 									fx_column.number_value = self.OFFSET_NUM_VALUE
@@ -3792,7 +3775,7 @@ function NOW_Sequence:learn_sequence()
               if (offset==math.floor(offset)) then
                 -- rotate the values
                 --print("get offset (before wrapping):",fx_column.amount_value)
-                self:set_offset(offset,wrap_value(fx_column.amount_value,0,255),true,true) 
+                self:set_offset(offset,cLib.wrap_value(fx_column.amount_value,0,255),true,true) 
               end
             end
           end
