@@ -8,6 +8,9 @@ Static methods for working with pattern/phrase/matrix/sequence-selections
 .
 #
 
+There are three different types of selections. Each one is just a plain 
+lua table containing the following values:
+
 ### Pattern-selection 
 
   {
@@ -46,7 +49,7 @@ Static methods for working with pattern/phrase/matrix/sequence-selections
 class 'xSelection'
 
 -------------------------------------------------------------------------------
--- retrieve selection spanning an entire pattern-track
+-- [Static] Retrieve selection spanning an entire pattern-track
 -- @param seq_idx (int)
 -- @param trk_idx (int)
 -- @return table (pattern-selection) or bool (false, on error)
@@ -74,6 +77,12 @@ function xSelection.get_pattern_track(seq_idx,trk_idx)
 end
 
 -------------------------------------------------------------------------------
+-- [Static] Get a selection spanning the provided column 
+-- @param seq_idx (int)
+-- @param trk_idx (int)
+-- @param col_idx (int)
+-- @return table (pattern-selection) or bool (false, on error)
+-- @return string (error message when failed)
 
 function xSelection.get_pattern_column(seq_idx,trk_idx,col_idx)
   TRACE("xSelection.get_pattern_column(seq_idx,trk_idx,col_idx)",seq_idx,trk_idx,col_idx)
@@ -87,7 +96,7 @@ function xSelection.get_pattern_column(seq_idx,trk_idx,col_idx)
 end
 
 -------------------------------------------------------------------------------
--- retrieve the existing pattern selection when valid for a single track
+-- [Static] Get existing pattern selection when valid for a single track
 -- @return table (pattern-selection) or bool (false, on error)
 -- @return string (error message when failed)
 
@@ -110,7 +119,7 @@ end
 
 
 -------------------------------------------------------------------------------
--- return a selection spanning an entire column in a pattern-track
+-- [Static] Get selection spanning an entire column in a pattern-track
 -- @param seq_idx (int)
 -- @param trk_idx (int)
 -- @param col_idx (int)
@@ -133,7 +142,7 @@ function xSelection.get_column_in_track(seq_idx,trk_idx,col_idx)
 end
 
 -------------------------------------------------------------------------------
--- return a selection spanning an entire group in a pattern-track
+-- [Static] Get selection spanning an entire group in a pattern-track
 -- @param seq_idx (int)
 -- @param trk_idx (int)
 -- @return table (pattern-selection) or bool (false, on error)
@@ -147,7 +156,8 @@ function xSelection.get_group_in_pattern(seq_idx,trk_idx)
 end
 
 -------------------------------------------------------------------------------
--- return a selection spanning the entire selected phrase
+-- [Static] Get selection spanning the entire selected phrase
+-- @return table (Phrase-selection)
 
 function xSelection.get_phrase()
 
@@ -167,7 +177,7 @@ function xSelection.get_phrase()
 end
 
 -------------------------------------------------------------------------------
--- retrieve the matrix selection 
+-- [Static] Retrieve the matrix selection 
 -- @return table<[sequence_index][track_index]>
 
 function xSelection.get_matrix_selection()
@@ -189,7 +199,8 @@ function xSelection.get_matrix_selection()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Test if selection is limited to a single column
 -- @param patt_sel (table ) 
 -- @return bool
 
@@ -201,7 +212,8 @@ function xSelection.is_single_column(patt_sel)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Test if selection is limited to a single track
 -- @param patt_sel (table ) 
 -- @return bool
 
@@ -212,7 +224,8 @@ function xSelection.is_single_track(patt_sel)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Test if selection includes note columns 
 -- @param patt_sel (table ) 
 -- @return bool
 
@@ -225,7 +238,8 @@ function xSelection.includes_note_columns(patt_sel)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Test if selection spans entire line 
 -- @param patt_sel (table) 
 -- @param number_of_columns (number)
 -- @return bool

@@ -13,7 +13,9 @@ Abstract message class (the basis for OSC and MIDI messages)
 Some properties are added because of the xVoiceManager. This includes all the originating_XX properties (on by default). Usually you don't have to change these values - read the xVoiceManager description to learn what they do. 
 
 ### See also 
-@{xOscMessage},@{xMidiMessage},@{xVoiceManager}
+@{xOscMessage}
+@{xMidiMessage}
+@{xVoiceManager}
 
 
 ]]
@@ -22,10 +24,9 @@ Some properties are added because of the xVoiceManager. This includes all the or
 
 class 'xMessage' -- (xClass)
 
-
---==============================================================================
--- Class Methods
---==============================================================================
+-------------------------------------------------------------------------------
+-- [Constructor] accepts a single argument for initializing the class 
+-- @param ...
 
 function xMessage:__init(...)
 
@@ -168,7 +169,7 @@ function xMessage:set_octave(val)
 end
 
 -------------------------------------------------------------------------------
--- produce a raw message (retrieve from cache if possible)
+-- [Class] Produce a raw message (retrieve from cache if possible)
 -- @return 
 
 function xMessage:create_raw_message()
@@ -184,7 +185,8 @@ end
 
 
 -------------------------------------------------------------------------------
--- @return table, a representation of the object state
+-- [Class] Get class descriptor
+-- @return table
 
 function xMessage:get_definition()
 

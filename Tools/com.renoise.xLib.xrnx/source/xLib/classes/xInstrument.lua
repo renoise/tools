@@ -13,7 +13,7 @@ Static methods for dealing with renoise.Instrument
 class 'xInstrument'
 
 --------------------------------------------------------------------------------
--- test whether the instrument contain sample slices
+-- [Static] Test whether the instrument contain sample slices
 -- @param instr (renoise.Instrument)
 -- @return bool
 
@@ -26,11 +26,10 @@ function xInstrument.is_sliced(instr)
 end
 
 --------------------------------------------------------------------------------
--- test whether the keyzone can be reached with the instrument
--- (running in program mode + sample columns, or TODO: having the entire 
--- keyzone filled with phrases using sample columns)
+-- [Static] Test whether the keyzone can be reached with the instrument
+-- (running in program mode + sample columns)
 -- @param instr (renoise.Instrument)
--- @return bool 
+-- @return boolean
 
 function xInstrument.is_keyzone_available(instr)
 
@@ -52,6 +51,9 @@ function xInstrument.is_keyzone_available(instr)
 end
 
 --------------------------------------------------------------------------------
+-- [Static] Test whether instrument seems to be triggering a phrase
+-- @param instr (renoise.Instrument)
+-- @return boolean
 
 function xInstrument.is_triggering_phrase(instr)
 
@@ -74,7 +76,8 @@ function xInstrument.is_triggering_phrase(instr)
 end
 
 -------------------------------------------------------------------------------
--- detect if there is a slice marker *approximately* at the sample pos
+-- [Static] Detect if there is a slice marker *approximately* at the sample pos
+-- @return boolean, [error message (string)]
 
 function xInstrument.get_slice_marker_at_pos(instr,pos,threshold)
   TRACE("xInstrument.get_slice_marker_at_pos(instr,pos,threshold)",instr,pos,threshold)
@@ -98,8 +101,8 @@ end
 
 
 --------------------------------------------------------------------------------
--- figure out which samples are mapped to the provided note
--- @return table<number>, sample indices 
+-- [Static] Figure out which samples are mapped to the provided note
+-- @return table<number> (sample indices)
 
 function xInstrument.get_samples_mapped_to_note(instr,note)
 
@@ -115,6 +118,10 @@ function xInstrument.get_samples_mapped_to_note(instr,note)
 end
 
 --------------------------------------------------------------------------------
+-- [Static] Return the slice markers associated with a given sample 
+-- @param instr (renoise.Instrument)
+-- @param sample_idx (number)
+-- @return table<number>
 
 function xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)
   TRACE("xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)",instr,sample_idx)
@@ -129,8 +136,8 @@ function xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)
 end
 
 --------------------------------------------------------------------------------
--- perform a simple autocapture and return the instrument 
--- @return int or nil 
+-- [Static] Perform a simple autocapture and return the instrument 
+-- @return int (instrument index) or nil 
 
 function xInstrument.autocapture()
   TRACE("xInstrument.autocapture()")
@@ -141,7 +148,7 @@ function xInstrument.autocapture()
 end
 
 --------------------------------------------------------------------------------
--- locate the first empty instrument in instrument list
+-- [Static] Locate the first empty instrument in instrument list
 -- @return int or nil 
 
 function xInstrument.get_first_available()
@@ -156,7 +163,7 @@ function xInstrument.get_first_available()
 end
 
 --------------------------------------------------------------------------------
--- resolve the assigned track (midi input properties)
+-- [Static] Resolve the assigned track (midi input properties)
 -- @param instr (renoise.Instrument)
 -- @return number, track index
 
@@ -169,7 +176,7 @@ function xInstrument.resolve_midi_track(instr)
 end
 
 --------------------------------------------------------------------------------
--- check if instrument contains any samples, modulation etc. 
+-- [Static] Check if instrument contains any samples, modulation etc. 
 -- @param instr (renoise.Instrument)
 -- @return bool
 
@@ -191,7 +198,7 @@ function xInstrument.is_empty(instr)
 end
 
 --------------------------------------------------------------------------------
--- TODO reset sample-based part of instrument 
+-- [Static] TODO reset sample-based part of instrument 
 
 function xInstrument.reset_sampler()
 

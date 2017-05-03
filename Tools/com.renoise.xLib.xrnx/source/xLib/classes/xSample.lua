@@ -481,8 +481,8 @@ end
 ---------------------------------------------------------------------------------------------------
 -- obtain the buffer frame from a particular position in the song
 -- @param sample (renoise.Sample)
--- @param trigger_pos (xNotePos), triggering position + note/pitch/delay/offset
--- @param end_pos (xNotePos), the end position
+-- @param trigger_pos (xCursorPos), triggering position + note/pitch/delay/offset
+-- @param end_pos (xCursorPos), the end position
 -- @param [ignore_sxx] (boolean), handle special case with sliced instruments, where Sxx is 
 --  used on the root sample for triggering individual slices 
 -- @return table{

@@ -15,28 +15,32 @@ A single value within a xOscMessage
 
 class 'xOscValue' (xValue)
 
+--- The type of message 
 xOscValue.TAG = {
   FLOAT = "f",    -- float32
   INTEGER = "i",  -- int32
-  STRING = "s",   -- OSC-string
-  NUMBER = "n",   -- 'non-strict number' (float OR integer)
-  -- more planned
-  --BLOB = "b",
-  --TIME = "t",
-  --FLOAT64 = "d",
-  --INTEGER64 = "h",
-  --ASCII = "c",
-  --MIDI = "m",     
-  --COLOR = "r",    
-  --BOOLEAN_TRUE = "T",
-  --BOOLEAN_FALSE = "F",
-  --NIL = "N",
-  --INF = "I",
-  --ALT_STRING = "S",
+  STRING = "s",   --  OSC-string
+  NUMBER = "n",   --  non-strict number (float OR integer)
 
 }
+-- more planned
+--BLOB = "b",
+--TIME = "t",
+--FLOAT64 = "d",
+--INTEGER64 = "h",
+--ASCII = "c",
+--MIDI = "m",     
+--COLOR = "r",    
+--BOOLEAN_TRUE = "T",
+--BOOLEAN_FALSE = "F",
+--NIL = "N",
+--INF = "I",
+--ALT_STRING = "S",
+
 
 -------------------------------------------------------------------------------
+-- [Constructor] accepts a single argument for initializing the class  
+-- @param table
 
 function xOscValue:__init(...)
 

@@ -364,12 +364,12 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- obtain current (quantized) position 
--- @return xNotePos
+-- @return xCursorPos
 
 function SliceMate:get_position()
   TRACE("SliceMate:get_position()")
 
-  local slice_xnotepos = xNotePos()
+  local slice_xnotepos = xCursorPos()
   if not self.prefs.quantize_enabled.value then
     return slice_xnotepos
   end
@@ -589,7 +589,7 @@ function SliceMate:insert_slice()
 end
 
 ---------------------------------------------------------------------------------------------------
--- @param slice_xnotepos (xNotePos), where to insert 
+-- @param slice_xnotepos (xCursorPos), where to insert 
 -- @param instr_idx (number), instrument index 
 -- @param sample_idx (number), sample index - mapping decides which note to insert
 -- @param [src_notecol] (renoise.NoteColumn), carry over volume/panning when set 

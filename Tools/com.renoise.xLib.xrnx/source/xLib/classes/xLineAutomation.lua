@@ -8,21 +8,22 @@ A representation of automation data within a single line
 .
 #
 
-Specify multiple values across the line, by supplying 'time' 
-
+See also:
+@{xLine}
+@{xLinePattern}
+@{xAutomation}
 
 ]]
 
 class 'xLineAutomation'
 
-
 -------------------------------------------------------------------------------
--- constructor
--- @param automation (table{value,time}) 
+-- [Constructor] accepts a single argument 
+-- @param automation 
 
 function xLineAutomation:__init(automation)
 
-  --- table
+  --- table<{value,time}>, multiple values are possible per-line
   self.automation = table.create()
 
   -- initialize -----------------------
@@ -36,6 +37,7 @@ function xLineAutomation:__init(automation)
 end
 
 -------------------------------------------------------------------------------
+-- [Class] Write to the provided automation lane
 -- @param sequence (int)
 -- @param line (int)
 -- @param ptrack_auto (renoise.PatternTrackAutomation)

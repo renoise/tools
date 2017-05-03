@@ -1,6 +1,6 @@
---[[============================================================================
--- xColumns
-============================================================================]]--
+--[[===============================================================================================
+xColumns
+===============================================================================================]]--
 
 --[[--
 
@@ -8,18 +8,17 @@ Static Methods for working with note/effect-columns
 .
 #
 
-Requires xTrack
-
 --]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xColumns'
 
---------------------------------------------------------------------------------
--- TODO test
+---------------------------------------------------------------------------------------------------
+-- [Static] Fine-grained navigation across visible columns. Will take you to the 
+-- from the currently selected column to the previous note/effect-column
 
-function xColumns:previous_column()
+function xColumns.previous_column()
 
   local sel_track_index = rns.selected_track_index
   local sel_track = rns.tracks[sel_track_index]
@@ -68,8 +67,9 @@ function xColumns:previous_column()
 
 end
 
---------------------------------------------------------------------------------
--- TODO test
+---------------------------------------------------------------------------------------------------
+-- [Static] Fine-grained navigation across visible columns. Will take you to the 
+-- from the currently selected column to the next note/effect-column
 
 function xColumns.next_column()
 
@@ -117,12 +117,12 @@ function xColumns.next_column()
 end
 
 
---------------------------------------------------------------------------------
--- navigate through note-columns - if the track is selected, use the  
--- selected note column as basis (else, the first one...)
--- @param wrap_pattern (bool) 
--- @param wrap_track (bool)
--- @param track_index (number)
+---------------------------------------------------------------------------------------------------
+-- [Static] Navigate through note-columns in track and/or pattern 
+-- @param wrap_pattern (bool), wrap at pattern boundaries
+-- @param wrap_track (bool), wrap at track boundaries
+-- @param track_index (number), start in this track - if the track is 
+--  selected, use the selected note column as basis - else, the first one...
 
 function xColumns.next_note_column(wrap_pattern,wrap_track,track_index)
   TRACE("xColumns.next_note_column(wrap_pattern,wrap_track,track_index)",wrap_pattern,wrap_track,track_index)
@@ -154,12 +154,12 @@ function xColumns.next_note_column(wrap_pattern,wrap_track,track_index)
 
 end
 
---------------------------------------------------------------------------------
--- navigate through note-columns - if the track is selected, use the  
--- selected note column as basis (else, the first one...)
--- @param wrap_pattern (bool) 
--- @param wrap_track (bool)
--- @param track_index (number)
+---------------------------------------------------------------------------------------------------
+-- [Static] Navigate through note-columns in track and/or pattern 
+-- @param wrap_pattern (bool), wrap at pattern boundaries
+-- @param wrap_track (bool), wrap at track boundaries
+-- @param track_index (number), start in this track - if the track is 
+--  selected, use the selected note column as basis - else, the last one...
 
 function xColumns.previous_note_column(wrap_pattern,wrap_track,track_index)
   TRACE("xColumns.previous_note_column(wrap_pattern,wrap_track,track_index)",track_index,wrap_track,wrap_pattern)
@@ -195,9 +195,14 @@ function xColumns.previous_note_column(wrap_pattern,wrap_track,track_index)
 
 end
 
---------------------------------------------------------------------------------
--- insert #amount of empty columns at 'col_idx' 
+---------------------------------------------------------------------------------------------------
+-- [Static] Insert #amount of empty columns at 'col_idx' 
 -- TODO refactor into xPatternTrack
+-- @param ptrack_or_phrase (renoise.PatternTrack or renoise.InstrumentPhrase)
+-- @param col_idx (number)
+-- @param amount amount (number)
+-- @param line_start (number)
+-- @param line_end (number)
 
 function xColumns.shift_note_columns(ptrack_or_phrase,col_idx,amount,line_start,line_end)
   TRACE("xColumns.shift_note_columns(ptrack_or_phrase,col_idx,amount,line_start,line_end)",ptrack_or_phrase,col_idx,amount,line_start,line_end)
@@ -205,9 +210,7 @@ function xColumns.shift_note_columns(ptrack_or_phrase,col_idx,amount,line_start,
   local line_rng = ptrack_or_phrase:lines_in_range(line_start,line_end)
   for k,v in ipairs(line_rng) do
     for k2,v2 in ripairs(v.note_columns) do
-      if ((k2-amount) >= col_idx)--(k2 <= col_idx+amount) 
-        --and (k2 >= col_idx)
-      then
+      if ((k2-amount) >= col_idx) then
         v2:copy_from(v.note_columns[k2-amount])
       end
     end

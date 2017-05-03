@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xMidiInput
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -43,8 +43,8 @@ The class is implemented with a callback, which will recieve xMidiMessages
 
 class 'xMidiInput'
 
---------------------------------------------------------------------------------
---- Constructor
+---------------------------------------------------------------------------------------------------
+--- [Constructor] accepts a single table as argument 
 -- @param args, table
 --  callback_fn 
 --  multibyte_enabled
@@ -139,8 +139,8 @@ function xMidiInput:__init(...)
 
 end
 
---------------------------------------------------------------------------------
--- process incoming message - will invoke the callback function when able 
+---------------------------------------------------------------------------------------------------
+-- [Class] Process incoming message - will invoke the callback function when able 
 -- to construct a xMidiMessage from the data that has been received
 -- @param msg (table), raw MIDI message with 3 parts
 -- @param port_name (string), where message originated from
@@ -511,8 +511,8 @@ function xMidiInput:input(msg,port_name)
 
 end
 
---------------------------------------------------------------------------------
---- Create MIDI 'fingerprint' for the provided message(s)
+---------------------------------------------------------------------------------------------------
+-- [Class] Create MIDI 'fingerprint' for the provided message(s)
 -- (just enough information to identify the CC/NRPN source)
 -- @param msg_type
 -- @param midi_msgs
@@ -540,8 +540,8 @@ function xMidiInput:_create_fingerprint(msg_type,midi_msgs)
 
 end
 
---------------------------------------------------------------------------------
--- convenience method for adding messages to the exempt list
+---------------------------------------------------------------------------------------------------
+-- [Class] Convenience method for adding messages to the exempt list
 
 function xMidiInput:add_multibyte_exempt(msg_type,msgs)
 
@@ -550,8 +550,8 @@ function xMidiInput:add_multibyte_exempt(msg_type,msgs)
 
 end
 
---------------------------------------------------------------------------------
---- Idle loop : process (or discard) multibyte messages, 
+---------------------------------------------------------------------------------------------------
+--- [Class] Idle loop : process (or discard) multibyte messages, 
 --  output messages which got delayed due to throttling
 
 function xMidiInput:on_idle()

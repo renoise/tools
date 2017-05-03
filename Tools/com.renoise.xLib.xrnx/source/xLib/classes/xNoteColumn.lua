@@ -19,13 +19,25 @@ counterparts.
 
 class 'xNoteColumn'
 
+--- Value representing an empty note 
 xNoteColumn.EMPTY_NOTE_VALUE = 121
+
+--- String representing an empty note
 xNoteColumn.EMPTY_NOTE_STRING = "---"
+
+--- Value representing a note-off
 xNoteColumn.NOTE_OFF_VALUE = 120
+
+--- String representing a note-off
 xNoteColumn.NOTE_OFF_STRING = "OFF"
-xNoteColumn.EMPTY_COLUMN_STRING = ".."
+
+--- Value representing an empty column 
 xNoteColumn.EMPTY_VOLUME_VALUE = 255
 
+--- String representing an empty column 
+xNoteColumn.EMPTY_COLUMN_STRING = ".."
+
+--- List of note-column properties 
 xNoteColumn.tokens = {
     "note_value","note_string", 
     "instrument_value","instrument_string",
@@ -36,6 +48,7 @@ xNoteColumn.tokens = {
     "effect_amount_value","effect_amount_string",
 }
 
+--- Properties to use when writing to pattern
 xNoteColumn.output_tokens = {
     "note_value", 
     "instrument_value",
@@ -46,13 +59,14 @@ xNoteColumn.output_tokens = {
     "effect_amount_value",
 }
 
+--- List of note-names, without the octave part 
 xNoteColumn.NOTE_ARRAY = {
   "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"
 }
 
 -------------------------------------------------------------------------------
--- constructor
--- @param args (table), a xline descriptor - any of the properties below
+-- [Constructor] Accepts a table with properties as argument
+-- @param args (table), descriptor
 
 function xNoteColumn:__init(args)
 
@@ -77,7 +91,7 @@ function xNoteColumn:__init(args)
   --    i.e. is used to specify volume]
   --  [number, 0-65535 in the form 0x0000xxyy where
   --    xx=effect char 1 and yy=effect char 2,
-  --    when column value is > 0x80, i.e. is used to specify an effect]
+  --    when column value is > 0x80, is used to specify an effect]
   self.volume_value = property(self.get_volume_value,self.set_volume_value)
   self._volume_value = nil
 

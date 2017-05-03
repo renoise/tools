@@ -23,6 +23,7 @@ if (renoise.API_VERSION > 4) then
   xScale.NEAPOLITAN_MINOR = "Neapolitan Minor"
 end
 
+-- List of available scales in Renoise 
 xScale.SCALES = {
   { name="None", keys={1,1,1,1,1,1,1,1,1,1,1,1}, count=12, },
   { name="Natural Major", keys={1,0,1,0,1,1,0,1,0,1,0,1}, count=7,  },
@@ -71,7 +72,7 @@ for _,v in ipairs(xScale.SCALES) do
 end
 
 --------------------------------------------------------------------------------
---- restricting notes to a specific scale and key 
+-- [Static] Restrict notes to a specific scale and key 
 -- @param note_value (0-119), notes outside this range are returned as-is 
 -- @param scale_idx_or_name (int/string), the scale to apply (xScale.SCALES) 
 -- @param scale_key (int), 1=C, 2=C#, 3=D, ...
@@ -132,6 +133,9 @@ function xScale.restrict_to_scale(note_value,scale_idx_or_name,scale_key)
 end
 
 --------------------------------------------------------------------------------
+-- [Scale] get a specific scale by its name 
+-- @param name (string)
+-- @return table (one of xScale.SCALES) or nil
 
 function xScale.get_scale_by_name(name)
 

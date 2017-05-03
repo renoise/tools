@@ -12,7 +12,9 @@ Note: in Renoise, the MIDI command will override any existing notes when the
 number of note-columns are changed (that is, when the MIDI command "migrates" 
 to the new, right-most note-column)
 
-@see xLinePattern
+See also:
+@{xLinePattern}
+
 
 ]]
 

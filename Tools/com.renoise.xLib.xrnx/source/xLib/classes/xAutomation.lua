@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xAutomation
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -19,9 +19,9 @@ xAutomation.FOLLOW_MODE = {
 }
 
 --- How to write data into an envelope
--- INTERLEAVE: leave existing data as-is (renoise default)
--- PUNCH_IN: remove existing data (using writeahead)
--- (TODO) LATCH: keep erasing data ahead of play-position
+--   - INTERLEAVE: leave existing data as-is (renoise default)
+--   - PUNCH_IN: remove existing data (using writeahead)
+--   - (TODO) LATCH: keep erasing data ahead of play-position
 xAutomation.WRITE_MODE = {
   INTERLEAVE = "interleave",
   PUNCH_IN = "punch_in",
@@ -46,7 +46,8 @@ xAutomation.PLAYMODE_NAMES = {
   "Cubic", 
 }
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Constructor] accepts a single argument for initializing the class  
 
 function xAutomation:__init(...)
 
@@ -72,17 +73,15 @@ function xAutomation:__init(...)
   -- internal --
 
   renoise.tool().app_new_document_observable:add_notifier(function()
-    self:attach_to_song()
+    self:_attach_to_song()
   end)
 
-  self:attach_to_song()
+  self:_attach_to_song()
 
 end
 
---------------------------------------------------------------------------------
--- Class methods
---------------------------------------------------------------------------------
---- add automation point at current time 
+---------------------------------------------------------------------------------------------------
+-- [Class] Add automation point at current time 
 -- @param track_idx (int)
 -- @param param (renoise.DeviceParameter)
 -- @param value (number) the input value
@@ -119,7 +118,7 @@ function xAutomation:record(track_idx,param,value,value_mode)
     ptrack_auto:add_point_at(pos.line,value)
   else
     if self.highres_mode then
-      local highres_pos = xNotePos.get_highres_pos()
+      local highres_pos = xCursorPos.get_highres_pos()
       local line_fract = highres_pos.line + highres_pos.fraction
       self:clear_range(line_fract,self.writeahead,ptrack_auto)
       ptrack_auto:add_point_at(line_fract,value)
@@ -135,8 +134,10 @@ function xAutomation:record(track_idx,param,value,value_mode)
 
 end
 
---------------------------------------------------------------------------------
--- check if automation exists for the given parameter
+---------------------------------------------------------------------------------------------------
+-- [Class] Check if automation exists for the given parameter
+-- @param track_idx (number)
+-- @param param (renoise.DeviceParameter)
 
 function xAutomation:has_automation(track_idx,param)
 
@@ -155,8 +156,8 @@ function xAutomation:has_automation(track_idx,param)
 
 end
 
---------------------------------------------------------------------------------
--- clear automation for the given range
+---------------------------------------------------------------------------------------------------
+-- [Class] Clear automation for the given range
 -- @param pos_from (int)
 -- @param length (number), can be fractional
 -- @param ptrack_auto (renoise.PatternTrackAutomation)
@@ -174,9 +175,9 @@ function xAutomation:clear_range(pos_from,length,ptrack_auto)
 
 end
 
---------------------------------------------------------------------------------
--- retrieve the correct SongPos object according to FOLLOW_MODE
--- @return int
+---------------------------------------------------------------------------------------------------
+-- [Class] Retrieve the correct SongPos object according to FOLLOW_MODE
+-- @return int or nil
 
 function xAutomation:get_position()
 
@@ -196,36 +197,35 @@ function xAutomation:get_position()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-function xAutomation:attach_to_song()
+function xAutomation:_attach_to_song()
 
   rns = renoise.song()
 
   rns.transport.bpm_observable:add_notifier(function()
-    self:compute_writeahead()
+    self:_compute_writeahead()
   end)
   rns.transport.lpb_observable:add_notifier(function()
-    self:compute_writeahead()
+    self:_compute_writeahead()
   end)
-  self:compute_writeahead()
+  self:_compute_writeahead()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-function xAutomation:compute_writeahead()
-  --TRACE("xAutomation:compute_writeahead()")
+function xAutomation:_compute_writeahead()
+  --TRACE("xAutomation:_compute_writeahead()")
 
   self.writeahead = (rns.transport.bpm * rns.transport.lpb / 200)
 
 end
 
-
---------------------------------------------------------------------------------
--- Static methods
---------------------------------------------------------------------------------
--- get or create the parameter automation 
+---------------------------------------------------------------------------------------------------
+-- [Static] Get or create the parameter automation 
+-- @param ptrack (renoise.PatternTrack)
+-- @param param (renoise.DeviceParameter)
 
 function xAutomation.get_or_create_automation(ptrack,param)
 
@@ -237,8 +237,8 @@ function xAutomation.get_or_create_automation(ptrack,param)
 
 end
 
--------------------------------------------------------------------------------
--- Scale an incoming value to the automation range (0-1)
+---------------------------------------------------------------------------------------------------
+-- [Static] Scale an incoming value to the automation range (0-1)
 -- @param value (number)
 -- @param value_mode (xMidiMessage.MODE), abs/rel + #bits
 -- @return number

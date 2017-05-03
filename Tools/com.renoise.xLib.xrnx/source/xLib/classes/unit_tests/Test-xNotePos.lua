@@ -5,13 +5,13 @@
 --]]
 
 _xlib_tests:insert({
-name = "xNotePos",
+name = "xCursorPos",
 fn = function()
 
   require (_xlibroot.."xLine")
-  require (_xlibroot.."xNotePos")
+  require (_xlibroot.."xCursorPos")
 
-  print(">>> xNotePos: starting unit-test...")
+  print(">>> xCursorPos: starting unit-test...")
 
   -- prepare ----------------------------------------------- 
 
@@ -72,7 +72,7 @@ fn = function()
 
   -- run tests ----------------------------------------------- 
 
-  local notepos = xNotePos{
+  local notepos = xCursorPos{
     sequence = 1,
     track = 1,
     line = 1,
@@ -89,7 +89,7 @@ fn = function()
   assert(column.note_value == 1)
   assert(column.volume_value == 1)
 
-  local notepos = xNotePos{
+  local notepos = xCursorPos{
     sequence = 1,
     track = 2,
     line = 16,
@@ -101,7 +101,7 @@ fn = function()
   assert(column.note_value == 2)
   assert(column.volume_value == 2)
 
-  local notepos = xNotePos{
+  local notepos = xCursorPos{
     sequence = 1,
     track = 2,
     line = 1,
@@ -113,7 +113,7 @@ fn = function()
   assert(column.number_value == 11)
   assert(column.amount_value == 11)
 
-  local notepos = xNotePos{
+  local notepos = xCursorPos{
     sequence = 2,
     track = 1,
     line = 16,
@@ -124,7 +124,7 @@ fn = function()
   assert(column.note_value == 3)
   assert(column.volume_value == 3)
 
-  local notepos = xNotePos{
+  local notepos = xCursorPos{
     sequence = 2,
     track = 2,
     line = 16,
@@ -137,7 +137,7 @@ fn = function()
 
   -- bad positions
 
-  local notepos = xNotePos{
+  local notepos = xCursorPos{
     sequence = 9999,
     track = 2,
     line = 16,
@@ -146,7 +146,7 @@ fn = function()
   local column,err = notepos:get_column()
   assert(not column,"Unexpected match")
 
-  local notepos = xNotePos{
+  local notepos = xCursorPos{
     sequence = 1,
     track = 9999,
     line = 16,
@@ -155,7 +155,7 @@ fn = function()
   local column,err = notepos:get_column()
   assert(not column,"Unexpected match")
 
-  local notepos = xNotePos{
+  local notepos = xCursorPos{
     sequence = 1,
     track = 1,
     line = 9999,
@@ -164,7 +164,7 @@ fn = function()
   local column,err = notepos:get_column()
   assert(not column,"Unexpected match")
 
-  local notepos = xNotePos{
+  local notepos = xCursorPos{
     sequence = 1,
     track = 1,
     line = 1,
@@ -176,14 +176,14 @@ fn = function()
 
   -- copy via constructor  
 
-  local notepos = xNotePos{
+  local notepos = xCursorPos{
     sequence = 1,
     track = 1,
     line = 1,
     column = 1,
   }
 
-  local notepos = xNotePos(notepos)
+  local notepos = xCursorPos(notepos)
 
 	assert(notepos.sequence == 1)
 	assert(notepos.track == 1)
@@ -204,7 +204,7 @@ fn = function()
   rns:delete_track_at(1)
 
 
-  print(">>> xNotePos: OK - passed all tests")
+  print(">>> xCursorPos: OK - passed all tests")
 
 end
 })

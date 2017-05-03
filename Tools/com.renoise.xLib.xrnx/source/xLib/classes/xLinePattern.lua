@@ -8,7 +8,9 @@ This class represents a 'virtual' renoise.PatternLine
 .
 #
 
-Create instances as needed, through the constructor method 
+See also:
+@{xLine}
+@{xLinePattern}
 
 ]]
 
@@ -33,9 +35,9 @@ xLinePattern.EFFECT_CHARS = {
 }
 
 ---------------------------------------------------------------------------------------------------
--- constructor
--- @param note_columns (table<xNoteColumn descriptor>)
--- @param effect_columns (table<xEffectColumn descriptor>)
+-- [Constructor], accepts two arguments for initializing the class
+-- @param note_columns (table, xNoteColumn descriptor)
+-- @param effect_columns (table, xEffectColumn descriptor)
 
 function xLinePattern:__init(note_columns,effect_columns)
 
@@ -64,7 +66,7 @@ function xLinePattern:__init(note_columns,effect_columns)
 end
 
 ---------------------------------------------------------------------------------------------------
--- convert descriptors into class instances (empty tables are left as-is)
+-- [Class] Convert descriptors into class instances (empty tables are left as-is)
 -- @param note_columns (xNoteColumn or table)
 -- @param effect_columns (xEffectColumn or table)
 
@@ -101,7 +103,7 @@ function xLinePattern:apply_descriptor(note_columns,effect_columns)
 end
 
 ---------------------------------------------------------------------------------------------------
--- combined method for writing to pattern or phrase
+-- [Class] Combined method for writing to pattern or phrase
 -- @param sequence (int)
 -- @param line (int)
 -- @param track_idx (int), when writing to pattern
@@ -169,7 +171,7 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hid
 end
 
 ---------------------------------------------------------------------------------------------------
--- write to either note or effect column
+-- [Class] Write to either note or effect column
 -- @param rns_columns (array<renoise.NoteColumn>) 
 -- @param rns_track_or_phrase (renoise.Track or renoise.InstrumentPhrase) 
 -- @param xline_columns (table<xNoteColumn or xEffectColumn>)
@@ -243,6 +245,7 @@ function xLinePattern:process_columns(
 end
 
 ---------------------------------------------------------------------------------------------------
+-- [Static] Read from pattern, return note/effect-column descriptors 
 -- @param rns_line (renoise.PatternLine)
 -- @param max_note_cols (int)
 -- @param max_fx_cols (int)
@@ -269,7 +272,7 @@ function xLinePattern.do_read(rns_line,max_note_cols,max_fx_cols)
 end
 
 ---------------------------------------------------------------------------------------------------
--- look for a specific type of effect command, return all matches
+-- [Static] Look for a specific type of effect command in line, return all matches
 -- (the number of characters in 'fx_type' decides if we search columns or sub-columns)
 -- @param track (renoise.Track)
 -- @param line (renoise.PatternLine)
@@ -303,7 +306,7 @@ function xLinePattern.get_effect_command(track,line,fx_type,notecol_idx,visible_
 end
 
 ---------------------------------------------------------------------------------------------------
--- get effect command using single-digit syntax 
+-- [Static] Get effect command using single-digit syntax (sub-column)
 -- (look through vol/pan subcolumns in note-columns)
 
 function xLinePattern.get_effect_subcolumn_command(track,line,fx_type,notecol_idx,visible_only)
@@ -314,7 +317,7 @@ function xLinePattern.get_effect_subcolumn_command(track,line,fx_type,notecol_id
 end 
 
 ---------------------------------------------------------------------------------------------------
--- get effect command using two-digit syntax 
+-- [Static] Get effect command using two-digit syntax (effect-column)
 -- (look through note effect-columns and effect-columns)
 
 function xLinePattern.get_effect_column_command(track,line,fx_type,notecol_idx,visible_only)
@@ -362,7 +365,7 @@ function xLinePattern.get_effect_column_command(track,line,fx_type,notecol_idx,v
 end 
 
 ---------------------------------------------------------------------------------------------------
--- get midi command from line
+-- [Static] Get midi command from line
 -- (look in last note-column, panning + first effect column)
 -- @return xMidiCommand or nil if not found
 
@@ -390,7 +393,7 @@ function xLinePattern.get_midi_command(track,line)
 end
 
 ---------------------------------------------------------------------------------------------------
--- set midi command (write to pattern)
+-- [Static] Set midi command (write to pattern)
 -- @param track renoise.Track
 -- @param line renoise.PatternLine
 -- @param cmd xMidiCommand

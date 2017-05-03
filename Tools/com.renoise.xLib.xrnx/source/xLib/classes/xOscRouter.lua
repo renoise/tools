@@ -5,6 +5,9 @@ xOscRouter
 --[[--
 
 A simple OSC router with caching
+.
+#
+
 The router is using instances of xOscPattern to match messages. 
 
 Caching works only when patterns does not define captures of float values. 

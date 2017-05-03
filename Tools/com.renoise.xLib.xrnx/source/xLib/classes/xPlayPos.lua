@@ -115,7 +115,7 @@ function xPlayPos:get()
 end
 
 -------------------------------------------------------------------------------
--- note: a realtime version of this method exists in xNotePos
+-- note: a realtime version of this method exists in xCursorPos
 -- @return table (like SongPos but with extra 'fraction' field)
 
 function xPlayPos:get_fractional()

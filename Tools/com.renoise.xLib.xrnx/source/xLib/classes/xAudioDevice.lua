@@ -14,8 +14,8 @@ Static methods for dealing with Audio Devices
 class 'xAudioDevice'
 
 --------------------------------------------------------------------------------
--- Resolve the device/parameter indices based on a parameter
--- (TODO: API5 makes a more efficient implementation possible)
+-- [Static] Resolve the device/parameter indices based on a parameter
+-- (TODO: API5 makes a much more efficient implementation possible)
 -- @param param, renoise.DeviceParameter 
 -- @param track_idx, restrict search to this track (optional)
 -- @param device_idx, restrict search to this device (optional)
@@ -85,8 +85,7 @@ function xAudioDevice.resolve_parameter(param,track_idx,device_idx)
 end
 
 --------------------------------------------------------------------------------
-
---- Determine if a device is linked to different fx-chains/tracks
+-- [Static] Determine if a device is linked to different fx-chains/tracks
 -- (detection not solid if the destination is automated - rare case!)
 -- @param device (renoise.AudioDevice)
 -- @return table (linked fx-chains/tracks)
@@ -115,7 +114,7 @@ function xAudioDevice.get_device_routings(device)
 end
 
 --------------------------------------------------------------------------------
---- Check if provided device is a send device
+-- [Static] Check if provided device is a send device
 -- @param device (renoise.AudioDevice)
 -- @return bool 
 
@@ -131,8 +130,7 @@ function xAudioDevice.is_send_device(device)
 end
 
 --------------------------------------------------------------------------------
--- Get parameters that are visible in the mixer
--- 
+-- [Static] Get parameters that are visible in the mixer
 -- @param device (renoise.AudioDevice)
 -- @return table<renoise.DeviceParameter>
 

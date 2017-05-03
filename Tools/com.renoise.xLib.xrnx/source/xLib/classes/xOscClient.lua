@@ -19,8 +19,12 @@ xOscClient is a simple OSC client
 class 'xOscClient' 
 
 --------------------------------------------------------------------------------
--- Class methods
---------------------------------------------------------------------------------
+-- [Constructor] Accepts a table argument for initializing the class 
+-- @param table{
+--    first_run (boolean),
+--    osc_host (string),
+--    osc_port (number)
+--  }
 
 function xOscClient:__init(...)
   TRACE("xOscClient:__init(...)")
@@ -55,7 +59,7 @@ end
 
 
 --------------------------------------------------------------------------------
---- Initialize the xOscClient class
+-- [Class] Initialize the xOscClient class
 -- @param osc_host (string) the host-address name (can be an IP address)
 -- @param osc_port (int) the host port
 -- @return boolean, 
@@ -82,7 +86,7 @@ function xOscClient:create(osc_host,osc_port)
 end
 
 --------------------------------------------------------------------------------
---- Trigger instrument-note
+-- [Class] Trigger instrument-note
 -- @param note_on (bool), true when note-on and false when note-off
 -- @param instr (int), the Renoise instrument index 
 -- @param track (int) the Renoise track index
@@ -119,7 +123,7 @@ function xOscClient:trigger_instrument(note_on,instr,track,note,velocity)
 end
 
 --------------------------------------------------------------------------------
---- Trigger standard midi-message
+-- [Class] Trigger standard midi-message
 -- @param t (table), a ready-to-send MIDI message
 -- @return bool, true when triggered
 
@@ -146,7 +150,7 @@ function xOscClient:trigger_midi(t)
 end
 
 --------------------------------------------------------------------------------
--- trigger 'automatic MIDI' using the internal OSC client
+-- [Class] Trigger 'automatic MIDI' using the internal OSC client
 -- if notes, route to specified track + instrument - else, pass as raw MIDI
 -- @param xmsg (xMidiMessage or xOscMessage)
 -- @return bool, true when triggered
@@ -178,7 +182,7 @@ function xOscClient:trigger_auto(xmsg)
 end
 
 --------------------------------------------------------------------------------
--- trigger 'raw MIDI' (makes notes MIDI-mappable)
+-- [Class] Trigger 'raw MIDI' (makes notes MIDI-mappable)
 -- @param xmsg (xMidiMessage or xOscMessage)
 -- @return bool, true when triggered
 -- @return string, error message when failed
@@ -204,7 +208,7 @@ end
 
 
 --------------------------------------------------------------------------------
---- Display usage instructions the first time the class is used
+-- [Class] Display usage instructions the first time the class is used
 
 function xOscClient:_show_instructions()
 

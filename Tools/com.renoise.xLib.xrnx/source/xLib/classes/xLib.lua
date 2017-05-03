@@ -4,7 +4,7 @@ xLib
 
 --[[--
 
-This is the core xLib class, containing a bunch of static helper methods
+Global constants and static methods for xLib
 .
 #
 
@@ -19,8 +19,8 @@ xLib.COLOR_ENABLED = {0xD0,0xD8,0xD4}
 xLib.COLOR_DISABLED = {0x00,0x00,0x00}
 
 --------------------------------------------------------------------------------
--- Detect if we have a renoise song: in rare cases it can briefly go missing,
--- mostly while loading a song or creating a new document...
+-- [Static] Detect if we have a renoise song: in rare cases it can briefly 
+-- go missing (e.g. while loading a song or creating a new document...)
 
 function xLib.is_song_available()
 

@@ -4,8 +4,10 @@
 
 --[[--
 
-This class defines a simple syntax for matching/extracting and generating OSC messages.
-  
+This class defines a syntax for matching/extracting/generating OSC messages.
+.
+#
+
 To start with, you define an "input pattern" for matching values - either a literal value (number or string), or a "wildcard". For example:
 
       -- Match message with four integers, third one equal to 48

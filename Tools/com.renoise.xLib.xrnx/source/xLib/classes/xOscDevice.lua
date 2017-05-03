@@ -12,6 +12,23 @@ receive OSC messages
 The class defines certain methods, according to the Renoise Socket API:
 socket_error(),socket_message()
 
+### How to use 
+
+Create an instance and supply any of these arguments:
+
+  xOscDevice{
+    active
+    name
+    prefix
+    address
+    port_in
+    port_out
+    callback
+    bundling_enabled
+    bundle_limit
+  }
+
+
 --]]
 
 --==============================================================================
@@ -33,6 +50,7 @@ xOscDevice.DOC_PROPS = {
 xOscDevice.DEFAULT_DEVICE_NAME = "Untitled device"
 
 --------------------------------------------------------------------------------
+-- [Constructor] supply a table to initialize the class 
 
 function xOscDevice:__init(...)
 

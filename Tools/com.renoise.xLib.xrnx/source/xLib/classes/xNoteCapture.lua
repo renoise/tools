@@ -10,21 +10,20 @@ Methods for capturing notes in pattern editor
 
 ]]
 
---require (_xlibroot..'xSongPos')
---require (_xlibroot..'xNotePos')
 
 class 'xNoteCapture'
 
 -------------------------------------------------------------------------------
--- capture the note at the current position, or previous
+-- [Static] Capture the note at the current position, or previous
 -- if no previous is found, find the next one
--- @param pos (xNotePos)
--- @return xNotePos or nil if not matched
+-- @param pos (xCursorPos)
+-- @return xCursorPos or nil if not matched
+
 function xNoteCapture.nearest(compare_fn,notepos)
   TRACE("xNoteCapture.nearest(notepos,compare_fn)", notepos, compare_fn)
   
   if not notepos then
-    notepos = xNotePos()
+    notepos = xCursorPos()
   end
   
   local column, err = notepos:get_column()
@@ -41,15 +40,15 @@ function xNoteCapture.nearest(compare_fn,notepos)
 end
 
 ---------------------------------------------------------------------------------------------------
--- capture the previous note, starting from (but not including) pos
+-- [Static] Capture the previous note, starting from (but not including) pos
 -- @param compare_fn (function)
--- @param notepos (xNotePos)
+-- @param notepos (xCursorPos)
 -- @param end_seq_idx (int)[optional], stop searching at this sequence index
--- @return xNotePos or nil if not matched
+-- @return xCursorPos or nil if not matched
 function xNoteCapture.previous(compare_fn, notepos, end_seq_idx)
   TRACE("xNoteCapture.previous(compare_fn,notepos,end_seq_idx)", compare_fn, notepos, end_seq_idx)
   
-  notepos = xNotePos(notepos)
+  notepos = xCursorPos(notepos)
   
   local matched = false
   local min_seq_idx = end_seq_idx or 1
@@ -80,15 +79,15 @@ function xNoteCapture.previous(compare_fn, notepos, end_seq_idx)
 end
 
 ---------------------------------------------------------------------------------------------------
--- capture the next note, starting from (but not including) pos
+-- [Static] Capture the next note, starting from (but not including) pos
 -- @param compare_fn (function)
--- @param notepos (xNotePos)
+-- @param notepos (xCursorPos)
 -- @param end_seq_idx (int)[optional], stop searching at this sequence index
--- @return xNotePos or nil if not matched
+-- @return xCursorPos or nil if not matched
 function xNoteCapture.next(compare_fn, notepos, end_seq_idx)
   TRACE("xNoteCapture.next(compare_fn,notepos,end_seq_idx)", compare_fn, notepos, end_seq_idx)
   
-  notepos = xNotePos(notepos)
+  notepos = xCursorPos(notepos)
   
   local matched = false
   local max_seq_idx = end_seq_idx or #rns.sequencer.pattern_sequence
@@ -115,11 +114,11 @@ function xNoteCapture.next(compare_fn, notepos, end_seq_idx)
 end
 
 ---------------------------------------------------------------------------------------------------
--- iterate from notepos to end of pattern, or when reversed, from notepos to start of pattern 
--- @param notepos (xNotePos)
+-- [Static] Iterate from notepos to end of pattern, or when reversed, notepos to patt.start 
+-- @param notepos (xCursorPos)
 -- @param compare_fn (function)
 -- @param reverse (boolean) reverse iteration
--- @return xNotePos or nil if not matched
+-- @return xCursorPos or nil if not matched
 
 function xNoteCapture.search_track(notepos, compare_fn, reverse)
   TRACE("xNoteCapture.search_track(notepos,compare_fn)", notepos, compare_fn)
@@ -166,13 +165,13 @@ function xNoteCapture.search_track(notepos, compare_fn, reverse)
 end
 
 ---------------------------------------------------------------------------------------------------
--- invoke the callback method to compare a given line 
+-- [Static] Invoke the callback method to compare a given line 
 -- @param lines (table<renoise.PatternLine>)
 -- @param count (number)
 -- @param line_idx (number)
--- @param notepos (xNotePos)
+-- @param notepos (xCursorPos)
 -- @param compare_fn (function)
--- @return xNotePos or nil if not matched
+-- @return xCursorPos or nil if not matched
 
 function xNoteCapture.compare_line(lines,count,line_idx,notepos,compare_fn)
   TRACE("xNoteCapture.compare_line(lines,count,line_idx,notepos,compare_fn)",count,line_idx,notepos,compare_fn)
@@ -181,7 +180,7 @@ function xNoteCapture.compare_line(lines,count,line_idx,notepos,compare_fn)
   if line then
     local notecol = line.note_columns[notepos.column]
     if (notecol and compare_fn(notecol)) then
-      notepos = xNotePos(notepos)
+      notepos = xCursorPos(notepos)
       notepos.line = line_idx
       return notepos
     end

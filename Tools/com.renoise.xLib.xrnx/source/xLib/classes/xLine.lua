@@ -4,13 +4,16 @@ xLine
 
 --[[--
 
-This class is used to describe a single line in the song
+Use xLine to represent a single line (note/effect-columns + automation)
 .
 #
 
-* Includes patterns, phrases or automation 
-* Limited to a single track at a time
+The class uses xLinePattern for notes and effect-columns, and 
+xLineAutomation to represent the automation within that line. 
 
+See also:
+@{xLinePattern}
+@{xLineAutomation}
 
 ]]
 
@@ -32,8 +35,8 @@ xLine.EMPTY_XLINE = {
   effect_columns = xLine.EMPTY_EFFECT_COLUMNS,
 } 
 
--------------------------------------------------------------------------------
--- constructor method
+---------------------------------------------------------------------------------------------------
+-- [Constructor] accepts a single argument to use as class initializer
 -- @param args (table)
 
 function xLine:__init(args)
@@ -63,31 +66,8 @@ function xLine:__init(args)
 end
 
 
--------------------------------------------------------------------------------
--- convert descriptors into class instances (empty tables are left as-is)
--- @param xline (xLine or table) will create xLine instance if table 
--- @return xLine 
-
-function xLine.apply_descriptor(xline)
-  --TRACE("xLine.apply_descriptor(xline)",xline)
-
-  if (type(xline) == "table") then -- entire xline redefined
-    xline = xLine(xline)
-  elseif (type(xline) == "xLine") then -- check xLine content
-    xline.pattern_line:apply_descriptor(xline.note_columns,xline.effect_columns)
-    if not table.is_empty(xline.automation) then
-      xline.automation = xLineAutomation(xline.automation)
-    end
-  else
-    error("Unexpected xline type")
-  end
-
-  return xline
-
-end
-
--------------------------------------------------------------------------------
--- write to pattern/phrase/automation - all defined types of data 
+---------------------------------------------------------------------------------------------------
+-- [Class] Write to pattern/phrase/automation - all defined types of data 
 -- @param sequence (int)
 -- @param line (int)
 -- @param track_idx (int)
@@ -144,7 +124,9 @@ function xLine:do_write(
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Class] clear the renoise.PatternLine 
+-- TODO refactor to xLinePattern 
 -- @param sequence (int)
 -- @param line (int)
 -- @param track_idx (int), when writing to pattern
@@ -165,8 +147,8 @@ function xLine:clear_pattern_line(sequence,line,track_idx,phrase)
 
 end
 
--------------------------------------------------------------------------------
--- resolve a column (note or effect), optionally a similar approach to that
+---------------------------------------------------------------------------------------------------
+-- [Static] Resolve a column (note or effect), optionally a similar approach to that
 -- used by "selection_in_pattern" - meaning that, if a given line contains
 -- two visible note columns and some effect columns then "col_idx=3" will 
 -- indicate the first effect column  
@@ -215,8 +197,8 @@ function xLine.get_column(line,col_idx,track,visible_only)
 
 end
 
--------------------------------------------------------------------------------
--- read from song, return a descriptive table 
+---------------------------------------------------------------------------------------------------
+-- [Static] Read from song, return a descriptive table 
 -- @param sequence (int)
 -- @param line (int)
 -- @param include_hidden (bool),
@@ -270,8 +252,8 @@ function xLine.do_read(sequence,line,include_hidden,track_idx,phrase)
 
 end
 
--------------------------------------------------------------------------------
--- resolve_pattern_line: MUST be valid 
+---------------------------------------------------------------------------------------------------
+-- [Static] Resolve_pattern_line: MUST be valid 
 -- @param sequence (int)
 -- @param line (int)
 -- @param track_idx (int)
@@ -296,8 +278,8 @@ function xLine.resolve_pattern_line(sequence,line,track_idx)
 
 end
 
--------------------------------------------------------------------------------
--- resolve_phrase_line: MUST be valid 
+---------------------------------------------------------------------------------------------------
+-- [Static] Resolve_phrase_line: MUST be valid 
 -- @param line (int)
 -- @param phrase (renoise.Phrase)
 -- @return rns_line (renoise.PatternLine)
@@ -312,7 +294,31 @@ function xLine.resolve_phrase_line(line,phrase)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Convert descriptors into class instances (empty tables are left as-is)
+-- @param xline (xLine or table) will create xLine instance if table 
+-- @return xLine 
+
+function xLine.apply_descriptor(xline)
+  --TRACE("xLine.apply_descriptor(xline)",xline)
+
+  if (type(xline) == "table") then -- entire xline redefined
+    xline = xLine(xline)
+  elseif (type(xline) == "xLine") then -- check xLine content
+    xline.pattern_line:apply_descriptor(xline.note_columns,xline.effect_columns)
+    if not table.is_empty(xline.automation) then
+      xline.automation = xLineAutomation(xline.automation)
+    end
+  else
+    error("Unexpected xline type")
+  end
+
+  return xline
+
+end
+
+
+---------------------------------------------------------------------------------------------------
 
 function xLine:__tostring()
 

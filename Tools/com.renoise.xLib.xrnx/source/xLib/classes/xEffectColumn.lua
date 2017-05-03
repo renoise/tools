@@ -11,20 +11,27 @@ Use xEffectColumn to create 'virtual' renoise.EffectColumn objects
 Unlike the renoise.EffectColumn, this one can be freely defined, 
 without the need to have the line present in an actual song 
 
+You create an instance by feeding it a descriptive table in the constructor.
+All string-based values are automatically converted into their numeric
+counterparts. 
+
 ]]
 
 class 'xEffectColumn'
 
+--- List of effect-column properties 
 xEffectColumn.tokens = {
     "number_value","number_string", 
     "amount_value","amount_string",
 }
 
+--- Properties to use when writing to pattern 
 xEffectColumn.output_tokens = {
     "number_value", 
     "amount_value",
 }
 
+--- List of effect commands (names)
 xEffectColumn.SUPPORTED_EFFECTS = {
   "Axy - Arpeggio",
   "Bxx - Backwards",
@@ -50,6 +57,7 @@ xEffectColumn.SUPPORTED_EFFECTS = {
   "Zxy - Trigger Phrase", -- API5
 }
 
+-- List of effect commands (values)
 xEffectColumn.SUPPORTED_EFFECT_CHARS = {
   10, --A
   11, --B
@@ -75,24 +83,24 @@ xEffectColumn.SUPPORTED_EFFECT_CHARS = {
   35, --Z (API5)             
 }
 -------------------------------------------------------------------------------
--- constructor
--- @param args (table), a xline descriptor - fully or sparsely populated
+-- [Constructor] accepts a single argument for initializing the class  
+-- @param args (table), descriptor
 
 function xEffectColumn:__init(args)
 
-  --- int
+  --- number, 0-255
   self.number_value = property(self.get_number_value,self.set_number_value)
   self._number_value = nil
 
-  --- string
+  --- string, '00'-'FF' or '..'
   self.number_string = property(self.get_number_string,self.set_number_string)
   self._number_string = nil
 
-  --- int
+  --- number, 0-255
   self.amount_value = property(self.get_amount_value,self.set_amount_value)
   self._amount_value = nil
 
-  --- string
+  --- string, '00'-'FF' or '..'
   self.amount_string = property(self.get_amount_string,self.set_amount_string)
   self._amount_string = nil
 
@@ -145,44 +153,8 @@ function xEffectColumn:set_amount_string(str)
   self._amount_value = xEffectColumn.amount_string_to_value(str)
 end
 
-
--- Converter methods (static implementation)
 -------------------------------------------------------------------------------
-
-function xEffectColumn.number_value_to_string(val)
-  --TRACE("xEffectColumn.number_value_to_string(val)",val)
-  local first = math.floor(val/256)
-  local str_first = xLinePattern.EFFECT_CHARS[first+1]
-  local str_second = xLinePattern.EFFECT_CHARS[val-(first*256)+1]
-  if str_first and str_second then
-    return str_first..str_second
-  else
-    error("Unexpected effect number. Expected two bytes between 0-35 respectively")
-  end
-end
-
-function xEffectColumn.number_string_to_value(str)
-  local digit_1 = table.find(xLinePattern.EFFECT_CHARS,string.sub(str,1,1))-1
-  local digit_2 = table.find(xLinePattern.EFFECT_CHARS,string.sub(str,2,2))-1
-  if digit_1 and digit_2 then
-    return digit_1*256 + digit_2
-  else
-    return 0
-  end
-end
-
--------------------------------------------------------------------------------
-
-function xEffectColumn.amount_value_to_string(val)
-  --TRACE("xEffectColumn.amount_value_to_string(val)",val)
-  return ("%.2X"):format(val)
-end
-
-function xEffectColumn.amount_string_to_value(str)
-  return tonumber("0x"..str)
-end
-
--------------------------------------------------------------------------------
+-- [Class] Write output to the provided effect-column 
 -- @param fx_col (renoise.EffectColumn)
 -- @param tokens (table<xStreamModel.output_tokens>)
 -- @param clear_undefined (bool)
@@ -205,7 +177,7 @@ function xEffectColumn:do_write(fx_col,tokens,clear_undefined)
 end
 
 -------------------------------------------------------------------------------
--- we need a function for each possible token
+-- [Class] Define a function for each possible token (see above)
 
 function xEffectColumn:do_write_number_value(fx_col,clear_undefined)
   --TRACE("xEffectColumn:do_write_number_value(fx_col,clear_undefined)",fx_col,clear_undefined)
@@ -244,6 +216,48 @@ function xEffectColumn:do_write_amount_string(fx_col,clear_undefined)
 end
 
 -------------------------------------------------------------------------------
+-- [Static] Convert number value to string 
+-- @param val (number)
+-- @return string 
+
+function xEffectColumn.number_value_to_string(val)
+  --TRACE("xEffectColumn.number_value_to_string(val)",val)
+  local first = math.floor(val/256)
+  local str_first = xLinePattern.EFFECT_CHARS[first+1]
+  local str_second = xLinePattern.EFFECT_CHARS[val-(first*256)+1]
+  if str_first and str_second then
+    return str_first..str_second
+  else
+    error("Unexpected effect number. Expected two bytes between 0-35 respectively")
+  end
+end
+
+function xEffectColumn.number_string_to_value(str)
+  local digit_1 = table.find(xLinePattern.EFFECT_CHARS,string.sub(str,1,1))-1
+  local digit_2 = table.find(xLinePattern.EFFECT_CHARS,string.sub(str,2,2))-1
+  if digit_1 and digit_2 then
+    return digit_1*256 + digit_2
+  else
+    return 0
+  end
+end
+
+-------------------------------------------------------------------------------
+-- [Static] Convert amount value to string 
+-- @param val (number)
+-- @return string 
+
+function xEffectColumn.amount_value_to_string(val)
+  --TRACE("xEffectColumn.amount_value_to_string(val)",val)
+  return ("%.2X"):format(val)
+end
+
+function xEffectColumn.amount_string_to_value(str)
+  return tonumber("0x"..str)
+end
+
+-------------------------------------------------------------------------------
+-- [Static] Read from pattern and turn into descriptor 
 -- @param fx_col (renoise.EffectColumn)
 -- @return table 
 
