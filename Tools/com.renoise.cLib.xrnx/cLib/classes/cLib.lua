@@ -1,42 +1,46 @@
---[[============================================================================
+--[[===============================================================================================
 cLib
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
-This is the core cLib class, containing a bunch of static helper methods
+This is the core cLib class, containing a bunch of static helper methods 
 .
 #
 
-Note that several classes might make calls to the LOG/TRACE methods - 
-it is recommended that any cLib-powered tool includes this file
+Note that several classes in the cLib library invokes the LOG/TRACE statement - 
+therefore, it is recommended that any cLib-powered tool includes this file
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 require (_clibroot.."cValue")
 require (_clibroot.."cNumber")
 
 class 'cLib'
 
---------------------------------------------------------------------------------
--- Logging and Tracing 
+---------------------------------------------------------------------------------------------------
+-- [Static] LOG statement - invokes cLib.log(). 
+-- you can override this method with your own custom implementation  
+-- @param ... (vararg)
 
 function LOG(...)
-  -- proxy method which forwards logging calls to cLib.log() 
-  -- having it as a proxy allows you to define a custom implementation  
   cLib.log(...)
 end
 
+---------------------------------------------------------------------------------------------------
+-- [Static] Placeholder TRACE statement
+-- (include cDebug for the full-featured implementation)
+-- @param ... (vararg)
+
 function TRACE(...) 
-  -- this is just a placeholder function,
-  -- include cDebug to enable full tracing...
+
 end
 
---------------------------------------------------------------------------------
--- Print important messages to the console (errors and warnings)
--- @param (vararg)
+---------------------------------------------------------------------------------------------------
+-- [Static] Print important messages to the console (errors and warnings)
+-- @param ... (vararg)
 
 function cLib.log(...)
   local result = ""
@@ -47,8 +51,9 @@ function cLib.log(...)
   print (result)
 end
 
---------------------------------------------------------------------------------
--- Turn varargs into a table
+---------------------------------------------------------------------------------------------------
+-- [Static] Turn varargs into a table
+-- @param ... (vararg)
 
 function cLib.unpack_args(...)
   local args = {...}
@@ -59,11 +64,11 @@ function cLib.unpack_args(...)
   end
 end
 
---------------------------------------------------------------------------------
--- Call a class method or function and show/log results
+---------------------------------------------------------------------------------------------------
+-- [Static] Call a class method or function and show/log results
 -- Note: currently with a maximum of 8 arguments can be passed (this is a
 -- convenience function after all...)
--- @params ... (vararg), [class+function or function] + argument(s)
+-- @param ... (vararg), [class+function or function] + argument(s)
 
 function cLib.invoke_task(...)
   local fn = select(1,...)
@@ -71,8 +76,8 @@ function cLib.invoke_task(...)
     select(6,...),select(7,...),select(8,...),select(9,...))
 end
 
---------------------------------------------------------------------------------
--- Turn value descriptor into instance
+---------------------------------------------------------------------------------------------------
+-- [Static] Turn value descriptor into instance
 -- @return cNumber or cValue
 
 function cLib.create_cvalue(t)
@@ -86,10 +91,10 @@ function cLib.create_cvalue(t)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Array/table methods
---------------------------------------------------------------------------------
--- Match item(s) in an associative array (provide key)
+---------------------------------------------------------------------------------------------------
+-- [Static] Match item(s) in an associative array (provide key)
 -- @param t (table) 
 -- @param key (string) 
 -- @return table
@@ -104,10 +109,13 @@ function cLib.match_table_key(t,key)
 
 end
 
---------------------------------------------------------------------------------
--- Expand a multi-dimensional array with given keys
+---------------------------------------------------------------------------------------------------
+-- [Static] Expand a multi-dimensional array with given keys
 -- @param t (table) 
--- @param k1-k4 (string) 
+-- @param k1 (string) 
+-- @param k2 (string) 
+-- @param k3 (string) 
+-- @param k4 (string) 
 -- @return table
 
 function cLib.expand_table(t,k1,k2,k3,k4)
@@ -124,8 +132,8 @@ function cLib.expand_table(t,k1,k2,k3,k4)
 
 end
 
---------------------------------------------------------------------------------
--- Find the highest/lowest numeric key (index) in a sparsely populated table
+---------------------------------------------------------------------------------------------------
+-- [Static] Find the highest/lowest numeric key (index) in a sparsely populated table
 -- @return lowest,highest
 
 function cLib.get_table_bounds(t)
@@ -143,8 +151,8 @@ function cLib.get_table_bounds(t)
 
 end
 
---------------------------------------------------------------------------------
--- Merge two tables into one (recursive)
+---------------------------------------------------------------------------------------------------
+-- [Static] Merge two tables into one (recursive)
 -- @param t1 (table)
 -- @param t2 (table)
 -- @return table
@@ -164,8 +172,8 @@ function cLib.merge_tables(t1,t2)
   return t1
 end
 
---------------------------------------------------------------------------------
--- Convert a sparsely populated table into a compact one
+---------------------------------------------------------------------------------------------------
+-- [Static] Convert a sparsely populated table into a compact one
 -- @param t (table)
 -- @return table
 
@@ -187,8 +195,8 @@ function cLib.compact_table(t)
 
 end
 
---------------------------------------------------------------------------------
--- quick'n'dirty table compare (values in first level only)
+---------------------------------------------------------------------------------------------------
+-- [Static] Quick'n'dirty table compare (values in first level only)
 -- @param t1 (table)
 -- @param t2 (table)
 -- @return boolean, true if identical
@@ -197,21 +205,23 @@ function cLib.table_compare(t1,t2)
   return (table.concat(t1,",")==table.concat(t2,","))
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Number methods
---------------------------------------------------------------------------------
--- scale_value: scale a value to a range within a range
+---------------------------------------------------------------------------------------------------
+-- [Static] Scale value to a range within a range
 -- @param value (number) the value we wish to scale
 -- @param in_min (number) 
 -- @param in_max (number) 
 -- @param out_min (number) 
 -- @param out_max (number) 
 -- @return number
+
 function cLib.scale_value(value,in_min,in_max,out_min,out_max)
   return(((value-in_min)*(out_max/(in_max-in_min)-(out_min/(in_max-in_min))))+out_min)
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Strip percentage sign from string, if present
 -- @param str (string), e.g. "33.3%"
 
 function cLib.string_to_percentage(str)
@@ -220,8 +230,8 @@ function cLib.string_to_percentage(str)
 end
 
 
---------------------------------------------------------------------------------
--- clamp_value: ensure value is within min/max
+---------------------------------------------------------------------------------------------------
+-- [Static] Clamp value - ensure value is within min/max
 -- @param value (number) 
 -- @param min_value (number) 
 -- @param max_value (number) 
@@ -231,8 +241,8 @@ function cLib.clamp_value(value, min_value, max_value)
   return math.min(max_value, math.max(value, min_value))
 end
 
--------------------------------------------------------------------------------
---- convert between note/hertz
+---------------------------------------------------------------------------------------------------
+-- [Static] Convert between note/hertz
 
 function cLib.note_to_hz(note)
   TRACE('cLib.note_to_hz(note)',note)
@@ -244,8 +254,8 @@ function cLib.hz_to_note(freq)
   return (math.log(freq) - math.log(440)) / math.log(2) + 4;
 end
 
---------------------------------------------------------------------------------
---- greatest common divisor
+---------------------------------------------------------------------------------------------------
+-- [Static] Greatest common divisor
 
 function cLib.gcd(m,n)
   while n ~= 0 do
@@ -256,15 +266,15 @@ function cLib.gcd(m,n)
   return m
 end
 
---------------------------------------------------------------------------------
---- least common multiplier (2 args)
+---------------------------------------------------------------------------------------------------
+-- [Static] Least common multiplier (2 args)
 
 function cLib.lcm(m,n)
   return ( m ~= 0 and n ~= 0 ) and m * n / cLib.gcd( m, n ) or 0
 end
 
---------------------------------------------------------------------------------
---- find least common multiplier 
+---------------------------------------------------------------------------------------------------
+-- [Static] Find least common multiplier 
 -- @param t (table), use values in table as argument
 
 function cLib.least_common(t)
@@ -275,16 +285,17 @@ function cLib.least_common(t)
   return cm
 end
 
---------------------------------------------------------------------------------
--- round_value (from http://lua-users.org/wiki/SimpleRound)
+---------------------------------------------------------------------------------------------------
+-- [Static] Round value (from http://lua-users.org/wiki/SimpleRound)
+-- @param num (number)
 
 function cLib.round_value(num) 
   if num >= 0 then return math.floor(num+.5) 
   else return math.ceil(num-.5) end
 end
 
---------------------------------------------------------------------------------
--- compare two numbers with variable precision
+---------------------------------------------------------------------------------------------------
+-- [Static] Compare two numbers with variable precision
 -- @param val1 
 -- @param val2 
 -- @param precision, '10000000' is suitable for parameter values
@@ -296,8 +307,8 @@ function cLib.float_compare(val1,val2,precision)
   return val1 == val2 
 end
 
---------------------------------------------------------------------------------
---- return the fractional part of a number
+---------------------------------------------------------------------------------------------------
+-- [Static] Return the fractional part of a number
 -- @param val 
 -- @return number
 
@@ -305,8 +316,8 @@ function cLib.fraction(val)
   return val-math.floor(val)
 end
 
--------------------------------------------------------------------------------
--- find number of hex digits needed to represent a number (e.g. 255 = 2)
+---------------------------------------------------------------------------------------------------
+-- [Static] Find number of hex digits needed to represent a number (e.g. 255 = 2)
 -- @param val (int)
 -- @return int
 
@@ -314,8 +325,8 @@ function cLib.get_hex_digits(val)
   return 8-#string.match(bit.tohex(val),"0*")
 end
 
--------------------------------------------------------------------------------
--- take a table and convert into strings - useful e.g. for viewbuilder popup 
+---------------------------------------------------------------------------------------------------
+-- [Static] Take a table and convert into strings - useful e.g. for viewbuilder popup 
 -- (if table is associative, will use values)
 -- @param t (table)
 -- @param prefix (string) insert before each entry
@@ -332,8 +343,8 @@ function cLib.stringify_table(t,prefix,suffix)
 
 end
 
--------------------------------------------------------------------------------
--- receives a string argument and turn it into a proper object or value
+---------------------------------------------------------------------------------------------------
+-- [Static] Receives a string argument and turn it into a proper object or value
 -- @param str (string), e.g. "renoise.song().transport.keyboard_velocity"
 -- @return value (can be nil)
 -- @return string, error message when failed
@@ -354,8 +365,8 @@ function cLib.parse_str(str)
 
 end
 
---------------------------------------------------------------------------------
--- try serializing a value or return "???"
+---------------------------------------------------------------------------------------------------
+-- [Static] Try serializing a value or return "???"
 -- the result should be a valid, quotable string
 -- @param obj, value or object
 -- @return string
@@ -372,8 +383,8 @@ function cLib.serialize_object(obj)
   end
 end
 
---------------------------------------------------------------------------------
--- serialize table into string, with some formatting options
+---------------------------------------------------------------------------------------------------
+-- [Static] Serialize table into string, with some formatting options
 -- @param t (table)
 -- @param max_depth (int), determine how many levels to process - optional
 -- @param longstring (boolean), use longstring format for multiline text
