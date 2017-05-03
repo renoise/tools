@@ -4,6 +4,11 @@ cLib ("core library") is a suite of classes to support the Renoise API.
 
 The library contains methods for working with the file system, basic data-types (string, table and so on), as well other lua/Renoise API-specific details. 
 
+## Documentation
+
+Point your browser to this location to browse the auto-generated luadocs:
+https://renoise.github.io/luadocs/clib
+
 ## LOG and TRACE 
 
 As an alternative to using print statements in your code, you can call the  TRACE/LOG methods. 
