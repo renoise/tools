@@ -102,7 +102,7 @@ PARAM_MODE = {
                       -- NRPN: increase at [0x01 - 0x7F] when MSB is 0x40, decrease at [0x7F - 0x00] when MSB is 0x3F 
                       -- (known as "Relative 2" in the Behringer B-Control series)
 
-  "rel_14_twos_comp", -- 14 bit relative value 
+  "rel_14_twos_comp"  -- 14 bit relative value 
                       -- CC: increase at [0x01 - 0x7F] when MSB is 0x00, decrease at [0x01 - 0x7F] when MSB is 0x40
                       -- NRPN: increase at [0x01 - 0x7F] when MSB is 0x00, decrease at [0x7F - 0x00] when MSB is 0x7F 
                       -- (known as "Relative 3" in the Behringer B-Control series)
@@ -110,9 +110,17 @@ PARAM_MODE = {
 
 --- (Enum) valid `type` attributes for <Param> nodes
 INPUT_TYPE = {
-  "button",           -- standard bidirectional button which output a value on press & release, but does not control it's internal state
-  "togglebutton",     -- bidirectional button which toggles the state internally - this type of control does not support release & hold events (examples are buttons on the BCF/BCR controller)
-  "pushbutton",       -- bidirectional button which will output values on press & release while controlling it's state internally. Some examples are Automap "momentary" buttons, or TouchOSC pushbuttons
+  "button",           -- standard bidirectional button which output a value on press and release, 
+                      -- but does not control it's internal state
+
+  "togglebutton",     -- bidirectional button which toggles the state internally -  
+                      -- this type of control does not support release and hold events 
+                      -- (examples are buttons on the BCF/BCR controller)
+
+  "pushbutton",       -- bidirectional button which will output values on press and release 
+                      -- while controlling it's state internally. Some examples are 
+                      -- Automap "momentary" buttons, or TouchOSC pushbuttons
+
   "fader",            -- manual fader
   "dial",             -- basic rotary encoder 
   "xypad",            -- XY pad 
