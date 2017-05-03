@@ -76,6 +76,34 @@ function xInstrument.is_triggering_phrase(instr)
 end
 
 -------------------------------------------------------------------------------
+-- [Static] Figure out the phrase playback mode
+-- @return boolean
+
+function xInstrument.get_phrase_playback_enabled(instr)
+  --- implementation depends on API version
+  if (renoise.API_VERSION > 4) then
+    return not (instr.phrase_playback_mode == renoise.Instrument.PHRASES_OFF)
+  else
+    return instr.phrase_playback_enabled 
+  end
+end
+
+-------------------------------------------------------------------------------
+-- [Static] Set the phrase playback mode
+-- @return boolean
+
+function xInstrument.set_phrase_playback_enabled(instr,bool)
+  if (renoise.API_VERSION > 4) then
+    -- this is a v4 method, so we assume Keymap trigger mode 
+    local enum = bool and renoise.Instrument.PHRASES_PLAY_KEYMAP
+      or renoise.Instrument.PHRASES_OFF
+    instr.phrase_playback_mode = enum
+  else
+    instr.phrase_playback_enabled = bool
+  end
+end
+
+-------------------------------------------------------------------------------
 -- [Static] Detect if there is a slice marker *approximately* at the sample pos
 -- @return boolean, [error message (string)]
 
