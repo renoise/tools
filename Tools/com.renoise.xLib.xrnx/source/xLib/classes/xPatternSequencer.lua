@@ -1,6 +1,6 @@
---[[============================================================================
-xVoiceSorter
-============================================================================]]--
+--[[===============================================================================================
+xPatternSequencer
+===============================================================================================]]--
 
 --[[--
 
@@ -13,21 +13,21 @@ Static methods for working with the renoise.PatternSequence
 class 'xPatternSequencer' 
 
 --[[
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- TODO
 function xPatternSequencer:get_next_pattern()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- TODO
 
 function xPatternSequencer:get_previous_pattern()
 
 end
 ]]
--------------------------------------------------------------------------------
--- Enable loop for the section that playback is currently located in
+---------------------------------------------------------------------------------------------------
+-- [Static] Enable loop for the section that playback is currently located in
 
 function xPatternSequencer.loop_current_section()
   local seq_pos = rns.transport.edit_pos.sequence
@@ -35,8 +35,9 @@ function xPatternSequencer.loop_current_section()
   xPatternSequencer.loop_section_by_index(section_index)
 end
 
--------------------------------------------------------------------------------
--- Loop the specified section 
+---------------------------------------------------------------------------------------------------
+-- [Static] Loop the specified section 
+-- @param section_index (number)
 
 function xPatternSequencer.loop_section_by_index(section_index)
 
@@ -96,8 +97,8 @@ function xPatternSequencer.loop_section_by_index(section_index)
 
 end
 
--------------------------------------------------------------------------------
--- Retrieve indices for sections in pattern-sequence
+---------------------------------------------------------------------------------------------------
+-- [Static] Retrieve indices for sections in pattern-sequence
 
 function xPatternSequencer.gather_section_positions()
   local positions = {}
@@ -109,8 +110,9 @@ function xPatternSequencer.gather_section_positions()
   return positions
 end
 
--------------------------------------------------------------------------------
--- Retrieve section-index for a given position in the pattern-sequence
+---------------------------------------------------------------------------------------------------
+-- [Static] Retrieve section-index for a given position in the pattern-sequence
+-- @param seq_pos (number)
 
 function xPatternSequencer.get_section_index_by_seq_pos(seq_pos)
   local positions = xPatternSequencer.gather_section_positions()
@@ -127,8 +129,9 @@ function xPatternSequencer.get_section_index_by_seq_pos(seq_pos)
   
 end
 
--------------------------------------------------------------------------------
--- Schedule a given section-index for playback 
+---------------------------------------------------------------------------------------------------
+-- [Static] Schedule a given section-index for playback 
+-- @param section_index
 
 function xPatternSequencer.set_scheduled_section(section_index)
   local positions = gather_section_positions()
