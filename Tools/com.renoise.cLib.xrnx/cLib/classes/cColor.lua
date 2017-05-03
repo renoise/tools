@@ -33,6 +33,14 @@ function cColor.adjust_brightness(rgb,amt)
 
 end
 
+--------------------------------------------------------------------------------
+-- get average from color
+-- @param color (table<int,int,int>) 
+-- @return number 
+
+function cColor.get_average(color)
+  return (color[1]+color[2]+color[3])/3
+end
 
 --------------------------------------------------------------------------------
 -- convert r,g,b into numeric representation valid for hex display (#RRGGBB)
