@@ -18,6 +18,12 @@ Inheritance: @{Duplex.Application} > Duplex.Application.Effect
 
 ### Changes
 
+  0.99.?? by Eran Dax Lonker
+    - Added: improved mapping for effect parameters - possibilty to set 
+             an index for the group (for instance: you start with the
+             second knob in group for the parameters and the first one
+             is for device browsing) 
+
   0.99.xx
     - New mapping: "param_active" (UILed, enabled/working parameters)
 
@@ -128,6 +134,7 @@ Effect.available_mappings = {
     orientation = ORIENTATION.HORIZONTAL,
     flipped = true,
     toggleable = true,
+    index = 1,
   },
   param_next = {
     description = "(UIButton) Next Parameter page",
@@ -490,6 +497,12 @@ function Effect:_build_app()
     end
   end
 
+  -- if an index is given in group start from slider x
+
+  if not self._slider_grid_mode and not distributed_group then
+    self._slider_group_size = self._slider_group_size - (map.index-1)
+  end
+
   for control_index = 1,self._slider_group_size do
 
     -- sliders for parameters --
@@ -521,7 +534,7 @@ function Effect:_build_app()
       c.toggleable = false
     else
       c.group_name = map.group_name
-      c:set_pos(control_index)
+      c:set_pos(control_index+(map.index-1))
       c:set_size(1)
       c.toggleable = false
     end
