@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xSongPos
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -50,8 +50,8 @@ xSongPos.BLOCK_BOUNDARY = {
   NONE = 3,
 }
 
--------------------------------------------------------------------------------
--- constructor - create new position 
+---------------------------------------------------------------------------------------------------
+-- [Constructor] Create new position 
 -- at the very least, you need to specify a table containing {sequence,line}
 -- @param pos[opt] (renoise.SongPos, xSongPos or {sequence,line} )
 
@@ -92,161 +92,11 @@ function xSongPos:__init(pos)
 
 end
 
---==============================================================================
--- Getters and setters 
---==============================================================================
-
--- returning a renoise.SongPos makes it possible
--- to use standard operators on objects
-function xSongPos:get_pos()
-  TRACE("xSongPos:get_pos()")
-
-  if not self.sequence or not self.line then
-    return nil
-  end
-	local pos = rns.transport.playback_pos
-	pos.sequence = self.sequence
-	pos.line = self.line
-	return pos
-end
-
-function xSongPos:set_pos(seq,ln)
-  assert(type(seq) == "number")
-  assert(type(ln) == "number")
-  self.lines_travelled = 0
-	self.sequence = seq
-	self.line = ln
-end
-
--------------------------------------------------------------------------------
--- Static methods
--------------------------------------------------------------------------------
--- Retrieve the pattern index 
--- @param seq_idx, sequence index 
--- @return int or nil 
-
-function xSongPos.get_pattern_index(seq_idx)
-  TRACE("xSongPos:get_pattern_index(seq_idx)",seq_idx)
-
-  return rns.sequencer:pattern(seq_idx)
-
-end
-
--------------------------------------------------------------------------------
--- Retrieve the pattern index 
--- OPTIMIZE how to implement a caching mechanism? 
--- @param seq_idx, sequence index 
--- @return int or nil 
-
-function xSongPos.get_pattern_num_lines(seq_idx)
-  TRACE("xSongPos.get_pattern_num_lines(seq_idx)",seq_idx)
-	
-  assert(type(seq_idx) == "number")
-
-  local patt_idx = xSongPos.get_pattern_index(seq_idx)
-  if patt_idx then
-    return rns:pattern(patt_idx).number_of_lines
-  end
-
-end
-
---------------------------------------------------------------------------------
--- @param seq_idx, sequence index
--- @return int, sequence index or nil
-
-function xSongPos.end_of_sequence_loop(seq_idx)
-  TRACE("xSongPos:end_of_sequence_loop(seq_idx)",seq_idx)
-
-  assert(type(seq_idx) == "number")
-
-	if (rns.transport.loop_sequence_end == seq_idx) then
-		return rns.transport.loop_sequence_start
-	end
-
-end
-
---------------------------------------------------------------------------------
--- @param seq_idx, sequence index
--- @return int, sequence index or nil
-
-function xSongPos.start_of_sequence_loop(seq_idx)
-  TRACE("xSongPos:start_of_sequence_loop(seq_idx)",seq_idx)
-
-  assert(type(seq_idx) == "number")
-
-	if (rns.transport.loop_sequence_start == seq_idx) then
-		return rns.transport.loop_sequence_end
-	end
-
-end
-
---------------------------------------------------------------------------------
--- check if position is within actual song boundaries
--- @param seq_idx, int
--- @param line_idx, int
--- @return bool
-
-function xSongPos.within_bounds(seq_idx,line_idx)
-  TRACE("xSongPos:within_bounds(seq_idx,line_idx)",seq_idx,line_idx)
-
-  if (seq_idx > #rns.sequencer.pattern_sequence) then
-    return false
-  elseif (seq_idx < 1) then
-    return false
-  else
-    return true
-  end
-
-end
-
---------------------------------------------------------------------------------
--- @param pos1 (SongPos)
--- @param pos2 (SongPos)
--- @return int
-
-function xSongPos.get_line_diff(pos1,pos2)
-  TRACE("xSongPos:get_line_diff(pos1,pos2)",pos1,pos2)
-
-  local num_lines = 0
-
-  if (pos1 == pos2) then
-    return num_lines
-  end
-
-  pos1 = xSongPos(pos1)
-  pos2 = xSongPos(pos2)
-  
-  local early,late
-  if (pos1 > pos2) then
-    early,late = pos2,pos1
-  else
-    early,late = pos1,pos2 
-  end
-
-  if (pos1.sequence == pos2.sequence) then
-    return late.line - early.line
-  else
-    for seq_idx = early.sequence, late.sequence do
-      local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
-      if (seq_idx == early.sequence) then
-        num_lines = num_lines + patt_num_lines - early.line
-      elseif (seq_idx == late.sequence) then
-        num_lines = num_lines + late.line
-      else
-        num_lines = num_lines + patt_num_lines
-      end
-    end
-    return num_lines
-  end
-
-
-end
-
---==============================================================================
--- Class Methods
---==============================================================================
--- Normalize the position, takes us from an 'imaginary' position to one  
+---------------------------------------------------------------------------------------------------
+-- [Class] Normalize the position, takes us from an 'imaginary' position to one  
 -- that respect the actual pattern length/sequence plus loops
+-- TODO skip return value? Not a static method
+-- @return table (renoise.SongPos-alike)
 
 function xSongPos:normalize()
   TRACE("xSongPos:normalize()")
@@ -275,8 +125,9 @@ function xSongPos:normalize()
 
 end
 
---------------------------------------------------------------------------------
--- increase the position by X number of lines
+---------------------------------------------------------------------------------------------------
+-- [Class] Increase position by X number of lines
+-- @param num_lines (number)
 
 function xSongPos:increase_by_lines(num_lines)
   TRACE("xSongPos:increase_by_lines(num_lines)",num_lines)
@@ -349,8 +200,8 @@ function xSongPos:increase_by_lines(num_lines)
 
 end
 
---------------------------------------------------------------------------------
--- subtract a number of lines from position
+---------------------------------------------------------------------------------------------------
+-- [Class] Subtract a number of lines from position
 -- @param num_lines, int
 
 function xSongPos:decrease_by_lines(num_lines)
@@ -428,8 +279,8 @@ function xSongPos:decrease_by_lines(num_lines)
 
 end
 
---------------------------------------------------------------------------------
--- restrict the position to boundaries (sequence, loop)
+---------------------------------------------------------------------------------------------------
+-- [Class] Restrict the position to boundaries (sequence, loop)
 -- @param direction, string ("increase" or "decrease")
 -- @param seq_idx, int
 -- @param line_idx, int
@@ -518,8 +369,8 @@ function xSongPos:enforce_boundary(direction,seq_idx,line_idx)
 
 end
 
---------------------------------------------------------------------------------
--- restrict the position to boundaries (block-loop)
+---------------------------------------------------------------------------------------------------
+-- [Class] Restrict position to boundaries (block-loop)
 -- @param direction, string ("increase" or "decrease")
 -- @param line_idx (int)
 -- @param line_delta (int), #lines to add/subtract, negative when decreasing
@@ -571,8 +422,8 @@ function xSongPos:enforce_block_boundary(direction,line_idx,line_delta)
 
 end
 
---------------------------------------------------------------------------------
--- return the next beat position
+---------------------------------------------------------------------------------------------------
+-- [Class] Set to the next beat position
 
 function xSongPos:next_beat()
   TRACE("xSongPos:next_beat()")
@@ -584,8 +435,8 @@ function xSongPos:next_beat()
 
 end
 
---------------------------------------------------------------------------------
--- return the next bar position
+---------------------------------------------------------------------------------------------------
+-- [Class] Set to the next bar position
 
 function xSongPos:next_bar()
   TRACE("xSongPos:next_bar()")
@@ -598,8 +449,8 @@ function xSongPos:next_bar()
 
 end
 
---------------------------------------------------------------------------------
--- return the next block position
+---------------------------------------------------------------------------------------------------
+-- [Class] Set to the next block position
 
 function xSongPos:next_block()
   TRACE("xSongPos:next_block()")
@@ -611,8 +462,8 @@ function xSongPos:next_block()
 
 end
 
---------------------------------------------------------------------------------
--- return the beginning of next pattern 
+---------------------------------------------------------------------------------------------------
+-- [Class] Set to the beginning of next pattern 
 
 function xSongPos:next_pattern()
   TRACE("xSongPos:next_pattern()")
@@ -624,9 +475,164 @@ function xSongPos:next_pattern()
 
 end
 
--------------------------------------------------------------------------------
+
+--=================================================================================================
+-- Getters and setters 
+--=================================================================================================
+
+function xSongPos:get_pos()
+  TRACE("xSongPos:get_pos()")
+
+  -- note: returning a renoise.SongPos makes it possible
+  -- to use standard operators on objects
+
+  if not self.sequence or not self.line then
+    return nil
+  end
+	local pos = rns.transport.playback_pos
+	pos.sequence = self.sequence
+	pos.line = self.line
+	return pos
+end
+
+function xSongPos:set_pos(seq,ln)
+  assert(type(seq) == "number")
+  assert(type(ln) == "number")
+  self.lines_travelled = 0
+	self.sequence = seq
+	self.line = ln
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Retrieve the pattern index 
+-- @param seq_idx, sequence index 
+-- @return int or nil 
+
+function xSongPos.get_pattern_index(seq_idx)
+  TRACE("xSongPos:get_pattern_index(seq_idx)",seq_idx)
+
+  return rns.sequencer:pattern(seq_idx)
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Retrieve the pattern index 
+-- OPTIMIZE how to implement a caching mechanism? 
+-- @param seq_idx, sequence index 
+-- @return int or nil 
+
+function xSongPos.get_pattern_num_lines(seq_idx)
+  TRACE("xSongPos.get_pattern_num_lines(seq_idx)",seq_idx)
+	
+  assert(type(seq_idx) == "number")
+
+  local patt_idx = xSongPos.get_pattern_index(seq_idx)
+  if patt_idx then
+    return rns:pattern(patt_idx).number_of_lines
+  end
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Return number if equal to end of sequence loop
+-- TODO refactor to xPatternSequence? 
+-- @param seq_idx, sequence index
+-- @return int, sequence index or nil
+
+function xSongPos.end_of_sequence_loop(seq_idx)
+  TRACE("xSongPos:end_of_sequence_loop(seq_idx)",seq_idx)
+
+  assert(type(seq_idx) == "number")
+
+	if (rns.transport.loop_sequence_end == seq_idx) then
+		return rns.transport.loop_sequence_start
+	end
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Return number if equal to start of sequence loop
+-- TODO refactor to xPatternSequence? 
+-- @param seq_idx, sequence index
+-- @return int, sequence index or nil
+
+function xSongPos.start_of_sequence_loop(seq_idx)
+  TRACE("xSongPos:start_of_sequence_loop(seq_idx)",seq_idx)
+
+  assert(type(seq_idx) == "number")
+
+	if (rns.transport.loop_sequence_start == seq_idx) then
+		return rns.transport.loop_sequence_end
+	end
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Check if position is within actual song boundaries
+-- @param seq_idx, int
+-- @param line_idx, int
+-- @return bool
+
+function xSongPos.within_bounds(seq_idx,line_idx)
+  TRACE("xSongPos:within_bounds(seq_idx,line_idx)",seq_idx,line_idx)
+
+  if (seq_idx > #rns.sequencer.pattern_sequence) then
+    return false
+  elseif (seq_idx < 1) then
+    return false
+  else
+    return true
+  end
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Get the difference in lines between two song-positions
+-- @param pos1 (SongPos)
+-- @param pos2 (SongPos)
+-- @return int
+
+function xSongPos.get_line_diff(pos1,pos2)
+  TRACE("xSongPos:get_line_diff(pos1,pos2)",pos1,pos2)
+
+  local num_lines = 0
+
+  if (pos1 == pos2) then
+    return num_lines
+  end
+
+  pos1 = xSongPos(pos1)
+  pos2 = xSongPos(pos2)
+  
+  local early,late
+  if (pos1 > pos2) then
+    early,late = pos2,pos1
+  else
+    early,late = pos1,pos2 
+  end
+
+  if (pos1.sequence == pos2.sequence) then
+    return late.line - early.line
+  else
+    for seq_idx = early.sequence, late.sequence do
+      local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
+      if (seq_idx == early.sequence) then
+        num_lines = num_lines + patt_num_lines - early.line
+      elseif (seq_idx == late.sequence) then
+        num_lines = num_lines + late.line
+      else
+        num_lines = num_lines + patt_num_lines
+      end
+    end
+    return num_lines
+  end
+
+
+end
+
+---------------------------------------------------------------------------------------------------
 -- Metamethods (operators)
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 -- sets handler for '==', '~='
 function xSongPos:__eq(other)

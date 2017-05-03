@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xTransport
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -8,18 +8,16 @@ Extended control of the Renoise transport
 .
 #
 
-Note: for control of the pattern section (including sections), 
-see xPatternSequencer
+See also:
+@{xPatternSequencer}, for control of the pattern section (including sections)  
 
 ]]
 
 
 class 'xTransport'
 
--------------------------------------------------------------------------------
--- Basic transport controls
--------------------------------------------------------------------------------
--- move playback position into next pattern 
+---------------------------------------------------------------------------------------------------
+-- [Static] Move playback position into next pattern 
 -- if the pattern doesn't exist, stay at the current one 
 -- if the line doesn't exist, play from the first one
 
@@ -40,8 +38,8 @@ function xTransport.forward()
 
 end
 
--------------------------------------------------------------------------------
--- move playback position into previous pattern 
+---------------------------------------------------------------------------------------------------
+-- [Static] Move playback position into previous pattern 
 -- if the pattern doesn't exist, stay at the current one 
 -- if the line doesn't exist, play from the first one
 
@@ -62,7 +60,8 @@ function xTransport.rewind()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Stop/pause playback in Renoise
 
 function xTransport.pause()
 
@@ -70,7 +69,8 @@ function xTransport.pause()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Resume playback in Renoise (start from current line)
 
 function xTransport.resume()
 
@@ -79,7 +79,8 @@ function xTransport.resume()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Restart playback in Renoise (start from first line)
 
 function xTransport.restart()
 
@@ -88,7 +89,8 @@ function xTransport.restart()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Toogle pattern-loop in Renoise
 
 function xTransport.toggle_loop()
 
@@ -96,7 +98,8 @@ function xTransport.toggle_loop()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Toggle edit/record-mode in Renoise 
 
 function xTransport.toggle_record()
 

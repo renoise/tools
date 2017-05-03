@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xStream
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -12,7 +12,7 @@ This class can track playback progression in a song
 
 Create an instance, and supply it with a steady flow of song-position changes (idle loop). 
 
-### Requires
+See also:
 @{xPlayPos}
 @{xSongPos}
 @{xBlockLoop}
@@ -22,7 +22,8 @@ Create an instance, and supply it with a steady flow of song-position changes (i
 
 class 'xStreamPos'
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Constructor] does not accept any arguments
 
 function xStreamPos:__init()
   TRACE("xStreamPos:__init()")
@@ -73,7 +74,8 @@ function xStreamPos:__init()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Class] Initialize read/write position 
 
 function xStreamPos:reset()
   TRACE("xStreamPos:reset()")
@@ -87,7 +89,8 @@ function xStreamPos:reset()
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Class] Start/continue playing 
 
 function xStreamPos:start()
   TRACE("xStreamPos:start()")
@@ -105,7 +108,8 @@ function xStreamPos:start()
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Class] Start playing 
 
 function xStreamPos:play()
   TRACE("xStreamPos:play()")
@@ -115,7 +119,21 @@ function xStreamPos:play()
   self.just_started_playback = os.clock()
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- Get/Set methods
+---------------------------------------------------------------------------------------------------
+
+function xStreamPos:get_writeahead_factor()
+  return self.writeahead_factor_observable.value
+end
+
+function xStreamPos:set_writeahead_factor(val)
+  TRACE("xStream:set_writeahead_factor(val)",val)
+  self.writeahead_factor_observable.value = val
+  self:determine_writeahead()
+end
+
+---------------------------------------------------------------------------------------------------
 
 function xStreamPos:get_writeahead()
   return self.writeahead_observable.value
@@ -128,7 +146,7 @@ function xStreamPos:set_writeahead(val)
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamPos:get_just_started_playback()
   return self.just_started_playback_observable.value
@@ -138,8 +156,8 @@ function xStreamPos:set_just_started_playback(val)
   self.just_started_playback_observable.value = val
 end
 
--------------------------------------------------------------------------------
--- Update the write position as a result of a changed playback position.
+---------------------------------------------------------------------------------------------------
+-- [Class] Update the write position as a result of a changed playback position.
 -- Most of the time we want the stream to continue smoothly forward - this is
 -- true for any kind of pattern, sequence or block loop. However, when we
 -- detect 'user events', the position can also jump backwards
@@ -258,7 +276,8 @@ function xStreamPos:_set_pos(pos)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Class] Create an instance of xBlockLoop 
 
 function xStreamPos:create_xblock()
   TRACE("xStreamPos:create_xblock()")
@@ -269,8 +288,8 @@ function xStreamPos:create_xblock()
 
 end
 
--------------------------------------------------------------------------------
--- This function is designed to be called in an idle loop
+---------------------------------------------------------------------------------------------------
+-- [Class] This function is designed to be called in an idle loop
 
 function xStreamPos:track_pos()
   TRACE("xStreamPos:track_pos()")
@@ -373,8 +392,8 @@ function xStreamPos:track_pos()
 
 end
 
--------------------------------------------------------------------------------
--- call when a new document becomes available
+---------------------------------------------------------------------------------------------------
+-- [Class] Call when a new document becomes available
 
 function xStreamPos:attach_to_song()
   TRACE("xStreamPos:attach_to_song()")
@@ -394,9 +413,8 @@ function xStreamPos:attach_to_song()
 
 end
 
-
---------------------------------------------------------------------------------
--- [app] decide the writeahead amount, depending on the song tempo
+---------------------------------------------------------------------------------------------------
+-- [Class] Decide the writeahead amount, depending on the song tempo
 
 function xStreamPos:determine_writeahead()
   TRACE("xStream:determine_writeahead()")
@@ -407,20 +425,7 @@ function xStreamPos:determine_writeahead()
 
 end
 
-
--------------------------------------------------------------------------------
-
-function xStreamPos:get_writeahead_factor()
-  return self.writeahead_factor_observable.value
-end
-
-function xStreamPos:set_writeahead_factor(val)
-  TRACE("xStream:set_writeahead_factor(val)",val)
-  self.writeahead_factor_observable.value = val
-  self:determine_writeahead()
-end
-
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamPos:__tostring()
 

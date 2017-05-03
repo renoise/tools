@@ -1,6 +1,6 @@
---[[============================================================================
--- xTrack
-============================================================================]]--
+--[[===============================================================================================
+xTrack
+===============================================================================================]]--
 
 --[[--
 
@@ -10,12 +10,13 @@ Static Methods for working with renoise.Tracks objects
 
 --]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xTrack'
 
---------------------------------------------------------------------------------
---- get_master_track_index
+---------------------------------------------------------------------------------------------------
+-- [Static] Get master track index
+-- @return number 
 
 function xTrack.get_master_track_index()
   for i,v in pairs(rns.tracks) do
@@ -25,8 +26,9 @@ function xTrack.get_master_track_index()
   end
 end
 
---------------------------------------------------------------------------------
---- get_master_track
+---------------------------------------------------------------------------------------------------
+-- [Static] Get the master track
+-- @return renoise.Track
 
 function xTrack.get_master_track()
   for i,v in pairs(rns.tracks) do
@@ -36,9 +38,10 @@ function xTrack.get_master_track()
   end
 end
 
---------------------------------------------------------------------------------
---- get send track
--- @param send_index (int)
+---------------------------------------------------------------------------------------------------
+-- [Static] Get send track with specific index 
+-- @param send_index (int), 1 == first, 2 == second, etc. 
+-- @return renoise.Track or nil 
 
 function xTrack.get_send_track(send_index)
   if (send_index <= rns.send_track_count) then
@@ -49,9 +52,10 @@ function xTrack.get_send_track(send_index)
   end
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Get total number of tracks matching the "type"
 -- @param track_type (renoise.Track.TRACK_TYPE_xxx)
--- @return int, number of tracks matching the type 
+-- @return int, 
 
 function xTrack.get_track_count(track_type)
 
@@ -65,9 +69,11 @@ function xTrack.get_track_count(track_type)
 
 end
 
---------------------------------------------------------------------------------
---- get the group track associated with the provided track 
--- @return number, group track index
+---------------------------------------------------------------------------------------------------
+-- [Static] Get the group track index associated with the provided track 
+-- @param track_index (number)
+-- @param match_self (boolean), allow matching the provided track 
+-- @return number or nil
 
 function xTrack.get_group_track_index(track_index,match_self)
   TRACE("xTrack.get_group_track_index(track_index)",track_index,match_self)
@@ -87,8 +93,10 @@ function xTrack.get_group_track_index(track_index,match_self)
 
 end
 
---------------------------------------------------------------------------------
---- get the first sequencer-track associated with the provided group 
+---------------------------------------------------------------------------------------------------
+-- [Static] Get the first sequencer-track associated with the provided group 
+-- @param track_index (number)
+-- @return number or nil, [error message (string)]
 
 function xTrack.get_first_sequencer_track_in_group(track_index)
   TRACE("xTrack.get_first_sequencer_track_in_group(track_index)",track_index)
@@ -106,9 +114,10 @@ function xTrack.get_first_sequencer_track_in_group(track_index)
 
 end
 
---------------------------------------------------------------------------------
---- get the type of track: sequencer/master/send
+---------------------------------------------------------------------------------------------------
+-- [Static] Get the type of track: sequencer/master/send
 -- @param track_index (int)
+-- @return renoise.Track.TRACK_TYPE_xxx or nil 
 
 function xTrack.determine_track_type(track_index)
 
@@ -125,9 +134,10 @@ function xTrack.determine_track_type(track_index)
 
 end
 
---------------------------------------------------------------------------------
--- navigate to the next sequencer track (skip other types)
--- @param wrap_pattern
+---------------------------------------------------------------------------------------------------
+-- [Static] Navigate to the next sequencer track (skip other types)
+-- @param wrap_pattern (boolean)
+-- @return boolean, true when able to navigate 
 
 function xTrack.next_sequencer_track(wrap_pattern)
   TRACE("xTrack.next_sequencer_track(wrap_pattern)",wrap_pattern)
@@ -155,9 +165,10 @@ function xTrack.next_sequencer_track(wrap_pattern)
 
 end
 
---------------------------------------------------------------------------------
--- navigate to the previous sequencer track (skip other types)
+---------------------------------------------------------------------------------------------------
+-- [Static] Navigate to the previous sequencer track (skip other types)
 -- @param wrap_pattern
+-- @return boolean, true when able to navigate 
 
 function xTrack.previous_sequencer_track(wrap_pattern)
   TRACE("xTrack.previous_sequencer_track(wrap_pattern)",wrap_pattern)
@@ -186,19 +197,21 @@ function xTrack.previous_sequencer_track(wrap_pattern)
 
 end
 
---------------------------------------------------------------------------------
--- obtain a specific pattern-track
+---------------------------------------------------------------------------------------------------
+-- [Static] Obtain a specific pattern-track
+-- @param seq_idx (number)
+-- @param trk_idx (number)
 -- @return PatternTrack or nil (when failed)
 -- @return string, error message when failed
 
-function xTrack:get_pattern_track(seq_idx,track_index)
+function xTrack:get_pattern_track(seq_idx,trk_idx)
 
   local patt_idx = rns.sequencer:pattern(seq_idx)
   if not patt_idx then
     return false,"Could not locate pattern"
   end
   local patt = rns.patterns[patt_idx]
-  local ptrack = patt:track(track_index)
+  local ptrack = patt:track(trk_idx)
   if not ptrack then
     return nil,"Could not locate pattern-track"
   end
@@ -207,8 +220,8 @@ function xTrack:get_pattern_track(seq_idx,track_index)
 
 end
 
--------------------------------------------------------------------------------
--- get column_index, based on visible columns 
+---------------------------------------------------------------------------------------------------
+-- [Static] Get column_index, based on visible columns 
 -- (similar to e.g. renoise.song().selection_in_pattern)
 
 function xTrack.get_selected_column_index()
@@ -221,9 +234,11 @@ function xTrack.get_selected_column_index()
   end
 end
 
--------------------------------------------------------------------------------
--- set column_index, based on visible columns 
+---------------------------------------------------------------------------------------------------
+-- [Static] Set column_index, based on visible columns 
 -- (similar to e.g. renoise.song().selection_in_pattern)
+-- @param track (renoise.Track)
+-- @param col_idx (number)
 -- @return string, error message when failed 
 
 function xTrack.set_selected_column_index(track,col_idx)

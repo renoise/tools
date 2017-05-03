@@ -12,7 +12,8 @@ This class converts pattern-tracks into 'voice-runs' - small note sequences
 
 xVoiceRunner provides a highly configurable method for extracting pattern data. 
 
-See also: xVoiceSorter
+See also: 
+@{xVoiceSorter}
 
 ]]
 

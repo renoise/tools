@@ -8,7 +8,8 @@ Advanced sorting of pattern-data (including selections)
 .
 #
 
-See also: xVoiceRunner 
+See also: 
+@{xVoiceRunner}
 
 
 ]]
