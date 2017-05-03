@@ -1,15 +1,15 @@
-##Welcome
+## Welcome
 ... to the Renoise Lua Scripting repository! This site targets developers who want to write their own scripts & tools for [Renoise](http://www.renoise.com/). 
 
 If you are only interested in downloading tools for Renoise, not developing your own tools, then please have a look at the [Renoise Tools Page](http://tools.renoise.com/).
 
-###Getting Started
+### Getting Started
 We offer a scripting starter-pack, which is highly recommended for everyone who wants to start getting into all this Renoise scripting. Please download and read this first, in order to get an overview about all that's needed to develop tools for Renoise. It contains example tools, the full API documentation, an introduction text and some code snippets. The starter pack also contains a HTML version of the API reference which is not available here on github.
 
 Link: [XRNX Starter Packer for Renoise 3.0](http://files.renoise.com/xrnx/XrnxStarterPack300.zip)
 
 
-###Documentation & API Reference
+### Documentation & API Reference
 The main documentation and API references can also be read online, on this site. You'll find them right here in the [XRNX code repository](https://github.com/renoise/xrnx/tree/master/Documentation).
 
 A few words on the overall folder/file Structure:
@@ -39,7 +39,7 @@ A few words on the overall folder/file Structure:
 >  "Official" Renoise Scripting API documentation can be found here.
 
 
-###How to Enable the Scripting Developer Tools in Renoise
+### How to Enable the Scripting Developer Tools in Renoise
 By default Renoise has all the scripting stuff hidden to keep things as easy as possible for those who don't want to mess around with code. If you want to write scripts, the first thing you have to do is enable the hidden development tools that are built into Renoise. This can be done by:
 
  - Launching the Renoise executable with the argument "`--scripting-dev`"
@@ -55,7 +55,7 @@ Enabling this option will add a new main menu entry "Tools" (or add new entries 
 
 Have a look at !Introduction.txt in the [XRNX code repository](https://github.com/renoise/xrnx/tree/master/Documentation) for more info.
 
-###Need More Help?
+### Need More Help?
 This site contains various complete scripting tools written by the Renoise team. The existing tools may help you to get more info about how your tools could be done.
 
 For any questions regarding the Lua API, or this repository, have a look at the [Renoise Scripting Development Forum](http://forum.renoise.com/index.php/forum/48-renoise-scripting-tools/) please.
