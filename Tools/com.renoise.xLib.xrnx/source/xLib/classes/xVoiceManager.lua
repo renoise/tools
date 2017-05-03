@@ -10,13 +10,19 @@ This class keeps track of active, playing voices as they are triggered.
 
 ### In more detail
 
-This class offers advanced voice-management for your own applications. This includes the ability to trigger and release specific instruments in specific tracks, while preserving the ability to freely move around in Renoise while doing so. 
+This class offers advanced voice-management for your own applications. 
+This includes the ability to trigger and release specific instruments in specific tracks, 
+while preserving the ability to freely move around in Renoise while doing so. 
 
-Without voice-management it would be too easy to create hanging notes. Everything from switching track, instrument or octave while playing, to having multiple MIDI sources could cause trouble. A good voice-manager will understand this and be able to determine the originating 'place' where the voice got triggered. 
+Without voice-management it would be too easy to create hanging notes. Everything from 
+switching track, instrument or octave while playing, to having multiple MIDI sources 
+could cause trouble. A good voice-manager will understand this and be able to determine 
+the originating 'place' where the voice got triggered. 
 
 ### Column allocation
 
-The class is able to assist with automatic note-column allocation while recording. It's a basic approach, but close enough to how Renoise usually works to feel familiar. 
+The class is able to assist with automatic note-column allocation while recording. 
+It's a basic approach, but close enough to how Renoise usually works to feel familiar. 
 
   * Recordings start from the currently selected note column 
   * New note columns (voices) are allocated as new notes arrive
@@ -24,17 +30,25 @@ The class is able to assist with automatic note-column allocation while recordin
 
 ### Polyphony limits
 
-In Renoise, you can play a maximum of 12 voices in a single track (equal to the maximum number of note-columns). 
+In Renoise, you can play a maximum of 12 voices in a single track (maximum number of note-columns).
 
-If you are familiar with MIDI recording in Renoise, you probably have noticed that there exist a monophonic trigger option. Enabling this option will restrict the number of possible voices (and note-columns) during a recording session. xVoiceManager has no "monophonic" mode as such, but setting the voice_limit to 1 will yield the same result. 
+If you are familiar with MIDI recording in Renoise, you probably have noticed that there exist a 
+monophonic trigger option. Enabling this option will restrict the number of possible voices 
+(and note-columns) during a recording session. xVoiceManager has no "monophonic" mode as such, 
+but setting the voice_limit to 1 should yield the same result. 
 
 ### Column allocation
 
-When automatic column-allocation is enabled, new note columns are allocated as the need arises. When this feature is enabled, the polyphonic limit can never be larger than the number of available columns, starting from the column_index of the first voice. So if you start recording while in note-column 11, you have a maximum polyphony of 2 voices before voice stealing kicks in.
+When automatic column-allocation is enabled, new note columns are allocated as the need arises. 
+When this feature is enabled, the polyphonic limit can never be larger than the number of 
+available columns, starting from the column_index of the first voice. So if you start recording 
+while in note-column 11, you have a maximum polyphony of 2 voices before voice stealing kicks in.
 
 ### Voice stealing
 
-Voice stealing takes effect the moment you feed a xVoiceManager with more voices than the current polyphony limit allows. xVoiceManager is using a simple heuristic which will replace the oldest voice with the new one (just like how Renoise does it). 
+Voice stealing takes effect the moment you feed a xVoiceManager with more voices than the current 
+polyphony limit allows. xVoiceManager is using a simple heuristic which will replace the oldest 
+voice with the new one (just like how Renoise does it). 
 
 ### Observable events 
 
@@ -43,7 +57,8 @@ Attach notifiers to detect when voices are triggered or released.
 `triggered_observable` -> fired right *after* a voice starts playing  
 `released_observable` -> fired right *before* a voice is released  
 
-After you have attached a notifier, you will receive a 'bang', but no argument. Instead, you should look for the `triggered/released_index` properties - they will contain the value you need.
+After you have attached a notifier, you will receive a 'bang', but no argument. Instead, you 
+should look for the `triggered/released_index` properties - they will contain the value you need.
 
 ### Usage example
 
@@ -67,7 +82,7 @@ How to instantiate a copy of this class, and feed xMidiMessages into it:
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xVoiceManager'
 
@@ -78,6 +93,18 @@ xVoiceManager.EVENT = {
   TRIGGERED = "triggered",
   STOLEN = "stolen",
 }
+
+---------------------------------------------------------------------------------------------------
+-- [Constructor] accepts a single argument for initializing the class 
+-- @param table {
+--    voice_limit (number)
+--    duration (number)
+--    column_allocation (boolean)
+--    follow_track (boolean)
+--    follow_instrument (boolean)
+--    follow_octave (boolean)
+-- }
+
 
 function xVoiceManager:__init(...)
 
@@ -165,7 +192,7 @@ function xVoiceManager:set_voice_limit(val)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xVoiceManager:get_duration()
   return self.duration_observable.value
@@ -175,7 +202,7 @@ function xVoiceManager:set_duration(val)
   self.duration_observable.value = val
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xVoiceManager:get_column_allocation()
   return self.column_allocation_observable.value
@@ -185,7 +212,7 @@ function xVoiceManager:set_column_allocation(val)
   self.column_allocation_observable.value = val
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xVoiceManager:get_follow_track()
   return self.follow_track_observable.value
@@ -195,7 +222,7 @@ function xVoiceManager:set_follow_track(val)
   self.follow_track_observable.value = val
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xVoiceManager:get_follow_instrument()
   return self.follow_instrument_observable.value
@@ -205,7 +232,7 @@ function xVoiceManager:set_follow_instrument(val)
   self.follow_instrument_observable.value = val
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xVoiceManager:get_follow_octave()
   return self.follow_octave_observable.value
@@ -216,9 +243,8 @@ function xVoiceManager:set_follow_octave(val)
 end
 
 
---==============================================================================
--- Class Methods
---==============================================================================
+---------------------------------------------------------------------------------------------------
+-- [Class] Input a message into the voice-manager
 -- @param xmsg (xMidiMessage)
 -- @return xMidiMessage (added/removed), false (ignored/active) or nil (invalid)
 -- @return int (voice index), when added or active
@@ -270,8 +296,8 @@ function xVoiceManager:input_message(xmsg)
 
 end
 
--------------------------------------------------------------------------------
--- alternative input method, convert notecol to xmsg (when possible)
+---------------------------------------------------------------------------------------------------
+-- [Class] Alternative input method, convert notecol to xmsg (when possible)
 -- and invoke input_message
 -- @param xnotecol (xNoteColumn)
 -- @param col_idx (number)
@@ -305,8 +331,8 @@ function xVoiceManager:input_note_column(xnotecol,col_idx,line_idx)
 
 end
 
--------------------------------------------------------------------------------
--- register/add a voice
+---------------------------------------------------------------------------------------------------
+-- [Class] Register/add a voice
 
 function xVoiceManager:register(xmsg)
   TRACE("xVoiceManager:register(xmsg)",xmsg)
@@ -353,8 +379,8 @@ function xVoiceManager:register(xmsg)
 
 end
 
--------------------------------------------------------------------------------
--- Release all active voices
+---------------------------------------------------------------------------------------------------
+-- [Class] Release all active voices
 
 function xVoiceManager:release_all()
   TRACE("xVoiceManager:release_all()")
@@ -365,8 +391,8 @@ function xVoiceManager:release_all()
 
 end
 
--------------------------------------------------------------------------------
--- Release all voices associated with a specific instrument
+---------------------------------------------------------------------------------------------------
+-- [Class] Release all voices associated with a specific instrument
 
 function xVoiceManager:release_all_instrument(instr_idx)
   TRACE("xVoiceManager:release_all_instrument(instr_idx)",instr_idx)
@@ -378,8 +404,8 @@ function xVoiceManager:release_all_instrument(instr_idx)
   end
 end
 
--------------------------------------------------------------------------------
--- Release all voices associated with a specific track
+---------------------------------------------------------------------------------------------------
+-- [Class] Release all voices associated with a specific track
 
 function xVoiceManager:release_all_track(track_idx)
   TRACE("xVoiceManager:release_all_track(track_idx)",track_idx)
@@ -391,8 +417,8 @@ function xVoiceManager:release_all_track(track_idx)
   end
 end
 
--------------------------------------------------------------------------------
--- release specific voice
+---------------------------------------------------------------------------------------------------
+-- [Class] Release specific voice
 
 function xVoiceManager:release(voice_idx)
   TRACE("xVoiceManager:release(voice_idx)",voice_idx)
@@ -407,8 +433,8 @@ function xVoiceManager:release(voice_idx)
 
 end
 
--------------------------------------------------------------------------------
--- check if any voices have expired (when duration is set)
+---------------------------------------------------------------------------------------------------
+-- [Class] Check if any voices have expired (when duration is set)
 
 function xVoiceManager:check_expired()
   --TRACE("xVoiceManager:check_expired()")
@@ -422,8 +448,8 @@ function xVoiceManager:check_expired()
 
 end
 
--------------------------------------------------------------------------------
--- locate among active voices, taking the pitch + track + instrument into
+---------------------------------------------------------------------------------------------------
+-- [Class] Locate among active voices, taking the pitch + track + instrument into
 -- consideration (if all match, the voice is considered active...)
 -- @param xmsg (xMidiMessage) should be a MIDI note-message
 -- @return number or nil 
@@ -492,9 +518,10 @@ function xVoiceManager:get_voice_index(xmsg)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Class] Get the first column which does not have a playing voice assigned to it
 -- @param track_idx
--- @return table
+-- @return table<number>, available column indices
 
 function xVoiceManager:get_available_columns(track_idx)
 
@@ -507,8 +534,8 @@ function xVoiceManager:get_available_columns(track_idx)
   return available_indices
 end
 
--------------------------------------------------------------------------------
--- Release the oldest voice (release, then trigger stolen_observable)
+---------------------------------------------------------------------------------------------------
+-- [Class] Release the oldest voice (release, then trigger stolen_observable)
 
 function xVoiceManager:steal_voice()
 
@@ -525,8 +552,8 @@ function xVoiceManager:steal_voice()
 
 end
 
--------------------------------------------------------------------------------
--- Monitor changes to tracks and instruments
+---------------------------------------------------------------------------------------------------
+-- [Class] Monitor changes to tracks and instruments
 
 function xVoiceManager:attach_to_song()
 
@@ -558,8 +585,9 @@ function xVoiceManager:attach_to_song()
 
 end
 
--------------------------------------------------------------------------------
--- Get a voice with a specific pitch
+---------------------------------------------------------------------------------------------------
+-- [Class] Get a voice with a specific pitch
+-- @param pitch (number)
 -- @return xMidiMessage or nil
 -- @return int or nil
 
@@ -574,8 +602,9 @@ function xVoiceManager:get_by_pitch(pitch)
 
 end
 
--------------------------------------------------------------------------------
--- Get a voice which has a higher pitch than the provided one
+---------------------------------------------------------------------------------------------------
+-- [Class] Get a voice which has a higher pitch than the provided one
+-- @param idx (number)
 -- @return xMidiMessage or nil
 -- @return int or nil
 
@@ -600,8 +629,8 @@ function xVoiceManager:get_higher(idx)
   end
 end
 
--------------------------------------------------------------------------------
--- Get the voice with the highest pitch 
+---------------------------------------------------------------------------------------------------
+-- [Class] Get the voice with the highest pitch 
 -- @return xMidiMessage or nil
 -- @return int or nil
 
@@ -619,8 +648,9 @@ function xVoiceManager:get_highest()
   return rslt,idx
 end
 
--------------------------------------------------------------------------------
--- Get a voice which has a lower pitch than the provided one
+---------------------------------------------------------------------------------------------------
+-- [Class] Get a voice which has a lower pitch than the provided one
+-- @param idx (number)
 -- @return xMidiMessage or nil
 
 function xVoiceManager:get_lower(idx)
@@ -644,8 +674,8 @@ function xVoiceManager:get_lower(idx)
   end
 end
 
--------------------------------------------------------------------------------
--- Get the voice with the lowest pitch 
+---------------------------------------------------------------------------------------------------
+-- [Class] Get the voice with the lowest pitch 
 -- @return xMidiMessage or nil
 
 function xVoiceManager:get_lowest()
