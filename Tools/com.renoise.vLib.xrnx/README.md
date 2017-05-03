@@ -4,4 +4,4 @@ vLib is a pure lua library which can add additional GUI features to your Renoise
 
 ## More information
 
-To learn more about vLib, [look here](/vLib/README.md) 
+To learn more about vLib, [look here](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.vLib.xrnx/vLib/README.md) 
