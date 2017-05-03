@@ -1,14 +1,20 @@
---==============================================================================
+--[[===============================================================================================
+Message
+===============================================================================================]]--
 
---[[
+--[[--
 
 The Message class is a container for messages, closely related to the ControlMap
+
+See also:
+@{Duplex.ControlMap}
+
 --]]
 
 
 class 'Message' 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Initialize Message class
 -- @param device (Device)
@@ -54,20 +60,20 @@ function Message:__init(device)
 
 end
 
---------------------------------------------------------------------------------
-
---- This method is called when we need to match against a value 
--- (for example, we might match a C#4 against a certain velocity level)
+---------------------------------------------------------------------------------------------------
+-- [Class] Retrieve the 'default', numeric value for a message 
+-- v2: It's too obscure what this method does 
 -- @return number or nil
 
 function Message:get_numeric_value()
+  TRACE("Message:get_numeric_value()")
 
   if (type(self.value) == "table") then
-    if (self.context == DEVICE_MESSAGE.MIDI_NOTE) then
-      return self.value[2] -- velocity
-    else
-      error("Not implemented")
-    end
+    print(">>> self.value",self.value)
+    print(">>> self.context",self.context)
+    rprint(self.value)
+    return self.value[2] -- velocity for MIDI NOTE, 
+
   else
     return self.value 
   end
@@ -75,10 +81,8 @@ function Message:get_numeric_value()
 end  
 
 
-
---------------------------------------------------------------------------------
-
---- Compare with another instance (only check for object identity)
+---------------------------------------------------------------------------------------------------
+-- [Class] Compare with another instance (only check for object identity)
 -- @param other (@{Duplex.Message}) 
 -- @return bool
 
@@ -87,9 +91,8 @@ function Message:__eq(other)
 end  
 
 
---------------------------------------------------------------------------------
-
---- Return message (for debugging purposes)
+---------------------------------------------------------------------------------------------------
+-- [Class] For debugging purposes
 
 function Message:__tostring()
   return type(self)
