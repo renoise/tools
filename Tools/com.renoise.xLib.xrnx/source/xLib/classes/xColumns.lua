@@ -49,7 +49,7 @@ function xColumns.previous_column()
 
   -- jump to the previous effect or note column
   else
-    sel_track_index = wrap_value(sel_track_index - 1, 1, #rns.tracks)
+    sel_track_index = cLib.wrap_value(sel_track_index - 1, 1, #rns.tracks)
     sel_track = rns.tracks[sel_track_index]
 
     note_column_count = sel_track.visible_note_columns
@@ -101,7 +101,7 @@ function xColumns.next_column()
 
   -- jump to the next tracks note or effect column
   else
-    sel_track_index = wrap_value(sel_track_index + 1, 1, #rns.tracks)
+    sel_track_index = cLib.wrap_value(sel_track_index + 1, 1, #rns.tracks)
     sel_track = rns.tracks[sel_track_index]
     note_column_count = sel_track.visible_note_columns
 
