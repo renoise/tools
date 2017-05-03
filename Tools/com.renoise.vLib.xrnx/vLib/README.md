@@ -9,7 +9,12 @@ It is modelled after the Viewbuilder API, which should make the syntax familiar.
 vLib requires an additional library called cLib, which you can get here:
 https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.cLib.xrnx
 
-## How to use
+## Documentation
+
+Point your browser to this location to browse the auto-generated luadocs:
+https://renoise.github.io/luadocs/vlib
+
+## Examples 
 
 To see vLib in action, download the tool from github:
 https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.vLib.xrnx
