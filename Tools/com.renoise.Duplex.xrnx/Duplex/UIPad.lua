@@ -53,7 +53,7 @@ function UIPad:do_change(msg)
   self.msg = msg
 
   local normalize = function(val)
-    return scale_value(val,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)
+    return cLib.scale_value(val,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)
   end
 
   local val_x,val_y = nil,nil

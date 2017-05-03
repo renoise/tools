@@ -1180,7 +1180,7 @@ function Recorder:_update_selected_sample(track,patt_idx)
   track.selected_sample = nil
   local skip_event = true
   local patt = renoise.song().patterns[patt_idx]
-  local track_type = determine_track_type(track.index)
+  local track_type = xTrack.determine_track_type(track.index)
   if (track_type==renoise.Track.TRACK_TYPE_SEQUENCER) then
     local note = patt.tracks[track.index].lines[1].note_columns[1]
     for k,sample in ipairs(track.samples) do
@@ -1373,7 +1373,7 @@ function Recorder:_update_all()
     local slider = self._controls.sliders[control_idx]
     local track_idx = control_idx+self._track_offset
     local track = self._tracks[track_idx]
-    local track_type = determine_track_type(track_idx)
+    local track_type = xTrack.determine_track_type(track_idx)
     if (track_type == renoise.Track.TRACK_TYPE_SEQUENCER) then
       if (track) then
         -- an active recorder track
@@ -1426,7 +1426,7 @@ function Recorder:_attempt_track_switch(track_idx)
   TRACE("Recorder:_attempt_track_switch(",track_idx,")")
 
   local track = self._tracks[track_idx]
-  local track_type = determine_track_type(track_idx)
+  local track_type = xTrack.determine_track_type(track_idx)
 
   -- do not allow selecting non-sequencer tracks
   if (track_type~=renoise.Track.TRACK_TYPE_SEQUENCER) then

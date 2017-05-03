@@ -212,8 +212,8 @@ function XYPad:update_renoise()
     if (self.min_value ~= 0) or 
       (self.max_value ~= 1) 
     then
-      val_x = scale_value(val_x,self.min_value,self.max_value,0,1)
-      val_y = scale_value(val_y,self.min_value,self.max_value,0,1)
+      val_x = cLib.scale_value(val_x,self.min_value,self.max_value,0,1)
+      val_y = cLib.scale_value(val_y,self.min_value,self.max_value,0,1)
     end
 
     self.target_device.parameters[1].value = val_x
@@ -249,8 +249,8 @@ function XYPad:update_controller()
 
   if self._controls.xy_grid then
 
-    local x_scaled = round_value(scale_value(self.value[1],0,1,1,self.grid_width))
-    local y_scaled = round_value(scale_value(self.value[2],0,1,1,self.grid_height))
+    local x_scaled = cLib.round_value(cLib.scale_value(self.value[1],0,1,1,self.grid_width))
+    local y_scaled = cLib.round_value(cLib.scale_value(self.value[2],0,1,1,self.grid_height))
 
     for x=1,self.grid_width do
       for y=self.grid_height,1,-1 do
@@ -351,8 +351,8 @@ function XYPad:_build_app()
       if self._record_mode then
         local params = self:get_xy_params()
         if params then
-          local val_x = scale_value(obj.value[1],self.min_value,self.max_value,0,1)
-          local val_y = scale_value(obj.value[2],self.min_value,self.max_value,0,1)
+          local val_x = cLib.scale_value(obj.value[1],self.min_value,self.max_value,0,1)
+          local val_y = cLib.scale_value(obj.value[2],self.min_value,self.max_value,0,1)
           self.automation:add_automation(self.track_index,params.x,val_x)
           self.automation:add_automation(self.track_index,params.y,val_y)
         end
@@ -443,8 +443,8 @@ function XYPad:select_grid_cell(x,y)
     return
   end
 
-  local x_val = (x==1) and 0 or scale_value(x,1,self.grid_width,0,1)
-  local y_val = (y==1) and 0 or scale_value(y,1,self.grid_height,0,1)
+  local x_val = (x==1) and 0 or cLib.scale_value(x,1,self.grid_width,0,1)
+  local y_val = (y==1) and 0 or cLib.scale_value(y,1,self.grid_height,0,1)
   
   -- record clean value 
   if self._record_mode then
@@ -474,8 +474,8 @@ function XYPad:select_grid_cell(x,y)
   end
 
   -- scale to the min/max range
-  new_x = scale_value(new_x,0,1,self.min_value,self.max_value)
-  new_y = scale_value(new_y,0,1,self.min_value,self.max_value)
+  new_x = cLib.scale_value(new_x,0,1,self.min_value,self.max_value)
+  new_y = cLib.scale_value(new_y,0,1,self.min_value,self.max_value)
 
   self.value = {new_x,new_y}
 
@@ -509,7 +509,7 @@ function XYPad:attach_to_device(track_idx,device_idx,device)
       self, 
       function()
         if not self.suppress_value_observable then
-          self.value[1] = scale_value(params.x.value,0,1,self.min_value,self.max_value)
+          self.value[1] = cLib.scale_value(params.x.value,0,1,self.min_value,self.max_value)
           --print("params.x.value_observable - self.value[1]",self.value[1])
           self.update_requested = true
           self:do_broadcast_x()
@@ -521,7 +521,7 @@ function XYPad:attach_to_device(track_idx,device_idx,device)
       self, 
       function()
         if not self.suppress_value_observable then
-          self.value[2] = scale_value(params.y.value,0,1,self.min_value,self.max_value)
+          self.value[2] = cLib.scale_value(params.y.value,0,1,self.min_value,self.max_value)
           --print("params.x.value_observable - self.value[2]",self.value[2])
           self.update_requested = true
           self:do_broadcast_y()

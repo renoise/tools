@@ -538,9 +538,7 @@ function Repeater:init_grid()
         if not self._grid_map[x] then
           self._grid_map[x] = table.create()
         end
-        --function scale_value(value,low_val,high_val,min_val,max_val)
         local val = step_size*count
-        --local val_scaled = scale_value(val,0,127,min_divisor,max_divisor)
         local val_scaled = self:divisor_from_linear_value(val)
         local cell = {
           divisor = val_scaled,
@@ -580,7 +578,6 @@ function Repeater:init_grid()
         if not self._grid_map[x] then
           self._grid_map[x] = table.create()
         end
-        --function scale_value(value,low_val,high_val,min_val,max_val)
         local mode = self.options.mode_select.value
         self._grid_map[x][y] = produce_cell(mode,DIVISORS[count])
         count = count+1
@@ -673,7 +670,7 @@ function Repeater:_build_app()
     c:set_pos(map.index)
     c.tooltip = map.description
     c.on_change = function(obj)
-      local mode_val = round_value(obj.value*4)
+      local mode_val = cLib.round_value(obj.value*4)
       self:set_mode(mode_val)
     end
     self._mode_slider = c

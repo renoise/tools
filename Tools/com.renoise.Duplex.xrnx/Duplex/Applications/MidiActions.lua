@@ -478,10 +478,10 @@ function MidiActions:_update_control(skip_transmit)
         self._value = value
         if (value~=nil) then
           if self._assist.param then
-            value = scale_value(value,min_val,max_val,0,1)
+            value = cLib.scale_value(value,min_val,max_val,0,1)
           elseif (type(value)=="number") then
-            value = clamp_value(value,self._user_min,self._user_max)
-            value = scale_value(value,self._user_min,self._user_max,0,1)
+            value = cLib.clamp_value(value,self._user_min,self._user_max)
+            value = cLib.scale_value(value,self._user_min,self._user_max,0,1)
           elseif (type(value)=="boolean") then
             value = value and 1 or 0
           end
@@ -514,12 +514,12 @@ function MidiActions:_update_control(skip_transmit)
 
         -- scale from control to user/parameter range
         if self._assist.param then
-          self._value = scale_value(tmp_value,0,1,min_val,max_val)
+          self._value = cLib.scale_value(tmp_value,0,1,min_val,max_val)
         else
-          self._value = scale_value(tmp_value,0,1,self._user_min,self._user_max)
+          self._value = cLib.scale_value(tmp_value,0,1,self._user_min,self._user_max)
         end
         if self._assist.is_integer then
-          self._value = round_value(self._value)
+          self._value = cLib.round_value(self._value)
         end 
 
       end
@@ -548,21 +548,21 @@ function MidiActions:_scale_value(val,method)
   local normal_factor = 10
 
   if (method == SCALE_LOG_STRONG) then
-    scaled_val = scale_value(val,0,1,1,strong_factor)
-    scaled_val = log_scale(strong_factor,scaled_val)
-    scaled_val = scale_value(scaled_val,0,strong_factor,0,1)
+    scaled_val = cLib.scale_value(val,0,1,1,strong_factor)
+    scaled_val = cLib.log_scale(strong_factor,scaled_val)
+    scaled_val = cLib.scale_value(scaled_val,0,strong_factor,0,1)
   elseif (method == SCALE_LOG) then
-    scaled_val = scale_value(val,0,1,1,normal_factor)
-    scaled_val = log_scale(normal_factor,scaled_val)
-    scaled_val = scale_value(scaled_val,0,normal_factor,0,1)
+    scaled_val = cLib.scale_value(val,0,1,1,normal_factor)
+    scaled_val = cLib.log_scale(normal_factor,scaled_val)
+    scaled_val = cLib.scale_value(scaled_val,0,normal_factor,0,1)
   elseif (method == SCALE_EXP) then
-    scaled_val = scale_value(val,0,1,1,normal_factor)
-    scaled_val = inv_log_scale(normal_factor,scaled_val)
-    scaled_val = scale_value(scaled_val,0,normal_factor,0,1)
+    scaled_val = cLib.scale_value(val,0,1,1,normal_factor)
+    scaled_val = cLib.inv_log_scale(normal_factor,scaled_val)
+    scaled_val = cLib.scale_value(scaled_val,0,normal_factor,0,1)
   elseif (method == SCALE_EXP_STRONG) then
-    scaled_val = scale_value(val,0,1,1,strong_factor)
-    scaled_val = inv_log_scale(strong_factor,scaled_val)
-    scaled_val = scale_value(scaled_val,0,strong_factor,0,1)
+    scaled_val = cLib.scale_value(val,0,1,1,strong_factor)
+    scaled_val = cLib.inv_log_scale(strong_factor,scaled_val)
+    scaled_val = cLib.scale_value(scaled_val,0,strong_factor,0,1)
   end
 
   return scaled_val
@@ -662,7 +662,7 @@ function MidiActions:_transmit()
     local value = self._value
     if self._assist.param then
       local min_val,max_val = self:_get_min_max(self._assist)
-      value = scale_value(value,min_val,max_val,0,127)
+      value = cLib.scale_value(value,min_val,max_val,0,127)
     end
 
     msg.value_min_scaling = 0

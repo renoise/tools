@@ -372,7 +372,7 @@ function Mixer:set_track_volume(control_index, value)
 
     -- update the master as well, if it has its own UI representation
     if (self._controls.master ~= nil) and 
-       (control_index + self._track_offset == get_master_track_index()) 
+       (control_index + self._track_offset == xTrack.get_master_track_index()) 
     then
       self._controls.master:set_value(value, skip_event)
     end
@@ -407,7 +407,7 @@ function Mixer:set_track_mute(control_index, state)
 
   if (self.active and self._controls.mutes ~= nil) then
     local muted = (state == renoise.Track.MUTE_STATE_ACTIVE)
-    local master_track_index = get_master_track_index()
+    local master_track_index = xTrack.get_master_track_index()
     local track_index = self._track_offset+control_index
     local button = self._controls.mutes[control_index]
     if (track_index > master_track_index) then
@@ -554,7 +554,7 @@ function Mixer:update()
   end
 
   local skip_event = true
-  local master_track_index = get_master_track_index()
+  local master_track_index = xTrack.get_master_track_index()
   local tracks = renoise.song().tracks
 
   -- track volume/panning/mute and solo
@@ -562,7 +562,7 @@ function Mixer:update()
   
     local track_index   = self._track_offset+control_index
     local track         = tracks[track_index]
-    local track_type    = determine_track_type(track_index)
+    local track_type    = xTrack.determine_track_type(track_index)
     local valid_level   = (self._controls.volume  and 
       (control_index<=#self._controls.volume))
     local valid_mute    = (self._controls.mutes   and 
@@ -614,9 +614,9 @@ function Mixer:update()
   -- master volume
   if (self._controls.master ~= nil) then
      if (self._postfx_mode) then
-       self._controls.master:set_value(get_master_track().postfx_volume.value)
+       self._controls.master:set_value(xTrack.get_master_track().postfx_volume.value)
      else
-       self._controls.master:set_value(get_master_track().prefx_volume.value)
+       self._controls.master:set_value(xTrack.get_master_track().prefx_volume.value)
      end
   end
   
@@ -855,7 +855,7 @@ function Mixer:_build_app()
         
         local track_index = self._track_offset + control_index
 
-        if (track_index == get_master_track_index()) then
+        if (track_index == xTrack.get_master_track_index()) then
           if (self._controls.master) then
             -- update separate master level
             self._controls.master:set_value(obj.value,true)
@@ -951,7 +951,7 @@ function Mixer:_build_app()
 
         --print("on_press")
 
-        if (track_index == get_master_track_index()) then
+        if (track_index == xTrack.get_master_track_index()) then
           -- can't mute the master track
           return 
         elseif (track_index > #renoise.song().tracks) then
@@ -979,7 +979,7 @@ function Mixer:_build_app()
       c.on_change = function(obj,val)
         local track_index = self._track_offset + control_index
 
-        if (track_index == get_master_track_index()) then
+        if (track_index == xTrack.get_master_track_index()) then
           -- can't mute the master track
           return 
         elseif (track_index > #renoise.song().tracks) then
@@ -1083,7 +1083,7 @@ function Mixer:_build_app()
     })
     c.on_change = function(obj) 
       --print("*** master.on_change",obj.value)
-      local track_index = get_master_track_index()
+      local track_index = xTrack.get_master_track_index()
       local control_index = track_index - self._track_offset
       if (self._controls.volume and 
           control_index > 0 and 
@@ -1092,7 +1092,7 @@ function Mixer:_build_app()
         -- update visible master level slider
         self._controls.volume[control_index]:set_value(obj.value,true)
       end
-      local track = get_master_track()
+      local track = xTrack.get_master_track()
 
       local volume = (self._postfx_mode) and 
         track.postfx_volume or track.prefx_volume
@@ -1390,7 +1390,7 @@ function Mixer:_attach_to_tracks(new_song)
   
   
   -- attach to the new ones in the order we want them
-  local master_idx = get_master_track_index()
+  local master_idx = xTrack.get_master_track_index()
   local master_done = false
   
   -- track volume level 
@@ -1533,7 +1533,7 @@ end
 function Mixer:_set_take_over_volume(p_volume, p_obj, p_track_index)
   TRACE("Mixer:_set_take_over_volume()",p_volume, p_obj, p_track_index)
 
-  local p_from_master = (p_track_index == get_master_track_index())
+  local p_from_master = (p_track_index == xTrack.get_master_track_index())
 
   -- If a fader is not registered into the table, we init it
   if not self._take_over_volumes[p_track_index] then
@@ -1566,7 +1566,7 @@ function Mixer:_set_take_over_volume(p_volume, p_obj, p_track_index)
     if not reached then
       local x1 = p_volume.value - take_over.last_value 
       local x2 = p_volume.value - p_obj.value
-      reached = (sign(x1) ~= sign(x2))
+      reached = (cLib.sign(x1) ~= cLib.sign(x2))
     end
     
     if reached then 

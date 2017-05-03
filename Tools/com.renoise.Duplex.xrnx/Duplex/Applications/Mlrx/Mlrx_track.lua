@@ -381,7 +381,7 @@ function Mlrx_track:prepare_sample()
       (slines < Mlrx_track.MIN_BEAT_SYNC) 
     then
       enable_beat_sync = false
-      self.sync_to_lines = round_value(slines)
+      self.sync_to_lines = cLib.round_value(slines)
     else
       self.sync_to_lines = self.sample.beat_sync_lines
     end
@@ -1573,7 +1573,7 @@ function Mlrx_track:attach_to_instr(first_run)
   -- attach to instrument only when there is something to attach to
   self.instr = rns.instruments[self.rns_instr_idx]
 
-  local playback_enabled = get_phrase_playback_enabled(self.instr)
+  local playback_enabled = xInstrument.get_phrase_playback_enabled(self.instr)
 
   local has_phrases,has_samples = nil,nil
   if self.instr then
@@ -2005,7 +2005,7 @@ function Mlrx_track:toggle_sync()
 
   --print("*** toggle_sync - self.phrase",self.phrase)
   --if self.phrase and self.instr.phrase_playback_enabled then
-  if self.phrase and get_phrase_playback_enabled(self.instr) then
+  if self.phrase and xInstrument.get_phrase_playback_enabled(self.instr) then
     return
   end
   
@@ -2232,7 +2232,7 @@ function Mlrx_track:stop_phrase_recording()
 
   end
 
-  self.process_slicer = ProcessSlicer(parse_phrase_recording)
+  self.process_slicer = cProcessSlicer(parse_phrase_recording)
   self.process_slicer:start()
 
 end
@@ -2306,7 +2306,7 @@ end
 
 function Mlrx_track:select_phrase(phrase)
 
-  set_phrase_playback_enabled(self.instr,true)
+  xInstrument.set_phrase_playback_enabled(self.instr,true)
   if rawequal(self.instr,rns.selected_instrument) then
     rns.selected_phrase_index = #self.instr.phrases
   end
@@ -2376,8 +2376,8 @@ function Mlrx_track:toggle_phrase_mode()
 
   if self.instr then
 
-    local phrase_enabled = get_phrase_playback_enabled(self.instr)
-    set_phrase_playback_enabled(self.instr,not phrase_enabled)
+    local phrase_enabled = xInstrument.get_phrase_playback_enabled(self.instr)
+    xInstrument.set_phrase_playback_enabled(self.instr,not phrase_enabled)
     if not phrase_enabled then
       --print("phrase disabled, transpose into basenote of sample")
       local sample_ref = self:get_sample_ref(self.note_pitch)
@@ -2458,7 +2458,7 @@ function Mlrx_track:apply_beatsync_to_tuning()
   local line_diff = tmp_lines
   tmp_lines = slines/(math.pow(2,target_transp/12))
   local target_cents = (tmp_lines-self.sample.beat_sync_lines)/(line_diff-tmp_lines)
-  target_cents = math.abs(scale_value(target_cents,0,1,0,127))
+  target_cents = math.abs(cLib.scale_value(target_cents,0,1,0,127))
   if (self.sample.beat_sync_lines >= slines) then
     target_cents = - target_cents
   end
@@ -2688,13 +2688,13 @@ end
 function Mlrx_track:set_transpose(val)
   TRACE("Mlrx_track:set_transpose(val)",val)
 
-  --local new_transpose = clamp_value(self.note_pitch + val,0,119)
+  --local new_transpose = cLib.clamp_value(self.note_pitch + val,0,119)
   --local old_pitch = self.note_pitch
-  local new_pitch = clamp_value(self.note_pitch + val,0,119)
+  local new_pitch = cLib.clamp_value(self.note_pitch + val,0,119)
   --print("*** set_transpose - new_pitch",new_pitch)
 
   if self.instr then
-    local phrase_enabled = get_phrase_playback_enabled(self.instr)
+    local phrase_enabled = xInstrument.get_phrase_playback_enabled(self.instr)
     if phrase_enabled then
       -- check if we transposed "into" a phrase
       local phrase,phrase_index = self:get_phrase_ref(new_pitch)
@@ -2721,7 +2721,7 @@ function Mlrx_track:set_transpose(val)
     end
 
     local using_phrase = self.phrase
-    local phrase_enabled = get_phrase_playback_enabled(self.instr)
+    local phrase_enabled = xInstrument.get_phrase_playback_enabled(self.instr)
     if not phrase_enabled then
       using_phrase = false
     end
@@ -2791,7 +2791,7 @@ function Mlrx_track:set_transpose(val)
         --print("*** set_transpose (sample) - slines",slines)  
 
         if slines then
-          self.sync_to_lines = round_value(slines)
+          self.sync_to_lines = cLib.round_value(slines)
         else
           self.sync_to_lines = Mlrx_track.FALLBACK_LINESYNC
         end
@@ -2812,7 +2812,7 @@ function Mlrx_track:set_transpose(val)
       --print(" set_transpose (phrase) - self.sync_to_lines",self.sync_to_lines)  
 
       local tmp = self.sync_to_lines
-      while not is_whole_number(self.sync_to_lines) do
+      while not cLib.is_whole_number(self.sync_to_lines) do
         self.sync_to_lines = self.sync_to_lines + tmp
         --print("phrase - raise cycles to whole number",self.sync_to_lines)
       end

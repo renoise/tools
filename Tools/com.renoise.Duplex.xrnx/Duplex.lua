@@ -3,9 +3,33 @@
 ============================================================================]]--
 
 --[[--
-  Include the duplex core, applications and device configurations
+
 ]]
 
+-- include supporting classes
+
+rns = nil
+_trace_filters = nil
+--_trace_filters = {"^UIButton*"}
+--_trace_filters = {"^StateController*"}
+--_trace_filters = {"^Recorder*","^UISlider*"}
+--_trace_filters = {".*"}
+
+_clibroot = "cLib/classes/"
+_xlibroot = "xLib/classes/"
+
+require (_clibroot.."cLib")
+require (_clibroot.."cDebug")
+require (_clibroot.."cColor")
+require (_clibroot.."cScheduler")
+require (_clibroot.."cProcessSlicer")
+
+require (_xlibroot.."xTrack")
+require (_xlibroot.."xInstrument")
+require (_xlibroot.."xNoteColumn")
+
+
+-- include the duplex core, applications and device configurations
 require "Duplex/Globals"
 require "Duplex/Preferences"
 require "Duplex/Automation"
@@ -38,8 +62,10 @@ require "Duplex/Application"
 require "Duplex/RoamingDSP" -- depends on Application
 require "Duplex/Browser"
 require "Duplex/BrowserProcess"
-require "Duplex/Scheduler"
-require "Duplex/ProcessSlicer"
+--require "Duplex/Scheduler"
+--require "Duplex/ProcessSlicer"
+
+
 
 
 -- load all application scripts dynamically (Applications/XXX.lua)
@@ -63,6 +89,7 @@ for _, foldername in pairs(os.dirnames("./Duplex/Controllers")) do
   end
 
   -- include any device configurations (Controller/Configurations/XXX.lua)
+  -- TODO error message when configuration folder is missing
   subpath = "./Duplex/Controllers/" .. foldername .. "/Configurations"
   for _, filename in pairs(os.filenames(subpath, "*.lua")) do
     require(subpath .. "/" .. split_filename(filename))

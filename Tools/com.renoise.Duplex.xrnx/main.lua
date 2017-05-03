@@ -432,6 +432,7 @@ renoise.tool().app_release_document_observable:add_notifier(function()
 end)
 renoise.tool().app_new_document_observable:add_notifier(function()
   --TRACE("main:app_new_document_observable fired...")
+  rns = renoise.song()
   if (browser) then
     browser:on_new_document()
   end

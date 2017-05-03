@@ -126,7 +126,7 @@ end
 function Mlrx_group:set_grp_panning(val,skip_output)
   TRACE("Mlrx_group:set_grp_panning(val)",val,skip_output)
 
-  val = clamp_value(val,0,Mlrx.INT_8BIT)
+  val = cLib.clamp_value(val,0,Mlrx.INT_8BIT)
   self.panning = math.floor(val)
 
   if not skip_output and rns.transport.edit_mode and
@@ -156,7 +156,7 @@ end
 function Mlrx_group:set_grp_velocity(val,skip_output)
   TRACE("Mlrx_group:set_grp_velocity(val)",val,skip_output)
 
-  val = clamp_value(val,0,Mlrx.INT_8BIT)
+  val = cLib.clamp_value(val,0,Mlrx.INT_8BIT)
   self.velocity = math.floor(val)
 
   if not skip_output and rns.transport.edit_mode and

@@ -306,7 +306,7 @@ function PatternCursor:changeLineTo(val)
   local rns = renoise.song()
   local patt_index = rns.selected_pattern_index
   local patt = rns.patterns[patt_index]    
-  rns.selected_line_index = clamp_value(
+  rns.selected_line_index = cLib.clamp_value(
     val, 1, patt.number_of_lines)
     
 end      

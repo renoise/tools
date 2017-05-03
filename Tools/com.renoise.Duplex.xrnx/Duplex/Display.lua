@@ -72,8 +72,8 @@ function Display:__init(process)
   -- when we need to change the UI Object's value)
   self.ui_notifiers = table.create()
 
-  --- (@{Duplex.Scheduler}) use scheduler to perform periodic updates
-  self.scheduler = Scheduler()
+  --- (@{cScheduler}) perform periodic updates
+  self.scheduler = cScheduler()
 
   ---  (table) define the visual appearance of 'empty space', used e.g.
   --  when we remove a given point due to resizing

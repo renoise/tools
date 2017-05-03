@@ -349,7 +349,7 @@ function UISlider:do_change(msg)
       end
     else
       -- treat as absolute control: scale from message to component range
-      new_val = scale_value(msg.value,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)
+      new_val = cLib.scale_value(msg.value,msg.xarg.minimum,msg.xarg.maximum,self.floor,self.ceiling)
       --print("*** absolute - new_val",new_val,self.ceiling)
       if (new_val > self.ceiling) then
         LOG("UISlider: trying to assign out-of-range value, probably due to an "

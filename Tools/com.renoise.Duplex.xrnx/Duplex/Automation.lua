@@ -438,7 +438,7 @@ function Automation:writeahead(amount,ptrack_auto,lane)
 
   local inc = 0
   if lane.old_value then
-    inc = ((lane.value-average(lane.old_value,lane.older_value))/amount)*self.extrapolate_strength
+    inc = ((lane.value-cLib.average(lane.old_value,lane.older_value))/amount)*self.extrapolate_strength
     lane.older_value = lane.old_value
     lane.old_value = nil
   end

@@ -287,7 +287,7 @@ function Matrix:_update_slots()
   local sequence = song.sequencer.pattern_sequence
   local tracks = song.tracks
   local seq_offset = self._edit_page*self._height
-  local master_idx = get_master_track_index()
+  local master_idx = xTrack.get_master_track_index()
   local patt_idx = nil
   local button = nil
   local slot_muted = nil
@@ -1092,7 +1092,7 @@ function Matrix:_build_app()
         c.on_press = function() 
           local seq = renoise.song().sequencer
           local patt_seq = renoise.song().sequencer.pattern_sequence
-          local master_idx = get_master_track_index()
+          local master_idx = xTrack.get_master_track_index()
           local seq_offset = self._edit_page*self._height
           --local sequence = renoise.song().sequencer.pattern_sequence
           local track_idx = x+self._track_offset

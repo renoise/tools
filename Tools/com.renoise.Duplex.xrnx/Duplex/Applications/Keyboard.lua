@@ -548,7 +548,7 @@ function Keyboard:trigger(note_on,instr_idx,pitch,velocity,grid_index)
       key_max = msg.xarg.maximum
     end
     if (self.options.velocity_mode.value == VELOCITY_CLAMP) then
-      velocity = clamp_value(velocity,key_min,key_max)
+      velocity = cLib.clamp_value(velocity,key_min,key_max)
     elseif note_on and (self.options.velocity_mode.value == VELOCITY_CLIP) then
       if (velocity<key_min) or
         (velocity>key_max) 
@@ -558,7 +558,7 @@ function Keyboard:trigger(note_on,instr_idx,pitch,velocity,grid_index)
     end
     -- scale velocity from device range to keyboard range (0-127),
     -- and apply user-specified volume 
-    velocity = scale_value(velocity,0,key_max,0,127)
+    velocity = cLib.scale_value(velocity,0,key_max,0,127)
     velocity = math.floor(velocity * (self.curr_volume/KEYBOARD_VELOCITIES))
   end
 
@@ -1065,7 +1065,7 @@ function Keyboard:_build_app()
               if msg.midi_msgs and msg.midi_msgs[1] then
                 velocity = msg.midi_msgs[1][3]
               else
-                velocity = scale_value(msg.xarg.maximum,msg.xarg.minimum,msg.xarg.maximum,0,127)
+                velocity = cLib.scale_value(msg.xarg.maximum,msg.xarg.minimum,msg.xarg.maximum,0,127)
               end
               
               local instr_idx = self:get_instrument_index() 

@@ -134,7 +134,7 @@ function Application:start_app(start_running)
     -- (floor/ceiling might have been set after creation)
     -- TODO refactor into widget_hooks (support complex values)
     if v.value and (type(v.value) == "number") then
-      v.value = clamp_value(v.value,v.floor,v.ceiling)
+      v.value = cLib.clamp_value(v.value,v.floor,v.ceiling)
     end
 
   end

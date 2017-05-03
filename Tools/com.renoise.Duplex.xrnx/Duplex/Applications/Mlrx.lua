@@ -1120,7 +1120,7 @@ function Mlrx:_build_app()
             if not self.active then return false end
             if msg:is_abs_value() then
               --local track_index = math.floor((msg.int_value / Mlrx.INT_7BIT)*#self.tracks)
-              --track_index = clamp_value(track_index,1,#self.tracks)
+              --track_index = cLib.clamp_value(track_index,1,#self.tracks)
               if (track_idx ~= self.selected_track) then
                 self:select_track(track_idx)
               end
@@ -1717,7 +1717,7 @@ function Mlrx:_build_app()
     end
     c.on_hold = function()
       local trk = self.tracks[self.selected_track]
-      if trk.phrase and get_phrase_playback_enabled(trk.instr) then
+      if trk.phrase and xInstrument.get_phrase_playback_enabled(trk.instr) then
         -- align transpose with phrase basenote 
         trk.note_pitch = trk.phrase.mapping.base_note
       elseif trk.sample then
@@ -1854,8 +1854,8 @@ function Mlrx:_build_app()
     local c = UIPad(self,map)
     c.on_change = function(obj)
       local val = {
-        scale_value(obj.value[1],obj.floor,obj.ceiling,0,1),
-        scale_value(obj.value[2],obj.floor,obj.ceiling,0,1)
+        cLib.scale_value(obj.value[1],obj.floor,obj.ceiling,0,1),
+        cLib.scale_value(obj.value[2],obj.floor,obj.ceiling,0,1)
       }
       self:input_xy(val)
     end
@@ -1869,7 +1869,7 @@ function Mlrx:_build_app()
         invoke = function(msg)
           if not self.active then return false end
           if msg:is_abs_value() then
-            local val_x = scale_value(msg.int_value,0,Mlrx.INT_7BIT,param.xarg.minimum,param.xarg.maximum)
+            local val_x = cLib.scale_value(msg.int_value,0,Mlrx.INT_7BIT,param.xarg.minimum,param.xarg.maximum)
             local val_y = self._controls.xy_pad.value[2]
             self._controls.xy_pad:set_value(val_x,val_y)
           end
@@ -1885,7 +1885,7 @@ function Mlrx:_build_app()
           if not self.active then return false end
           if msg:is_abs_value() then
             local val_x = self._controls.xy_pad.value[1]
-            local val_y = scale_value(msg.int_value,0,Mlrx.INT_7BIT,param.xarg.minimum,param.xarg.maximum)
+            local val_y = cLib.scale_value(msg.int_value,0,Mlrx.INT_7BIT,param.xarg.minimum,param.xarg.maximum)
             self._controls.xy_pad:set_value(val_x,val_y)
           end
         end
@@ -2583,7 +2583,7 @@ function Mlrx:assign_track(group_idx,track_idx,programmatic)
   if rns_trk then
     local param = rns_trk.prefx_volume
     local param_val = track.group.velocity
-    param.value = scale_value(param_val,0,Mlrx.INT_8BIT,0,RENOISE_DECIBEL)
+    param.value = cLib.scale_value(param_val,0,Mlrx.INT_8BIT,0,RENOISE_DECIBEL)
     track.group:set_grp_velocity(track.group.velocity)
 
     local param = rns_trk.prefx_panning
@@ -3596,7 +3596,7 @@ function Mlrx:on_host_tempo_change()
   for _,v in ipairs(self.tracks) do
     if v.sample and not v.sample.beat_sync_enabled then
       v:set_transpose_task(0)
-    elseif v.phrase and get_phrase_playback_enabled(v.instr) then
+    elseif v.phrase and xInstrument.get_phrase_playback_enabled(v.instr) then
       v:set_transpose_task(0)
     end
     v:determine_writeahead()
@@ -3679,7 +3679,7 @@ function Mlrx:midi_callback(message)
     if not msg_is_note_off then
     
       if (self.options.group_velocity.value == Mlrx.GRP_VELOCITY_MIDI_VEL) then
-        local val = scale_value(message[3],0,Mlrx.INT_7BIT,0,Mlrx.INT_8BIT)
+        local val = cLib.scale_value(message[3],0,Mlrx.INT_7BIT,0,Mlrx.INT_8BIT)
         trk.group:set_grp_velocity(val)
         self:update_group_levels(trk.group)
       end
@@ -3781,7 +3781,7 @@ function Mlrx:midi_callback(message)
   elseif (message[1]>=208) and (message[1]<=223) then
     --print("MIDI_CHANNEL_PRESSURE")
     if (self.options.group_velocity.value == Mlrx.GRP_VELOCITY_MIDI_PRESS) then
-      local val = scale_value(message[2],0,Mlrx.INT_7BIT,0,Mlrx.INT_8BIT)
+      local val = cLib.scale_value(message[2],0,Mlrx.INT_7BIT,0,Mlrx.INT_8BIT)
       trk.group:set_grp_velocity(val)
       self:update_group_levels(trk.group)
     end
@@ -3821,10 +3821,10 @@ function Mlrx:input_xy(val)
   local set_grp_velocity = false
   if (self.options.group_velocity.value == Mlrx.GRP_VELOCITY_PAD_Y) then
     set_grp_velocity = true
-    value = clamp_value(val[2],0,1)
+    value = cLib.clamp_value(val[2],0,1)
   elseif (self.options.group_velocity.value == Mlrx.GRP_VELOCITY_PAD_X) then
     set_grp_velocity = true
-    value = clamp_value(val[1],0,1)
+    value = cLib.clamp_value(val[1],0,1)
   end
   if set_grp_velocity then
     group:set_grp_velocity(value * Mlrx.INT_8BIT)
@@ -3836,10 +3836,10 @@ function Mlrx:input_xy(val)
   local set_trk_velocity = false
   if (self.options.track_velocity.value == Mlrx.TRK_VELOCITY_PAD_Y) then
     set_trk_velocity = true
-    value = clamp_value(val[2],0,1)
+    value = cLib.clamp_value(val[2],0,1)
   elseif (self.options.track_velocity.value == Mlrx.TRK_VELOCITY_PAD_X) then
     set_trk_velocity = true
-    value = clamp_value(val[1],0,1)
+    value = cLib.clamp_value(val[1],0,1)
   end
   if set_trk_velocity then
     track:set_trk_velocity(value * Mlrx.INT_7BIT)
@@ -3851,10 +3851,10 @@ function Mlrx:input_xy(val)
   local set_grp_panning = false
   if (self.options.group_panning.value == Mlrx.GRP_PANNING_PAD_Y) then
     set_grp_panning = true
-    value = clamp_value(val[2],0,1) 
+    value = cLib.clamp_value(val[2],0,1) 
   elseif (self.options.group_panning.value == Mlrx.GRP_PANNING_PAD_X) then
     set_grp_panning = true
-    value = clamp_value(val[1],0,1)
+    value = cLib.clamp_value(val[1],0,1)
   end
   if set_grp_panning then
     group:set_grp_panning(value * Mlrx.INT_8BIT)
@@ -3867,10 +3867,10 @@ function Mlrx:input_xy(val)
   local set_trk_panning = false
   if (self.options.track_panning.value == Mlrx.TRK_PANNING_PAD_Y) then
     set_trk_panning = true
-    value = clamp_value(val[2],0,1) 
+    value = cLib.clamp_value(val[2],0,1) 
   elseif (self.options.track_panning.value == Mlrx.TRK_PANNING_PAD_X) then
     set_trk_panning = true
-    value = clamp_value(val[1],0,1)
+    value = cLib.clamp_value(val[1],0,1)
   end
   if set_trk_panning then
     track:set_trk_panning(value * Mlrx.INT_7BIT)

@@ -749,35 +749,35 @@ MidiActions.assist_table = {
     name = "Track Levels:Volume:Master Track (Pre) [Set]",
     label = "VolMast",
     param = function()
-      return get_master_track().prefx_volume
+      return xTrack.get_master_track().prefx_volume
     end,
   },
   {
     name = "Track Levels:Panning:Master Track (Pre) [Set]",
     label = "PanMast",
     param = function()
-      return get_master_track().prefx_panning
+      return xTrack.get_master_track().prefx_panning
     end,
   },
   {
     name = "Track Levels:Width:Master Track [Set]",
     label = "WidthMast",
     param = function()
-      return get_master_track().prefx_width
+      return xTrack.get_master_track().prefx_width
     end,
   },
   {
     name = "Track Levels:Volume:Master Track (Post) [Set]",
     label = "VolMast",
     param = function()
-      return get_master_track().postfx_volume
+      return xTrack.get_master_track().postfx_volume
     end,
   },
   {
     name = "Track Levels:Panning:Master Track (Post) [Set]",
     label = "PanMast",
     param = function()
-      return get_master_track().postfx_panning
+      return xTrack.get_master_track().postfx_panning
     end,
   },
   {

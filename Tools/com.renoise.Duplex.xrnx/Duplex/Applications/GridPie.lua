@@ -1930,7 +1930,7 @@ function GridPie:_toggle_slot(seq_idx,track_idx)
   local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
   local old_lines = gridpie_patt.number_of_lines
   local old_pos = rns.transport.playback_pos
-  local old_lc = least_common(self.poly_counter:values())
+  local old_lc = cLib.least_common(self.poly_counter:values())
   --print("*** _toggle_slot - old_lc",old_lc)
 
   --print("*** toggle_slot - patt",patt)
@@ -1974,7 +1974,7 @@ function GridPie:_toggle_slot(seq_idx,track_idx)
     ]]
     self.poly_counter[track_idx] = patt.number_of_lines
     -- calculate new recombination pattern length
-    local lc = least_common(self.poly_counter:values())
+    local lc = cLib.least_common(self.poly_counter:values())
     if lc then
       
       -- how many different lengths have we got?
@@ -2111,7 +2111,7 @@ function GridPie:_toggle_pattern(seq_idx,track_idx)
   local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
   local old_lines = gridpie_patt.number_of_lines
   local old_pos = rns.transport.playback_pos
-  local old_lc = least_common(self.poly_counter:values())
+  local old_lc = cLib.least_common(self.poly_counter:values())
 
   local muted = self:can_mute_pattern(seq_idx)
   --print("*** muted",muted)
@@ -2173,7 +2173,7 @@ function GridPie:_toggle_pattern(seq_idx,track_idx)
 
   -- update pattern length 
   local num_lines = nil
-  local lc = least_common(self.poly_counter:values())
+  local lc = cLib.least_common(self.poly_counter:values())
   if lc then
     num_lines = lc
   else
@@ -3225,7 +3225,7 @@ function GridPie:on_idle()
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
   local playing_pos = rns.transport.playback_pos.sequence
   local playback_line = rns.transport.playback_pos.line
-  local lc = least_common(self.poly_counter:values())
+  local lc = cLib.least_common(self.poly_counter:values())
 
   -- session recording: check if we have arrived at the new gp pattern
   if self.gp_buffer_seq_pos and (self.gp_buffer_seq_pos ~= playing_pos) then
@@ -4100,7 +4100,7 @@ function GridPie:_attach_to_pattern(new_song)
           --print("*** self.poly_counter[",t_idx,"]",self.poly_counter[t_idx])
         end
       end
-      local lc = least_common(self.poly_counter:values())
+      local lc = cLib.least_common(self.poly_counter:values())
       if lc then
         local gp_patt = rns.patterns[self.gridpie_patt_idx]
         local old_lines = gp_patt.number_of_lines
@@ -4257,7 +4257,7 @@ function GridPie:shorten_pattern(patt,old_len)
   TRACE("GridPie:shorten_pattern()",patt,old_len)
 
   local rns = renoise.song()
-  local lc = least_common(self.poly_counter:values())
+  local lc = cLib.least_common(self.poly_counter:values())
   local changed = false
   local playpos = rns.transport.playback_pos
   if lc then

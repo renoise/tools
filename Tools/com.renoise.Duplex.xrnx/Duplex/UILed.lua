@@ -74,7 +74,7 @@ function UILed:draw()
   -- if value has not been explicitly set, use the
   -- avarage color (0x80+) to determine lit state 
   if not type(point.val)=="boolean" then
-    if(get_color_average(self.palette.foreground.color)>0x7F)then
+    if(cColor.get_average(self.palette.foreground.color)>0x7F)then
       point.val = true        
     else
       point.val = false        

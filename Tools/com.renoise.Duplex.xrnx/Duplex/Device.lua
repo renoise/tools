@@ -732,7 +732,7 @@ function Device:output_number(pt,xarg,ui_obj)
   TRACE("Device:output_number(pt,xarg,ui_obj)",pt,xarg,ui_obj)
   --print("pt.val,ui_obj.floor,ui_obj.ceiling,xarg.minimum,xarg.maximum",pt.val,ui_obj.floor,ui_obj.ceiling,xarg.minimum,xarg.maximum)
 
-  return scale_value(pt.val,ui_obj.floor,ui_obj.ceiling,xarg.minimum,xarg.maximum)
+  return cLib.scale_value(pt.val,ui_obj.floor,ui_obj.ceiling,xarg.minimum,xarg.maximum)
 
 end
 
