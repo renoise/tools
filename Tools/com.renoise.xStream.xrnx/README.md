@@ -391,7 +391,10 @@ It's recommended to open the scripting console for more detailed feedback and th
 	xOscMessage
 	xAutomation
 	xParameter
+  xPattern
+  xPatternSequencer
 	xPlayPos
 	xAudioDevice
 	xPhraseManager
+  LFO
 

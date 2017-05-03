@@ -266,6 +266,12 @@ function xStreamModel:__init(xstream)
     ["xParameter"] = {
       access = function(env) return xParameter end,
     },
+    ["xPattern"] = {
+      access = function(env) return xPattern end,
+    },
+    ["xPatternSequencer"] = {
+      access = function(env) return xPatternSequencer end,
+    },
     ["xPlayPos"] = {
       access = function(env) return xPlayPos end,
     },
