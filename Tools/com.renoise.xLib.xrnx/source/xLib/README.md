@@ -2,7 +2,10 @@
 
 The xLib library is a suite of classes that extend the standard Renoise API. 
 
-The idea is to offer additional methods for the built-in objects in Renoise, and to provide alternatives. For example, the xNoteColumn class is a complete emulation of the native renoise.NoteColumn - but not bound to a specific song/pattern. 
+## Documentation
+
+Point your browser to this location to browse the auto-generated luadocs:
+https://renoise.github.io/luadocs/xlib
 
 ## How to use 
 
@@ -32,15 +35,14 @@ https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.cLib.xrnx
 
 To install, copy the 'cLib' folder to your tool (and don't forget to read the instructions which accompany cLib)
 
-## How to use
-
-Since xLib does not 'do' anything on it's own, the standalone version is simply configured to run some unit-tests:
-https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.xLib.xrnx
-
 ## Examples
 
 xLib is used in many of the tools on our github repository: 
 https://github.com/renoise/xrnx/tree/master/Tools/
+
+There is a packaged (renoise tool) version of xLib, configured to run some unit-tests:
+https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.xLib.xrnx
+
 
 
 
