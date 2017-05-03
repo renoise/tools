@@ -43,12 +43,22 @@ end
 -- @param ... (vararg)
 
 function cLib.log(...)
-  local result = ""
+
+  local args = {...}
   local n = select('#', ...)
-  for i = 1, n do
-    result = result .. tostring(select(i, ...)) .. "\t"
-  end
-  print (result)
+
+  local success,err = pcall(function()
+    local result = ""
+    for i = 1, n do
+      result = result .. tostring(args[i]) .. "\t"
+    end
+    print (result)
+  end)
+
+  if not success then 
+    print(...)
+  end 
+
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -221,14 +231,27 @@ function cLib.scale_value(value,in_min,in_max,out_min,out_max)
 end
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Strip percentage sign from string, if present
+-- [Static] Attempt to convert string to a number (strip percent sign)
 -- @param str (string), e.g. "33.3%"
+-- @return number or (TODO) nil if not able to convert
 
 function cLib.string_to_percentage(str)
   TRACE("cLib.string_to_percentage(str)",str)
   return tonumber(string.sub(str,1,#str-1))
 end
 
+
+---------------------------------------------------------------------------------------------------
+--- [Static] Get average of supplied numbers
+-- @return number 
+
+function cLib.average(...)
+  local rslt = 0
+  for i=1, #arg do
+    rslt = rslt+arg[i]
+  end
+	return rslt/#arg
+end
 
 ---------------------------------------------------------------------------------------------------
 -- [Static] Clamp value - ensure value is within min/max
@@ -239,6 +262,54 @@ end
 
 function cLib.clamp_value(value, min_value, max_value)
   return math.min(max_value, math.max(value, min_value))
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] 'Wrap/rotate' value within specified range
+-- (with a range of 64-127, a value of 128 should output 65)
+-- TODO use % modulo to obtain offset
+
+function cLib.wrap_value(value, min_value, max_value)
+  local range = max_value - min_value + 1
+  assert(range > 0, "invalid range")
+  while (value < min_value) do
+    value = value + range
+  end
+  while (value > max_value) do
+    value = value - range
+  end
+  return value
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Determine the sign of a number
+-- @return -1 if negative or 1 if positive
+
+function cLib.sign(x)
+    return (x<0 and -1) or 1
+end
+
+---------------------------------------------------------------------------------------------------
+--- [Static] Inverse logarithmic scaling (exponential)
+
+function cLib.inv_log_scale(ceiling,val)
+  return ceiling-log_scale(ceiling,ceiling-val+1)
+end
+
+---------------------------------------------------------------------------------------------------
+--- logarithmic scaling within a fixed space
+-- @param ceiling (number) the upper boundary 
+-- @param val (number) the value to scale
+
+function cLib.log_scale(ceiling,val)
+  return math.log(val)*ceiling/math.log(ceiling)
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Check for whole number, using format() 
+
+function cLib.is_whole_number(n)
+  return (("%.8f"):format(n-math.floor(n)) == "0.00000000") 
 end
 
 ---------------------------------------------------------------------------------------------------
