@@ -1,4 +1,8 @@
-# Duplex.xrnx - Links and Resources
+# Links and Resources
+
+## Bug Reports and Support
+
+Duplex has a [dedicated topic on the Renoise forum](http://forum.renoise.com/index.php?/topic/27886-duplex-beta-versions/), where you can get support. 
 
 ## List of Supported Controllers
 
@@ -10,10 +14,7 @@ The source code for Duplex is located on our [official source code repository](h
 The [luadoc reference](https://renoise.github.io/luadocs/duplex/index.html) offers a compact overview of the framework and its classes. 
 
 ## HOW-TO Guides
-[How To Create A New Duplex Application](...) (Renoise Forum)  
-[How To Start Editing Duplex Files](...) (Renoise Forum) 
+[How To Create A New Duplex Application](http://forum.renoise.com/index.php/topic/30577-how-to-create-a-new-duplex-application/) (Renoise Forum)  
+[How To Start Editing Duplex Files](http://forum.renoise.com/index.php/topic/28284-how-to-start-editing-duplex-files/) (Renoise Forum) 
 
-## Bug reports and Suggestions
-
-Duplex has a [dedicated topic on the Renoise forum](http://forum.renoise.com/index.php?/topic/27886-duplex-beta-versions/), where you can get support. 
 

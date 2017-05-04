@@ -1,4 +1,4 @@
-# Duplex.xrnx - Getting Started
+# Getting Started
 
 ## Introduction to the GUI Front End 
 

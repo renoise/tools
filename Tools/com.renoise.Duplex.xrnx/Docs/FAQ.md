@@ -1,6 +1,4 @@
-# Duplex.xrnx - FAQ
-
-## Frequently Asked Questions 
+# Frequently Asked Questions 
 
 |Question |Answer |
 |---------|-------|

@@ -15,15 +15,13 @@ for messages from your hardware, but can also forward these messages to Renoise,
 
 ## [Installation](Docs/Installation.md)
 
-## [Getting Started](Docs/FrontEndIntro.md)
+## [Getting Started](Docs/GettingStarted.md)
 
 ## [Bundled Applications](Docs/Applications.md)
 
-## [Supported Controllers](Docs/Controllers.md)
-
-## [Links and Resources](Docs/Resources.md)
-
-## [Troubleshooting ](Docs/Troubleshooting.md)
+## [Controllers & Troubleshooting](Docs/Controllers.md)
 
 ## [Frequently Asked Questions](Docs/FAQ.md)
+
+## [Links and Resources](Docs/Resources.md)
 
