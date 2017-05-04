@@ -72,7 +72,7 @@ function Display:__init(process)
   -- when we need to change the UI Object's value)
   self.ui_notifiers = table.create()
 
-  --- (@{cScheduler}) perform periodic updates
+  --- (cScheduler) perform periodic updates
   self.scheduler = cScheduler()
 
   ---  (table) define the visual appearance of 'empty space', used e.g.
