@@ -2,7 +2,19 @@
 
 ## About
 
-Duplex GridPie is a performance tool for Renoise which allows you to combine pattern-tracks from anywhere in your song. It requires a grid-style controller to function - the more buttons you have, the larger an overview of the song you will get. 
+Grid Pie is a performance interface. It lets the user combine different parts of a linear song, non-linearly, in real time, using a special looping pattern as a live drafting area. It does so by taking over the Pattern Matrix.
+
+Grid Pie requires a grid-style controller to function - the more buttons you have, the larger an overview of the song you will get. 
+
+## How does it work? 
+
+Basically, you start by launching one of the controllers that come with a Grid Pie configuration. The launchpad is really suitable, as the display has been optimized for that particular controller.
+
+Once you have selected the Launchpad and selected the Grid Pie config (there are actually two of those), hit "run" and Grid Pie will transform your song into a mode where you can combine everything with everything.
+
+You will have to decide for yourself if you want to use it as a remix tool (combine various elements of an existing song), or as a compositional aide (most likely, to play around with the real-time poly-rhythmic features), or perhaps as something to use for your next live performance?
+
+## Links
 
 Discussion of Duplex GridPie is located on the [Renoise forum](http://forum.renoise.com/index.php?/topic/33484-new-tool-28-duplex-grid-pie/)
 

@@ -1,12 +1,15 @@
 # Duplex.Applications.XYPad
 
+![XYPad_devices](../Images/XYPad_devices.png)  
+*The XYPad application is available on multiple devices*
+
 ## Features
 * Built-in automation recording 
 * Supports knobs, a MIDI keyboard's touchpad or an OSC device's accelerometer
 * Free roaming - jump between different XYPad devices in the song
 * Device Lock - remember focused device between sessions
 
-## Usage
+## Setting up (mapping)
 
 For basic operation, you can map _either_ `xy_pad` or `xy_grid` to your controller. Without any of these mappings, the application will refuse to start.
 
@@ -24,6 +27,14 @@ To map a MIDI device, add a `Param` node to the control-map which look like this
 > Note: to enter the correct minimum and maximum values, it's important you know a bit about your device as the application will base it's min/max/axis values 
 directly on the information specified here. 
 
+## How to use
+
+
+**Specially tweaked for grid/pad controllers**  
+When you're using buttons to control an XYPad device, there is a slight amount
+of variation applied, each time you hit the button. It's not enough to be noticeable,
+but it will allow the XYPad to fire a signal on repeated hits, instead of just when
+you hit _another_ button
 
 ## Discuss
 

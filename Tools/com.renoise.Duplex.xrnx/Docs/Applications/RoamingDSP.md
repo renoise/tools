@@ -8,13 +8,24 @@ RoamingDSP is not an application in itself, but rather, a baseclass that other a
 
 ## How it works
 
-The class can target any device that has been selected in Renoise, freely roaming the tracks. If the lock button starts to blink slowly, it is to remind you that the application is currently 'homeless', has no matching device to control. 
+**Free-roming mode**  
+At it's most basic level, the application can target any compatible device that has been selected, while the user freely roams the tracks. It supports automation recording as well - hit the edit-button, and it will record automation envelopes (according to the selected mode in options)
 
-Opposite to the "free-roaming mode" we have the "locked mode" which will lock to a single device. The locked mode can either be set by being mapped to a button, or via the options dialog. In either case, the application will 'tag' the device with a unique name. 
+![XYPad_roaming](../Images/XYPad_roaming.gif)  
+*The illustrations shows roaming between multiple XY-pads*
 
-To complement the "lock" button, we also have a "focus" button. This button brings focus back to the locked device, whenever you have (manually) selected an un-locked device.
+**Locking to a device**  
+While the free-roaming mode is useful, you also have the locked mode. This is the complete opposite, as it will always target a single device, no matter the track or device that's currently selected. The locked mode can either be set by being mapped to a button, or via the options dialog. In either case, the locked state of a device can be restored between sessions, as the application will 'tag' the device with a unique name.
 
-Finally, we can navigate between devices by using the 'next' and 'previous' buttons. In case we have locked to a device, previous/next will "transfer" the lock to that device.
+**Blinking means 'nowhere to go'**  
+If you select an unassignable device in free-roaming mode, and you have assigned lock_button somewhere on your controller, the button will start to blink slowly, to remind you that the application is currently 'homeless', has no parameter to control.
+
+**Assign a unique name for each application**  
+By selecting a different unique name, we can run multiple RoamingDSP applications, and each one will be controlling a different device. Even when you move devices and tracks around, things should not break.
+
+**Navigation works across tracks**  
+Finally, we can navigate between devices by using the 'next' and 'previous' buttons. Pressing one will search across all tracks in the song, so we can put our device in any track we want. In case we have locked to a device, previous/next will transfer the unique name to that device (NB: be careful if you have other locked devices, as this will overwrite their names as well).
+
 
 ## Available mappings 
 
