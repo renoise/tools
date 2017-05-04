@@ -3,23 +3,8 @@
 ============================================================================]]--
 
 --[[--
-Extend this class if you want an application to lock onto a specific type of device, or navigate between similar devices.
-Inheritance: @{Duplex.Application} > Duplex.RoamingDSP
 
-The application can target any device that has been selected in Renoise, freely roaming the tracks. If the lock button starts to blink slowly, it is to remind you that the application is currently 'homeless', has no matching device to control. 
-
-Opposite to the "free-roaming mode" we have the "locked mode" which will lock to a single device. The locked mode can either be set by being mapped to a button, or via the options dialog. In either case, the application will 'tag' the device with a unique name. 
-
-To complement the "lock" button, we also have a "focus" button. This button brings focus back to the locked device, whenever you have (manually) selected an un-locked device.
-
-Finally, we can navigate between devices by using the 'next' and 'previous' buttons. In case we have locked to a device, previous/next will "transfer" the lock to that device.
-
-
-### Changes
-
-  0.98
-    - First release
-
+Extend this class for 'roaming' control of a DSP device 
 
 ]]--
 
@@ -92,13 +77,13 @@ RoamingDSP.default_options = {
 -- @table available_mappings
 RoamingDSP.available_mappings = {
   lock_button = {
-    description = "Lock/unlock device",
+    description = "RoamingDSP: Lock/unlock device",
   },
   next_device = {
-    description = "Next device",
+    description = "RoamingDSP: Next device",
   },
   prev_device = {
-    description = "Previous device",
+    description = "RoamingDSP: Previous device",
   },
 
 
