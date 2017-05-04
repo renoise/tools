@@ -328,20 +328,21 @@ function TrackSelector:update()
     end
   end
 
-
+  if self._prev_column then
     if (self._selected_column_index <= 1) then
       self._prev_column:set(self.palette.column_prev_off)
     else
       self._prev_column:set(self.palette.column_prev_on)
     end
+  end 
 
-
+  if self._next_column then
     if (self._selected_column_index >= renoise.song().tracks[self._selected_track_index].visible_note_columns) then
       self._next_column:set(self.palette.column_next_off)
     else
       self._next_column:set(self.palette.column_next_on)
     end
-
+  end
 
   -- set the active track page + range
   local track_max = #renoise.song().tracks
@@ -381,7 +382,7 @@ function TrackSelector:update()
     self._select_track:set_index(slider_pos,skip_event)
   end
 
-  local master_idx = get_master_track_index()
+  local master_idx = xTrack.get_master_track_index()
 
   -- set the seq./master/send buttons
   if self._select_first then
@@ -714,7 +715,7 @@ function TrackSelector:_build_app(song)
     c.tooltip = map.description
     c:set_pos(map.index)
     c.on_press = function(obj)
-      local track_idx = get_master_track_index()
+      local track_idx = xTrack.get_master_track_index()
       renoise.song().selected_track_index = track_idx
     end
     self._select_master = c
@@ -729,7 +730,7 @@ function TrackSelector:_build_app(song)
     c.tooltip = map.description
     c:set_pos(map.index)
     c.on_press = function(obj)
-      local track_idx = get_master_track_index()+1
+      local track_idx = xTrack.get_master_track_index()+1
       -- outside bounds?
       if (track_idx>#renoise.song().tracks) then
         return 
