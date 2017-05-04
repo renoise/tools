@@ -6,6 +6,10 @@
 
 Control any Hydra device in the current song.
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/Hydra.md) (github)
+
 --]]
 
 --==============================================================================

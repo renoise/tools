@@ -6,12 +6,9 @@
 
 Basic control of the Renoise pattern-sequence.
 
-.
 #
 
-TODO
-* add first/last pattern mappings
-* add sections mappings 
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/PatternSequence.md) (github)
 
 --]]
 

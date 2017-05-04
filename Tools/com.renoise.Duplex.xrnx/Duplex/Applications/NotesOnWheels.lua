@@ -6,6 +6,10 @@
 
 Notes On Wheels (N.O.W) is an arpeggiating step sequencer. 
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/NotesOnWheels.md) (github)
+
 --]]
 
 --==============================================================================

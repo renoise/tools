@@ -6,6 +6,10 @@
 
 A step sequencer for grid/pad-based controllers
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/StepSequencer.md) (github)
+
 --]]
 
 --==============================================================================

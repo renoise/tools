@@ -6,9 +6,9 @@
 
 Navigate between lines in the pattern editor.
 
-### TODO 
-make navigation across pattern boundaries more streamlined - currently, navigating with edit-step around very short patterns will not work, only when pattern contain more lines than editstep...
+#
 
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/PatternCursor.md) (github)
 
 --]]
 

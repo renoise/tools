@@ -6,6 +6,10 @@
 
 Take control of the Renoise metronome (tutorial).
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/Metronome.md) (github)
+
 --]]
 
 --==============================================================================

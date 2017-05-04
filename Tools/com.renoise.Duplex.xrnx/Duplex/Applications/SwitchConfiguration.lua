@@ -3,14 +3,11 @@
 ============================================================================]]--
 
 --[[--
-Switch between different configurations (next, previous and set).
-Inheritance: @{Duplex.Application} > Duplex.Application.SwitchConfiguration
+Switch between different hardware configurations 
 
+#
 
-### Changes
-
-  0.98
-    - First release
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/SwitchConfiguration.md) (github)
 
 --]]
 

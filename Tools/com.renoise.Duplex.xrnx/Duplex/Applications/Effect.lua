@@ -6,6 +6,10 @@ Duplex.Application.Effect
 
 The Effect application enables control of DSP chain parameters.
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/Effect.md) (github)
+
 --]]
 
 --==============================================================================

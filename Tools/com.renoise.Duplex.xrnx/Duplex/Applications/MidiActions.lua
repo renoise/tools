@@ -6,6 +6,10 @@
 
 MidiActions will expose most of the standard Renoise mappings to Duplex. 
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/MidiActions.md) (github)
+
 --]]
 
 --==============================================================================

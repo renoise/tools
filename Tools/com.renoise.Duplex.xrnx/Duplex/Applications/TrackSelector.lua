@@ -4,7 +4,11 @@
 
 --[[--
 
-Select between tracks, including shortcuts for master & send tracks
+Switch between tracks, including shortcuts for master & send tracks
+
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/TrackSelector.md) (github)
 
 --]]
 

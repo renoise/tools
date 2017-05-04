@@ -6,6 +6,10 @@
 
 Mlrx is a live performance loop sequencer.
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/Mlrx.md) (github)
+
 ]]
 
 --==============================================================================

@@ -6,6 +6,10 @@
 
 Take control of the pattern matrix in Renoise 
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/Matrix.md) (github)
+
 --]]
 
 --==============================================================================

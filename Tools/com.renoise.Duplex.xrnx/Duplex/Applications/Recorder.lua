@@ -6,6 +6,10 @@
 
 Record and loop any signal that you feed into Renoise
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/Recorder.md) (github)
+
 --]]
 
 --==============================================================================

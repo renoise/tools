@@ -6,6 +6,10 @@
 
 A replacement of the standard Renoise keyboard, supporting for MIDI and OSC.
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/Keyboard.md) (github)
+
 --]]
 
 --==============================================================================

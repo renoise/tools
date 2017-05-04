@@ -1,10 +1,14 @@
 --[[============================================================================
--- Duplex.Repeater
+-- Duplex.Application.Repeater
 ============================================================================]]--
 
 --[[--
 
 Take control of the native repeater DSP device.
+
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/Repeater.md) (github)
 
 --]]
 

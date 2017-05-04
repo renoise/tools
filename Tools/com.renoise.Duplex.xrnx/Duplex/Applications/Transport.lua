@@ -4,34 +4,10 @@
 
 --[[--
 The Transport application offers transport controls for Renoise.
-Inheritance: @{Duplex.Application} > Duplex.Application.Transport
 
-     _______ _______ ______ ______ ______ ______ ________ _______
-    |       |       |      |      |      |      |        |       |
-    |  |◄   |   ►   |  ►|  | ∞/═  |  ■   |  ●   |   ↓    |   ∆   |
-    | Prev  | Play  | Next | Loop | Stop | Edit | Follow | Metro |
-    |_______|_______|______|______|______|______|________|_______|
-     _______________ ______ ______ ______
-    |               |      |      |      |
-    |   01:04.25    |  +   | 95.2 |  -   |
-    |  Song playpos | BPM  | BPM  | BPM  |
-    |_______________|______|______|______|
+#
 
-
-### Changes
-  
-  0.98  
-    - New mapping: "metronome_toggle", minor optimizations
-  0.96  
-    - Fixed: Option "pattern_switch" didn't switch instantly
-  0.92  
-    - New option: "stop playback" (playback toggle button)
-  0.91  
-    - Fixed: always turn off "start" when hitting "stop"
-  0.90  
-    - Follow player option
-  0.81  
-    - First release
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/Transport.md) (github)
 
 --]]
 

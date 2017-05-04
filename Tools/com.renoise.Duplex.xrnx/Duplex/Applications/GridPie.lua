@@ -6,6 +6,10 @@
 
 Grid Pie lets you combine different parts of song, non-linearly, in real time.
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/GridPie.md) (github)
+
 --]]
 
 --==============================================================================

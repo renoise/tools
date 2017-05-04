@@ -6,6 +6,10 @@
 
 Use the Mixer for controlling the Renoise mixer
 
+#
+
+[View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/Mixer.md) (github)
+
 --]]
 
 --==============================================================================
