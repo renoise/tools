@@ -529,6 +529,22 @@ function Application:_add_component(c)
 
 end  
 
+--------------------------------------------------------------------------------
+-- (For documentation) print in a markdown-table syntax
+
+function Application:list_mappings_and_options(mappings,options)
+  TRACE("Application:list_mappings_and_options(mappings,options)",mappings,options)
+
+  LOG(">>> mappings...")
+  for k,v in pairs(mappings) do
+    LOG(("|`%s`|%s|"):format(k,v.description))
+  end 
+  LOG(">>> options...")
+  for k,v in pairs(options) do
+    LOG(("|`%s`|%s|"):format(k,v.description))
+  end 
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -538,6 +554,7 @@ end
 function Application:__tostring()
   return type(self)
 end  
+
 
 
 --------------------------------------------------------------------------------
