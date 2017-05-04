@@ -2383,7 +2383,7 @@ function NOW_Sequence:set_num_steps(int_val,update)
       end
     end
 
-    xTrack.set_column_mute(idx)
+    xTrack.set_column_mute(int_val)
 
     local msg = string.format("Notes On Wheels: Number of steps was set to %d",int_val)
     renoise.app():show_status(msg)
@@ -2581,7 +2581,7 @@ function NOW_Sequence:extend()
   end
   -- update display
   local val_int = math.floor(self.retrig_adjust*NOW_Sequence.MAX_RETRIGS)*2/NOW_Sequence.MAX_RETRIGS
-  self:adjust_retrig(clamp_value(val_int,0,1),true)
+  self:adjust_retrig(cLib.clamp_value(val_int,0,1),true)
 
   self:set_num_steps(self.num_steps*2,true)
   return true
@@ -2644,7 +2644,7 @@ end
 -- @return (int) between 0-MAX_RETRIGS
 function NOW_Sequence:apply_retrig_adjust(val)
   local retrig_adj = math.floor(self.retrig_adjust*NOW_Sequence.MAX_RETRIGS)
-  return math.floor(clamp_value(val*retrig_adj+(retrig_adj-1),0,NOW_Sequence.MAX_RETRIGS-1))
+  return math.floor(cLib.clamp_value(val*retrig_adj+(retrig_adj-1),0,NOW_Sequence.MAX_RETRIGS-1))
 end
 
 -- calculate the amount of retriggers
