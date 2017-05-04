@@ -3,55 +3,8 @@
 ============================================================================]]--
 
 --[[--
+
 Notes On Wheels (N.O.W) is an arpeggiating step sequencer. 
-Inheritance: @{Duplex.Application} > Duplex.Application.NotesOnWheels 
-
-### Features
-N.O.W. allows you to create a sequence and control all aspects of each step (such as the pitch, velocity etc.) in realtime. 
-
-As for input, N.O.W. is very flexible, as you can control it via an additional MIDI input. Also, the virtual control surface will, when focused, detect and respond to keypresses within a specific range. 
-
-The virtual keyboard supports both ordinary transpose (one octave up/down from the middle C), and multi-step sequences (press keys while holding the SHIFT modifier). Same goes for the external MIDI keyboard, which can be set up to act upon CC messages and pitch bend. 
-
-
-### Controller setup
-
-A dedicated control surface is located in the Renoise tools menu:
-Duplex > Custombuilt > Notes On Wheels
-    _________________________________________________
-    |  _  _  _  _  _  _  _  _  _  _  _  _   _  _    | 
-    | |_||_||_||_||_||_||_||_||_||_||_||_| |_||_|   | <- Position + Line offset
-    |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
-    | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Pitch controls
-    |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
-    | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Velocity controls
-    |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
-    | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Offset controls
-    |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
-    | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Gate controls
-    |  _  _  _  _  _  _  _  _  _  _  _  _   ______  | 
-    | (_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_) |__||__| | <- Retrigger controls
-    |  _  _  _  _  _  _  _  _  _  _  _  _   _  _    | 
-    | |_||_||_||_||_||_||_||_||_||_||_||_| (_)(_)   | <- Steps + Spacing/Length
-    |                                               |
-    | |Write| |Learn| |Fill| |Global| |Modes...|    | <- Various controls
-    | ______________________________________________|
-
-Also, check out the compact version, which use fewer controls, but still manages to contain every feature of it's bigger brother. This is possible because the sliders in that version are switching between the currently active mode (pitch, velocity etc.), and therefore, require only a small set of physical controls. Perhaps it's a more realistic starting point for your wn controller mapping than the fully expanded version? It's located here: 
-Duplex > Custombuilt > Notes On Wheels (compact)
-
-
-### Discuss
-
-Tool discussion is located on the [Renoise forum][1]
-[1]: http://forum.renoise.com/index.php?/topic/31136-notes-on-wheels-now/
-
-
-### Changelog
-
-  0.98  
-    - First release
-
 
 --]]
 
@@ -87,18 +40,6 @@ local WRAP_OFFSET_OFF = 2
 class 'NotesOnWheels' (Application)
 
 --- These are the default options for the application
--- 
--- @field write_method Select the desired write method 
---    WRITE_METHOD_TOUCH will only output notes while the controller is being used
---    WRITE_METHOD_LATCH will start output once the controller is being used
---    WRITE_METHOD_WRITE will output notes continously, no matter what
--- @field edit_sync Enable output when recording/edit-mode in Renoise is active
--- @field global_mode Enable this to start the application in global mode
--- @field fill_mode Enable this to start the application in fill mode
--- @field offset_quantize Adjust this to divide a sample into a number of equally sized segments when (applied when using the sample-offset controls). 
--- @field offset_wrap Enable this to wrap the sample-offset 
--- @field midi_keyboard Select among available MIDI devices
--- @table default_options
 NotesOnWheels.default_options = {
   write_method = {
     label = "Write method",
@@ -181,44 +122,6 @@ NotesOnWheels.default_options = {
 }
 
 --- These are the available mappings for the application
--- 
--- Note: the `set_mode_[...]` mappings allow you to assign a mode directly to a specific button. If two or more modes are assigned in this way, they will act as radio buttons.
--- As a secondary feature, hold any of these buttons for a moment, and the sequence will be written to the pattern, `fill mode`
--- @field choose_mode (UISlider) The mode determine which kind of output the 'Steps' dials will generate
---    1 = Pitch - set the pitch of each step - max/min value will clear
---    2 = Velocity - set the volume of each step
---    3 = Offset - set the sample offset of each step
---    4 = Gate - set the length of each step, max is infinite
---    5 = Retrig - set the retrig rate of each step
--- @field set_mode_pitch (UIButton) Set mode to Pitch* 
--- @field set_mode_velocity (UIButton) Set mode to Velocity*
--- @field set_mode_offset (UIButton) Set mode to Offset*
--- @field set_mode_gate (UIButton) Set mode to Gate*
--- @field set_mode_retrig (UIButton) Set mode to Gate*
--- @field multi_sliders (group of UISliders) Specifies mode-dependant input dials (can control any parameter by switching mode)
--- @field pitch_sliders (group of UISliders) Direct pitch control of each step
--- @field velocity_sliders (group of UISliders) Direct velocity control of each step
--- @field offset_sliders (group of UISliders) Direct offset control of each step
--- @field gate_sliders (group of UISliders) Direct gate control of each step
--- @field retrig_sliders (group of UISliders) Direct retrig control of each step
--- @field num_steps (UISlider, 1-12) Set the number of steps in the sequence (mode-dependant)
--- @field step_spacing (UISlider, 1-16) This value will determine the space between each note in lines (a value of 0 will output all notes simultaneously)
--- @field pitch_adjust (UISlider) global pitch adjust (affects all steps)
--- @field velocity_adjust (UISlider) global velocity adjust (affects all steps)
--- @field offset_adjust (UISlider) global offset adjust (affects all steps)
--- @field gate_adjust (UISlider) global gate adjust (affects all steps)
--- @field retrig_adjust (UISlider) global retrig adjust (affects all steps)
--- @field multi_adjust (UISlider) global adjust (affects all steps in given mode)
--- @field write (UIButton) Toggles between output and no output (if you don't have room for this, check out @edit_sync)
--- @field learn (UIButton) Import pattern editor data beginning from the cursor position
--- @field fill (UIButton) Fill the entire track with the sequence, each time something changes. Use with caution, as this might be heavy on the CPU (with long patterns and many note columns)
--- @field global (UIButton) Enable 'global' to output all parameters (pitch, velocity, etc.) at the same time. When off, only the modified parameter type is output
--- @field shift_up (UIButton) Control the line-number offset (increase offset by a single line)
--- @field shift_down (UIButton) Control the line-number offset (decrease offset by a single line)
--- @field extend (UIButton) The 'extend' button will multiply the sequence's length by two, by cloning all steps and doubling the global retrig rate. 
--- @field shrink (UIButton) Pressing 'shrink' will reduce the length of the sequence and global retrig rate by 50%
--- @field position (UIButton) Set the position of the sequence, based on the position of the edit cursor
--- @table available_mappings
 NotesOnWheels.available_mappings = {
 
   choose_mode = {
@@ -486,6 +389,8 @@ function NotesOnWheels:__init(...)
   --- (renoise.Midi.MidiDevice) 
   self.midi_in = nil
   self:select_midi_port(self.options.midi_keyboard.value-1)
+
+  --self:list_mappings_and_options(NotesOnWheels.available_mappings,NotesOnWheels.default_options)
 
 end
 

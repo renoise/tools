@@ -3,19 +3,8 @@
 ============================================================================]]--
 
 --[[--
+
 Control any Hydra device in the current song.
-Inheritance: @{Duplex.Application} > @{Duplex.RoamingDSP} > Duplex.Application.Hydra 
-
-Assign it to a slider and you gain the features from the RoamingDSP class
-as well: device locking, navigation and automation recording
-
-Also comes with a label for displaying the current value
-
-
-### Changes 
-
-  0.98
-    - First release
 
 --]]
 

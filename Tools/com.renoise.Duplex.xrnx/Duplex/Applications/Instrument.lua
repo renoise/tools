@@ -3,15 +3,8 @@
 ============================================================================]]--
 
 --[[--
-Take control of the Renoise Instrument (tutorial).
 
-
-### Changes
-
-  0.99.3
-    - First release
-
-
+Take control of the Renoise Instrument.
 
 --]]
 

@@ -3,17 +3,17 @@
 ============================================================================]]--
 
 --[[--
+
 Basic control of the Renoise pattern-sequence.
-Inheritance: @{Duplex.Application} > Duplex.Application.PatternSequence 
 
-### Changes
+.
+#
 
-  0.98.20 
-    - Initial version
-
+TODO
+* add first/last pattern mappings
+* add sections mappings 
 
 --]]
-
 
 --==============================================================================
 
@@ -23,10 +23,15 @@ PatternSequence.default_options = {}
 
 PatternSequence.available_mappings = {
   display_next = {
-    description = "PatternSequence: Display next pattern",
+    description = "PatternSequence: Display next pattern"
+      .."\n[Press] Go to next pattern in song"
+      .."\n[Hold] Go to last pattern in song",
   },
   display_previous = {
-    description = "PatternSequence: Display previous pattern",
+    description = "PatternSequence: Display previous pattern"
+      .."\n[Press] Go to previous pattern in song"
+      .."\n[Hold] Go to first pattern in song"
+    ,
   }
 }
 

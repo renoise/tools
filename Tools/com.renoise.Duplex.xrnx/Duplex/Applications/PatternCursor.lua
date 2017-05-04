@@ -4,15 +4,11 @@
 
 --[[--
 
-Navigate between lines and columns/tracks in the pattern editor.
+Navigate between lines in the pattern editor.
 
 ### TODO 
-refactor Mlrx_pos to make navigation across pattern boundaries more streamlined - currently, navigating with edit-step around very short patterns will not work, only when pattern contain more lines than editstep...
+make navigation across pattern boundaries more streamlined - currently, navigating with edit-step around very short patterns will not work, only when pattern contain more lines than editstep...
 
-### Changes
-
-  0.99.3
-    - First release
 
 --]]
 

@@ -3,35 +3,8 @@
 ============================================================================]]--
 
 --[[--
-Mlrx is a comphrehensive live performance environment for Renoise.
-Inheritance: @{Duplex.Application} > Duplex.Application.Mlrx 
 
-### Features
-
-* Independantly playing samples and/or phrases in any tempo
-* Many triggering modes and options can be defined for each track
-* Supports samples, sliced samples and phrases 
-* "Streaming" output means seamless transitions between patterns, loops
-* Record everything you do into patterns or phrases (create from scratch)
-* Non-invasive workflow: tightly integrated with Renoise 
-* Heavily inspired by mlr by tehn for the monome 
-
-### Discuss
-
-Tool discussion is located on the [Renoise forum][1]
-[1]: http://forum.renoise.com/index.php?/topic/38924-new-tool-30-mlrx/
-
-### Changes
-
-  0.99.1
-    - Realtime recording into phrases
-
-  0.99
-    - Many new features, better integration with Renoise
-
-  0.98
-    - First release 
-
+Mlrx is a live performance loop sequencer.
 
 ]]
 
@@ -561,6 +534,8 @@ function Mlrx:__init(...)
   -- set up external midi control
   self.midi_in = nil
   self:select_midi_port(self.options.midi_controller.value-1)
+
+  --self:list_mappings_and_options(Mlrx.available_mappings,Mlrx.default_options)
 
 end
 

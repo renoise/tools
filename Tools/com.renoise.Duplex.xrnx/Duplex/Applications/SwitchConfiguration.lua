@@ -24,12 +24,10 @@ SwitchConfiguration.default_options = {}
 
 SwitchConfiguration.available_mappings = {
   goto_next = {
-    description = "SwitchConfiguration: Goto next configuration"    
-    .."\nControl value: ",
+    description = "SwitchConfiguration: Goto next configuration" ,
   },
   goto_previous = {
-    description = "SwitchConfiguration: Goto previous configuration"    
-    .."\nControl value: ",
+    description = "SwitchConfiguration: Goto previous configuration",
   },
 }
 

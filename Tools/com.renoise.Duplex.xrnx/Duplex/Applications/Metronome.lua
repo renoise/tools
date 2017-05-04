@@ -3,14 +3,8 @@
 ============================================================================]]--
 
 --[[--
+
 Take control of the Renoise metronome (tutorial).
-Inheritance: @{Duplex.Application} > Duplex.Application.Metronome
-
-Metronome is a sample application that is meant to demonstrate how to write an application with Duplex. It demonstrates how to listen for events within Renoise and produce a proper response on the controller (bi-directional communication). 
-
-To read the whole tutorial, visit [this topic][1] on the Renoise forum. 
-[1]: http://forum.renoise.com/index.php?/topic/30577-duplex-how-to-create-a-new-duplex-application/
-
 
 --]]
 

@@ -3,14 +3,8 @@
 ============================================================================]]--
 
 --[[--
+
 Take control of the native repeater DSP device.
-Inheritance: @{Duplex.Application} > @{Duplex.RoamingDSP} > Duplex.Application.Repeater 
-
-
-### Changes 
-
-  0.98
-    - First release
 
 --]]
 
@@ -134,7 +128,7 @@ Repeater.available_mappings = {
     description = "Repeater: Set mode to 'triplet'",
   },
   mode_dotted = {
-    description = "Repeater: Set mode to 'triplet'",
+    description = "Repeater: Set mode to 'dotted'",
   },
   mode_free = {
     description = "Repeater: Set mode to 'free'",
@@ -216,6 +210,7 @@ function Repeater:__init(...)
 
   RoamingDSP.__init(self,...)
 
+  --self:list_mappings_and_options(Repeater.available_mappings,Repeater.default_options)
 
 end
 

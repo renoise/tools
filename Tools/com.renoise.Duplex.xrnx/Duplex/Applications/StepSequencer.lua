@@ -3,90 +3,10 @@
 ============================================================================]]--
 
 --[[--
-Use your grid controller as a basic step sequencer.
-Inheritance: @{Duplex.Application} > Duplex.Application.StepSequencer 
 
-Each button in the grid corresponds to a line in a track. The grid 
-is scrollable too - use the line/track mappings to access any part of the 
-pattern you're editing. 
-
-Originally written by daxton.fleming@gmail.com
-
-### How to use:
-
-- Press an empty button to put a note down, using the currently selected 
-  instrument, base-note and volume
-- Press a lit button to remove the note
-- Press and hold a lit button to copy the note. Toggle a note on/off somewhere 
-  else to paste the copied note to this location
-- Transpose note up/down by pressing and holding any number of notes, and then 
-  pressing the transpose buttons. Changes will be applied to all held notes
-- Adjust note volume by pressing and holding any number of notes, and then 
-  pressing a level button. Changes will be applied to all held notes
-- Press level/transpose buttons when no notes are held, to adjust the base-note 
-  and default volume
-
-### Changes
-
-  0.99 by Eran Dax Lonker
-    - Added: "grid mode" option - use all grid buttons for only one track/column
-    - Added: "follow column" option - use the currently selected column
-    - Added: "Write mode" option - insert notes only if pattern edit mode is on
-    - Added: "Play notes" option - plays the current note if trigger pads is
-              pushed (via OSC, if "Write notes" set not to "All time", notes 
-              will be played only if pattern edit mode is off.)
-    - Added: "display notes" option - display notes + volumens on the grid buttons
-    - Added: new mapping "levelslider" (single slider for setting the volume) 
-             new mapping "lvelsteps" (single button for rotating the volume)
-    - Added: grid mapping parameter button_size ... only needed to decide whether
-             it's possible to display the note volume in addition to the note value
-    - Fixed: wrong note octave in renoise notifications 
-
-  0.98.21
-    - Support line_notifier when slots are aliased (also when created and/or removed)
-    - Workflow: when navigating from a long pattern into a shorter one, start from 
-      the top (IOW, always restrict to the actual pattern length)
-    - Fixed: update the volume-level display when base volume is changed
-    - Fixed: selecting a group track could cause an error
-
-  0.98.20
-    - Fixed: focus bug when holding button
-
-  0.98.18
-    - Mappings track, level, line, transpose are now optional. This should fix an 
-      issue with the nano2K config that didn’t specify ‘track’
-    - Fixed: under certain conditions, could throw error on startup
-
-  0.98  
-    - Palette now uses the standard format (easier to customize)
-    - Sequencer tracks can be linked with instruments, simply by assigning 
-      the same name to both. 
-      UISpinner (deprecated) control replaced with UISlider+UIButton(s)
-
-  0.96
-    - Option: "follow_track", set to align to selected track in Renoise
-    - Option: "track_increment", specify custom step size for track-switching
-
-  0.95  
-    - The sequencer is now fully synchronized with the currently selected 
-      pattern in  Renoise. You can copy, delete or move notes around, 
-      and the StepSequencer will update it's display accordingly
-    - Enabling Renoise's follow mode will cause instant catch-up
-    - Display volume/base-note changes in the status bar
-    - Orientation: use as sideways 16-step sequencer on monome128 etc.
-    - Option: "increment by this amount" value for navigating lines
-    - Improved performance 
-
-  0.93  
-    - Support other devices than the Launchpad (such as the monome)
-    - Display playposition and volume simultaneously 
-
-  0.92  
-    - Original version
-
+A step sequencer for grid/pad-based controllers
 
 --]]
-
 
 --==============================================================================
 
@@ -146,7 +66,7 @@ StepSequencer.default_options = {
       "Follow track enabled",
       "Follow track disabled"
     },
-    value = 2,
+    value = FOLLOW_TRACK_OFF,
   },
   follow_column = {
     label = "Follow column",
@@ -159,7 +79,7 @@ StepSequencer.default_options = {
       "Follow column enabled",
       "Follow column disabled"
     },
-    value = 2,
+    value = FOLLOW_COLUMN_OFF,
   },
   follow_line = {
     label = "Follow line",
@@ -172,7 +92,7 @@ StepSequencer.default_options = {
       "Follow line enabled",
       "Follow line disabled"
     },
-    value = 1,
+    value = FOLLOW_LINE_ON,
   },
   grid_mode = {
     label = "Grid Mode",
@@ -187,7 +107,7 @@ StepSequencer.default_options = {
       "Multiple tracks",
       "Single track"
     },
-    value = 1,
+    value = GRID_MODE_MULTIPLE,
   },
   write_mode = {
     label = "Write Mode",
@@ -199,7 +119,7 @@ StepSequencer.default_options = {
       "All time",
       "Only in record mode"
     },
-    value = 1,
+    value = WRITE_MODE_RECORD_OFF,
   },
   play_notes = {
     label = "Play notes",
@@ -213,26 +133,26 @@ StepSequencer.default_options = {
       "No",
       "Yes"
     },
-    value = 1,
+    value = PLAY_NOTES_OFF,
   },  
   display_notes = {
     label = "Display notes",
     description = "Choose if you want to display the note values" 
                 .."\onto the grid buttons in Duplex",
-    on_change = function(inst)
-    end,
+    --on_change = function(inst)
+    --end,
     items = {
       "No",
       "Yes"
     },
-    value = 1,
+    value = DISPLAY_NOTES_OFF,
   },
   page_size = {
     label = "Page size",
     description = "Specify the step size when using paged navigation",
-    on_change = function(inst)
-      inst:_update_track_count()
-    end,
+    --on_change = function(inst)
+    --  inst:_update_track_count()
+    --end,
     items = {
       "Automatic: use available width",
       "1","2","3","4",
@@ -246,9 +166,9 @@ StepSequencer.default_options = {
     label = "Volume steps",
     description = "Specify the step size of the"
                 .."\nvolume-steps button",
-    on_change = function(inst)
-      inst:_update_track_count()
-    end,
+    --on_change = function(inst)
+    --  inst:_update_track_count()
+    --end,
     items = {
       "3","4","6","8","12","16","24","32"
     },
@@ -403,6 +323,8 @@ function StepSequencer:__init(...)
   self._toggle_exempt = { } 
 
   Application.__init(self,...)
+
+  --self:list_mappings_and_options(StepSequencer.available_mappings,StepSequencer.default_options)
 
 end
 
@@ -1876,7 +1798,7 @@ function StepSequencer:_copy_grid_button(lx,ly, btn)
     self._base_volume = note_vol
     self:_draw_volume_slider(note_vol)
     self:_draw_volume_steps(note_vol)
-    self:_draw_level_slider(newval)
+    self:_draw_level_slider(note_vol)
   end
   -- change selected instrument
   if (note.instrument_value < #rns.instruments) then

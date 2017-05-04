@@ -3,35 +3,10 @@
 ============================================================================]]--
 
 --[[--
-Take control of the pattern matrix in Renoise with the endlessly scrollable matrix application. 
-Inheritance: @{Duplex.Application} > Duplex.Application.Matrix 
 
-### Demonstration video
-
-See a video demonstrating this application at [Youtube][1]
-[1]:http://www.youtube.com/watch?v=K_kCaYV_T78
-
-### Changes
-
-  0.95  
-    - Added changelog, more thourough documentation
-
-  0.93  
-    - Inclusion of UIButtonStrip for more flexible control of playback-pos
-    - Utilize "blinking" feature to display a scheduled pattern
-    - "follow_player" mode in Renoise will update the matrix immediately
-
-  0.92  
-    - Removed the destroy_app() method (not needed anymore)
-    - Assign tooltips to the virtual control surface
-
-  0.91  
-    - All mappings are now without dependancies (no more "required" groups)
-
-  0.81  - First release
+Take control of the pattern matrix in Renoise 
 
 --]]
-
 
 --==============================================================================
 
@@ -92,8 +67,7 @@ Matrix.default_options = {
   },
   follow_track = {
     label = "Follow track",
-    description = "Enable this if you want the Matrix to align with " 
-                .."\nthe selected track in Renoise",
+    description = "Align with the selected track in Renoise",
     on_change = function(inst)
       inst:_follow_track()
     end,
@@ -162,10 +136,10 @@ Matrix.available_mappings = {
     description = "Matrix: display previous sequence page"
   },
   next_track_page = {
-    description = "Matrix: display next sequence page"
+    description = "Matrix: display next track page"
   },
   prev_track_page = {
-    description = "Matrix: display previous sequence page"
+    description = "Matrix: display previous track page"
   },
   --[[
   track = {
@@ -272,6 +246,10 @@ function Matrix:_update_slots()
   if (not self.active) then
     return
   end
+
+  if not self._height then
+    return
+  end 
 
   if (not self.mappings.matrix.group_name) then
     return
@@ -607,7 +585,7 @@ end
 
 function Matrix:_update_range()
 
-  if (self._controls._trigger) then
+  if self._controls._trigger then
 
     --local rng = self._controls._trigger:get_range()
     local rng = renoise.song().transport.loop_sequence_range
@@ -656,7 +634,7 @@ function Matrix:_update_position(idx)
   if(self._playing)then
     local play_page = self:_get_play_page()
     -- we are at a visible page?
-    if(self._edit_page == play_page)then
+    if (self._edit_page == play_page) then
       pos_idx = idx-(self._play_page*self._height)
     else
       pos_idx = 0 -- no, hide sequence index 
@@ -1133,6 +1111,10 @@ end
 
 function Matrix:_attach_to_song(song)
   TRACE("Matrix:_attach_to_song()",song)
+
+  if not self._height then
+    LOG("*** Can't attach to song - required property (height) not set")
+  end
 
   local track_idx = renoise.song().selected_track_index
   self._playing = renoise.song().transport.playing

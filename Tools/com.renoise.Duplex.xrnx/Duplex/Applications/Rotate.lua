@@ -3,18 +3,8 @@
 ============================================================================]]--
 
 --[[--
-Rotate a track/pattern upwards or downwards, optionally including automation.
-Inheritance: @{Duplex.Application} > Duplex.Application.Rotate 
 
-This application is an implementation of taktik's [Rotate tool][1]
-[1]: http://tools.renoise.com/tools/rotate-pattern
-
-
-### Changes
-
-  0.98
-    - First release
-
+Rotate a track/pattern, optionally including automation.
 
 --]]
 

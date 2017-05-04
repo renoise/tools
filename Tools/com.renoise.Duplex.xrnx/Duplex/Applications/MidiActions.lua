@@ -3,14 +3,9 @@
 ============================================================================]]--
 
 --[[--
+
 MidiActions will expose most of the standard Renoise mappings to Duplex. 
-Inheritance: @{Duplex.Application} > Duplex.Application.MidiActions 
 
-MidiActions will expose standard Renoise mappings as fully bi-directional mappings, with customizable scaling (exponential, logarithmic, linear) and range. 
-
-By parsing the GlobalMidiActions file, it literally provides access to hundreds of features inside Renoise, such as BPM, LPB, and even UI view presets. You will have to map each feature manually, but only once - once mapped, the target will remain accessible. 
-
-See also: @{Duplex.Applications.MidiActions.Bindings}
 --]]
 
 --==============================================================================

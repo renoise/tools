@@ -3,73 +3,10 @@
 ============================================================================]]--
 
 --[[--
-The Mixer is a generic class for controlling the Renoise mixer, featuring an endlessly scrollable number of tracks.
-Inheritance: @{Duplex.Application} > Duplex.Application.Mixer 
 
-### Grid controller layout
-
-Assigning the levels, mute and/or solo mapping to the same group (the grid) will automaticaly produce the following layout:
-
-    +---- - --- - --- - --- +    +---- +  The master track 
-    |mute1|mute2|mute3|mute4| -> |  m  |  will, when specified, 
-    +---- - --- - --- - --- +    +  a  +  show up in the 
-    |solo1|solo2|solo3|solo4| -> |  s  |  rightmost side 
-    +---- - --- - --- - --- +    +  t  +  and use full height
-    |  l  |  l  |  l  |  l  | -> |  e  |  
-    +  e  +  e  +  e  +  e  +    +  r  +  
-    |  v  |  v  |  v  |  v  |    |     |  
-    +  e  +  e  +  e  +  e  +    +     +  
-    |  l  |  l  |  l  |  l  |    |     |
-    +     +     +     +     +    +     +
-    |  1  |  2  |  3  |  4  |    |     |
-    +---- - --- - --- - --- +    +---- +
-  
-  Note that you can have any number of tracks, but each group (levels, mute and/or solo) needs to contain the same number of parameters.
-
-
-### Other features
-
-- Parameter pick-up: when this feature is enabled, values will not be changed until you move a fader across the threshold point (the current value). This will make it possible to avoid sudden jumps in levels as you are scrolling between pages and adjusting levels.
-
-### Changes
-
-  0.99
-    - UIComponent: when possible, supply mapping as construction argument
-    - UIComponent references stored within self._controls
-
-  0.98
-    - Track navigation removed (delegated to TrackSelector app)
-
-  0.97  
-    - Renoise's 2.7 multi-solo mode supported/visualized
-    - Main display updates now happen in on_idle loop
-    - Ability to embed both mute & solo mappings into grid
-    - New option: "sync_pre_post" (Renoise 2.7+)
-
-  0.96  
-    - Option: paged navigation features (page_size)
-    - Option: offset tracks by X (for the Ohm64 configuration)
-
-  0.95  
-    - The various mappings now have less dependancies 
-    - Feature: hold mute button to toggle solo state for the given track
-    - Applied feedback fix (cascading mutes when solo'ing)
-    - Options: follow_track, mute_mode
-
-  0.92  
-    - Remove the destroy_app() method (not needed anymore)
-    - Assign tooltips to the virtual control surface
-
-  0.90  
-    - Use the new UIComponent.set_pos() method throughout the class
-    - Adjusted colors to degrade better on various devices
-
-  0.81  
-    - First release
-
+Use the Mixer for controlling the Renoise mixer
 
 --]]
-
 
 --==============================================================================
 
@@ -121,8 +58,7 @@ Mixer.default_options = {
   },
   follow_track = {
     label = "Follow track",
-    description = "Enable this if you want the Mixer to align with " 
-                .."\nthe selected track in Renoise",
+    description = "Align with the selected track in Renoise",
     on_change = function(inst)
       inst:_follow_track()
     end,
@@ -163,7 +99,7 @@ Mixer.default_options = {
   },
   record_method = {
     label = "Automation rec.",
-    description = "Determine how to record automation ",
+    description = "Determine if/how to record automation ",
     items = {
       "Disabled, do not record automation",
       "Touch, record only when touched",

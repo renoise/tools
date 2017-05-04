@@ -3,49 +3,16 @@
 ============================================================================]]--
 
 --[[--
-Select the active Renoise track, including shortcuts for master & send tracks.
-Inheritance: @{Duplex.Application} > Duplex.Application.TrackSelector
 
-### Changes
-
-  0.99.4 by Eran Dax Lonker
-    - New mappings: prev/next column
-
-  0.99.3
-    - All "pattern line mappings" has moved into 
-      Duplex.Applications.PatternCursor
-
-  0.98.28
-    - New mappings: “next_track”,”prev_track” (UIButtons, replaces UISpinner)
-    - New mappings: “next_page”,”prev_page” (UIButtons, replaces UISpinner)
-    - FEATURE: Hold prev/next track to select first/last track
-    - New mappings: “next_line”,”prev_line” (UIButtons)
-    - New mappings: “line”(UISlider, replaces UISpinner)
-
-  0.98.21
-    - Fixed: application was updating display when stopped/paused
-
-  0.98  
-    - Deprecated UISpinner controls (exchanged with UIButtons)
-
-  0.97
-    - Allows to set focus to track by index, previous or next track
-    - Supports paged navigation features (previous/next, page size)
-    - Allows direct access to sequencer-track #1, master or send-track #1
-
-  0.96  
-    - First release
-
+Select between tracks, including shortcuts for master & send tracks
 
 --]]
-
 
 --==============================================================================
 
 -- constants
 
 local TRACK_PAGE_AUTO = 1
-
 
 --==============================================================================
 
@@ -193,6 +160,9 @@ function TrackSelector:__init(...)
   self._select_first = nil
 
   Application.__init(self,...)
+
+  self:list_mappings_and_options(TrackSelector.available_mappings,TrackSelector.default_options)
+
 
 end
 

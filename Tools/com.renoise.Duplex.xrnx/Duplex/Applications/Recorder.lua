@@ -3,133 +3,8 @@
 ============================================================================]]--
 
 --[[--
-Record and loop any signal that you feed into Renoise, be that your voice, a guitar etc. 
-Inheritance: @{Duplex.Application} > Duplex.Application.Recorder 
 
-
-### Features
-
-* flexible mappings: record using buttons, dials etc.
-* loop samples with different lengths, allowing for poly-rhythms.
-* supports sessions - restore recorded sessions next song is loaded
-
-### Usage
-
-Recorder operation is designed to be really simple:
-
-* Press a button to select the track and bring up the recording dialog
-* Press again to start recording
-* Once done, the sample is (optionally) looped/synced to the beat, and you’re then instantly able to switch among this, and all the other recordings you’ve made. 
-
-Note that when reading the following description, and using a controller with faders/dials instead of a (button-based) grid controller, you don’t have “sample slots” that you can press - instead, the recorder button is used for this purpose. But otherwise, the description is pretty much the same. 
-
- 1. *Track select stage*
-    Press any recorder button to open/close the recording dialog for the desired 
-    track (you can only record into sequencer tracks). When the recording dialog 
-    has been opened, a sample slot will start to blink slowly. Press the sample 
-    slot to enter the next stage. If your controller supports “hold” events, you 
-    can also hold a recorder button for a moment to start recording as soon as 
-    possible. 
- 
- 2. *Preparation stage*
-    The preparation stage is the time spent before the playback position enters 
-    the beginning of the pattern and begin the actual recording. On the recording 
-    dialog it will read “Starting in XX lines...”, and the selected sample slot 
-    will be  flashing rapidly. As long as you’re in the preparation stage, you can 
-    hit the sample slot again to tell the Recorder that you wish to record only a 
-    single pattern (now, both the the recorder button and the sample slot will 
-    start flashing rapidly). This is known as a short take, and will take you 
-    straight from the preparation stage to the finalizing stage.
- 
- 3. *Recording stage*
-    In the recording stage, you’ll see both the recorder button and the sample 
-    slot blinking slowly, in time with the beat. There is no limit to the length 
-    of the recording, except of course the amount of RAM you computer has 
-    installed, so you can keep it going for as long as you desire. 
-    Press the sample slot again to stop the recording and enter the finalizing 
-    stage.
- 
- 4. *Finalizing stage* 
-    The finalizing stage is the time spent while recording before the playback 
-    reaches the beginning of a pattern. On the recording dialog it will read 
-    “Stopping in XX lines...”, and the recording button will be flashing rapidly. 
-    While you’re in the finalizing stage, pressing the sample slot will write the 
-    yet-to-be sample to the pattern (however, this is only useful if you’ve not 
-    enabled the writeahead mode, which does this automatically for you). 
- 
- 5. *Post-recording stage*
-    Immediately after the recording has been made, the resulting sample is 
-    automatically renamed, and the recording dialog is closed. We’re ready for 
-    another recording. 
-
-> Hint: you can choose another destination track for the recording, or abort the recording at any time. Use the recorder button to select another track, and turn a dial/select an existing sample slot to abort the recording.
-
-
-### Mappings
-
-  recorders - (UIButton...) toggle recording mode for track X
-  sliders   - (UISlider...) sample-select sliders, assignable to grid controller
-
-
-### Options
-
-  loop_mode     - determine the looping mode of recordings 
-  beat_sync     - determine if the recording should be synced to the beat
-  autostart     - specify the number of lines for the autostart note
-  writeahead    - (obsolete) determine if sample playback should start after each recording
-  trigger_mode  - toggle between continuous/05xx, or normal mode
-  follow_track  - align with the selected track in Renoise
-  page_size     - specify step size when using paged navigation
-
-### Notes
-
-  - The Recorder has been designed for recording samples that are synced to the 
-    pattern length, creating a new instrument for each recording. If you choose 
-    other settings, the results may be unpredictable. 
-  - Please be careful when changing the tempo while recording, as this will 
-    break the beat-sync of samples.
-  - When you record something using the Recorder, each recording is named 
-    something like “Track #2 - Recording #1” - please do not edit these names, 
-    as they are used for keeping track of the recordings you have made.
-  - Autostart is an extra note that's being written to the pattern immediately
-    after a new recording has been made. Because Renoise needs a little moment
-    to actually make the sample available for playback, the autostart option 
-    has been added so you can adjust how quickly we should attempt to start
-    playback. Adjust the amount so it matches your setup: the higher tempo your
-    track is, the higher autostart value you need (for reference, with a delay 
-    of one line at LPB4, autostart will break at around 185 BPM)
-  - Due to the way the scripting API works, some notifiers will only work when 
-    specific parts of the interface are visible. For example, the Recorder is 
-    automatically selecting active recordings as playback is progressing, but we 
-    never get the notification that the pattern has changed while in the 
-    instrument/sample editor
-
-### Changes
-
-  0.98.28
-    - Fixed issue with “autostart” option (broke the recording workflow)
-
-  0.98.18
-    - Fixed: under certain conditions, could throw error on startup
-
-  0.98
-    - First-run message explaining how to set up a recording
-    - Detect v3 API and use alternate FX commands
-
-  0.97
-    - Any number of tracks supported, option to follow current track
-    - Supports paged navigation features (previous/next, page size)
-    - Detect when tracks are inserted/removed/swapped, maintain references
-
-  0.96  
-    - Detect when tracks are swapped/inserted/removed
-    - Full undo support (tracks changes to pattern and recordings)
-    - Unlimited number of tracks (paged navigation)
-    - Option: page_size & follow_track
-
-  0.95  
-    - First release
-
+Record and loop any signal that you feed into Renoise
 
 --]]
 
@@ -379,6 +254,8 @@ function Recorder:__init(...)
   self.recorder_process = select(1,...)
 
   Application.__init(self,...)
+
+  --self:list_mappings_and_options(Recorder.available_mappings,Recorder.default_options)
 
 end
 
