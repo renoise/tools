@@ -116,7 +116,7 @@ duplex_configurations:insert {
           group_name = "Controls",
           index = 6,
         },
-        metronome_toggle = {
+        edit_mode = {
           group_name = "Controls",
           index = 5,
         },
@@ -124,7 +124,7 @@ duplex_configurations:insert {
           group_name= "Controls",
           index = 7,
         },
-        block_loop = {
+        loop_pattern = {
           group_name = "Controls",
           index = 8,
         },
