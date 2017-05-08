@@ -1,6 +1,6 @@
 --==============================================================================
 
---- Mlrx_note - a struct for logical note-objects in mlrx
+--- Mlrx_note - logical note-objects in mlrx
 
 class 'Mlrx_note' 
 
