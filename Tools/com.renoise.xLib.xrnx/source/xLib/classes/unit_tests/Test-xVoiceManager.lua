@@ -21,14 +21,14 @@ fn = function()
   local scheduled_at = nil
 
   -- make sure we have two instruments and two sequencer tracks
-  if (#renoise.song().instruments < 2) 
-    or (xTrack.get_track_count(renoise.Track.TRACK_TYPE_SEQUENCER) < 2)
+  if (#rns.instruments < 2) 
+    or (rns.sequencer_track_count < 2)
   then
     local str_msg = "The xVoiceManager unit-test will create and remove instruments/tracks during the test - do you want to proceed?"
     local choice = renoise.app():show_prompt("Unit test",str_msg,{"OK","Cancel"})
     if (choice == "OK") then
-      renoise.song():insert_instrument_at(2)
-      renoise.song():insert_track_at(2)
+      rns:insert_instrument_at(2)
+      rns:insert_track_at(2)
     else
       return
     end
