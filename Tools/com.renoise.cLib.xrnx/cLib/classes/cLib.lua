@@ -436,24 +436,6 @@ function cLib.parse_str(str)
 end
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Try serializing a value or return "???"
--- the result should be a valid, quotable string
--- @param obj, value or object
--- @return string
-
-function cLib.serialize_object(obj)
-  local succeeded, result = pcall(tostring, obj)
-  if succeeded then
-    result=string.gsub(result,"\n","\\n")    -- return code
-    result=string.gsub(result,'\\"','\\\\"') -- double-quotes
-    result=string.gsub(result,'"','\\"')     -- single-quotes
-    return result 
-  else
-   return "???"
-  end
-end
-
----------------------------------------------------------------------------------------------------
 -- Check if table values are all identical
 -- (useful e.g. for detecting if a color is tinted)
 -- @return boolean
@@ -494,6 +476,24 @@ function cLib.table_count(t)
     return n
   else
     return nil
+  end
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Try serializing a value or return "???"
+-- the result should be a valid, quotable string
+-- @param obj, value or object
+-- @return string
+
+function cLib.serialize_object(obj)
+  local succeeded, result = pcall(tostring, obj)
+  if succeeded then
+    result=string.gsub(result,"\n","\\n")    -- return code
+    result=string.gsub(result,'\\"','\\\\"') -- double-quotes
+    result=string.gsub(result,'"','\\"')     -- single-quotes
+    return result 
+  else
+   return "???"
   end
 end
 
