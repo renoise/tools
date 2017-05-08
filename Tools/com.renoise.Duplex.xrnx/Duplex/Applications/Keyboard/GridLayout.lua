@@ -94,8 +94,6 @@ end
 function GridLayout:update_grid()
   TRACE("GridLayout:update_grid()")
 
-
-  local rns = renoise.song()
   local instr_idx = self.kb:get_instrument_index()
   local instr = rns.instruments[instr_idx]
 
