@@ -54,12 +54,13 @@ end
 --------------------------------------------------------------------------------
 -- convert r,g,b table to string representation (e.g. "0xFFCC66")
 -- @param t (table)
+-- @param [prefix], string - e.g. "#" to return CSS-style color 
 -- @return string
 
-function cColor.color_table_to_hex_string(t)
+function cColor.color_table_to_hex_string(t,prefix)
 
   local val = cColor.color_table_to_value(t)
-  return cColor.value_to_hex_string(val)
+  return cColor.value_to_hex_string(val,prefix)
 
 end
 
@@ -78,10 +79,14 @@ end
 --------------------------------------------------------------------------------
 -- convert value to hexadecimal string (e.g. 0xFFCC66)
 -- @param val (int)
+-- @param [prefix], string - e.g. "#" to return CSS-style color 
 -- @return string
 
-function cColor.value_to_hex_string(val)
-  return ("0x%.6X"):format(val)
+function cColor.value_to_hex_string(val,prefix)
+  if not prefix then 
+    prefix = "0x"
+  end
+  return ("%s%.6X"):format(prefix,val)
 end
 
 --------------------------------------------------------------------------------
