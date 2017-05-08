@@ -67,8 +67,8 @@ function Metronome:_build_app()
   local map = self.mappings.toggle
   local c = UIButton(self,map)
   c.on_press = function(obj)
-    local enabled = renoise.song().transport.metronome_enabled
-    renoise.song().transport.metronome_enabled = not enabled
+    local enabled = rns.transport.metronome_enabled
+    rns.transport.metronome_enabled = not enabled
     self:update()
   end
   self._toggle = c
@@ -86,7 +86,7 @@ end
 
 function Metronome:update()
   if self._toggle then
-    if renoise.song().transport.metronome_enabled then
+    if rns.transport.metronome_enabled then
       self._toggle:set(self.palette.enabled)
     else
       self._toggle:set(self.palette.disabled)
@@ -109,7 +109,7 @@ end
 
 function Metronome:_attach_to_song()
 
-  renoise.song().transport.metronome_enabled_observable:add_notifier(
+  rns.transport.metronome_enabled_observable:add_notifier(
     function()
       self:update()
     end
