@@ -153,7 +153,7 @@ end
 function PatternSequence:_attach_to_song()
   TRACE("PatternSequence:_attach_to_song()")
 
-  renoise.song().selected_sequence_index_observable:add_notifier(
+  rns.selected_sequence_index_observable:add_notifier(
     function(e)
       --TRACE("PatternSequence: selected_sequence_index_observable fired...")
       self._update_pos_requested = true
@@ -182,7 +182,7 @@ end
 
 function PatternSequence:_get_pattern(idx)
 
-  local patt_seq = renoise.song().sequencer.pattern_sequence
+  local patt_seq = rns.sequencer.pattern_sequence
   return patt_seq[idx] 
 
 end
@@ -195,7 +195,7 @@ end
 function PatternSequence:_update_prev_next()
 
   if self.controls.previous then
-    local new_idx = renoise.song().selected_sequence_index-1
+    local new_idx = rns.selected_sequence_index-1
     local patt = self:_get_pattern(new_idx)
     if patt then
       self.controls.previous:set(self.palette.previous_enabled)
@@ -204,7 +204,7 @@ function PatternSequence:_update_prev_next()
     end
   end
   if self.controls.next then
-    local new_idx = renoise.song().selected_sequence_index+1
+    local new_idx = rns.selected_sequence_index+1
     local patt = self:_get_pattern(new_idx)
     if patt then
       self.controls.next:set(self.palette.next_enabled)
@@ -220,10 +220,10 @@ end
 
 function PatternSequence:_display_next()
 
-  local new_idx = renoise.song().selected_sequence_index+1
+  local new_idx = rns.selected_sequence_index+1
   local patt = self:_get_pattern(new_idx)
   if patt then
-    renoise.song().selected_sequence_index = new_idx
+    rns.selected_sequence_index = new_idx
   end
 
 end
@@ -234,10 +234,10 @@ end
 
 function PatternSequence:_display_previous()
 
-  local new_idx = renoise.song().selected_sequence_index-1
+  local new_idx = rns.selected_sequence_index-1
   local patt = self:_get_pattern(new_idx)
   if patt then
-    renoise.song().selected_sequence_index = new_idx
+    rns.selected_sequence_index = new_idx
   end
 
 end
@@ -248,7 +248,7 @@ end
 
 function PatternSequence:_display_first()
 
-  renoise.song().selected_sequence_index = 1
+  rns.selected_sequence_index = 1
 
 end
 
@@ -258,10 +258,10 @@ end
 
 function PatternSequence:_display_last()
 
-  local new_idx = #renoise.song().sequencer.pattern_sequence
+  local new_idx = #rns.sequencer.pattern_sequence
   local patt = self:_get_pattern(new_idx)
   if patt then
-    renoise.song().selected_sequence_index = new_idx
+    rns.selected_sequence_index = new_idx
   end
 
 end
