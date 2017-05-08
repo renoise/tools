@@ -162,7 +162,7 @@ function Device:quantize_color(color,colorspace)
 
 
   -- if monochrome, average color above 50% is considered lit
-  if ((#colorspace==1) and (colorspace[1] == 1)) then
+  if (is_monochrome(colorspace)) then
     local avg = (color[1]+color[2]+color[3])/3
     if (avg > 0x80) then 
       return {0xff,0xff,0xff}
