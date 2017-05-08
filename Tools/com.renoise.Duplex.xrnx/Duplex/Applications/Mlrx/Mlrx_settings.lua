@@ -13,8 +13,8 @@ Mlrx: static methods for storing settings in song comments
 class 'Mlrx_settings' (Application)
 
 Mlrx_settings.__VERSION = "0.99.0"
-Mlrx_settings.SETTINGS_TOKEN_START = "-- begin mlrx settings"
-Mlrx_settings.SETTINGS_TOKEN_END = "-- end mlrx_settings"
+Mlrx_settings.TOKEN_START = "-- begin mlrx settings"
+Mlrx_settings.TOKEN_END = "-- end mlrx_settings"
 
 --------------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ function Mlrx_settings.store_local_settings(mlrx)
   }
 
   xSongSettings.store(config,
-    Mlrx_settings.SETTINGS_TOKEN_START,Mlrx_settings.SETTINGS_TOKEN_END)
+    Mlrx_settings.TOKEN_START,Mlrx_settings.TOKEN_END)
 
 end
 
@@ -98,7 +98,6 @@ function Mlrx_settings.retrieve_local_settings(mlrx)
           for k3,v3 in pairs(v2) do
             local trk = mlrx.tracks[k2]
             if trk then 
-              --print("k3,v3",k3,v3)
               if (k3 == "group_index") then
                 mlrx:assign_track(v3,k2,true)
               elseif (k3 == "velocity") then
@@ -150,9 +149,11 @@ function Mlrx_settings.retrieve_local_settings(mlrx)
 
   end
 
-  local config,err = xSongSettings.retrieve(Mlrx_settings.SETTINGS_TOKEN_START,Mlrx_settings.SETTINGS_TOKEN_END)
-  if not config and err then 
-    renoise.app():show_status(err)  
+  local config,err = xSongSettings.retrieve(Mlrx_settings.TOKEN_START,Mlrx_settings.TOKEN_END)
+  if not config then 
+    if err then
+      renoise.app():show_status(err)  
+    end
     return
   end 
 
