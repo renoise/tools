@@ -3,23 +3,8 @@
 ============================================================================]]--
 
 --[[--
+
 The StateController handles states within a display/controlmap
-
-.
-#
-
-A state can toggle any part of a control-map on/off while a device configuration is running. They represent a separate mapping layer, independantly of the device configuration, and are especially useful when you are running out of space on the controller - or when an application does not provide you with enough flexibility. 
-
-Adding a state is done via the special <Stage> tag - however, a state will not do anything by itself. You still need to associate the state with one or more 'triggers', buttons that share their value with the state. 
-
-Once a state has been defined, you can begin prefixing target nodes, using the state's name as the identifier - for example, <MyState:Param>
-
-Most nodes can be prefixed: Group, Row, Column and Param (but not SubParam). For a detailed description of all supported attributes for <State> nodes, please refer to the ControlMap class
-
-### Changes
-
-  0.99.3
-    - First release
 
 --]]
 
