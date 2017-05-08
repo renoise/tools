@@ -272,7 +272,7 @@ function BrowserProcess:instantiate(configuration)
       if app_node then
         if app_node.options and app_node.options:property(k) then
           options[k].value = app_node.options:property(k).value
-          if table_find(hidden,k) then
+          if table.find(hidden,k) then
             options[k].hidden = true
           end
         end
