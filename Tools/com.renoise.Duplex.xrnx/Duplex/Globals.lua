@@ -207,7 +207,10 @@ end
 function is_monochrome(colorspace)
   if table.is_empty(colorspace) then
     return true
+  elseif (#colorspace==1) and (colorspace[1] == 1) then 
+    return true
   end
+  return false
 end
 
 --- remove channel info from value-string
