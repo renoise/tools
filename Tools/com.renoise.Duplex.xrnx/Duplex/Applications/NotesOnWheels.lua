@@ -320,7 +320,7 @@ function NotesOnWheels:__init(...)
   self.touched = false
 
   --- the song is playing? check via idle loop
-  self._playing = renoise.song().transport.playing
+  self._playing = rns.transport.playing
 
   --- realtime position 
   self.realtime_pos = nil
@@ -387,7 +387,7 @@ function NotesOnWheels:__init(...)
   self.write_mode = false
 
   if (self.options.edit_sync.value == EDIT_SYNC_ON) then
-    self.write_mode = renoise.song().transport.edit_mode
+    self.write_mode = rns.transport.edit_mode
   end
   
   --- (renoise.Midi.MidiDevice) 
@@ -588,13 +588,13 @@ function NotesOnWheels:output_sequence(seq_step,mask_mode,stream,force)
   local patt_idx = nil
 
   if self._playing then
-    local pos = renoise.song().transport.playback_pos
+    local pos = rns.transport.playback_pos
     begin_line = pos.line
-    patt_idx = renoise.song().sequencer.pattern_sequence[pos.sequence]
+    patt_idx = rns.sequencer.pattern_sequence[pos.sequence]
   else
-    local pos = renoise.song().transport.edit_pos
+    local pos = rns.transport.edit_pos
     begin_line = pos.line
-    patt_idx = renoise.song().selected_pattern_index
+    patt_idx = rns.selected_pattern_index
   end
 
   -- write sequence to pattern
@@ -618,8 +618,8 @@ function NotesOnWheels:on_idle()
   local has_written = false
 
   local ctrl = self._controls.write
-  local playing = renoise.song().transport.playing
-  local pos = renoise.song().transport.playback_pos
+  local playing = rns.transport.playing
+  local pos = rns.transport.playback_pos
 
   if playing then 
     -- realtime position: check if changed
@@ -649,8 +649,8 @@ function NotesOnWheels:on_idle()
       local arrived = true
       -- if looped, we need to check that we've played the entire pattern
       -- (we have no 'pattern playback restarted' notifier, so this is a workaround)
-      if (renoise.song().transport.loop_pattern) then
-        local curr_line = renoise.song().selected_line_index
+      if (rns.transport.loop_pattern) then
+        local curr_line = rns.selected_line_index
         if (self.last_line<=curr_line) then
           arrived = false
         end
@@ -665,10 +665,10 @@ function NotesOnWheels:on_idle()
 
   -- periodic output & write button blinking is 
   -- controlled by the playback line number 
-  local lpb = renoise.song().transport.lpb
+  local lpb = rns.transport.lpb
   local pos = playing 
-    and renoise.song().transport.playback_pos 
-    or renoise.song().transport.edit_pos
+    and rns.transport.playback_pos 
+    or rns.transport.edit_pos
   local blink = (math.floor((((pos.line-2)/lpb)+1)%2)==1)
   local changed = false
   if (blink~=self._blink) then
@@ -858,7 +858,7 @@ function NotesOnWheels:on_keypress(key)
         local length = self.seq.num_steps+1
         if (length<=12) then
           -- add note to sequence
-          local oct = renoise.song().transport.octave
+          local oct = rns.transport.octave
           local note_oct = (oct*12)+note-12
           self.seq:set_pitch(length,note_oct,true,true)
           self.seq:set_num_steps(length,true)
@@ -921,11 +921,11 @@ function NotesOnWheels:_attach_to_song()
   TRACE("NotesOnWheels:_attach_to_song")
   
   -- edit sync 
-  renoise.song().transport.edit_mode_observable:add_notifier(
+  rns.transport.edit_mode_observable:add_notifier(
     function()
       TRACE("NotesOnWheels:edit_mode_observable fired...")
         if (self.options.edit_sync.value == EDIT_SYNC_ON) then
-          self.write_mode = renoise.song().transport.edit_mode
+          self.write_mode = rns.transport.edit_mode
           if (self._controls.write) then
             if self.write_mode then
               self._controls.write:set(self.palette.write_off)
@@ -942,7 +942,7 @@ function NotesOnWheels:_attach_to_song()
   )
 
   -- when track is changed
-  renoise.song().selected_track_index_observable:add_notifier(
+  rns.selected_track_index_observable:add_notifier(
     function()
       TRACE("NotesOnWheels:selected_track_index_observable fired...")
       self.track_changed = true
@@ -951,7 +951,7 @@ function NotesOnWheels:_attach_to_song()
 
 
   -- when instrument is changed, 
-  renoise.song().selected_instrument_observable:add_notifier(
+  rns.selected_instrument_observable:add_notifier(
     function()
       TRACE("NotesOnWheels:selected_instrument_observable fired...")
       self:_attach_to_instrument()
@@ -971,8 +971,8 @@ end
 function NotesOnWheels:_attach_to_instrument(new_song)
   TRACE("NotesOnWheels:_attach_to_instrument",new_song)
 
-  local inst_idx = renoise.song().selected_instrument_index
-  renoise.song().instruments[inst_idx].sample_mappings_observable[1]:add_notifier(
+  local inst_idx = rns.selected_instrument_index
+  rns.instruments[inst_idx].sample_mappings_observable[1]:add_notifier(
     function()
       TRACE("NotesOnWheels:sample_mappings_observable fired...")
       self:detect_slices()
@@ -991,8 +991,8 @@ end
 function NotesOnWheels:detect_slices()
   TRACE("NotesOnWheels:detect_slices()")
 
-  local inst_idx = renoise.song().selected_instrument_index
-  local mappings = renoise.song().instruments[inst_idx].sample_mappings[1] -- Note On Layer
+  local inst_idx = rns.selected_instrument_index
+  local mappings = rns.instruments[inst_idx].sample_mappings[1] -- Note On Layer
   if not mappings[1] or not mappings[1].read_only then
     -- not sliced
     self.number_of_slices = 0
@@ -1201,7 +1201,7 @@ function NotesOnWheels:_build_app()
             -- if we have reached the minimum value while going downward
             local ctrl = self._controls.multi_sliders[control_index]
             local pitch_val = self.seq.pitch_steps[control_index]
-            if (pitch_val==121 and compare(obj.value,0,10)) then
+            if (pitch_val==121 and cLib.float_compare(obj.value,0,10)) then
               pitch_val = 0
             end
             self.seq:update_pitch_ctrl(pitch_val,ctrl)
@@ -1610,10 +1610,10 @@ function NotesOnWheels:_build_app()
         self:disable_write_mode()
         self.autolearn = true
         self.just_entered_autolearn = true
-        print("on_hold() - self.just_entered_autolearn",self.just_entered_autolearn)
+        --print("on_hold() - self.just_entered_autolearn",self.just_entered_autolearn)
       end
       c.on_release = function()
-        print("on_release() - self.just_entered_autolearn",self.just_entered_autolearn)
+        --print("on_release() - self.just_entered_autolearn",self.just_entered_autolearn)
         if not self.just_entered_autolearn then
           self.autolearn = false
           self._controls.learn:set(self.palette.learn_off)
@@ -2472,7 +2472,7 @@ function NOW_Sequence:extend()
     return false
   end
 
-  local num_ticks = self.num_lines * renoise.song().transport.tpl
+  local num_ticks = self.num_lines * rns.transport.tpl
 
   for i=1,self.num_steps do
 
@@ -2559,7 +2559,7 @@ end
 -- calculate the amount of retriggers
 -- @return (int) between 0-MAX_RETRIGS
 function NOW_Sequence:get_num_retrigs(val)
-  local tmp = renoise.song().transport.tpl/val
+  local tmp = rns.transport.tpl/val
   return cLib.clamp_value(math.floor(tmp*self.num_lines),0,NOW_Sequence.MAX_RETRIGS)
 end
 
@@ -2567,10 +2567,10 @@ end
 -- (used when writing to pattern)
 -- @return int
 function NOW_Sequence:get_pattseq_pos(val)
-  if renoise.song().transport.playing then
-    return renoise.song().transport.playback_pos.sequence
+  if rns.transport.playing then
+    return rns.transport.playback_pos.sequence
   else
-    return renoise.song().selected_sequence_index
+    return rns.selected_sequence_index
   end
 end
 
@@ -2588,7 +2588,7 @@ end
 -- @return int
 function NOW_Sequence:fast_retrigger(val)
   --TRACE("NOW_Sequence:fast_retrigger",val)
-  local tmp = renoise.song().transport.tpl/val
+  local tmp = rns.transport.tpl/val
   local frac = (cLib.fraction(tmp)>0) and 1 or 0
   return self.RETRIG_PAN_LOWER+math.floor(tmp)+frac
 end
@@ -2599,7 +2599,7 @@ end
 function NOW_Sequence:write_note(val,note_column,skip_instr)
   --TRACE("NOW_Sequence:write_note",val,note_column,skip_instr)
   --local val = self.pitch_steps[offset2]
-  local instr_index = renoise.song().selected_instrument_index-1
+  local instr_index = rns.selected_instrument_index-1
   if not val or (val==-1) then
     -- skip undefined notes
   elseif(val>120) then
@@ -2640,7 +2640,7 @@ end
 -- @return number of ticks
 function NOW_Sequence:notecut_to_ticks(lines,val)
   --TRACE("NOW_Sequence:notecut_to_ticks",lines,val)
-	return (lines*renoise.song().transport.tpl)+(val-self.RETRIG_PAN_LOWER)
+	return (lines*rns.transport.tpl)+(val-self.RETRIG_PAN_LOWER)
 end
 
 -- quantize value by the amount specified in options
@@ -2687,8 +2687,8 @@ end
 -- called when data is written to the pattern to ensure that columns are visible
 function NOW_Sequence:show_note_column(idx)
   --TRACE("NOW_Sequence:show_note_column",idx)
-	if idx > renoise.song().selected_track.visible_note_columns then
-		renoise.song().selected_track.visible_note_columns = idx
+	if idx > rns.selected_track.visible_note_columns then
+		rns.selected_track.visible_note_columns = idx
 	end
 end
 
@@ -2710,7 +2710,7 @@ function NOW_Sequence:detect_steps(patt_idx,line_idx,col_idx,seq_idx)
 
   while not done do
 
-    local patt = renoise.song().patterns[patt_idx]
+    local patt = rns.patterns[patt_idx]
     if not patt then
       --print("done E - no pattern with this pattern index ",patt_idx)
       done = true
@@ -2718,9 +2718,9 @@ function NOW_Sequence:detect_steps(patt_idx,line_idx,col_idx,seq_idx)
     end
     --print("about to iterate through lines in this pattern:",patt_idx,patt.number_of_lines)
 
-    local iter = renoise.song().pattern_iterator:lines_in_pattern_track(
+    local iter = rns.pattern_iterator:lines_in_pattern_track(
       patt_idx,
-      renoise.song().selected_track_index);
+      rns.selected_track_index);
     for pos,line in iter do
       if done then
         break
@@ -2761,7 +2761,7 @@ function NOW_Sequence:detect_steps(patt_idx,line_idx,col_idx,seq_idx)
         -- reached last line, check next pattern
         seq_idx = seq_idx+1
         expected_line = expected_line-patt.number_of_lines
-        patt_idx = renoise.song().sequencer.pattern_sequence[seq_idx]
+        patt_idx = rns.sequencer.pattern_sequence[seq_idx]
         
       end
 
@@ -2785,23 +2785,23 @@ end
 function NOW_Sequence:detect_trigger(patt_idx,line_idx,col_idx,forwards,seq_idx)
   TRACE("NOW_Sequence:detect_trigger",patt_idx,line_idx,col_idx,forwards,seq_idx)
 
-  local inst_idx = renoise.song().selected_instrument_index
+  local inst_idx = rns.selected_instrument_index
   local trigger_line = nil -- the line number
   local tmp_seq_idx = seq_idx
   local done = false
 
   while not done do
 
-    local patt = renoise.song().patterns[patt_idx]
+    local patt = rns.patterns[patt_idx]
     if not patt then
       --print("done B - no pattern with this pattern index ",patt_idx)
       done = true
       break
     end
 
-    local iter = renoise.song().pattern_iterator:lines_in_pattern_track(
+    local iter = rns.pattern_iterator:lines_in_pattern_track(
       patt_idx,
-      renoise.song().selected_track_index);
+      rns.selected_track_index);
     for pos,line in iter do
       if done then
         break
@@ -2839,7 +2839,7 @@ function NOW_Sequence:detect_trigger(patt_idx,line_idx,col_idx,forwards,seq_idx)
     end
 
     tmp_seq_idx = (forwards) and tmp_seq_idx+1 or tmp_seq_idx-1
-    patt_idx = renoise.song().sequencer.pattern_sequence[tmp_seq_idx]
+    patt_idx = rns.sequencer.pattern_sequence[tmp_seq_idx]
 
   end
 
@@ -2864,16 +2864,16 @@ function NOW_Sequence:detect_spacing(patt_idx,line_idx,col_idx,seq_idx)
 
   while not done do
 
-    local patt = renoise.song().patterns[patt_idx]
+    local patt = rns.patterns[patt_idx]
     if not patt then
       --print("done B - no pattern with this pattern index ",patt_idx)
       done = true
       break
     end
 
-    local iter = renoise.song().pattern_iterator:lines_in_pattern_track(
+    local iter = rns.pattern_iterator:lines_in_pattern_track(
       patt_idx,
-      renoise.song().selected_track_index);
+      rns.selected_track_index);
     for pos,line in iter do
       if done then
         break
@@ -2932,7 +2932,7 @@ function NOW_Sequence:detect_spacing(patt_idx,line_idx,col_idx,seq_idx)
     line_idx = 1
     seq_idx = seq_idx+1
     triggered_line = -(patt.number_of_lines-triggered_line)
-    patt_idx = renoise.song().sequencer.pattern_sequence[seq_idx]
+    patt_idx = rns.sequencer.pattern_sequence[seq_idx]
     --print("check this pattern",patt_idx)
 
   end
@@ -2954,12 +2954,12 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
   TRACE("NOW_Sequence:write_to_pattern",patt_idx,begin_line,seq_step,mask_type,stream,recursive,line_offset)
 
   -- prevent from writing in master/send track 
-	if (renoise.song().selected_track_index>=xTrack.get_master_track_index()) then
+	if (rns.selected_track_index>=xTrack.get_master_track_index()) then
 		return
 	end
 
-  local pattern = renoise.song().patterns[patt_idx]
-	local tpl = renoise.song().transport.tpl
+  local pattern = rns.patterns[patt_idx]
+	local tpl = rns.transport.tpl
 	local offset = nil
 	local set_note,set_gate,set_offset,set_velocity,set_retrig
   local seq_idx = self:get_pattseq_pos()
@@ -2973,9 +2973,9 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
 		writeahead_length = renoise.Pattern.MAX_NUMBER_OF_LINES
   -- C) stream mode, output in smaller segments,
   --    based on current tempo, lines per beat
-  elseif stream or renoise.song().transport.playing then
-    local bpm = renoise.song().transport.bpm
-    local lpb = renoise.song().transport.lpb
+  elseif stream or rns.transport.playing then
+    local bpm = rns.transport.bpm
+    local lpb = rns.transport.lpb
     writeahead_length = math.ceil(math.max(2,(bpm*lpb)/80))
 	end
   --print("writeahead_length",writeahead_length)
@@ -3090,9 +3090,9 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
     end
   end
 
-	local iter = renoise.song().pattern_iterator:lines_in_pattern_track(
+	local iter = rns.pattern_iterator:lines_in_pattern_track(
 		patt_idx,
-		renoise.song().selected_track_index);
+		rns.selected_track_index);
 	for pos,line in iter do
     -- begin output from this line
 		if(pos.line>=begin_line) then
@@ -3315,10 +3315,10 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
               self:show_note_column(col_index)
             end
             if show_delay_column then
-              renoise.song().selected_track.delay_column_visible = true
+              rns.selected_track.delay_column_visible = true
             end
             if gates_set[col_index] or retrig_set then
-              renoise.song().selected_track.panning_column_visible = true
+              rns.selected_track.panning_column_visible = true
             end
 
 					end
@@ -3387,15 +3387,15 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
     if ((pos.line+1) > pattern.number_of_lines) then
       if not recursive then
         local next_pattern = nil
-        local seq_loop_end = renoise.song().transport.loop_end.sequence
-        local next_patt_idx = renoise.song().sequencer.pattern_sequence[seq_idx+1]
+        local seq_loop_end = rns.transport.loop_end.sequence
+        local next_patt_idx = rns.sequencer.pattern_sequence[seq_idx+1]
         --line_offset = 0
-        if (renoise.song().transport.loop_pattern) then
+        if (rns.transport.loop_pattern) then
           -- same pattern
           self.owner.pending_line_offset = self:compute_offset(pattern.number_of_lines,line_offset) 
           self.owner.pending_seq_pos = seq_idx
-          next_patt_idx = renoise.song().sequencer.pattern_sequence[seq_idx]
-          next_pattern = renoise.song().patterns[next_patt_idx]
+          next_patt_idx = rns.sequencer.pattern_sequence[seq_idx]
+          next_pattern = rns.patterns[next_patt_idx]
           --print("A) looped pattern - self.owner.pending_line_offset",self.owner.pending_line_offset,"next_patt_idx",next_patt_idx)
 
         elseif (seq_loop_end==seq_idx) then
@@ -3404,7 +3404,7 @@ function NOW_Sequence:write_to_pattern(patt_idx,begin_line,seq_step,mask_type,st
           --print("C) write to next pattern")
           self.owner.pending_line_offset = self:compute_offset(pattern.number_of_lines,line_offset) 
           self.owner.pending_seq_pos = seq_idx+1
-          next_pattern = renoise.song().patterns[next_patt_idx]
+          next_pattern = rns.patterns[next_patt_idx]
         else
           --print("D) skip end of song")
         end
@@ -3421,13 +3421,13 @@ end
 function NOW_Sequence:learn_sequence()
   TRACE("NOW_Sequence:learn_sequence()")
 
-  local pos = renoise.song().transport.edit_pos
-  local pattern = renoise.song().selected_pattern
-  local patt_idx = renoise.song().selected_pattern_index
-  local track_idx = renoise.song().selected_track_index
+  local pos = rns.transport.edit_pos
+  local pattern = rns.selected_pattern
+  local patt_idx = rns.selected_pattern_index
+  local track_idx = rns.selected_track_index
 	local begin_line = pos.line
   local line_offset = 0
-  local seq_idx = renoise.song().selected_sequence_index --self:get_pattseq_pos()
+  local seq_idx = rns.selected_sequence_index --self:get_pattseq_pos()
 
   -- the actual sequence/pattern index (can be prior to out current pattern)
   local tmp_seq_idx = seq_idx 
@@ -3455,7 +3455,7 @@ function NOW_Sequence:learn_sequence()
   if last_trigger then
     --print("last_trigger",last_trigger)
     -- detect spacing
-    tmp_patt_idx = renoise.song().sequencer.pattern_sequence[tmp_seq_idx]
+    tmp_patt_idx = rns.sequencer.pattern_sequence[tmp_seq_idx]
     local spacing = self:detect_spacing(tmp_patt_idx,last_trigger,1,tmp_seq_idx)
     --print("spacing",spacing)
     if spacing then
@@ -3527,16 +3527,16 @@ function NOW_Sequence:learn_sequence()
 
   while not done do
 
-    local pattern = renoise.song().patterns[tmp_patt_idx]
+    local pattern = rns.patterns[tmp_patt_idx]
     if not pattern then
       --print("learn A - no pattern with this pattern index ",tmp_patt_idx)
       done = true
       break
     end
 
-    local iter = renoise.song().pattern_iterator:lines_in_pattern_track(
+    local iter = rns.pattern_iterator:lines_in_pattern_track(
       tmp_patt_idx,
-      renoise.song().selected_track_index);
+      rns.selected_track_index);
     for pos,line in iter do
       if(pos.line>=begin_line) then
         if(readahead_length<0) then
@@ -3636,8 +3636,8 @@ function NOW_Sequence:learn_sequence()
                         if (pos.line>next_trigger) then
                           -- look from the most recent trigger and forth...
                           --print("look back from next_trigger->seq_line",next_trigger,seq_line)
-                          local track_idx = renoise.song().selected_track_index
-                          local track = renoise.song().patterns[tmp_patt_idx].tracks[track_idx]
+                          local track_idx = rns.selected_track_index
+                          local track = rns.patterns[tmp_patt_idx].tracks[track_idx]
                           for i=next_trigger+1,next_trigger+self.num_lines-1 do
                             if (i>pattern.number_of_lines) then
                               break
@@ -3695,7 +3695,7 @@ function NOW_Sequence:learn_sequence()
     end -- patt iterator
     --print("steps_learned,self.num_steps",steps_learned,self.num_steps)
     if (steps_learned<self.num_steps) then
-      if not renoise.song().transport.loop_pattern then
+      if not rns.transport.loop_pattern then
         tmp_seq_idx = tmp_seq_idx+1
       end
       if (tmp_seq_idx>=seq_idx) then
@@ -3703,7 +3703,7 @@ function NOW_Sequence:learn_sequence()
       end
       begin_line = 1
       line_offset = self:compute_offset(pattern.number_of_lines,line_offset) 
-      tmp_patt_idx = renoise.song().sequencer.pattern_sequence[tmp_seq_idx]
+      tmp_patt_idx = rns.sequencer.pattern_sequence[tmp_seq_idx]
       --print("*** not yet done learning - proceed to this pattern ",tmp_patt_idx)
     else
       --print("done G - completed searching pattern",tmp_patt_idx)
@@ -3715,8 +3715,8 @@ function NOW_Sequence:learn_sequence()
   end -- not done
 
   -- set active instrument
-  if renoise.song().instruments[detected_instr_index] then
-    renoise.song().selected_instrument_index = detected_instr_index
+  if rns.instruments[detected_instr_index] then
+    rns.selected_instrument_index = detected_instr_index
   end
 
   -- report back what got learned
