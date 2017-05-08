@@ -3,9 +3,8 @@
 ============================================================================]]--
 
 --[[--
-Various global constants, functions and methods for tracing output
 
-- To enable tracing of output, see TRACE() 
+Various global constants, functions and methods
 
 --]]
 
@@ -128,120 +127,10 @@ INPUT_TYPE = {
   "key",              -- key (drum-pad)
   "label",            -- text display
 }
-HARMONIC_SCALES = {
-  ["None"] =                { index=1, keys={1,1,1,1,1,1,1,1,1,1,1,1}, count=12, },
-  ["Natural Major"] =       { index=2, keys={1,0,1,0,1,1,0,1,0,1,0,1}, count=7,  },
-  ["Natural Minor"] =       { index=3, keys={1,0,1,1,0,1,0,1,1,0,1,0}, count=7,  },
-  ["Pentatonic Major"] =    { index=4, keys={1,0,1,0,1,0,0,1,0,1,0,0}, count=5,  },
-  ["Pentatonic Minor"] =    { index=5, keys={1,0,0,1,0,1,0,1,0,0,1,0}, count=5,  },
-  ["Egyptian Pentatonic"] = { index=6, keys={1,0,1,0,0,1,0,1,0,0,1,0}, count=5,  }, -- obsolete since API v5
-  ["Pentatonic Egyptian"] = { index=6, keys={1,0,1,0,0,1,0,1,0,0,1,0}, count=5,  }, 
-  ["Blues Major"] =         { index=7, keys={1,0,1,1,1,0,0,1,0,1,0,0}, count=6,  },
-  ["Blues Minor"] =         { index=8, keys={1,0,0,1,0,1,1,1,0,0,1,0}, count=6,  },
-  ["Whole Tone"] =          { index=9, keys={1,0,1,0,1,0,1,0,1,0,1,0}, count=6,  },
-  ["Augmented"] =           { index=10, keys={1,0,0,1,1,0,0,1,1,0,0,1}, count=6,  },
-  ["Prometheus"] =          { index=11, keys={1,0,1,0,1,0,1,0,0,1,1,0}, count=6,  },
-  ["Tritone"] =             { index=12, keys={1,1,0,0,1,0,1,1,0,0,1,0}, count=6,  },
-  ["Harmonic Major"] =      { index=13, keys={1,0,1,0,1,1,0,1,1,0,0,1}, count=7,  },
-  ["Harmonic Minor"] =      { index=14, keys={1,0,1,1,0,1,0,1,1,0,0,1}, count=7,  },
-  ["Melodic Minor"] =       { index=15, keys={1,0,1,1,0,1,0,1,0,1,0,1}, count=7,  },
-  ["All Minor"] =           { index=16, keys={1,0,1,1,0,1,0,1,1,1,1,1}, count=9,  },
-  ["Dorian"] =              { index=17, keys={1,0,1,1,0,1,0,1,0,1,1,0}, count=7,  },
-  ["Phrygian"] =            { index=18, keys={1,1,0,1,0,1,0,1,1,0,1,0}, count=7,  },
-  ["Phrygian Dominant"] =   { index=19, keys={1,1,0,0,1,1,0,1,1,0,1,0}, count=7,  },
-  ["Lydian"] =              { index=20, keys={1,0,1,0,1,0,1,1,0,1,0,1}, count=7,  },
-  ["Lydian Augmented"] =    { index=21, keys={1,0,1,0,1,0,1,0,1,1,0,1}, count=7,  },
-  ["Mixolydian"] =          { index=22, keys={1,0,1,0,1,1,0,1,0,1,1,0}, count=7,  },
-  ["Locrian"] =             { index=23, keys={1,1,0,1,0,1,1,0,1,0,1,0}, count=7,  },
-  ["Locrian Major"] =       { index=24, keys={1,0,1,0,1,1,1,0,1,0,1,0}, count=7,  },
-  ["Super Locrian"] =       { index=25, keys={1,1,0,1,1,0,1,0,1,0,1,0}, count=7,  },
-  ["Major Neapolitan"] =    { index=26, keys={1,1,0,1,0,1,0,1,0,1,0,1}, count=7,  }, -- obsolete since API v5
-  ["Minor Neapolitan"] =    { index=27, keys={1,1,0,1,0,1,0,1,1,0,0,1}, count=7,  }, -- obsolete since API v5
-  ["Neapolitan Minor"] =    { index=27, keys={1,1,0,1,0,1,0,1,1,0,0,1}, count=7,  },
-  ["Romanian Minor"] =      { index=28, keys={1,0,1,1,0,0,1,1,0,1,1,0}, count=7,  },
-  ["Spanish Gypsy"] =       { index=29, keys={1,1,0,0,1,1,0,1,1,0,0,1}, count=7,  },
-  ["Hungarian Gypsy"] =     { index=30, keys={1,0,1,1,0,0,1,1,1,0,0,1}, count=7,  },
-  ["Enigmatic"] =           { index=31, keys={1,1,0,0,1,0,1,0,1,0,1,1}, count=7,  },
-  ["Overtone"] =            { index=32, keys={1,0,1,0,1,0,1,1,0,1,1,0}, count=7,  },
-  ["Diminished Half"] =     { index=33, keys={1,1,0,1,1,0,1,1,0,1,1,0}, count=8,  },
-  ["Diminished Whole"] =    { index=34, keys={1,0,1,1,0,1,1,0,1,1,0,1}, count=8,  },
-  ["Spanish Eight-Tone"] =  { index=35, keys={1,1,0,1,1,1,1,0,1,0,1,0}, count=8,  },
-  ["Nine-Tone Scale"] =     { index=36, keys={1,0,1,1,1,0,1,1,1,1,0,1}, count=9,  },
-}
-
-if (renoise.API_VERSION > 4) then
-  HARMONIC_SCALES["Pentatonic Egyptian"] = table.rcopy(HARMONIC_SCALES["Egyptian Pentatonic"])  
-  HARMONIC_SCALES["Neapolitan Major"] = table.rcopy(HARMONIC_SCALES["Major Neapolitan"])  
-  HARMONIC_SCALES["Neapolitan Minor"] = table.rcopy(HARMONIC_SCALES["Minor Neapolitan"])  
-  HARMONIC_SCALES["Egyptian Pentatonic"] = nil
-  HARMONIC_SCALES["Major Neapolitan"] = nil
-  HARMONIC_SCALES["Minor Neapolitan"] = nil
-end
 
 --------------------------------------------------------------------------------
 -- helper functions
 --------------------------------------------------------------------------------
-
---- compare two numbers with variable precision
-
-function compare(val1,val2,precision)
-  val1 = math.floor(val1 * precision)
-  val2 = math.floor(val2 * precision)
-  return val1 == val2 
-end
-
---- quick'n'dirty table compare, compares values (not keys)
--- @return boolean, true if identical
-
-function table_compare(t1,t2)
-  return (table.concat(t1,",")==table.concat(t2,","))
-end
-
---- count table entries, including mixed types
--- @return int or nil
-
-function table_count(t)
-  local n=0
-  if ("table" == type(t)) then
-    for key in pairs(t) do
-      n = n + 1
-    end
-    return n
-  else
-    return nil
-  end
-end
-
---- look for value within table
--- @return boolean
-
-function table_find(t,val)
-  for _,v in ipairs(t)do
-    if (val==v) then
-      return true
-    end
-  end
-  return false
-end
-
---- check if values are the same
--- (useful for detecting if a color is tinted)
--- @return boolean
-
-function table_has_equal_values(t)
-
-  local val = nil
-  for k,v in ipairs(t) do
-    if (val==nil) then
-      val = v
-    end
-    if (val~=v) then
-      return false
-    end
-  end
-  return true
-
-end
 
 -- pack arguments into table
 
@@ -251,6 +140,7 @@ end
 
 
 --- split_filename
+-- TODO use cLib/cFileSystem methods
 
 function split_filename(filename)
   local _, _, name, extension = filename:find("(.+)%.(.+)$")
@@ -260,12 +150,6 @@ function split_filename(filename)
   else
     return filename 
   end
-end
-
---- replace character in string
-
-function replace_char(pos, str, r)
-  return str:sub(1, pos-1) .. r .. str:sub(pos+1)
 end
 
 --- convert note-column pitch number into string value
@@ -318,22 +202,6 @@ function extract_cc_num(str_val)
  return str_val:match("%d+")
 end
 
---- get_playing_pattern
-function get_playing_pattern()
-  local idx = renoise.song().transport.playback_pos.sequence
-  return renoise.song().patterns[renoise.song().sequencer.pattern_sequence[idx]]
-end
-
---- get send track
-function send_track(send_index)
-  if (send_index <= renoise.song().send_track_count) then
-    -- send tracks are always behind the master track
-    local trk_idx = renoise.song().sequencer_track_count + 1 + send_index
-    return renoise.song():track(trk_idx)
-  else
-    return nil
-  end
-end
 
 --- check if colorspace is monochromatic
 function is_monochrome(colorspace)
