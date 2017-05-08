@@ -10,7 +10,7 @@ Extend this class for 'roaming' control of a DSP device
 
 ----------------------------------------------------------------------------]]--
 
-class 'RoamingDSP' (Application)
+class 'RoamingDSP' (Automateable)
 
 RoamingDSP.FOLLOW_POS_ENABLED = 1
 RoamingDSP.FOLLOW_POS_DISABLED = 2
@@ -43,20 +43,6 @@ RoamingDSP.default_options = {
     },
     value = 2,
   },
-  record_method = {
-    label = "Automation rec.",
-    description = "Determine how to record automation",
-    items = {
-      "Disabled, do not record automation",
-      "Touch, record only when touched",
-      "Latch (experimental)",
-    },
-    value = 1,
-    on_change = function(inst)
-      inst.automation.latch_record = 
-      (inst.options.record_method.value == RoamingDSP.RECORD_LATCH) and true or false
-    end
-  },
   follow_pos = {
     label = "Follow pos",
     description = "Follow the selected device in the DSP chain",
@@ -68,7 +54,6 @@ RoamingDSP.default_options = {
   },
 
 }
-
 
 ---  Mappings
 -- @field lock_button control the locked state of the selected device
@@ -99,18 +84,31 @@ RoamingDSP.default_palette = {
 }
 
 --------------------------------------------------------------------------------
+--  merge superclass options, mappings & palette --
+
+for k,v in pairs(Automateable.default_options) do
+  RoamingDSP.default_options[k] = v
+end
+for k,v in pairs(Automateable.available_mappings) do
+  RoamingDSP.available_mappings[k] = v
+end
+for k,v in pairs(Automateable.default_palette) do
+  RoamingDSP.default_palette[k] = v
+end
+
+--------------------------------------------------------------------------------
 
 --- Constructor method
--- @param (VarArg), see Application to learn more
+-- @param (VarArg), see Application/Automateable to learn more
 
 function RoamingDSP:__init(...)
   TRACE("RoamingDSP:__init()")
 
-  --- (@{Duplex.Automation}) used for recording movements
-  self.automation = Automation()
+  --- (xAutomation) used for recording movements
+  --self.automation = xAutomation()
 
   --- (bool) set while recording automation
-  self._record_mode = true
+  --self._record_mode = true
 
   -- the various UIComponents
   self._controls = {}
@@ -140,19 +138,23 @@ function RoamingDSP:__init(...)
     --- (table) list of observable device parameters
   self._device_observables = table.create()
 
-  Application.__init(self,...)
+  Automateable.__init(self,...)
 
   -- determine stuff after options have been applied
 
-  self.automation.latch_record = 
-  (self.options.record_method.value == RoamingDSP.RECORD_LATCH)
+  --self.automation.latch_record = (self.options.record_method.value == RoamingDSP.RECORD_LATCH)
+
+  duplex_preferences.highres_automation:add_notifier(
+    function()
+      TRACE("duplex_preferences.highres_automation fired...")
+      self.automation.highres_mode = duplex_preferences.highres_automation.value
+    end
+  )
 
 end
 
 --------------------------------------------------------------------------------
-
---- inherited from Application
--- @see Duplex.Application.start_app
+-- @see Duplex.Automateable.start_app
 -- @return bool or nil
 
 function RoamingDSP:start_app()
@@ -166,7 +168,7 @@ function RoamingDSP:start_app()
     return false
   end
 
-  if not Application.start_app(self) then
+  if not Automateable.start_app(self) then
     return false
   end
 
@@ -175,7 +177,6 @@ function RoamingDSP:start_app()
 end
 
 --------------------------------------------------------------------------------
-
 --- this search is performed on application start
 -- if not in locked mode: use the currently focused track->device
 -- if we are in locked mode: recognize any locked devices, but fall back
@@ -184,7 +185,6 @@ end
 function RoamingDSP:initial_select()
   TRACE("RoamingDSP:initial_select()")
 
-  local song = renoise.song()
   local device,track_idx,device_idx
   local search = self:do_device_search()
   if search then
@@ -198,9 +198,9 @@ function RoamingDSP:initial_select()
     self:update_lock_button()
   end
   if not device then
-    device = song.selected_device
-    track_idx = song.selected_track_index
-    device_idx = song.selected_device_index
+    device = rns.selected_device
+    track_idx = rns.selected_track_index
+    device_idx = rns.selected_device_index
   end
 
   if self:device_is_valid(device) then
@@ -220,14 +220,13 @@ end
 function RoamingDSP:goto_previous_device()
   TRACE("RoamingDSP:goto_previous_device()")
 
-  local song = renoise.song()
   local track_index,device_index
   if self.target_device then
     track_index = self.track_index
     device_index = self.device_index
   else
-    track_index = song.selected_track_index
-    device_index = song.selected_device_index
+    track_index = rns.selected_track_index
+    device_index = rns.selected_device_index
   end
 
   local search = self:search_previous_device(track_index,device_index)
@@ -248,14 +247,13 @@ end
 function RoamingDSP:goto_next_device()
   TRACE("RoamingDSP:goto_next_device()")
 
-  local song = renoise.song()
   local track_index,device_index
   if self.target_device then
     track_index = self.track_index
     device_index = self.device_index
   else
-    track_index = song.selected_track_index
-    device_index = song.selected_device_index
+    track_index = rns.selected_track_index
+    device_index = rns.selected_device_index
   end
   local search = self:search_next_device(track_index,device_index)
   if search then
@@ -280,7 +278,7 @@ function RoamingDSP:search_previous_device(track_index,device_index)
   local matched = nil
   local locked = (self.options.locked.value == RoamingDSP.LOCKED_ENABLED)
   local display_name = self:get_unique_name()
-  for track_idx,v in ripairs(renoise.song().tracks) do
+  for track_idx,v in ripairs(rns.tracks) do
     local include_track = true
     if track_index and (track_idx>track_index) then
       include_track = false
@@ -329,7 +327,7 @@ function RoamingDSP:search_next_device(track_index,device_index)
   local matched = nil
   local locked = (self.options.locked.value == RoamingDSP.LOCKED_ENABLED)
   local display_name = self:get_unique_name()
-  for track_idx,v in ipairs(renoise.song().tracks) do
+  for track_idx,v in ipairs(rns.tracks) do
     local include_track = true
     if track_index and (track_idx<track_index) then
       include_track = false
@@ -433,10 +431,9 @@ end
 
 function RoamingDSP:do_device_search()
 
-  local song = renoise.song()
   local display_name = self:get_unique_name()
   local device_count = 0
-  for track_idx,track in ipairs(song.tracks) do
+  for track_idx,track in ipairs(rns.tracks) do
     for device_idx,device in ipairs(track.devices) do
       if self:device_is_valid(device) and 
         (device.display_name == display_name) 
@@ -497,7 +494,7 @@ end
 function RoamingDSP:tag_device(device)
 
   local display_name = self:get_unique_name()
-  for _,track in ipairs(renoise.song().tracks) do
+  for _,track in ipairs(rns.tracks) do
     for k,d in ipairs(track.devices) do
       if (d.display_name==display_name) then
         d.display_name = d.name
@@ -511,11 +508,8 @@ function RoamingDSP:tag_device(device)
 
 end
 
-
 --------------------------------------------------------------------------------
-
---- inherited from Application
--- @see Duplex.Application.on_idle
+-- @see Duplex.Automateable.on_idle
 
 function RoamingDSP:on_idle()
 
@@ -523,15 +517,13 @@ function RoamingDSP:on_idle()
     return 
   end
 
-  local song = renoise.song()
-
   -- set to the current device
   if self.current_device_requested then
     self.current_device_requested = false
     self:attach_to_selected_device()
     -- update prev/next
-    local track_idx = song.selected_track_index
-    local device_idx = song.selected_device_index
+    local track_idx = rns.selected_track_index
+    local device_idx = rns.selected_device_index
     self:update_prev_next(track_idx,device_idx)
     -- update lock button
     if self.target_device then
@@ -553,10 +545,8 @@ function RoamingDSP:on_idle()
     end
   end
 
+  Automateable.on_idle(self)
 
-  if self._record_mode then
-    self.automation:update()
-  end
 
 end
 
@@ -567,10 +557,9 @@ end
 
 function RoamingDSP:get_selected_device()
 
-  local song = renoise.song()
-  local track_idx = song.selected_track_index
-  local device_index = song.selected_device_index
-  return song.tracks[track_idx].devices[device_index]   
+  local track_idx = rns.selected_track_index
+  local device_index = rns.selected_device_index
+  return rns.tracks[track_idx].devices[device_index]   
 
 end
 
@@ -582,11 +571,10 @@ end
 function RoamingDSP:attach_to_selected_device()
 
   if (self.options.locked.value == RoamingDSP.LOCKED_DISABLED) then
-    local song = renoise.song()
     local device = self:get_selected_device()
     if self:device_is_valid(device) then
-      local track_idx = song.selected_track_index
-      local device_idx = song.selected_device_index
+      local track_idx = rns.selected_track_index
+      local device_idx = rns.selected_device_index
       self:attach_to_device(track_idx,device_idx,device)
     else
       self:clear_device()
@@ -614,7 +602,7 @@ function RoamingDSP:attach_to_device(track_idx,device_idx,device)
 
   -- new track? attach_to_track_devices
   if track_changed then
-    local track = renoise.song().tracks[track_idx]
+    local track = rns.tracks[track_idx]
     self:_attach_to_track_devices(track)
   end
 
@@ -642,24 +630,21 @@ end
 
 
 --------------------------------------------------------------------------------
+-- Update automation 
+-- @param track_idx, int
+-- @param param, DeviceParameter
+-- @param value, number
+-- @param [playmode] renoise.PatternTrackAutomation.PLAYMODE_XX
 
--- update automation 
--- @param track_idx (int)
--- @param device_param (DeviceParameter)
--- @param value (number) 
--- @param playmode (enum) 
-
-function RoamingDSP:update_automation(track_idx,device_param,value,playmode)
+function RoamingDSP:update_automation(track_idx,param,value,playmode)
 
   if self._record_mode then
-    
     -- default to points mode
     if not playmode then
       playmode = renoise.PatternTrackAutomation.PLAYMODE_POINTS
     end
-
-    self.automation:add_automation(track_idx,device_param,value,playmode)
-
+    self.automation.playmode = playmode
+    self.automation:record(track_idx,param,value)
   end
 
 end
@@ -704,7 +689,7 @@ function RoamingDSP:_attach_to_track_devices(track)
           end
         end
       end
-      self.automation:stop_automation()
+      --self.automation:stop_automation()
 
     end
   )
@@ -719,8 +704,8 @@ function RoamingDSP:follow_device_pos()
 
   if (self.options.follow_pos.value == RoamingDSP.FOLLOW_POS_ENABLED) then
     if self.track_index then
-      renoise.song().selected_track_index = self.track_index
-      renoise.song().selected_device_index = self.device_index
+      rns.selected_track_index = self.track_index
+      rns.selected_device_index = self.device_index
     end
   end
 
@@ -765,7 +750,7 @@ function RoamingDSP:_build_app()
     c:set_pos(map.index)
     c.on_press = function(obj)
       TRACE("RoamingDSP - lock_button.on_press()")
-      local track_idx = renoise.song().selected_track_index
+      local track_idx = rns.selected_track_index
       if (self.options.locked.value ~= RoamingDSP.LOCKED_ENABLED) then
         -- attempt to lock device
         if not self.target_device then
@@ -830,6 +815,8 @@ end
 
 function RoamingDSP:on_new_document()
 
+  rns = renoise.song()
+
   self:_attach_to_song()
   self:initial_select()
 
@@ -856,49 +843,27 @@ end
 function RoamingDSP:clear_device()
 
   self:_remove_notifiers(self._parameter_observables)
-  self.automation:stop_automation()
+  --self.automation:stop_automation()
   self.target_device = nil
   self.track_index = nil
   self.device_index = nil
 
 end
 
-
 --------------------------------------------------------------------------------
-
---- update the record mode (when editmode or record_method has changed)
-
-function RoamingDSP:_update_record_mode()
-  if (self.options.record_method.value ~= RoamingDSP.RECORD_NONE) then
-    self._record_mode = renoise.song().transport.edit_mode 
-  else
-    self._record_mode = false
-  end
-end
-
---------------------------------------------------------------------------------
-
---- attach notifier to the song, handle changes
+--- attach notifiers to the song, handle changes
+-- @see Duplex.Automateable._attach_to_song
 
 function RoamingDSP:_attach_to_song()
 
   -- update when a device is selected
-  renoise.song().selected_device_observable:add_notifier(
+  rns.selected_device_observable:add_notifier(
     function()
       self.current_device_requested = true
     end
   )
 
-  -- track edit_mode, and set record_mode accordingly
-  renoise.song().transport.edit_mode_observable:add_notifier(
-    function()
-      self:_update_record_mode()
-    end
-  )
-  self._record_mode = renoise.song().transport.edit_mode
-
-  -- also call Automation class
-  self.automation:attach_to_song()
+  Automateable._attach_to_song(self)
 
 end
 
