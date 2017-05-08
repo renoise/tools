@@ -28,7 +28,6 @@ local BROADCAST_Y_ENABLED = 2
 
 class 'XYPad' (RoamingDSP)
 
---- The XYPad application has no default options 
 -- @see Duplex.RoamingDSP
 
 XYPad.default_options = {
@@ -310,8 +309,8 @@ function XYPad:_build_app()
         if params then
           local val_x = cLib.scale_value(obj.value[1],self.min_value,self.max_value,0,1)
           local val_y = cLib.scale_value(obj.value[2],self.min_value,self.max_value,0,1)
-          self.automation:add_automation(self.track_index,params.x,val_x)
-          self.automation:add_automation(self.track_index,params.y,val_y)
+          self.automation:record(self.track_index,params.x,val_x)
+          self.automation:record(self.track_index,params.y,val_y)
         end
       end
       self.suppress_value_observable = false
@@ -407,8 +406,8 @@ function XYPad:select_grid_cell(x,y)
   if self._record_mode then
     local params = self:get_xy_params()
     if params then
-      self.automation:add_automation(self.track_index,params.x,x_val)
-      self.automation:add_automation(self.track_index,params.y,y_val)
+      self.automation:record(self.track_index,params.x,x_val)
+      self.automation:record(self.track_index,params.y,y_val)
     end
   end
 
