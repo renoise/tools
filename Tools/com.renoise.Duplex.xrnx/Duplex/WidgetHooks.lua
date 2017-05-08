@@ -418,7 +418,7 @@ widget_hooks.button = {
         --print("point.val == false")
       else
         local color = nil
-        if table_has_equal_values(c_space) then
+        if cLib.table_has_equal_values(c_space) then
           -- monochrome & lit, use theme color
           color = {
             duplex_preferences.theme_color[1].value,
@@ -434,7 +434,11 @@ widget_hooks.button = {
       end
     end
     if point.text then
+      -- remember width/height before setting text
+      -- (avoid that text expands size of widget)
+      local w,h = widget.width, widget.height
       widget.text = point.text
+      widget.width, widget.height = w,h
     end
 
   end,
