@@ -199,8 +199,8 @@ function Browser:show()
             and (key.modifiers=="") 
             and not (key.repeated)
           then
-            local em = renoise.song().transport.edit_mode
-            renoise.song().transport.edit_mode = not em
+            local em = rns.transport.edit_mode
+            rns.transport.edit_mode = not em
           else
             return key
           end
