@@ -252,10 +252,6 @@ function Matrix:_update_slots()
     return
   end
 
-  if not self._height then
-    return
-  end 
-
   if (not self.mappings.matrix.group_name) then
     return
   end
@@ -352,8 +348,10 @@ end
 
 function Matrix:on_idle()
 --TRACE("Matrix:idle_app()",self._update_slots_requested)
-  
-  if (not self.active) then return end
+
+  if not self.active or not self._height then 
+    return 
+  end
 
   -- updated tracks/slots?
   if (self._update_tracks_requested) then
@@ -704,6 +702,10 @@ end
 function Matrix:_get_play_page()
   TRACE("Matrix:_get_play_page()")
 
+  if not self._height then
+    return
+  end 
+
   local play_pos = rns.transport.playback_pos
   return math.floor((play_pos.sequence-1)/self._height)
 
@@ -717,6 +719,10 @@ end
 
 function Matrix:_get_edit_page()
   TRACE("Matrix:_get_edit_page()")
+
+  if not self._height then
+    return
+  end 
 
   local edit_pos = rns.transport.edit_pos
   return math.floor((edit_pos.sequence-1)/self._height)
@@ -1119,6 +1125,7 @@ function Matrix:_attach_to_song()
 
   if not self._height then
     LOG("*** Can't attach to song - required property (height) not set")
+    return
   end
 
   local track_idx = rns.selected_track_index
