@@ -138,7 +138,7 @@ function UISpinner:do_press(msg)
         changed = true
       end
     
-    elseif (idx == 2)then
+    elseif (idx == 2) then
       if (self.index < self.maximum) then
         self._cached_index = self.index
         self.index = math.floor(self.index+self.step_size)
@@ -210,18 +210,18 @@ function UISpinner:set_range(minimum,maximum)
 
   local changed = false
 
-  if (minimum) and (self.minimum ~= minimum) then
+  if minimum and (self.minimum ~= minimum) then
     self.minimum = minimum
     changed = true
   end
 
-  if (maximum) and (self.maximum ~= maximum) then
+  if maximum and (self.maximum ~= maximum) then
     self.maximum = maximum
     self.ceiling = maximum
     changed = true
   end
 
-  if(changed)then
+  if changed then
 
     if (self.minimum > self.maximum) then
       self.minimum, self.maximum = self.maximum, self.minimum
@@ -262,7 +262,7 @@ function UISpinner:set_index(idx, skip_event_handler)
     changed = true
   end
 
-  if (changed) then
+  if changed then
     self:invalidate()
 
     if (not skip_event_handler) then
@@ -351,7 +351,7 @@ function UISpinner:draw()
       assert(self._orientation == ORIENTATION.VERTICAL, 
         "Internal Error. Please report: unexpected UI orientation")
 
-      if (self.flipped) then
+      if self.flipped then
         self.canvas:write(point1,1,2)
         self.canvas:write(point2,1,1)
       else
