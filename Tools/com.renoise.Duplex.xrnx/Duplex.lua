@@ -24,15 +24,22 @@ require (_clibroot.."cColor")
 require (_clibroot.."cScheduler")
 require (_clibroot.."cProcessSlicer")
 
+require (_xlibroot.."xMessage")
+require (_xlibroot.."xMidiMessage")
+require (_xlibroot.."xAutomation")
 require (_xlibroot.."xTrack")
+require (_xlibroot.."xTransport")
+require (_xlibroot.."xScale")
 require (_xlibroot.."xInstrument")
 require (_xlibroot.."xNoteColumn")
+require (_xlibroot.."xPatternSequencer")
+require (_xlibroot.."xSongSettings")
+require (_xlibroot.."xCursorPos")
 
 
 -- include the duplex core, applications and device configurations
 require "Duplex/Globals"
 require "Duplex/Preferences"
-require "Duplex/Automation"
 require "Duplex/Message"
 require "Duplex/MessageStream"
 require "Duplex/Display"
@@ -59,13 +66,10 @@ require "Duplex/OscDevice"
 require "Duplex/OscClient"
 require "Duplex/OscVoiceMgr"
 require "Duplex/Application"
-require "Duplex/RoamingDSP" -- depends on Application
+require "Duplex/Automateable" -- extends Application
+require "Duplex/RoamingDSP" -- extends Automateable
 require "Duplex/Browser"
 require "Duplex/BrowserProcess"
---require "Duplex/Scheduler"
---require "Duplex/ProcessSlicer"
-
-
 
 
 -- load all application scripts dynamically (Applications/XXX.lua)
