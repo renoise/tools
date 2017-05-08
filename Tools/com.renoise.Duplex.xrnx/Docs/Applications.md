@@ -13,7 +13,7 @@
 | Metronome     | [Control the metronome (toggle on/off)](Applications/Metronome.md)|
 | MidiActions   | [Make use of the built-in MidiMappings in Renoise](Applications/MidiActions.md)|
 | Mixer         | [Automapped control of the Renoise mixer](Applications/Mixer.md) |
-| Mlrx          | [A powerful loop sequencer (realtime performance)](Applications/Mlrx.md)|
+| Mlrx          | [An advanced loop sequencer (inspired by mlr)](Applications/Mlrx.md)|
 | Navigator     | [Control playback position and pattern/block-loop](Applications/Navigator.md)|
 | NotesOnWheels | [An arpeggiating step sequencer with rotary encoders](Applications/NotesOnWheels.md)|
 | PatternCursor | [For navigating the pattern (prev/next line)](Applications/PatternCursor.md)|
