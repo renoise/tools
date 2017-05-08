@@ -8,8 +8,8 @@ Note: If you have the Automap software running in the background, please disable
   <States>
 		<State name="DimStateA" hide_when_inactive="false" disable_when_inactive="true" value="CC#108" type="toggle" active="true" />
 		<State name="DimStateB" hide_when_inactive="false" disable_when_inactive="true" value="CC#108" type="toggle" />
-		<State name="ToggleStateA" hide_when_inactive="true" value="CC#108" type="toggle" active="true" />
-		<State name="ToggleStateB" hide_when_inactive="true" value="CC#108" type="toggle" />
+		<State name="ToggleStateA" hide_when_inactive="true" receive_when_inactive="false" value="CC#108" type="toggle" active="true" />
+		<State name="ToggleStateB" hide_when_inactive="true" receive_when_inactive="false" value="CC#108" type="toggle" />
   </States>
 	<Parameters>
 		<Column>
