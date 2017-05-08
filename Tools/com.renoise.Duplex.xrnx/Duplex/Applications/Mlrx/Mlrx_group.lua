@@ -38,10 +38,9 @@ function Mlrx_group:__init(main)
   self.tracks = table.create()
 
   --- (Automation) instance of Duplex automation class
-  self.automation = Automation()
-  self.automation.follow_pos = Automation.FOLLOW_PLAY_POS
-  self.automation.preferred_playmode = 
-    renoise.PatternTrackAutomation.PLAYMODE_POINTS
+  self.automation = xAutomation()
+  self.automation.follow_pos = xAutomation.FOLLOW_MODE.PLAY_POS
+  self.automation.playmode = renoise.PatternTrackAutomation.PLAYMODE_POINTS
 
   --- (bool) true when 'latched' automation is being recorded
   -- (this will cause the group button to blink)
@@ -56,6 +55,14 @@ function Mlrx_group:__init(main)
 
   --- (bool) a special 'void' type group that bypass mute groups
   self.void_mutes = false
+
+  -- attach notifiers and initialize
+
+  duplex_preferences.highres_automation:add_notifier(function()
+    self.automation.highres_mode = duplex_preferences.highres_automation.value
+  end)
+  self.automation.highres_mode = duplex_preferences.highres_automation.value
+
 
 end
 
@@ -106,13 +113,15 @@ function Mlrx_group:group_output(on_idle)
     trk:track_output(writepos,trk.writeahead,wraparound,on_idle) 
   end
 
+  --[[
   if self.grp_latch_velocity or 
     self.grp_latch_panning
   then
     self.automation:update()
   else
-    --self.automation:stop_automation()
+    self.automation:stop_automation()
   end
+  ]]
 
 
 end
@@ -194,9 +203,6 @@ function Mlrx_group:set_grp_automation(param_type)
     end
   end
 
-  --local pos = Mlrx_pos()
-
-
   -- record into envelope, uaing Automation class
   self.automation.latch_record = self.grp_latch_velocity
   for _,trk in ipairs(self.tracks) do
@@ -204,15 +210,13 @@ function Mlrx_group:set_grp_automation(param_type)
     if (param_type == Mlrx_track.PARAM_PANNING) then
       local dev_param = rns_trk.prefx_panning
       self.automation.latch_record = self.grp_latch_panning
-      self.automation:add_automation(
-        trk.rns_track_idx,dev_param,self.panning/Mlrx.INT_8BIT)
+      self.automation:record(trk.rns_track_idx,dev_param,self.panning/Mlrx.INT_8BIT)
     elseif (param_type == Mlrx_track.PARAM_VELOCITY) then
       local dev_param = rns_trk.prefx_volume
       self.automation.latch_record = self.grp_latch_velocity
-      self.automation:add_automation(
-        trk.rns_track_idx,dev_param,self.velocity/Mlrx.INT_8BIT)
+      self.automation:record(trk.rns_track_idx,dev_param,self.velocity/Mlrx.INT_8BIT)
     end
-    self.automation:update()
+    --self.automation:update()
   end
 
 
