@@ -530,19 +530,66 @@ function Application:_add_component(c)
 end  
 
 --------------------------------------------------------------------------------
--- (For documentation) print in a markdown-table syntax
+-- (For documentation) print application summary in markdown syntax
 
-function Application:list_mappings_and_options(mappings,options)
-  TRACE("Application:list_mappings_and_options(mappings,options)",mappings,options)
+function Application:list_mappings_and_options(app)
+  TRACE("Application:list_mappings_and_options(app)",app)
 
-  LOG(">>> mappings...")
-  for k,v in pairs(mappings) do
-    LOG(("|`%s`|%s|"):format(k,v.description))
+
+  local can_be_overridden = "> Can be overridden in [configurations](../Configurations.md)"
+
+  local replace_newlines = function(str)
+    return str:gsub("\n","<br>")
+  end
+
+  LOG(">>> begin summary...")
+
+  LOG([[
+
+## Available mappings
+
+| Name       | Description   |
+| -----------|---------------|]])
+  for k,v in pairs(app.available_mappings) do
+    LOG(("|`%s`|%s|"):format(k,replace_newlines(v.description)))
   end 
-  LOG(">>> options...")
-  for k,v in pairs(options) do
-    LOG(("|`%s`|%s|"):format(k,v.description))
+
+  LOG([[
+
+## Default options 
+
+]]..can_be_overridden..[[
+
+
+| Name          | Description   |
+| ------------- |---------------|]])
+  for k,v in pairs(app.default_options) do
+    LOG(("|`%s`|%s|"):format(k,replace_newlines(v.description)))
   end 
+
+  LOG([[
+
+## Default palette 
+
+]]..can_be_overridden..[[
+
+
+| Name          | Color|Text|Value|
+| ------------- |------|----|-----|]])
+  for k,v in pairs(app.default_palette) do
+
+    local text_color = (cColor.get_average(v.color) > 128) and "black" or "white"
+    local hex_color = cColor.color_table_to_hex_string(v.color,"#")
+
+    local str_swatch = ('<div style="padding-left:0.5em;padding-right:0.5em; background-color:%s; color: %s">0x%.2X,0x%.2X,0x%.2X</div>'):format(
+      hex_color,text_color,v.color[1],v.color[2],v.color[3])
+
+
+    LOG(("|`%s`|%s|%s|%s|"):format(k,str_swatch,v.text,cLib.serialize_object(v.val)))
+  end 
+
+  LOG(">>> end of summary...")
+
 
 end
 
