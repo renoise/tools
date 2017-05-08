@@ -27,14 +27,10 @@ local FOLLOW_TRACK_OFF = 2
 local TRACK_PAGE_AUTO = 1
 local TAKE_OVER_VOLUME_OFF = 1
 local TAKE_OVER_VOLUME_ON = 2
-local RECORD_NONE = 1
-local RECORD_TOUCH = 2
-local RECORD_LATCH = 3
-
 
 --==============================================================================
 
-class 'Mixer' (Application)
+class 'Mixer' (Automateable)
 
 Mixer.default_options = {
   pre_post = {
@@ -101,21 +97,7 @@ Mixer.default_options = {
     },
     value = 1,
   },
-  record_method = {
-    label = "Automation rec.",
-    description = "Determine if/how to record automation ",
-    items = {
-      "Disabled, do not record automation",
-      "Touch, record only when touched",
-      "Latch record (experimental)",
-    },
-    value = 1,
-    on_change = function(inst)
-      inst.automation.latch_record = 
-        (inst.options.record_method.value==RECORD_LATCH) 
-      inst:update_record_mode()
-    end
-  }
+
 
 }
 
@@ -200,9 +182,20 @@ Mixer.default_palette = {
   next_page_off     = { color={0x00,0x00,0x00}, val = false,text = "►",},
 }
 
+--------------------------------------------------------------------------------
+--  merge superclass options, mappings & palette --
+
+for k,v in pairs(Automateable.default_options) do
+  Mixer.default_options[k] = v
+end
+for k,v in pairs(Automateable.available_mappings) do
+  Mixer.available_mappings[k] = v
+end
+for k,v in pairs(Automateable.default_palette) do
+  Mixer.default_palette[k] = v
+end
 
 --------------------------------------------------------------------------------
-
 --- Constructor method
 -- @param (VarArg)
 -- @see Duplex.Application
@@ -238,32 +231,22 @@ function Mixer:__init(...)
 
   self._update_requested = false
 
-  -- use Automation class to record movements
-  self.automation = Automation()
-
-  -- set while recording automation
-  self._record_mode = false
 
   -- list of takeover volumes
   self._take_over_volumes = {}
 
   -- apply arguments
-  Application.__init(self,...)
+  Automateable.__init(self,...)
 
   -- toggle, which defines if we're controlling the pre or post fx vol/pans
   self._postfx_mode = (self.options.pre_post.value == MODE_POSTFX)
 
-  -- possible after options have been set
-  self.automation.latch_record = 
-    (self.options.record_method.value==RECORD_LATCH)
 
 end
 
 
 --------------------------------------------------------------------------------
-
---- inherited from Application
--- @see Duplex.Application.on_idle
+-- @see Duplex.Automateable.on_idle
 
 function Mixer:on_idle()
 
@@ -276,12 +259,9 @@ function Mixer:on_idle()
     self:update()
   end
 
-  if self._record_mode then
-    self.automation:update()
-  end
+  Automateable.on_idle(self)
 
 end
-
 
 
 --------------------------------------------------------------------------------
@@ -391,20 +371,6 @@ end
 
 --------------------------------------------------------------------------------
 
--- return true if any track is soloed
-
-function Mixer:_any_track_is_soloed()
-
-  for v,track in ipairs(renoise.song().tracks) do
-    if track.solo_state then
-      return true
-    end
-  end
-  return false
-end
-
---------------------------------------------------------------------------------
-
 -- set dimmed state of slider - will only happen when:
 -- - the controller has a color display
 -- - when the control is unsolo'ed or unmuted
@@ -412,12 +378,11 @@ end
 function Mixer:set_dimmed(control_index)
   TRACE("Mixer:set_dimmed()",control_index)
 
-  local rns = renoise.song()
   local track_index = self._track_offset + control_index
-  local track = renoise.song().tracks[track_index]
+  local track = rns.tracks[track_index]
   if (track) then
 
-    local any_solo = self:_any_track_is_soloed()
+    local any_solo = xTrack.any_track_is_soloed()
     local is_send_track = (track_index > rns.sequencer_track_count + 1)
     local is_master_track = (track_index == rns.sequencer_track_count + 1)
     local dimmed = false
@@ -495,7 +460,7 @@ function Mixer:update()
 
   local skip_event = true
   local master_track_index = xTrack.get_master_track_index()
-  local tracks = renoise.song().tracks
+  local tracks = rns.tracks
 
   -- track volume/panning/mute and solo
   for control_index = 1,self._width do
@@ -800,12 +765,12 @@ function Mixer:_build_app()
             -- update separate master level
             self._controls.master:set_value(obj.value,true)
           end
-        elseif (track_index > #renoise.song().tracks) then
+        elseif (track_index > #rns.tracks) then
           -- track is outside bounds
           return 
         end
 
-        local track = renoise.song().tracks[track_index]
+        local track = rns.tracks[track_index]
         local volume = (self._postfx_mode) and 
           track.postfx_volume or track.prefx_volume
 
@@ -847,18 +812,18 @@ function Mixer:_build_app()
         
         local track_index = self._track_offset + control_index
 
-        if (track_index > #renoise.song().tracks) then
+        if (track_index > #rns.tracks) then
           -- track is outside bounds
           return 
 
         else
 
-          local track = renoise.song().tracks[track_index]
+          local track = rns.tracks[track_index]
           local panning = (self._postfx_mode) and 
             track.postfx_panning or track.prefx_panning
           panning.value = obj.value
           if self._record_mode then
-            self.automation:add_automation(track_index,panning,obj.value)
+            self.automation:record(track_index,panning,obj.value)
           end
 
         end
@@ -894,12 +859,12 @@ function Mixer:_build_app()
         if (track_index == xTrack.get_master_track_index()) then
           -- can't mute the master track
           return 
-        elseif (track_index > #renoise.song().tracks) then
+        elseif (track_index > #rns.tracks) then
           -- track is outside bounds
           return 
         end
         
-        local track = renoise.song().tracks[track_index]
+        local track = rns.tracks[track_index]
         local track_is_muted = (track.mute_state ~= renoise.Track.MUTE_STATE_ACTIVE)
 
         if (track_is_muted) then
@@ -922,7 +887,7 @@ function Mixer:_build_app()
         if (track_index == xTrack.get_master_track_index()) then
           -- can't mute the master track
           return 
-        elseif (track_index > #renoise.song().tracks) then
+        elseif (track_index > #rns.tracks) then
           -- track is outside bounds
           return 
         end
@@ -930,7 +895,7 @@ function Mixer:_build_app()
         -- turn on if more than midways
         local ceiling = 127 -- todo !!!
         local track_is_muted = (val > ceiling/2)
-        local track = renoise.song().tracks[track_index]
+        local track = rns.tracks[track_index]
 
         if (track_is_muted) then
           track:unmute()
@@ -951,12 +916,12 @@ function Mixer:_build_app()
 
         local track_index = self._track_offset + control_index
 
-        if (track_index > #renoise.song().tracks) then
+        if (track_index > #rns.tracks) then
           -- track is outside bounds
           return false
         end
         
-        local track = renoise.song().tracks[track_index]
+        local track = rns.tracks[track_index]
         track.solo_state = not track.solo_state
 
       end
@@ -987,12 +952,12 @@ function Mixer:_build_app()
       c.on_press = function(obj) 
 
         local track_index = self._track_offset + control_index
-        if (track_index > #renoise.song().tracks) then
+        if (track_index > #rns.tracks) then
           -- track is outside bounds
           return 
         end
         
-        local track = renoise.song().tracks[track_index]
+        local track = rns.tracks[track_index]
         track.solo_state = not track.solo_state
 
       end
@@ -1107,7 +1072,7 @@ function Mixer:_build_app()
 
   end
     
-  Application._build_app(self)
+  Automateable._build_app(self)
   return true
 
 end
@@ -1129,8 +1094,7 @@ function Mixer:_set_volume(parameter,track_index,obj)
   end
   if value_set and self._record_mode then
     -- scale back value to 0-1 range
-    self.automation:add_automation(
-      track_index,parameter,obj.value/RENOISE_DECIBEL)
+    self.automation:record(track_index,parameter,obj.value/RENOISE_DECIBEL)
   end
 
   return value_set
@@ -1139,28 +1103,17 @@ end
 
 
 --------------------------------------------------------------------------------
-
--- update the record mode (when editmode or record_method has changed)
-
-function Mixer:update_record_mode()
-  TRACE("Mixer:update_record_mode")
-  if (self.options.record_method.value ~= RECORD_NONE) then
-    self._record_mode = renoise.song().transport.edit_mode 
-  else
-    self._record_mode = false
-  end
-end
-
---------------------------------------------------------------------------------
-
 -- adds notifiers to song
 -- invoked when a new document becomes available
+-- @see also: Duplex.Automateable._attach_to_song
 
 function Mixer:_attach_to_song()
   TRACE("Mixer:_attach_to_song")
 
+  rns = renoise.song()
+
   -- initialize important parameters
-  local track_idx = renoise.song().selected_track_index 
+  local track_idx = rns.selected_track_index 
   self._track_page = self:_get_track_page(track_idx)
   self:_update_page_count()
   self._track_offset = 0  
@@ -1179,7 +1132,7 @@ function Mixer:_attach_to_song()
   end
 
   -- update on track changes in the song
-  renoise.song().tracks_observable:add_notifier(
+  rns.tracks_observable:add_notifier(
     function()
       TRACE("Mixer:tracks_changed fired...")
       self._update_requested = true
@@ -1191,7 +1144,7 @@ function Mixer:_attach_to_song()
   self:_attach_to_tracks(new_song)
 
   -- follow active track in Renoise
-  renoise.song().selected_track_index_observable:add_notifier(
+  rns.selected_track_index_observable:add_notifier(
     function()
       TRACE("Mixer:selected_track_observable fired...")
       self:_follow_track()
@@ -1199,17 +1152,7 @@ function Mixer:_attach_to_song()
   )
   self:_follow_track()
 
-  -- track edit_mode, and set record_mode accordingly
-  renoise.song().transport.edit_mode_observable:add_notifier(
-    function()
-      TRACE("Mixer:edit_mode_observable fired...")
-        self:update_record_mode()
-    end
-  )
-  self:update_record_mode()
-
-  -- attach Automation class
-  self.automation:attach_to_song(new_song)
+  Automateable._attach_to_song(self)
 
 end
 
@@ -1225,8 +1168,7 @@ function Mixer:_follow_track()
     return
   end
 
-  local song = renoise.song()
-  local track_idx = song.selected_track_index 
+  local track_idx = rns.selected_track_index 
   local page = self:_get_track_page(track_idx)
   if (page~=self._track_page) then
     self._track_page = page
@@ -1265,10 +1207,10 @@ function Mixer:_set_track_page(page_idx)
   local page_width = self:_get_page_width()
 
   if (self.options.follow_track.value == FOLLOW_TRACK_ON) then
-    local offset = (renoise.song().selected_track_index%page_width)
-    local num_tracks = #renoise.song().tracks
+    local offset = (rns.selected_track_index%page_width)
+    local num_tracks = #rns.tracks
     local track_idx = (page_idx * page_width) + offset  
-    renoise.song().selected_track_index = math.min(num_tracks,track_idx)
+    rns.selected_track_index = math.min(num_tracks,track_idx)
   else
     self._track_offset = (page_idx * page_width)
     self._update_requested = true
@@ -1293,7 +1235,7 @@ end
 function Mixer:_update_page_count()
 
   local page_width = self:_get_page_width()
-  self._page_count = math.floor((#renoise.song().tracks-1)/page_width)
+  self._page_count = math.floor((#rns.tracks-1)/page_width)
 
 end
 
@@ -1305,13 +1247,13 @@ end
 function Mixer:_attach_to_tracks(new_song)
   TRACE("Mixer:_attach_to_tracks", new_song)
 
-  local tracks = renoise.song().tracks
+  local tracks = rns.tracks
 
   -- validate and update the sequence/track offset
   --[[
   if (self._page_control) then
     local page_width = self:_get_page_width()
-    local pages = math.floor((#renoise.song().tracks-1)/page_width)
+    local pages = math.floor((#rns.tracks-1)/page_width)
     self._page_control:set_range(nil,math.max(0,pages))
   end
   ]]
@@ -1352,7 +1294,7 @@ function Mixer:_attach_to_tracks(new_song)
             local value = volume.value
             -- compensate for potential loss of precision 
             if not self._record_mode and not 
-              compare(self._controls.volume[control_index].value, value, 1000) 
+              cLib.float_compare(self._controls.volume[control_index].value, value, 1000) 
             then
               self:set_track_volume(control_index, value)
             end
@@ -1386,7 +1328,7 @@ function Mixer:_attach_to_tracks(new_song)
             local value = panning.value
             -- compensate for potential loss of precision 
             if not 
-              compare(self._controls.panning[control_index].value, value, 1000) 
+              cLib.float_compare(self._controls.panning[control_index].value, value, 1000) 
             then
               self:set_track_panning(control_index, value)
             end
@@ -1441,7 +1383,7 @@ function Mixer:_attach_to_tracks(new_song)
 
   -- if master wasn't already mapped just before
   if (not master_done and self._controls.master) then
-    local track = renoise.song().tracks[master_idx]
+    local track = rns.tracks[master_idx]
     local volume = (self._postfx_mode) and 
       track.postfx_volume or track.prefx_volume
 
@@ -1454,7 +1396,7 @@ function Mixer:_attach_to_tracks(new_song)
         if (self.active) then
           local value = volume.value
           -- compensate for potential loss of precision 
-          if not compare(self._controls.master.value, value, 1000) then
+          if not cLib.float_compare(self._controls.master.value, value, 1000) then
             self._controls.master:set_value(value)
           end
         end
@@ -1502,7 +1444,7 @@ function Mixer:_set_take_over_volume(p_volume, p_obj, p_track_index)
 
     -- determines if fader has reached/crossed the track volume
     -- first, see if the volume is within threshold ("sticky")
-    local reached = compare(p_volume.value,p_obj.value,5)
+    local reached = cLib.float_compare(p_volume.value,p_obj.value,5)
     if not reached then
       local x1 = p_volume.value - take_over.last_value 
       local x2 = p_volume.value - p_obj.value
