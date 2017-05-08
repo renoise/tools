@@ -62,7 +62,6 @@ Keyboard.default_options = {
     description = "Choose which instrument to control",
     on_change = function(app)
 
-      local rns = renoise.song()
       local val = app.options.instr_index.value
       if (val>1) then
         app:set_instr(val-1,true)
@@ -79,7 +78,6 @@ Keyboard.default_options = {
     label = "Target Track",
     description = "Choose which track to use ",
     on_change = function(app)
-    	local rns = renoise.song()
       local val = app.options.track_index.value
       if (val>1) then
         app:set_track(val-1,true)
@@ -115,7 +113,6 @@ Keyboard.default_options = {
     label = "Volume",
     description = "Determine how to control keyboard volume",
     on_change = function(app)
-    	local rns = renoise.song()
       local val = app.options.base_volume.value
       if (val>1) then
         app:set_volume(val-2,true)
@@ -356,9 +353,11 @@ Keyboard.default_palette = {
   octave_sync_off       = { color = {0x00,0x00,0x00}, val=false,text="·", },
   slider_on             = { color = {0xFF,0xC0,0xFF}, val=true, text = "▪" },
   slider_off            = { color = {0xC0,0x80,0x80}, val=false,text = "·" },
+  --[[
   cycle_layout_1        = { text = "⋮"},
   cycle_layout_2        = { text = "⋰"},
   cycle_layout_3        = { text = "⋯"},
+  ]]
   cycle_layout_on       = { color = {0xFF,0xFF,0xFF}, val=true},
   cycle_layout_off      = { color = {0x00,0x00,0x00}, val=false},
   all_notes_on          = { color = {0xFF,0xFF,0xFF}, val=true, text = "⚡" },
@@ -377,34 +376,34 @@ Keyboard.default_palette = {
 function Keyboard:__init(...)
   TRACE("Keyboard:__init()")
 
-  --- octave
+  --- number, octave
   self.curr_octave = nil 
 
-  --- volume
+  --- number, volume
   self.curr_volume = nil 
 
-  --- track index
+  --- number, track index
   self.curr_track = nil  
 
-  --- instrument index
+  --- number, instrument index
   self.curr_instr = nil  
   
-  --- instrument scale
+  --- string, instrument scale - e.g. "Harmonic Minor")
   self.scale_mode = nil
 
-  --- instrument scale
+  --- number, instrument key
   self.scale_key = nil
 
-  --- lower note
+  --- number, lower note
   self.lower_note = nil  
 
-  --- upper note
+  --- number, upper note
   self.upper_note = nil  
 
-  --- grid width
+  --- number, grid width
   self.grid_w = nil
   
-  --- grid height
+  --- number, grid height
   self.grid_h = nil
 
   --- voice manager
@@ -449,8 +448,6 @@ end
 
 function Keyboard:trigger(note_on,instr_idx,pitch,velocity,grid_index)
   TRACE("Keyboard:trigger()",note_on,instr_idx,pitch,velocity,grid_index)
-
-	--local rns = renoise.song()
 
   if (self.options.keyboard_mode.value == KEYBOARD_TRIGGER_NONE) then
     LOG("Cannot trigger note, keyboard has been disabled")
@@ -590,7 +587,7 @@ end
 function Keyboard:get_nth_note(idx)
   --print("Keyboard:get_nth_note()",idx)
 
-  local scale = HARMONIC_SCALES[self.scale_mode]
+  local scale = xScale.get_scale_by_name(self.scale_mode)
   local oct = 0
   if (idx > scale.count) then
     oct = math.floor(idx/scale.count)
@@ -626,7 +623,7 @@ function Keyboard:restrict_pitch_to_scale(pitch)
 
   if (self.scale_mode ~= "None") then
 
-    local scale = HARMONIC_SCALES[self.scale_mode]
+    local scale = xScale.get_scale_by_name(self.scale_mode)
     assert(scale,"Internal Error. Please report: " ..
       "unexpected instrument scale")
     
@@ -657,8 +654,6 @@ end
 
 function Keyboard:_maintain_held_notes(voice_count,instr_idx,grid_index,velocity)
   TRACE("Keyboard:_maintain_held_notes()",voice_count,instr_idx,grid_index,velocity)
-
-  local rns = renoise.song()
 
   -- if hold mode, compare number of voices
   local hold_mode = (renoise.API_VERSION < 5) and
@@ -769,8 +764,6 @@ end
 
 function Keyboard:start_app()
   TRACE("Keyboard:start_app()")
-
-	local rns = renoise.song()
 
   self.voice_mgr = self._process.browser._voice_mgr
   assert(self.voice_mgr,"Internal Error. Please report: " ..
@@ -1004,7 +997,6 @@ function Keyboard:_build_app()
             c:set_size(unit_w,unit_h)
             c.on_press = function(obj)
 
-            	local rns = renoise.song()
               local msg = self.display.device.message_stream.current_msg
               --local pitch = ctrl_idx+(self.curr_octave*12)-1
 
@@ -1159,7 +1151,6 @@ function Keyboard:_build_app()
     c:set(self.palette.octave_down_off)
     c.on_press = function(obj)
 
-    	local rns = renoise.song()
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
         rns.transport.octave = math.max(0,rns.transport.octave - 1)
       else
@@ -1179,7 +1170,6 @@ function Keyboard:_build_app()
     c:set(self.palette.octave_up_off)
     c.on_press = function(obj)
 
-    	local rns = renoise.song()
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
         rns.transport.octave = math.min(8,rns.transport.octave + 1)
       else
@@ -1215,7 +1205,6 @@ function Keyboard:_build_app()
     c.value = self.curr_octave
     c.on_change = function(obj)
 	
-      local rns = renoise.song()
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
         rns.transport.octave = obj.index
       else
@@ -1234,7 +1223,6 @@ function Keyboard:_build_app()
     c:set(self.palette.octave_sync_off)
     c.on_press = function()
 
-    	local rns = renoise.song()
       local val = nil
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
         val = rns.transport.octave+2
@@ -1288,7 +1276,6 @@ function Keyboard:_build_app()
     c:set(self.palette.track_sync_off)
     c.on_press = function()
 
-    	local rns = renoise.song()
       local val = nil
       if (self.options.track_index.value == TRACK_FOLLOW) then
         val = rns.selected_track_index+1
@@ -1342,7 +1329,6 @@ function Keyboard:_build_app()
     c:set(self.palette.instr_sync_off)
     c.on_press = function()
 
-    	local rns = renoise.song()
       local val = nil
       if (self.options.instr_index.value == INSTR_FOLLOW) then
         val = rns.selected_instrument_index+2
@@ -1384,7 +1370,6 @@ function Keyboard:_build_app()
     c.ceiling = KEYBOARD_VELOCITIES
     c.on_change = function(obj)
 
-      local rns = renoise.song()
       if (self.options.base_volume.value == VOLUME_FOLLOW) then
         -- do not allow setting volume if velocity is disabled
         local enabled = rns.transport.keyboard_velocity_enabled
@@ -1411,7 +1396,6 @@ function Keyboard:_build_app()
     c:set(self.palette.volume_sync_off)
     c.on_press = function()
       --print("volume_sync.on_press")
-    	local rns = renoise.song()
       local val = nil
       if (self.options.base_volume.value == VOLUME_FOLLOW) then
         val = rns.transport.keyboard_velocity
@@ -1482,8 +1466,6 @@ end
 function Keyboard:obtain_octave()
   TRACE("Keyboard:obtain_octave()")
 
-  local rns = renoise.song()
-
   if (self.options.base_octave.value == OCTAVE_FOLLOW) then
     self.curr_octave = rns.transport.octave
   else
@@ -1496,8 +1478,6 @@ end
 
 function Keyboard:obtain_track()
   TRACE("Keyboard:obtain_track()")
-
-	local rns = renoise.song()
 
   if (self.options.track_index.value == TRACK_FOLLOW) then
     self.curr_track = rns.selected_track_index
@@ -1512,8 +1492,6 @@ end
 function Keyboard:obtain_instr()
   TRACE("Keyboard:obtain_instr()")
 
-	local rns = renoise.song()
-
   if (self.options.instr_index.value == INSTR_FOLLOW) then
     self.curr_instr = rns.selected_instrument_index
   else
@@ -1526,8 +1504,6 @@ end
 
 function Keyboard:obtain_volume()
   TRACE("Keyboard:obtain_volume()")
-
-	local rns = renoise.song()
 
   if (self.options.base_volume.value == VOLUME_FOLLOW) then
     self.curr_volume = rns.transport.keyboard_velocity
@@ -1830,8 +1806,7 @@ function Keyboard:update_instr_controls()
 
 end
 --------------------------------------------------------------------------------
-
---- update display of layout cycler
+-- update display of layout cycler
 
 function Keyboard:update_cycle_controls()
   TRACE("Keyboard:update_cycle_controls()")
@@ -1840,16 +1815,16 @@ function Keyboard:update_cycle_controls()
     return
   end
 
-  --local symbols = {"⋮","⋰","⋯",}
   local ctrl = self._controls.cycle_layout
   if ctrl then
-    --local symbol = symbols[self.options.grid_layout.value] 
+    --[[
     local symbol = self.palette[
       string.format("cycle_layout_%s",self.options.grid_layout.value)]
       or {text=self.options.grid_layout.value}
+      ]]
+    local symbol = {text=string.format("⋮%d",self.options.grid_layout.value)}
     ctrl:set(symbol)
   end
-  --print("*** update_cycle_controls - ctrl",ctrl)
 
 end
 
@@ -1920,8 +1895,6 @@ function Keyboard:get_instrument_index()
   local instr_index = nil
   local matched = true
 
-	local rns = renoise.song()
-
   if (self.options.instr_index.value == INSTR_FOLLOW) then
     instr_index = rns.selected_instrument_index
   else
@@ -1948,7 +1921,6 @@ function Keyboard:get_track_index()
   TRACE("Keyboard:get_track_index()")
 
   local track_index = nil
-	local rns = renoise.song()
 
   if (self.options.track_index.value == TRACK_FOLLOW) then
     track_index = rns.selected_track_index
@@ -1983,13 +1955,11 @@ end
 function Keyboard:_attach_to_song()
   TRACE("Keyboard:_attach_to_song()")
 
-	local rns = renoise.song()
-
   rns.transport.octave_observable:add_notifier(
     function()
       --print("octave_observable fired...")
       if (self.options.base_octave.value == OCTAVE_FOLLOW) then
-        self:set_octave(renoise.song().transport.octave)
+        self:set_octave(rns.transport.octave)
       end
     end
   )
@@ -2000,7 +1970,7 @@ function Keyboard:_attach_to_song()
       if (self.options.instr_index.value == INSTR_FOLLOW) then
         self._update_grid_requested = true
         self:attach_to_instrument()
-        self:set_instr(renoise.song().selected_instrument_index)
+        self:set_instr(rns.selected_instrument_index)
       end
     end
   )
@@ -2009,7 +1979,7 @@ function Keyboard:_attach_to_song()
     function()
       --print("selected_track_observable fired...")
       if (self.options.track_index.value == TRACK_FOLLOW) then
-        self:set_track(renoise.song().selected_track_index)
+        self:set_track(rns.selected_track_index)
       end
     end
   )
@@ -2018,7 +1988,7 @@ function Keyboard:_attach_to_song()
     function()
       --print("keyboard_velocity_observable fired...")
       if (self.options.base_volume.value == VOLUME_FOLLOW) then
-        self:set_volume(renoise.song().transport.keyboard_velocity)
+        self:set_volume(rns.transport.keyboard_velocity)
       end
     end
   )
@@ -2026,10 +1996,10 @@ function Keyboard:_attach_to_song()
   rns.transport.keyboard_velocity_enabled_observable:add_notifier(
     function()
       --print("keyboard_velocity_enabled_observable fired...")
-      local enabled = renoise.song().transport.keyboard_velocity_enabled
+      local enabled = rns.transport.keyboard_velocity_enabled
       if (self.options.base_volume.value == VOLUME_FOLLOW) then
         if enabled then
-          self:set_volume(renoise.song().transport.keyboard_velocity)
+          self:set_volume(rns.transport.keyboard_velocity)
         else
           self:set_volume(KEYBOARD_VELOCITIES)
         end
@@ -2066,7 +2036,6 @@ end
 function Keyboard:attach_to_instrument()
   TRACE("Keyboard:attach_to_instrument()")
 
-	local rns = renoise.song()
   local instr_index = self:get_instrument_index()
   local instr = rns.instruments[instr_index]
 
