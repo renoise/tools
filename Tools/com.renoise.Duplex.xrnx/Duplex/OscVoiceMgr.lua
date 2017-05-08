@@ -59,9 +59,6 @@ end
 function OscVoiceMgr:trigger(app,instr_idx,track_idx,pitch,velocity,keep,is_midi,channel)
   TRACE("OscVoiceMgr:trigger()",app,instr_idx,track_idx,pitch,velocity,keep,is_midi,channel)
 
-  local rns = renoise.song()
-  --local channel = 1 -- TODO
-
   local instr = rns.instruments[instr_idx]
   assert(instr,"Internal Error. Please report: " ..
     "expected an instrument at index",instr_idx)
@@ -141,9 +138,6 @@ function OscVoiceMgr:release(app,instr_idx,track_idx,pitch,velocity,is_midi,chan
   local transp = 0
   local str_app = self:_get_app_name(app)
 
-  --channel = 1 -- TODO
-
-  local rns = renoise.song()
   assert(rns.instruments[instr_idx],string.format("Internal Error. Please report: " ..
     "expected instrument to be present at index %d",instr_idx))
 
@@ -365,7 +359,7 @@ end
 
 function OscVoiceMgr:_get_pitch_offset()
 
-  local pitch_offset = 48-(math.floor(renoise.song().transport.octave)*12)
+  local pitch_offset = 48-(math.floor(rns.transport.octave)*12)
   return pitch_offset
 
 end
