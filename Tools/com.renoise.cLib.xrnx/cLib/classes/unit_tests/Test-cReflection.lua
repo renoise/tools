@@ -19,7 +19,7 @@ fn = function()
   assert(cReflection.get_basename(_G["xOscDevice"]) == "xOscDevice")
   ]]
 
-  local instr = renoise.song().selected_instrument
+  local instr = rns.selected_instrument
 
   -- object info
 
