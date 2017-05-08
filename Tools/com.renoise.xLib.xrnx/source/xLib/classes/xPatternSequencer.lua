@@ -139,3 +139,12 @@ function xPatternSequencer.set_scheduled_section(section_index)
     rns.transport:set_scheduled_sequence(positions[section_index])
   end
 end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Get_playing_pattern
+-- @return renoise.Pattern 
+
+function xPatternSequencer.get_playing_pattern()
+  local idx = rns.transport.playback_pos.sequence
+  return rns.patterns[rns.sequencer.pattern_sequence[idx]]
+end
