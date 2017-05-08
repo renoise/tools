@@ -1075,7 +1075,7 @@ function MidiActions:on_idle()
             self:_update_control(true)
           end
         else
-          if not compare(new_val,self._value,1000) then
+          if not cLib.float_compare(new_val,self._value,1000) then
             --print("*** on_idle - update_control",new_val,self._value)
             self:_update_control(true)
           end
