@@ -44,6 +44,10 @@ Finally, we can navigate between devices by using the 'next' and 'previous' butt
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+- High-res automation recording (interleaved or punch-in)
+
 0.98
 - First release
 

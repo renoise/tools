@@ -22,5 +22,8 @@ The Duplex Rotate application allows you to rotate a track/pattern upwards or do
 
 ### Changes
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+
 0.98
 - First release

@@ -19,5 +19,8 @@ To read the whole tutorial, visit [this topic](http://forum.renoise.com/index.ph
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+
 0.xx 
 - Initial release

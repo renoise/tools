@@ -18,6 +18,11 @@ You will have to decide for yourself if you want to use it as a remix tool (comb
 
 Discussion of Duplex GridPie is located on the [Renoise forum](http://forum.renoise.com/index.php?/topic/33484-new-tool-28-duplex-grid-pie/)
 
+## Example configuration
+
+![GridPie_on_launchpad.png](../Images/GridPie_on_launchpad.png)  
+*The Duplex GridPie configuration for the Launchpad*
+
 ## Available mappings 
 
 | Name       | Description   |
@@ -44,6 +49,9 @@ Discussion of Duplex GridPie is located on the [Renoise forum](http://forum.reno
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+
 0.99.23
 - FIXME (Recording) better handling of patt. cloning near boundaries
 - TWEAK “Keep the beat” changed to modify playback-pos less often
@@ -64,7 +72,7 @@ Discussion of Duplex GridPie is located on the [Renoise forum](http://forum.reno
   - Multitouch gestures (assign/resolve aliases, save combination, etc.)
   - Visualization of aliased slots, current track + pattern etc.
   - Configurable initialization and shutdown process (options)
-  - Many smaller bug fixes, cleaner code ...
+  - Many smaller bug fixes, cleaner code 
 - Feature: assign an alias by pressing and holding a slot button (source), and
   then pressing another button in the same track. The procedure will only
   work when the source slot is already aliased or empty (to avoid accidents)
@@ -87,7 +95,7 @@ Discussion of Duplex GridPie is located on the [Renoise forum](http://forum.reno
 - Fixed: properly update mute state when gridpie is cloned
 - Fixed: line notifiers could get lost when scrolling through the song
 - Fixed: UI integration with Renoise pattern-matrix is gone (buggy)
-- Restructured code, simplified things...
+- Restructured code, simplified things
 
 0.99.21
 - Fixed: retain mute state when toggling a pattern off (hold x2)

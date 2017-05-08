@@ -22,5 +22,8 @@
 
 ## Changes 
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+
 0.98
 - First release

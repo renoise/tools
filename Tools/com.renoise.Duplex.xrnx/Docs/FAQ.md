@@ -3,7 +3,7 @@
 |Question |Answer |
 |---------|-------|
 |Is my device supported?| First, install Duplex, and check to see if the menu list your device. If this is the case, then the answer is obviously “yes”. Otherwise, consult the “list of controllers” (with pending controllers)|
-|My device is not working?| If you experience trouble getting the device to do anything, please see [troubleshooting your device](...)|
+|My device is not working?| If you experience trouble getting the device to do anything, please see [troubleshooting your device](Controllers.md#troubleshooting-your-device)|
 |Where do I locate the Duplex folder?|The Duplex folder is located in the Renoise Tools folder, named `com.renoise.Duplex.xrnx`. While in Renoise, you can open the Duplex folder like this: go to the tools menu, select the Tool Browser and locate Duplex. Right-click the tool, and there should be an option to reveal the folder (in explorer, finder etc.)|
 |How do I locate an application class?| The applications are located in the Duplex folder, under `Duplex/Applications`|
 |How do I locate a device configuration?| The device configuration is located in `Duplex/Controllers/[DeviceName]/[Device Name]/Configurations/` <br>Note: replace [Device Name] with the name of your device.|
@@ -19,5 +19,5 @@
 |Can I somehow see the communication between Renoise and my MIDI controller? | Yes, go to the Tools > Duplex menu and select "dump MIDI". This will output the MIDI messages in the console |
 |Can I change the location of individual buttons and sliders?||
 |How can I add more applications to my device?| Yes, see chapter 5: Device configurations for extensive information on how to customize your controller |
-|How to enable the scripting console in Renoise|The [Renoise API repository](...) has instructions for enabling the scripting console|
+|How to enable the scripting console in Renoise|The [Renoise API repository](https://github.com/renoise/xrnx) has instructions for enabling the scripting console|
 

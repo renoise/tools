@@ -30,6 +30,9 @@ To take advantage of this application, you need to assign a number of buttons to
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+
 0.98.32
 - FIXME When jumping back in pattern, and briefly going to the previous pattern,
   the navigator would break if the previous pattern hadn’t same number of lines

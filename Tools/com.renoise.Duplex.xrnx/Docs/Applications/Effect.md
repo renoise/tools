@@ -11,6 +11,10 @@
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+- High-res automation recording (interleaved or punch-in)
+
 0.99.?? by Eran Dax Lonker
 - Added: possibilty to set an index for the group (for instance: you start with the second knob in group for the parameters and the first one is for device browsing) 
 

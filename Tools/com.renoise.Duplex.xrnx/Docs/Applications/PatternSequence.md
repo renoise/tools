@@ -17,5 +17,8 @@ The PatternSequence application allows you to control the Renoise pattern-sequen
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+
 0.98.20 
 - Initial version

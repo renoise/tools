@@ -29,7 +29,7 @@ Note that when reading the following description, and using a controller with fa
  2. *Preparation stage*  
     The preparation stage is the time spent before the playback position enters 
     the beginning of the pattern and begin the actual recording. On the recording 
-    dialog it will read “Starting in XX lines...”, and the selected sample slot 
+    dialog it will read “Starting in XX lines..”, and the selected sample slot 
     will be  flashing rapidly. As long as you’re in the preparation stage, you can 
     hit the sample slot again to tell the Recorder that you wish to record only a 
     single pattern (now, both the the recorder button and the sample slot will 
@@ -47,7 +47,7 @@ Note that when reading the following description, and using a controller with fa
  4. *Finalizing stage*  
     The finalizing stage is the time spent while recording before the playback 
     reaches the beginning of a pattern. On the recording dialog it will read 
-    “Stopping in XX lines...”, and the recording button will be flashing rapidly. 
+    “Stopping in XX lines..”, and the recording button will be flashing rapidly. 
     While you’re in the finalizing stage, pressing the sample slot will write the 
     yet-to-be sample to the pattern (however, this is only useful if you’ve not 
     enabled the writeahead mode, which does this automatically for you). 
@@ -82,6 +82,11 @@ Note that when reading the following description, and using a controller with fa
     never get the notification that the pattern has changed while in the 
     instrument/sample editor
 
+## Example configuration
+
+![Recorder_on_launchpad.png](../Images/Recorder_on_launchpad.png)  
+*The Duplex Recorder configuration for the Launchpad*
+
 
 ## Available mappings 
 
@@ -104,6 +109,9 @@ Note that when reading the following description, and using a controller with fa
 |`trigger_mode`|Choose how notes are written to the pattern|  
 
 ## Changelog
+
+1.01
+- Tool-dev: use cLib/xLib libraries
 
 0.98.28
 - Fixed issue with “autostart” option (broke the recording workflow)

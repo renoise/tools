@@ -30,7 +30,7 @@ Duplex > Custombuilt > Notes On Wheels
     |  _  _  _  _  _  _  _  _  _  _  _  _   _  _    | 
     | |_||_||_||_||_||_||_||_||_||_||_||_| (_)(_)   | <- Steps + Spacing/Length
     |                                               |
-    | |Write| |Learn| |Fill| |Global| |Modes...|    | <- Various controls
+    | |Write| |Learn| |Fill| |Global| |Modes.. |    | <- Various controls
     | ______________________________________________|
 
 Also, check out the compact version, which use fewer controls, but still manages to contain every feature of it's bigger brother. This is possible because the sliders in that version are switching between the currently active mode (pitch, velocity etc.), and therefore, require only a small set of physical controls. Perhaps it's a more realistic starting point for your own controller mapping than the fully expanded version? It's located here: 
@@ -90,7 +90,14 @@ Tool discussion is located on the [Renoise forum](http://forum.renoise.com/index
 
 ## Changelog
 
-0.98  
+1.01
+- Tool-dev: use cLib/xLib libraries
+- Fixed: Allow unmapped phrases (API5)
+
+0.99.1 
+- Added: Phrase recording
+
+0.98.32
 - First release
 
 

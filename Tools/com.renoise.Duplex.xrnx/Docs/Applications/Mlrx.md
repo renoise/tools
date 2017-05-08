@@ -83,6 +83,10 @@ Tool discussion is located on the [Renoise forum](http://forum.renoise.com/index
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries, refactored some code
+- High-res automation recording (interleaved or punch-in)
+
 0.99.1
 - Realtime recording into phrases
 

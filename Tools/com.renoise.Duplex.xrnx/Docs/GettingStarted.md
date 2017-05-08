@@ -1,22 +1,23 @@
 # Getting Started
 
-## Introduction to the GUI Front End 
+## The front-end 
 
-For the most part, the Duplex GUI is designed to be self-documenting - mouse over any part of the interface to get help and
+For the most part, the Duplex front-end is designed to be self-documenting - mouse over any part of the interface to get help and
 additional information about what each buttons/control does. The following is a quick walk-through of the
 most important user-interface elements, and how they work:
 
 ### The tool menu
 When Duplex is first installed, a sub-menu labelled Duplex will appear in the tools menu
 
-...image
+![Duplex_menu.png](Images/Duplex_menu.png)  
+*The tool menu provides instant access to device configurations*
 
 | Name          | Description   |
 | ------------- |---------------|
 |Show browser|Display the Duplex browser, the primary UI for displaying and navigating devices
 |Display on startup| Enable this to show the Duplex browser on startup. This will only have an effect when one or more device configurations have been selected to “autostart”
-|Release all...| Close all running devices & configurations that are currently running
-|Dump MIDI...| This is useful for debugging faulty MIDI devices
+|Release all..| Close all running devices & configurations that are currently running
+|Dump MIDI..| This is useful for debugging faulty MIDI devices
 
 Furthermore, the menu provides quick access to all of Duplex’ presets (a.k.a. device configurations). Each
 one comes with a descriptive name such as "Launchpad Mixer + Matrix", or "Simple TouchOSC template",
@@ -34,7 +35,8 @@ The browser is a fully multi-tasking environment - each device configuration can
 applications, and multiple devices can be opened simultaneously. When a device is presently active and
 running, it will contain an additional “(running)” suffix appended to it’s name. 
 
-...image
+![Duplex_browser.png](Images/Duplex_browser.png)  
+*The Duplex browser running a TouchOSC configuration*
 
 | Name          | Description   |
 | ------------- |---------------|
@@ -50,4 +52,6 @@ configuration, so you can have the Mixer application configured differently in t
 are persistent (remembered between sessions) and applied in real-time, so any change you make should
 immediately be reflected on the device. 
 
-...image
+![Duplex_options.png](Images/Duplex_options.png)  
+*The Duplex options dialog*
+

@@ -2,7 +2,17 @@
 
 ## About
 
-The Duplex Repeater application allows you to take control of any repeater DSP device in a Renoise song. The application allows you to move freely between Repeater devices, or 'lock' to a specific one.   
+The Duplex Repeater application allows you to take control of any repeater DSP device in a Renoise song.  
+
+## Features
+* Jump between different repeater devices in the song
+* Remember focused device between sessions
+* Built-in automation recording 
+
+## Example configuration
+
+![Repeater_on_remote_sl.png](../Images/Repeater_on_remote_sl.png)  
+*The Duplex Repeater configuration for the Remote SL MKII*
 
 ## Available mappings 
 
@@ -32,6 +42,10 @@ The Duplex Repeater application allows you to take control of any repeater DSP d
 |`follow_pos`|See [RoamingDSP](RoamingDSP.md)|  
 
 ## Changelog
+
+1.01
+- Tool-dev: use cLib/xLib libraries
+- High-res automation recording (interleaved or punch-in)
 
 0.98
 - First release

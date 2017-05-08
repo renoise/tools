@@ -33,5 +33,8 @@ SwitchConfiguration can be used for switching hardware configurations on-the-fly
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+
 0.xx 
 - Initial release

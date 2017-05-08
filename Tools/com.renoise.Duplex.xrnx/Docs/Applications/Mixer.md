@@ -54,6 +54,10 @@ Assigning the levels, mute and/or solo mapping to the same group (the grid) will
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+- High-res automation recording (interleaved or punch-in)
+
 0.99
 - UIComponent: when possible, supply mapping as construction argument
 - UIComponent references stored within self._controls

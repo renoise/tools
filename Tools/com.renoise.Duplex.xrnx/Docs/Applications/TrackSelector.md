@@ -27,6 +27,9 @@ The Duplex TrackSelector application allows you to select between tracks, includ
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+
 0.99.4 by Eran Dax Lonker
 - New mappings: prev/next column
 

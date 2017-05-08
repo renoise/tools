@@ -48,7 +48,7 @@ not really advisable (it takes up a lot of space to have separate rows of black 
  
 **Harmonic scales and keys**  
 Here is an image that show how each layout will respond to a harmonic scale.
-See how the harmonic layout is the only one without redundant pitches...?
+See how the harmonic layout is the only one without redundant pitches?
 
 ![Keyboard_scale_harmonic](../Images/Keyboard_scale_harmonic.gif)
 
@@ -65,7 +65,7 @@ It only seemed like a good idea for this screenshot, as it clearly demonstrates 
 
 * Voice-manager: the foundation for some of the more advanced features, basically it keeps track of
 the currently playing notes, their designated instrument and track + it eliminates the potential problem
-of stuck notes when you're changing octave from within Renoise while pressing one or more keys...
+of stuck notes when you're changing octave from within Renoise while pressing one or more keys
 * Upper and lower range, to create a split keyboard (so you don't have to edit your instrument to achieve this)
 
 ## Links
@@ -117,6 +117,11 @@ Tool discussion is located on the [Renoise forum](http://forum.renoise.com/index
 
 
 ## Changelog
+
+1.01
+- Tool-dev: use cLib/xLib libraries
+- Added: HarmonicWrapped grid layout 
+- Tweaked Launchpad configuration
 
 0.99.4
 - Support for Renoise 3 trigger options (hold/mono modes)

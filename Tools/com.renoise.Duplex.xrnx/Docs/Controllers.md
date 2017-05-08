@@ -1,8 +1,27 @@
-# Controllers & Troubleshooting
+# Devices: Controllers & Troubleshooting
 
 ## Supported controllers
 
 We maintain a list of supported controllers in [this Google spreadsheet](https://docs.google.com/spreadsheet/ccc?key=0AkXQ8SxsnmZKdHZwTVVkUnh0WUxfOEtYblhMbWp6R3c&hl=en#gid=0). 
+
+### MIDI Controllers
+
+Many of the controllers supported by Duplex will work out of the box, using the factory settings (the default settings of your controller). But if your controller settings are somehow configurable (via an editor software), Duplex might not be able to communicate with it. 
+
+In such a case, you have two options: tweak Duplex to make it understand your controller, or tweak the controller to make it transmit the messages that Duplex is expecting. 
+
+Sometimes, a supported controller will come with a provided preset file, which you can then find in this folder: `Duplex > Controllers > YourController > Presets`. If this is the case, open your controller’s editor software and point it to this file. Loading the preset should ensure that the controller is outputting some values that Duplex has been configured to understand. 
+
+### OSC Controllers
+
+Often, OSC controllers will require a valid IP address, port and _prefix_ (see below) before they can be used with Duplex. Exactly how the port & IP are obtained varies from device to device. 
+Here are some common scenarios:
+
+**Monome/MonomeSerial**: the IP adress is the one provided in the Monome Serial interface.  
+**TouchOSC** (iPhone, Android): check Settings > Connections, look for Local IP address.
+
+> The prefix is an extra string which can be added to any communication with OSC devices. 
+Consult your device documentation, to see if it is making use of an OSC prefix or not. 
 
 ## Support for new controllers
 

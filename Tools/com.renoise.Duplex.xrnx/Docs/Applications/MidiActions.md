@@ -23,5 +23,8 @@ By parsing the GlobalMidiActions file, it literally provides access to hundreds 
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+
 0.xx
 - Initial release

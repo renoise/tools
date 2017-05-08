@@ -42,6 +42,10 @@ Tool discussion is located on the [Renoise forum](http://forum.renoise.com/index
 
 ## Changelog
 
+1.01
+- Tool-dev: use cLib/xLib libraries
+- High-res automation recording (interleaved or punch-in)
+
 0.99.12
 - Supports <SubParam> nodes (proper support for MIDI devices)
 - Broadcasting of MIDI values
