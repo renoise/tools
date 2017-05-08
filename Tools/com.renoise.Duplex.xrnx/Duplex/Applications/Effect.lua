@@ -225,7 +225,7 @@ function Effect:__init(...)
   self._param_active = {}
 
   Automateable.__init(self,...)
-  self:list_mappings_and_options(Effect)
+  --self:list_mappings_and_options(Effect)
 
 end
 
