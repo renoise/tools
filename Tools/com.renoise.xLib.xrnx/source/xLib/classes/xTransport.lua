@@ -107,4 +107,25 @@ function xTransport.toggle_record()
 
 end
 
+--------------------------------------------------------------------------------
+-- [Static] Expanded check for looped pattern, will also consider if the 
+-- (currently playing) pattern is looped via the pattern sequence 
+
+function xTransport.pattern_is_looped()
+  TRACE("xTransport.pattern_is_looped()")
+
+  if rns.transport.loop_pattern then
+    return true
+  end
+
+  local seq_idx = rns.transport.playback_pos.sequence
+  if (rns.transport.loop_sequence_start == seq_idx) and
+    (rns.transport.loop_sequence_end == seq_idx) 
+  then
+    return true
+  end
+
+end
+
+
 
