@@ -12,16 +12,20 @@ desktop.ini
 preferences.xml
 Libraries/remdebug/Win32/controller_gui.ini
 
+# IDE generated files
+settings.json
+
 # Binary files 
 Tools/com.renoise.Soundcloud.xrnx/bin/osx/Share on SoundCloud.app/
 Tools/com.renoise.Soundcloud.xrnx/bin/win/Share on SoundCloud.exe
-Tools/com.renoise.xRules.xrnx/preferences.xml.old
 Tools/com.renoise.xStream.xrnx/favorites.xml
 Tools/com.renoise.xStream.xrnx/userdata/favorites.xml
 Tools/com.renoise.xStream.xrnx/userdata/favorites.xml
 Tools/com.renoise.xStream.xrnx/userdata/favorites.xml
 Tools/com.renoise.xStream.xrnx/userdata/favorites.xml
 Tools/com.renoise.xStream.xrnx/userdata/favorites.xml
+
+# Symbolic links 
 Tools/com.renoise.VoiceRunner.xrnx/source/vLib
 Tools/com.renoise.Noodletrap.xrnx/classes/xLib
 Tools/com.renoise.xCleaner.xrnx/source/vLib
@@ -49,3 +53,7 @@ Tools/com.renoise.xRules.xrnx/profiles
 Tools/com.renoise.SliceMate.xrnx/source/cLib
 Tools/com.renoise.SliceMate.xrnx/source/vLib
 Tools/com.renoise.SliceMate.xrnx/source/xLib
+Tools/com.renoise.Duplex.xrnx/xLib
+Tools/com.renoise.Duplex.xrnx/cLib
+Tools/com.renoise.vLibBoilerPlate.xrnx/source/cLib
+Tools/com.renoise.vLibBoilerPlate.xrnx/source/vLib
