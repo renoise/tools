@@ -146,11 +146,11 @@ function Rotate:process(shift_amount, range_mode, shift_automation)
   assert(type(shift_automation) == "boolean" and 
     "Internal Error: Unexpected shift_automation argument")
   
-  local patterns = renoise.song().patterns
-  local tracks = renoise.song().tracks
+  local patterns = rns.patterns
+  local tracks = rns.tracks
   
-  local selected_track_index = renoise.song().selected_track_index
-  local selected_pattern_index = renoise.song().selected_pattern_index
+  local selected_track_index = rns.selected_track_index
+  local selected_pattern_index = rns.selected_pattern_index
     
   
   ----- get the processing pattern & track range
@@ -371,8 +371,8 @@ function Rotate:selection_line_range(pattern_index)
 
   local line_start, line_end
   
-  if (pattern_index == renoise.song().selected_pattern_index) then
-    local iter = renoise.song().pattern_iterator:lines_in_pattern(pattern_index)
+  if (pattern_index == rns.selected_pattern_index) then
+    local iter = rns.pattern_iterator:lines_in_pattern(pattern_index)
     
     for pos,line in iter do
       for _,note_column in pairs(line.note_columns) do
