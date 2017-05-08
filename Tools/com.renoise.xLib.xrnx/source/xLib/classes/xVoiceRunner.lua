@@ -362,14 +362,14 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
             if voice_run and implied_noteoff then
               voice_run.implied_noteoff = implied_noteoff
             end
-
-            print(">>> voice_run",voice_run)
-            print(">>> col_idx",col_idx)
-            print(">>> notecol",notecol)
-            print(">>> begin_voice_run",begin_voice_run)
-            print(">>> stop_voice_run",stop_voice_run)
-            print(">>> has_note_cut",has_note_cut)
-            print(">>> has_note_off",has_note_off)
+            
+            --print(">>> voice_run",voice_run)
+            --print(">>> col_idx",col_idx)
+            --print(">>> notecol",notecol)
+            --print(">>> begin_voice_run",begin_voice_run)
+            --print(">>> stop_voice_run",stop_voice_run)
+            --print(">>> has_note_cut",has_note_cut)
+            --print(">>> has_note_off",has_note_off)
 
             -- opportune moment to compute number of lines: before a new run
             if voice_run and begin_voice_run 
@@ -606,8 +606,7 @@ function xVoiceRunner:collect_below_cursor()
 
   self:reset()
   self:collect(ptrack_or_phrase,xVoiceRunner.COLLECT_MODE.CURSOR)
-  print(">>> post-collect self.voice_runs...")
-  rprint(self.voice_runs)
+  --print(">>> post-collect self.voice_runs...")
 
   local in_range = xVoiceRunner.in_range(self.voice_runs,line_idx,patt.number_of_lines,{
     restrict_to_column = col_idx,
@@ -1011,8 +1010,6 @@ function xVoiceRunner.get_voice_run_selection(vrun,trk_idx,col_idx)
 
   local low,high = cLib.get_table_bounds(vrun)
   local end_line = low + vrun.number_of_lines - 1
-
-  print()
 
   end_line = ((vrun.implied_noteoff and not vrun.actual_noteoff_col)
       or vrun.open_ended  
