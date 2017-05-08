@@ -411,7 +411,6 @@ widget_hooks.button = {
     local c_space = xarg.colorspace or display.device.colorspace
     if not is_monochrome(c_space) then
       widget.color = display.device:quantize_color(point.color,c_space)
-      --print("not is_monochrome",widget.color[1],widget.color[2],widget.color[3])
     else
       if (point.val==false) then
         widget.color = {0x00,0x00,0x00}
