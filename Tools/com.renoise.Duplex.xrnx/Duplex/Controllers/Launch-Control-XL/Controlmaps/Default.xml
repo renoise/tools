@@ -4,9 +4,9 @@
   <Description>Test controlmap - merging setups via "states"</Description>
   
   <States>
-    <State name="MutesMode" hide_when_inactive="true" disable_when_inactive="true" receive_when_inactive="false" value="A#7" type="trigger" exclusive="StateGroup" active="true" />
-    <State name="SolosMode" hide_when_inactive="true" disable_when_inactive="true" receive_when_inactive="false" value="B-7" type="trigger" exclusive="StateGroup" />
-    <State name="TransportMode" hide_when_inactive="true" disable_when_inactive="true" receive_when_inactive="false" value="C-8" type="trigger" exclusive="StateGroup" />
+    <State name="MutesMode" hide_when_inactive="true" disable_when_inactive="true" receive_when_inactive="false" value="Prg#1" match="1" type="trigger" exclusive="StateGroup" active="true" />
+    <State name="SolosMode" hide_when_inactive="true" disable_when_inactive="true" receive_when_inactive="false" value="Prg#1" match="2" type="trigger" exclusive="StateGroup" />
+    <State name="TransportMode" hide_when_inactive="true" disable_when_inactive="true" receive_when_inactive="false" value="Prg#1" match="3" type="trigger" exclusive="StateGroup" />
   </States>
   
   <Parameters>
@@ -121,19 +121,19 @@
       </Group>
       </Column>
       <Column>
-      <Group name="DeviceSelect" orientation="horizontal" columns="2" colorspace="4,4,0">
+      <Group name="DeviceSelect" orientation="horizontal" columns="2" >
         <Param value="CC#104" type="button" name="PreviousDevice" size="0.6" minimum="0" maximum="127" />
         <Param value="CC#105" type="button" name="NextDevice" size="0.6" minimum="0" maximum="127" />
       </Group>
-      <Group name="PageSelectors" orientation="horizontal" columns="2" colorspace="4,4,0">
+      <Group name="PageSelectors" orientation="horizontal" columns="2" >
         <Param value="CC#106" type="button" name="PreviousPage" size="0.6" minimum="0" maximum="127" />
         <Param value="CC#107" type="button" name="NextPage" size="0.6" minimum="0" maximum="127" />
       </Group>
 	  <Group name="Modes" orientation="vertical" columns="1" colorspace="4,4,0">
 		<Param value="A-7" type="button" name="EditMode" size="1.2" minimum="0" maximum="127" />
-		<Param value="A#7" type="button" name="Mutes" size="1.2" minimum="0" maximum="127" />
-		<Param value="B-7" type="button" name="Solos" size="1.2" minimum="0" maximum="127" />
-		<Param value="C-8" type="button" name="Transport" size="1.2" minimum="0" maximum="127" />
+		<Param value="Prg#1" type="button" name="Mutes" size="1.2" minimum="0" maximum="1" />
+		<Param value="Prg#1" type="button" name="Solos" size="1.2" minimum="0" maximum="2" />
+		<Param value="Prg#1" type="button" name="Transport" size="1.2" minimum="0" maximum="3" />
 	  </Group>
       </Column>
       </Row>
