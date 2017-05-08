@@ -92,20 +92,10 @@ function Instrument:_build_app()
   if map.group_name then
     local c = UIButton(self,map)
     c.on_press = function(obj)
-      local instr = renoise.song().selected_instrument
-      local scale_mode = instr.trigger_options.scale_mode
-      local scale_idx = HARMONIC_SCALES[scale_mode].index
-      for k,v in pairs(HARMONIC_SCALES) do
-        if (v.index==scale_idx-1) then
-          scale_mode = k
-          break
-        end
-      end
-      instr.trigger_options.scale_mode = scale_mode
+      xInstrument.set_previous_scale(rns.selected_instrument)
     end
     c.on_hold = function(obj)
-      local instr = renoise.song().selected_instrument
-      instr.trigger_options.scale_mode = "None"
+      rns.selected_instrument.trigger_options.scale_mode = "None"
     end
     self._controls.prev_scale = c
   end
@@ -114,26 +104,10 @@ function Instrument:_build_app()
   if map.group_name then
     local c = UIButton(self,map)
     c.on_press = function(obj)
-      local instr = renoise.song().selected_instrument
-      local scale_mode = instr.trigger_options.scale_mode
-      local scale_idx = HARMONIC_SCALES[scale_mode].index
-      for k,v in pairs(HARMONIC_SCALES) do
-        if (v.index==scale_idx+1) then
-          scale_mode = k
-          break
-        end
-      end
-      instr.trigger_options.scale_mode = scale_mode
+      xInstrument.set_next_scale(rns.selected_instrument)
     end
     c.on_hold = function(obj)
-      local instr = renoise.song().selected_instrument
-      local scale_count = table_count(HARMONIC_SCALES)
-      for k,v in pairs(HARMONIC_SCALES) do
-        if (v.index==scale_count) then
-          instr.trigger_options.scale_mode = k
-          break
-        end
-      end
+      xInstrument.set_scale_by_index(rns.selected_instrument,#xScale.SCALES)
     end
     self._controls.next_scale = c
   end
@@ -153,7 +127,7 @@ function Instrument:_build_app()
     local c = UISlider(self,map)
     c:set_size(slider_size)
     c.on_change = function()
-      local instr = renoise.song().selected_instrument
+      local instr = rns.selected_instrument
       instr.trigger_options.scale_key = c.index
     end
     self._controls.set_key = c
@@ -183,9 +157,9 @@ end
 function Instrument:update_scale_controls()
   TRACE("Instrument:update_scale_controls()")
 
-  local instr = renoise.song().selected_instrument
+  local instr = rns.selected_instrument
   local scale_mode = instr.trigger_options.scale_mode
-  local scale_idx = HARMONIC_SCALES[scale_mode].index
+  local scale_idx = xScale.get_scale_index_by_name(scale_mode)
 
   local ctrl = self._controls.prev_scale
   if ctrl then
@@ -198,7 +172,7 @@ function Instrument:update_scale_controls()
 
   local ctrl = self._controls.next_scale
   if ctrl then
-    if (scale_idx == table_count(HARMONIC_SCALES)) then
+    if (scale_idx == #xScale.SCALES) then
       ctrl:set(self.palette.scale_next_disabled)
     else
       ctrl:set(self.palette.scale_next_enabled)
@@ -245,7 +219,7 @@ end
 
 function Instrument:_attach_to_instrument()
 
-  local instr = renoise.song().selected_instrument
+  local instr = rns.selected_instrument
 
   -- update when selected scale changes
   instr.trigger_options.scale_mode_observable:add_notifier(
