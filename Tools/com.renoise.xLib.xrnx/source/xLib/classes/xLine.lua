@@ -265,7 +265,7 @@ end
 
 function xLine.resolve_pattern_line(sequence,line,track_idx)
 
-  local patt_idx = xSongPos.get_pattern_index(sequence)
+  local patt_idx = rns.sequencer:pattern(sequence)
   local rns_patt = rns.patterns[patt_idx] 
   local rns_track = rns.tracks[track_idx] 
   assert(rns_patt,"The specied track does not exist")
