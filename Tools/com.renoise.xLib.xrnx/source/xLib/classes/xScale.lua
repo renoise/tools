@@ -12,7 +12,6 @@ Methods for working with notes & harmonic scales
 
 class 'xScale'
 
-
 xScale.PENTATONIC_EGYPTIAN = "Egyptian Pentatonic"
 xScale.NEAPOLITAN_MAJOR = "Major Neapolitan"
 xScale.NEAPOLITAN_MINOR = "Minor Neapolitan"
@@ -30,7 +29,7 @@ xScale.SCALES = {
   { name="Natural Minor", keys={1,0,1,1,0,1,0,1,1,0,1,0}, count=7,  },
   { name="Pentatonic Major", keys={1,0,1,0,1,0,0,1,0,1,0,0}, count=5,  },
   { name="Pentatonic Minor", keys={1,0,0,1,0,1,0,1,0,0,1,0}, count=5,},
-  { name="Egyptian Pentatonic", keys={1,0,1,0,0,1,0,1,0,0,1,0}, count=5,}, 
+  --{ name="Egyptian Pentatonic", keys={1,0,1,0,0,1,0,1,0,0,1,0}, count=5,}, 
   { name=xScale.PENTATONIC_EGYPTIAN,keys={1,0,1,0,0,1,0,1,0,0,1,0},count=5,}, 
   { name="Blues Major", keys={1,0,1,1,1,0,0,1,0,1,0,0}, count=6,  },
   { name="Blues Minor", keys={1,0,0,1,0,1,1,1,0,0,1,0}, count=6,  },
@@ -53,7 +52,7 @@ xScale.SCALES = {
   { name="Super Locrian", keys={1,1,0,1,1,0,1,0,1,0,1,0}, count=7,  },
   { name= xScale.NEAPOLITAN_MAJOR, keys={1,1,0,1,0,1,0,1,0,1,0,1}, count=7,  }, 
   { name=xScale.NEAPOLITAN_MINOR, keys={1,1,0,1,0,1,0,1,1,0,0,1}, count=7,  }, 
-  { name="Neapolitan Minor", keys={1,1,0,1,0,1,0,1,1,0,0,1}, count=7,  },
+  --{ name="Neapolitan Minor", keys={1,1,0,1,0,1,0,1,1,0,0,1}, count=7,  },
   { name="Romanian Minor", keys={1,0,1,1,0,0,1,1,0,1,1,0}, count=7,  },
   { name="Spanish Gypsy", keys={1,1,0,0,1,1,0,1,1,0,0,1}, count=7,  },
   { name="Hungarian Gypsy", keys={1,0,1,1,0,0,1,1,1,0,0,1}, count=7,  },
@@ -71,6 +70,19 @@ for _,v in ipairs(xScale.SCALES) do
   table.insert(xScale.SCALE_NAMES,v.name)
 end
 
+-- List of white keys (for quick lookup)
+xScale.WHITE_KEYS = {
+  0,2,4,5,7,9,11,
+  12,14,16,17,19,21,23,
+  24,26,28,29,31,33,35,
+  36,38,40,41,43,45,47,
+  48,50,52,53,55,57,59,
+  60,62,64,65,67,69,71,
+  72,74,76,77,79,81,83,
+  84,86,88,89,91,93,95,
+  96,98,100,101,103,105,107,
+  108,110,112,113,115,117,119}
+
 --------------------------------------------------------------------------------
 -- [Static] Restrict notes to a specific scale and key 
 -- @param note_value (0-119), notes outside this range are returned as-is 
@@ -78,6 +90,7 @@ end
 -- @param scale_key (int), 1=C, 2=C#, 3=D, ...
 
 function xScale.restrict_to_scale(note_value,scale_idx_or_name,scale_key)
+  TRACE("xScale.restrict_to_scale(note_value,scale_idx_or_name,scale_key)",note_value,scale_idx_or_name,scale_key)
 
   if (note_value > 119) then
     return note_value
@@ -134,14 +147,32 @@ end
 
 --------------------------------------------------------------------------------
 -- [Scale] get a specific scale by its name 
+-- TODO use SCALE_NAMES for faster lookup 
 -- @param name (string)
 -- @return table (one of xScale.SCALES) or nil
 
 function xScale.get_scale_by_name(name)
+  TRACE("xScale.get_scale_by_name(name)",name)
+
+  local scale_idx = xScale.get_scale_index_by_name(name)
+  if scale_idx then 
+    return xScale.SCALES[scale_idx]
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- [Scale] get a specific scale by its name 
+-- TODO use SCALE_NAMES for faster lookup 
+-- @param name (string)
+-- @return table (one of xScale.SCALES) or nil
+
+function xScale.get_scale_index_by_name(name)
+  TRACE("xScale.get_scale_index_by_name(name)",name)
 
   for k,v in pairs(xScale.SCALES) do
     if (v.name == name) then
-      return v
+      return k
     end 
   end
 
