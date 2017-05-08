@@ -193,6 +193,18 @@ renoise.tool():add_menu_entry {
   end
 }
 
+renoise.tool():add_menu_entry {
+  name = "--- Main Menu:Tools:Duplex:High-res automation",
+  selected = function()
+    return duplex_preferences.highres_automation.value
+  end,
+  invoke = function() 
+    duplex_preferences.highres_automation.value = 
+      not duplex_preferences.highres_automation.value
+  end
+}
+
+
 --[[
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Duplex:Enable NRPN support",
@@ -257,16 +269,9 @@ renoise.tool():add_menu_entry {
 }
 
 renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:[Link] API Reference",
+  name = "--- Main Menu:Tools:Duplex:Documentation [github]",
   invoke = function() 
-    renoise.app():open_url("http://files.renoise.com/xrnx/duplex-docs/")
-  end
-}
-
-renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:[Link] Supported Controllers",
-  invoke = function() 
-    renoise.app():open_url("https://docs.google.com/spreadsheets/d/1FNVvQQPAv51Rl0tZkhvLSLawJY3frvL4kvtobGaH9Fc/edit?usp=sharing")
+    renoise.app():open_url("https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Duplex.xrnx")
   end
 }
 
