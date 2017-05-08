@@ -85,10 +85,14 @@ end
 -- @param track_idx (int)
 -- @param param (renoise.DeviceParameter)
 -- @param value (number) the input value
--- @param value_mode (xMidiMessage.MODE) - apply scaling to the input value
+-- @param [value_mode] (xMidiMessage.MODE) - apply scaling to the input value
 
 function xAutomation:record(track_idx,param,value,value_mode)
   TRACE("xAutomation:record(track_idx,param,value,value_mode)",track_idx,param,value,value_mode)
+
+  assert(type(track_idx)=="number","Expected track_idx to be a number")
+  assert(type(param)=="DeviceParameter","Expected param to be a DeviceParameter")
+  assert(type(value)=="number","Expected value to be a number")
 
   if not param.is_automatable then
     LOG("Could not write automation, parameter is not automatable")
@@ -123,8 +127,8 @@ function xAutomation:record(track_idx,param,value,value_mode)
       self:clear_range(line_fract,self.writeahead,ptrack_auto)
       ptrack_auto:add_point_at(line_fract,value)
     else
-      self:clear_range(rns.playback_pos.line,1,ptrack_auto)
-      ptrack_auto:add_point_at(rns.playback_pos.line,value)
+      self:clear_range(rns.transport.playback_pos.line,1,ptrack_auto)
+      ptrack_auto:add_point_at(rns.transport.playback_pos.line,value)
     end
   end
 
@@ -250,20 +254,14 @@ function xAutomation.get_scaled_value(value,value_mode)
   assert(type(value_mode)=="string","Expected value_mode to be a string")
 
   local val_min,val_max
-  if value_mode then
-    if value_mode:find("7") then
-      val_min = 0 
-      val_max = 127 
-    elseif value_mode:find("14") then
-      val_min = 0 
-      val_max = 16383 
-    else
-      -- TODO
-      LOG("Unexpected value_mode")
-      return value
-    end
+  if value_mode:find("7") then
+    val_min = 0 
+    val_max = 127 
+  elseif value_mode:find("14") then
+    val_min = 0 
+    val_max = 16383 
   else
-    -- floating point values etc.
+    -- no scaling required
     return value
   end
   
