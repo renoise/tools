@@ -165,7 +165,7 @@ function TrackSelector:__init(...)
 
   Application.__init(self,...)
 
-  self:list_mappings_and_options(TrackSelector.available_mappings,TrackSelector.default_options)
+  --self:list_mappings_and_options(TrackSelector.available_mappings,TrackSelector.default_options)
 
 
 end
@@ -183,7 +183,7 @@ function TrackSelector:start_app()
     return
   end
 
-  self:_attach_to_song(renoise.song())
+  self:_attach_to_song(rns)
   self:update()
 
 end
@@ -196,7 +196,8 @@ end
 function TrackSelector:on_new_document()
   TRACE("TrackSelector:on_new_document()")
 
-  self:_attach_to_song(renoise.song())
+  rns = renoise.song()
+  self:_attach_to_song(rns)
   self:update()
 
 end
@@ -282,7 +283,7 @@ function TrackSelector:update()
   --[[
   if (self._prev_next_track) then
     local track_min = 1
-    local track_max = #renoise.song().tracks
+    local track_max = #rns.tracks
     self._prev_next_track:set_range(track_min,track_max)
     self._prev_next_track:set_index(self._selected_track_index,skip_event)
   end
@@ -295,7 +296,7 @@ function TrackSelector:update()
     end
   end
   if (self._next_track) then
-    if (self._selected_track_index >= #renoise.song().tracks) then
+    if (self._selected_track_index >= #rns.tracks) then
       self._next_track:set(self.palette.track_next_off)
     else
       self._next_track:set(self.palette.track_next_on)
@@ -311,7 +312,7 @@ function TrackSelector:update()
   end 
 
   if self._next_column then
-    if (self._selected_column_index >= renoise.song().tracks[self._selected_track_index].visible_note_columns) then
+    if (self._selected_column_index >= rns.tracks[self._selected_track_index].visible_note_columns) then
       self._next_column:set(self.palette.column_next_off)
     else
       self._next_column:set(self.palette.column_next_on)
@@ -319,7 +320,7 @@ function TrackSelector:update()
   end
 
   -- set the active track page + range
-  local track_max = #renoise.song().tracks
+  local track_max = #rns.tracks
   local track_index = self._selected_track_index
   local page = self:_get_track_page(track_index)
   self._track_page = page
@@ -347,7 +348,7 @@ function TrackSelector:update()
 
   -- set the active slider index
   if (self._select_track) then
-    self._select_track.steps = #renoise.song().tracks
+    self._select_track.steps = #rns.tracks
     -- figure out the position on the slider
     local page_index = (self._track_page) 
       and (self._track_page-1)*page_width
@@ -413,15 +414,15 @@ function TrackSelector:_build_app(song)
       -- compare cached value in spinner (the old value
       -- is kept before new the new value is applied)
       local increased = (obj.index>obj._cached_index)
-      local track_idx = renoise.song().selected_track_index
+      local track_idx = rns.selected_track_index
       -- ensure that we select a track within valid range
       if (increased) then
-        track_idx = math.min(track_idx+1,#renoise.song().tracks)
+        track_idx = math.min(track_idx+1,#rns.tracks)
       else
         track_idx = math.max(track_idx-1,1)
       end
       -- the notifier will take care of the rest
-      renoise.song().selected_track_index = track_idx
+      rns.selected_track_index = track_idx
  
     end
     
@@ -435,12 +436,12 @@ function TrackSelector:_build_app(song)
     c.tooltip = map.description
     c:set_pos(map.index or 1)
     c.on_press = function() 
-      local track_idx = renoise.song().selected_track_index
+      local track_idx = rns.selected_track_index
       track_idx = math.max(track_idx-1,1)
-      renoise.song().selected_track_index = track_idx
+      rns.selected_track_index = track_idx
     end
     c.on_hold = function() 
-      renoise.song().selected_track_index = 1
+      rns.selected_track_index = 1
     end
     self._prev_track = c
   end
@@ -452,12 +453,12 @@ function TrackSelector:_build_app(song)
     c.tooltip = map.description
     c:set_pos(map.index or 1)
     c.on_press = function() 
-      local track_idx = renoise.song().selected_track_index
-      track_idx = math.min(track_idx+1,#renoise.song().tracks)
-      renoise.song().selected_track_index = track_idx
+      local track_idx = rns.selected_track_index
+      track_idx = math.min(track_idx+1,#rns.tracks)
+      rns.selected_track_index = track_idx
     end
     c.on_hold = function() 
-      renoise.song().selected_track_index = #renoise.song().tracks
+      rns.selected_track_index = #rns.tracks
     end
     self._next_track = c
   end
@@ -469,10 +470,10 @@ function TrackSelector:_build_app(song)
     c.tooltip = map.description
     c:set_pos(map.index or 1)
     c.on_press = function() 
-      local columns = renoise.song().tracks[renoise.song().selected_track_index].visible_note_columns
-      local column_idx = renoise.song().selected_note_column_index
+      local columns = rns.tracks[rns.selected_track_index].visible_note_columns
+      local column_idx = rns.selected_note_column_index
       column_idx = math.max(column_idx-1,1)
-      renoise.song().selected_note_column_index = column_idx
+      rns.selected_note_column_index = column_idx
       -- observing column via Renoise API is not possible so we set the palette changes on button press 
       if (column_idx <= columns ) then
        self._prev_column:set(self.palette.column_prev_off)
@@ -484,7 +485,7 @@ function TrackSelector:_build_app(song)
       end
     end
     c.on_hold = function() 
-      renoise.song().selected_note_column_index = 1
+      rns.selected_note_column_index = 1
     end
     self._prev_column = c
   end
@@ -496,10 +497,10 @@ function TrackSelector:_build_app(song)
     c.tooltip = map.description
     c:set_pos(map.index or 1)
     c.on_press = function() 
-      local columns = renoise.song().tracks[renoise.song().selected_track_index].visible_note_columns
-      local column_idx = renoise.song().selected_note_column_index
+      local columns = rns.tracks[rns.selected_track_index].visible_note_columns
+      local column_idx = rns.selected_note_column_index
       column_idx = math.min(column_idx+1,columns)
-      renoise.song().selected_note_column_index = column_idx
+      rns.selected_note_column_index = column_idx
       -- observing column via Renoise API is not possible so we set the palette changes on button press 
       if (column_idx >= columns ) then
        self._next_column:set(self.palette.column_next_off)
@@ -511,7 +512,7 @@ function TrackSelector:_build_app(song)
       end
     end
     c.on_hold = function() 
-      renoise.song().selected_note_column_index = renoise.song().tracks[renoise.song().selected_track_index].visible_note_columns
+      rns.selected_note_column_index = rns.tracks[rns.selected_track_index].visible_note_columns
     end
     self._next_column = c
   end
@@ -527,7 +528,7 @@ function TrackSelector:_build_app(song)
     c:set_pos(map.index or 1)
     c:set_orientation(map.orientation or ORIENTATION.HORIZONTAL)
     c.on_change = function(obj)
-      local track_idx = renoise.song().selected_track_index
+      local track_idx = rns.selected_track_index
       local track_page = self:_get_track_page(track_idx)
       -- figure out the resulting track index
       if self._out_of_bounds_track_index then
@@ -538,14 +539,14 @@ function TrackSelector:_build_app(song)
       local track_idx = page_diff+track_idx
 
       -- outside bounds?
-      if (track_idx>#renoise.song().tracks) then
+      if (track_idx>#rns.tracks) then
         self._out_of_bounds_track_index = track_idx
-        track_idx=#renoise.song().tracks
+        track_idx=#rns.tracks
       else
         self._out_of_bounds_track_index = nil
       end
       -- the notifier will take care of the rest
-      renoise.song().selected_track_index = track_idx
+      rns.selected_track_index = track_idx
     end
     self._prev_next_page = c
   end
@@ -556,7 +557,7 @@ function TrackSelector:_build_app(song)
   -- @param offset: -1 to decrease page, +1 to increase
   local get_track_index = function(offset)
 
-    local track_idx = renoise.song().selected_track_index
+    local track_idx = rns.selected_track_index
     local track_page = self:_get_track_page(track_idx)
 
     -- figure out the resulting track index
@@ -567,14 +568,14 @@ function TrackSelector:_build_app(song)
     local track_idx = (offset*page_width)+track_idx
 
     -- outside bounds?
-    if (track_idx>#renoise.song().tracks) then
+    if (track_idx>#rns.tracks) then
       if not self._out_of_bounds_track_index then
         self._out_of_bounds_track_index = track_idx
       end
-      track_idx=#renoise.song().tracks
+      track_idx=#rns.tracks
     else
       if (track_idx<1) then
-        track_idx = renoise.song().selected_track_index
+        track_idx = rns.selected_track_index
       end
       self._out_of_bounds_track_index = nil
     end
@@ -591,7 +592,7 @@ function TrackSelector:_build_app(song)
     c:set_pos(map.index or 1)
     c.on_press = function()
       local track_idx = get_track_index(-1)
-      renoise.song().selected_track_index = track_idx
+      rns.selected_track_index = track_idx
     end
     self._prev_page = c
   end
@@ -604,7 +605,7 @@ function TrackSelector:_build_app(song)
     c:set_pos(map.index or 1)
     c.on_press = function()
       local track_idx = get_track_index(1)
-      renoise.song().selected_track_index = track_idx
+      rns.selected_track_index = track_idx
     end
     self._next_page = c
   end
@@ -650,7 +651,7 @@ function TrackSelector:_build_app(song)
           track_idx = obj.index
         end
         -- outside bounds?
-        if (track_idx>#renoise.song().tracks) then
+        if (track_idx>#rns.tracks) then
           -- TODO if button-based, revert to previous index
           return 
         end
@@ -658,7 +659,7 @@ function TrackSelector:_build_app(song)
         -- (since we manually selected this track)
         self._out_of_bounds_track_index = nil
         -- the notifier will take care of the rest
-        renoise.song().selected_track_index = track_idx
+        rns.selected_track_index = track_idx
       end
 
     end
@@ -675,7 +676,7 @@ function TrackSelector:_build_app(song)
     c.tooltip = map.description
     c:set_pos(map.index)
     c.on_press = function(obj)
-      renoise.song().selected_track_index = 1
+      rns.selected_track_index = 1
     end
     self._select_first = c
   end
@@ -690,7 +691,7 @@ function TrackSelector:_build_app(song)
     c:set_pos(map.index)
     c.on_press = function(obj)
       local track_idx = xTrack.get_master_track_index()
-      renoise.song().selected_track_index = track_idx
+      rns.selected_track_index = track_idx
     end
     self._select_master = c
   end
@@ -706,10 +707,10 @@ function TrackSelector:_build_app(song)
     c.on_press = function(obj)
       local track_idx = xTrack.get_master_track_index()+1
       -- outside bounds?
-      if (track_idx>#renoise.song().tracks) then
+      if (track_idx>#rns.tracks) then
         return 
       end
-      renoise.song().selected_track_index = track_idx
+      rns.selected_track_index = track_idx
     end
     self._select_sends = c
   end
