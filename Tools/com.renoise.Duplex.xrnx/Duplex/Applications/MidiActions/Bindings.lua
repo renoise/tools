@@ -57,10 +57,10 @@ MidiActions.assist_table = {
     label = "Play",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.playing_observable
+      return rns.transport.playing_observable
     end,
     value_func = function()
-      return renoise.song().transport.playing
+      return rns.transport.playing
     end
   },
   {
@@ -68,10 +68,10 @@ MidiActions.assist_table = {
     label = "Loop",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.loop_pattern_observable
+      return rns.transport.loop_pattern_observable
     end,
     value_func = function()
-      return renoise.song().transport.loop_pattern
+      return rns.transport.loop_pattern
     end
   },
   --[[
@@ -80,10 +80,10 @@ MidiActions.assist_table = {
     label = "Loop",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.loop_pattern_observable
+      return rns.transport.loop_pattern_observable
     end,
     value_func = function()
-      return renoise.song().transport.loop_pattern
+      return rns.transport.loop_pattern
     end
   },
   ]]
@@ -92,7 +92,7 @@ MidiActions.assist_table = {
     label = "LoopBlock",
     is_boolean = true,
     value_func = function() 
-      return renoise.song().transport.loop_block_enabled 
+      return rns.transport.loop_block_enabled 
     end,
   },
   --[[
@@ -101,7 +101,7 @@ MidiActions.assist_table = {
     label = "LoopBlock",
     is_boolean = true,
     value_func = function() 
-      return renoise.song().transport.loop_block_enabled 
+      return rns.transport.loop_block_enabled 
     end,
   },
   ]]
@@ -112,7 +112,7 @@ MidiActions.assist_table = {
     minimum = 16,
     maximum = 2,
     value_func = function()
-      return renoise.song().transport.loop_block_range_coeff
+      return rns.transport.loop_block_range_coeff
     end,
   },
   {
@@ -128,10 +128,10 @@ MidiActions.assist_table = {
     label = "Follow",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.follow_player_observable
+      return rns.transport.follow_player_observable
     end,
     value_func = function()
-      return renoise.song().transport.follow_player
+      return rns.transport.follow_player
     end
   },
   --[[
@@ -140,10 +140,10 @@ MidiActions.assist_table = {
     label = "Follow",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.follow_player_observable
+      return rns.transport.follow_player_observable
     end,
     value_func = function()
-      return renoise.song().transport.follow_player
+      return rns.transport.follow_player
     end
   },
   ]]
@@ -160,10 +160,10 @@ MidiActions.assist_table = {
     label = "Metro",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.metronome_enabled_observable
+      return rns.transport.metronome_enabled_observable
     end,
     value_func = function()
-      return renoise.song().transport.metronome_enabled
+      return rns.transport.metronome_enabled
     end
   },
   --[[
@@ -172,10 +172,10 @@ MidiActions.assist_table = {
     label = "Metronome",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.metronome_enabled_observable
+      return rns.transport.metronome_enabled_observable
     end,
     value_func = function()
-      return renoise.song().transport.metronome_enabled
+      return rns.transport.metronome_enabled
     end
   },
   ]]
@@ -184,10 +184,10 @@ MidiActions.assist_table = {
     label = "Chord",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.chord_mode_enabled_observable
+      return rns.transport.chord_mode_enabled_observable
     end,
     value_func = function()
-      return renoise.song().transport.chord_mode_enabled
+      return rns.transport.chord_mode_enabled
     end
   },
   --[[
@@ -196,10 +196,10 @@ MidiActions.assist_table = {
     label = "Chord",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.chord_mode_enabled_observable
+      return rns.transport.chord_mode_enabled_observable
     end,
     value_func = function()
-      return renoise.song().transport.chord_mode_enabled
+      return rns.transport.chord_mode_enabled
     end
   },
   ]]
@@ -208,10 +208,10 @@ MidiActions.assist_table = {
     label = "Quant",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.record_quantize_enabled_observable
+      return rns.transport.record_quantize_enabled_observable
     end,
     value_func = function()
-      return renoise.song().transport.record_quantize_enabled
+      return rns.transport.record_quantize_enabled
     end
   },
   --[[
@@ -220,10 +220,10 @@ MidiActions.assist_table = {
     label = "Quant",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.record_quantize_enabled_observable
+      return rns.transport.record_quantize_enabled_observable
     end,
     value_func = function()
-      return renoise.song().transport.record_quantize_enabled
+      return rns.transport.record_quantize_enabled
     end
   },
   ]]
@@ -234,10 +234,10 @@ MidiActions.assist_table = {
     minimum = 1,
     maximum = 32,
     observable = function()
-      return renoise.song().transport.record_quantize_lines_observable
+      return rns.transport.record_quantize_lines_observable
     end,
     value_func = function()
-      return renoise.song().transport.record_quantize_lines
+      return rns.transport.record_quantize_lines
     end
   },
   --[[
@@ -247,10 +247,10 @@ MidiActions.assist_table = {
     minimum = 1,
     maximum = 32,
     observable = function()
-      return renoise.song().transport.record_quantize_lines_observable
+      return rns.transport.record_quantize_lines_observable
     end,
     value_func = function()
-      return renoise.song().transport.record_quantize_lines
+      return rns.transport.record_quantize_lines
     end
   },
   ]]
@@ -267,10 +267,10 @@ MidiActions.assist_table = {
     label = "RecMode",
     is_boolean = true,
     observable = function() 
-      return renoise.song().transport.record_parameter_mode_observable
+      return rns.transport.record_parameter_mode_observable
     end,
     value_func = function() 
-      return (renoise.song().transport.record_parameter_mode ==
+      return (rns.transport.record_parameter_mode ==
         renoise.Transport.RECORD_PARAMETER_MODE_AUTOMATION)
     end,
   },
@@ -280,10 +280,10 @@ MidiActions.assist_table = {
     label = "RecMode",
     is_boolean = true,
     observable = function() 
-      return renoise.song().transport.record_parameter_mode_observable
+      return rns.transport.record_parameter_mode_observable
     end,
     value_func = function() 
-      return (renoise.song().transport.record_parameter_mode ==
+      return (rns.transport.record_parameter_mode ==
         renoise.Transport.RECORD_PARAMETER_MODE_AUTOMATION)
     end,
   },
@@ -304,10 +304,10 @@ MidiActions.assist_table = {
     maximum = 999,
     offset = -60,
     observable = function()
-      return renoise.song().transport.bpm_observable
+      return rns.transport.bpm_observable
     end,
     value_func = function()
-      return renoise.song().transport.bpm
+      return rns.transport.bpm
     end
   },
   {
@@ -325,10 +325,10 @@ MidiActions.assist_table = {
     minimum = 1,
     maximum = 256,
     observable = function()
-      return renoise.song().transport.lpb_observable
+      return rns.transport.lpb_observable
     end,
     value_func = function()
-      return renoise.song().transport.lpb
+      return rns.transport.lpb
     end
   },
   {
@@ -344,10 +344,10 @@ MidiActions.assist_table = {
     label = "Shuffle",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.groove_enabled_observable
+      return rns.transport.groove_enabled_observable
     end,
     value_func = function()
-      return renoise.song().transport.groove_enabled
+      return rns.transport.groove_enabled
     end,
   },
   --[[
@@ -356,10 +356,10 @@ MidiActions.assist_table = {
     label = "Shuffle",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.groove_enabled_observable
+      return rns.transport.groove_enabled_observable
     end,
     value_func = function()
-      return renoise.song().transport.groove_enabled
+      return rns.transport.groove_enabled
     end,
   },
   ]]
@@ -368,10 +368,10 @@ MidiActions.assist_table = {
     label = "Edit",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.edit_mode_observable
+      return rns.transport.edit_mode_observable
     end,
     value_func = function()
-      return renoise.song().transport.edit_mode
+      return rns.transport.edit_mode
     end,
     
   },
@@ -381,10 +381,10 @@ MidiActions.assist_table = {
     label = "Edit",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.edit_mode_observable
+      return rns.transport.edit_mode_observable
     end,
     value_func = function()
-      return renoise.song().transport.edit_mode
+      return rns.transport.edit_mode
     end,
   },
   ]]
@@ -395,10 +395,10 @@ MidiActions.assist_table = {
     minimum = 0,
     maximum = 64,
     observable = function()
-      return renoise.song().transport.edit_step_observable
+      return rns.transport.edit_step_observable
     end,
     value_func = function()
-      return renoise.song().transport.edit_step
+      return rns.transport.edit_step
     end,
   },
   {
@@ -416,10 +416,10 @@ MidiActions.assist_table = {
     minimum = 0,
     maximum = 8,
     observable = function()
-      return renoise.song().transport.octave_observable
+      return rns.transport.octave_observable
     end,
     value_func = function()
-      return renoise.song().transport.octave
+      return rns.transport.octave
     end,
   },
   {
@@ -441,10 +441,10 @@ MidiActions.assist_table = {
     label = "KBVelEnabled",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.keyboard_velocity_enabled_observable
+      return rns.transport.keyboard_velocity_enabled_observable
     end,
     value_func = function()
-      return renoise.song().transport.keyboard_velocity_enabled
+      return rns.transport.keyboard_velocity_enabled
     end,
   },
   {
@@ -454,10 +454,10 @@ MidiActions.assist_table = {
     minimum = 0,
     maximum = 127,
     observable = function()
-      return renoise.song().transport.keyboard_velocity_enabled
+      return rns.transport.keyboard_velocity_enabled
     end,
     value_func = function()
-      return renoise.song().transport.keyboard_velocity
+      return rns.transport.keyboard_velocity
     end,
   },
   {
@@ -475,10 +475,10 @@ MidiActions.assist_table = {
     label = "Single",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.single_track_edit_mode_observable
+      return rns.transport.single_track_edit_mode_observable
     end,
     value_func = function()
-      return renoise.song().transport.single_track_edit_mode
+      return rns.transport.single_track_edit_mode
     end,
   },
   --[[
@@ -487,10 +487,10 @@ MidiActions.assist_table = {
     label = "Single",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.single_track_edit_mode_observable
+      return rns.transport.single_track_edit_mode_observable
     end,
     value_func = function()
-      return renoise.song().transport.single_track_edit_mode
+      return rns.transport.single_track_edit_mode
     end,
   },
   {
@@ -498,10 +498,10 @@ MidiActions.assist_table = {
     label = "PattWrap",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.wrapped_pattern_edit_observable
+      return rns.transport.wrapped_pattern_edit_observable
     end,
     value_func = function()
-      return renoise.song().transport.wrapped_pattern_edit
+      return rns.transport.wrapped_pattern_edit
     end,
   },
   ]]
@@ -510,10 +510,10 @@ MidiActions.assist_table = {
     label = "PattWrap",
     is_boolean = true,
     observable = function()
-      return renoise.song().transport.wrapped_pattern_edit_observable
+      return rns.transport.wrapped_pattern_edit_observable
     end,
     value_func = function()
-      return renoise.song().transport.wrapped_pattern_edit
+      return rns.transport.wrapped_pattern_edit
     end,
   },
 
@@ -532,7 +532,7 @@ MidiActions.assist_table = {
     is_integer = true,
     minimum = 1,
     maximum = function()
-      return renoise.song().transport.song_length.sequence
+      return rns.transport.song_length.sequence
     end,
   },
   --"Seq. Triggering:Trigger:Sequence XX:Sequence #%02d [Trigger]"
@@ -546,7 +546,7 @@ MidiActions.assist_table = {
     is_integer = true,
     minimum = 1,
     maximum = function()
-      return renoise.song().transport.song_length.sequence
+      return rns.transport.song_length.sequence
     end,
   },
   --"Seq. Triggering:Schedule:Sequence XX:Sequence #%02d [Trigger]"
@@ -560,7 +560,7 @@ MidiActions.assist_table = {
     is_integer = true,
     minimum = 1,
     maximum = function()
-      return renoise.song().transport.song_length.sequence
+      return rns.transport.song_length.sequence
     end,
   },
   {
@@ -584,7 +584,7 @@ MidiActions.assist_table = {
     label = "S.Mute",
     is_boolean = true,
     value_func = function(trk_idx)
-      local rns = renoise.song()
+      local rns = rns
       if rns.tracks[trk_idx] then
         local seq_idx = rns.selected_sequence_index
         local is_muted = rns.sequencer:track_sequence_slot_is_muted(trk_idx, seq_idx)
@@ -615,7 +615,7 @@ MidiActions.assist_table = {
     label = "MuteCurr",
     is_boolean = true,
     value_func = function()
-      local track = renoise.song().selected_track
+      local track = rns.selected_track
       if track.mute_state == renoise.Track.MUTE_STATE_ACTIVE and
         track.type ~= renoise.Track.TRACK_TYPE_MASTER 
       then
@@ -630,7 +630,7 @@ MidiActions.assist_table = {
     label = "MuteCurr",
     is_boolean = true,
     value_func = function()
-      local track = renoise.song().selected_track
+      local track = rns.selected_track
       if track.mute_state == renoise.Track.MUTE_STATE_ACTIVE and
         track.type ~= renoise.Track.TRACK_TYPE_MASTER 
       then
@@ -648,7 +648,7 @@ MidiActions.assist_table = {
     label = "Mute",
     is_boolean = true,
     value_func = function(trk_idx)
-      local track = renoise.song().tracks[trk_idx]
+      local track = rns.tracks[trk_idx]
       if track then
         if track.mute_state == renoise.Track.MUTE_STATE_ACTIVE and
           track.type ~= renoise.Track.TRACK_TYPE_MASTER 
@@ -659,7 +659,7 @@ MidiActions.assist_table = {
       return true
     end,
     observable = function(trk_idx)
-      local rns = renoise.song()
+      local rns = rns
       local track = rns.tracks[trk_idx]
       if track then
         return rns.tracks[trk_idx].mute_state_observable
@@ -681,8 +681,8 @@ MidiActions.assist_table = {
     label = "SendTrkMuteToggle",
     is_boolean = true,
     value_func = function(send_index)
-      local rns = renoise.song()
-      local track = send_track(send_index)
+      local rns = rns
+      local track = xTrack.get_send_track(send_index)
       if track then
         if track.mute_state == renoise.Track.MUTE_STATE_ACTIVE and
           track.type ~= renoise.Track.TRACK_TYPE_MASTER 
@@ -693,8 +693,8 @@ MidiActions.assist_table = {
       return true
     end,
     observable = function(send_index)
-      local rns = renoise.song()
-      local track = send_track(send_index)
+      local rns = rns
+      local track = xTrack.get_send_track(send_index)
       if track then
         return track.mute_state_observable
       end
@@ -714,35 +714,35 @@ MidiActions.assist_table = {
     name = "Track Levels:Volume:Current Track (Pre) [Set]",
     label = "VolCurr",
     param = function()
-      return renoise.song().selected_track.prefx_volume
+      return rns.selected_track.prefx_volume
     end,
   },
   {
     name = "Track Levels:Panning:Current Track (Pre) [Set]",
     label = "PanCurr",
     param = function()
-      return renoise.song().selected_track.prefx_panning
+      return rns.selected_track.prefx_panning
     end,
   },
   {
     name = "Track Levels:Width:Current Track [Set]",
     label = "WidthCurr",
     param = function()
-      return renoise.song().selected_track.prefx_width
+      return rns.selected_track.prefx_width
     end,
   },
   {
     name = "Track Levels:Volume:Current Track (Post) [Set]",
     label = "VolCurr",
     param = function()
-      return renoise.song().selected_track.postfx_volume
+      return rns.selected_track.postfx_volume
     end,
   },
   {
     name = "Track Levels:Panning:Current Track (Post) [Set]",
     label = "PanCurr",
     param = function()
-      return renoise.song().selected_track.postfx_panning
+      return rns.selected_track.postfx_panning
     end,
   },
   {
@@ -784,7 +784,7 @@ MidiActions.assist_table = {
     name = "Track Levels:Volume:Track XX (Pre):Track #* [Set]",
     label = "TrkVol",
     param = function(trk_idx)
-      local track = renoise.song().tracks[trk_idx]
+      local track = rns.tracks[trk_idx]
       if track then
         return track.prefx_volume
       end
@@ -794,7 +794,7 @@ MidiActions.assist_table = {
     name = "Track Levels:Volume:Track XX (Post):Track #* [Set]",
     label = "TrkVolP",
     param = function(trk_idx)
-      local track = renoise.song().tracks[trk_idx]
+      local track = rns.tracks[trk_idx]
       if track then
         return track.postfx_volume
       end
@@ -804,7 +804,7 @@ MidiActions.assist_table = {
     name = "Track Levels:Panning:Track XX (Pre):Track #* [Set]",
     label = "TrkPan",
     param = function(trk_idx)
-      local track = renoise.song().tracks[trk_idx]
+      local track = rns.tracks[trk_idx]
       if track then
         return track.prefx_panning
       end
@@ -814,7 +814,7 @@ MidiActions.assist_table = {
     name = "Track Levels:Panning:Track XX (Post):Track #* [Set]",
     label = "TrkPan",
     param = function(trk_idx)
-      local track = renoise.song().tracks[trk_idx]
+      local track = rns.tracks[trk_idx]
       if track then
         return track.postfx_panning
       end
@@ -824,7 +824,7 @@ MidiActions.assist_table = {
     name = "Track Levels:Width:Track XX:Track #* [Set]",
     label = "TrkWidth",
     param = function(trk_idx)
-      local track = renoise.song().tracks[trk_idx]
+      local track = rns.tracks[trk_idx]
       if track then
         return track.prefx_width
       end
@@ -834,8 +834,7 @@ MidiActions.assist_table = {
     name = "Track Levels:Volume:Send Track XX (Pre):Send Track #* [Set]",
     label = "SendTrkVol",
     param = function(send_index)
-      local rns = renoise.song()
-      local track = send_track(send_index)
+      local track = xTrack.get_send_track(send_index)
       if track then
         return track.prefx_volume
       end
@@ -845,8 +844,7 @@ MidiActions.assist_table = {
     name = "Track Levels:Volume:Send Track XX (Post):Send Track #* [Set]",
     label = "SendTrkVolP",
     param = function(send_index)
-      local rns = renoise.song()
-      local track = send_track(send_index)
+      local track = xTrack.get_send_track(send_index)
       if track then
         return track.postfx_volume
       end
@@ -856,8 +854,7 @@ MidiActions.assist_table = {
     name = "Track Levels:Panning:Send Track XX (Pre):Send Track #* [Set]",
     label = "SendTrkPanP",
     param = function(send_index)
-      local rns = renoise.song()
-      local track = send_track(send_index)
+      local track = xTrack.get_send_track(send_index)
       if track then
         return track.prefx_panning
       end
@@ -867,8 +864,7 @@ MidiActions.assist_table = {
     name = "Track Levels:Panning:Send Track XX (Post):Send Track #* [Set]",
     label = "SendTrkPanP",
     param = function(send_index)
-      local rns = renoise.song()
-      local track = send_track(send_index)
+      local track = xTrack.get_send_track(send_index)
       if track then
         return track.postfx_panning
       end
@@ -878,8 +874,7 @@ MidiActions.assist_table = {
     name = "Track Levels:Width:Send Track XX:Send Track #* [Set]",
     label = "SendTrkWidth",
     param = function(send_index)
-      local rns = renoise.song()
-      local track = send_track(send_index)
+      local track = xTrack.get_send_track(send_index)
       if track then
         return track.prefx_width
       end
@@ -896,8 +891,8 @@ MidiActions.assist_table = {
     label = "ToggleDSP",
     is_boolean = true,
     value_func = function()
-      if renoise.song().selected_device then
-        return renoise.song().selected_device.is_active
+      if rns.selected_device then
+        return rns.selected_device.is_active
       end
     end,
   },
@@ -907,8 +902,8 @@ MidiActions.assist_table = {
     label = "ToggleDSP",
     is_boolean = true,
     value_func = function()
-      if renoise.song().selected_device then
-        return renoise.song().selected_device.is_active
+      if rns.selected_device then
+        return rns.selected_device.is_active
       end
     end,
   },
@@ -916,7 +911,7 @@ MidiActions.assist_table = {
     name = "Track DSPs:Selected FX:Parameter #* [Set]",
     label = "FXParam",
     param = function(param_index)
-      local sel_device = renoise.song().selected_device
+      local sel_device = rns.selected_device
       if sel_device and sel_device.parameters[param_index] then
         return sel_device.parameters[param_index]
       end
@@ -937,7 +932,7 @@ MidiActions.assist_table = {
     is_integer = true,
     minimum = 1,
     maximum = function() 
-      return renoise.song().transport.song_length.sequence 
+      return rns.transport.song_length.sequence 
     end,
   },
   {
@@ -955,7 +950,7 @@ MidiActions.assist_table = {
     minimum = 1,
     maximum = 1000,
     observable = function()
-      return renoise.song().selected_pattern_index_observable
+      return rns.selected_pattern_index_observable
     end,
   },
   {
@@ -972,10 +967,10 @@ MidiActions.assist_table = {
     is_integer = true,
     minimum = 1,
     maximum = function() 
-      return #renoise.song().tracks 
+      return #rns.tracks 
     end,
     observable = function()
-      return renoise.song().selected_track_index_observable
+      return rns.selected_track_index_observable
     end,
   },
   {
@@ -1008,7 +1003,7 @@ MidiActions.assist_table = {
     label = "VolCol",
     is_boolean = true,
     value_func = function()
-      return renoise.song().selected_track.volume_column_visible
+      return rns.selected_track.volume_column_visible
     end,
   },
   ]]
@@ -1017,7 +1012,7 @@ MidiActions.assist_table = {
     label = "VolCol",
     is_boolean = true,
     value_func = function()
-      return renoise.song().selected_track.volume_column_visible
+      return rns.selected_track.volume_column_visible
     end,
   },
   --[[
@@ -1026,7 +1021,7 @@ MidiActions.assist_table = {
     label = "PanCol",
     is_boolean = true,
     value_func = function()
-      return renoise.song().selected_track.panning_column_visible
+      return rns.selected_track.panning_column_visible
     end,
   },
   ]]
@@ -1035,7 +1030,7 @@ MidiActions.assist_table = {
     label = "PanCol",
     is_boolean = true,
     value_func = function()
-      return renoise.song().selected_track.panning_column_visible
+      return rns.selected_track.panning_column_visible
     end,
   },
   --[[
@@ -1044,7 +1039,7 @@ MidiActions.assist_table = {
     label = "DlyCol",
     is_boolean = true,
     value_func = function()
-      return renoise.song().selected_track.delay_column_visible
+      return rns.selected_track.delay_column_visible
     end,
   },
   ]]
@@ -1053,7 +1048,7 @@ MidiActions.assist_table = {
     label = "DlyCol",
     is_boolean = true,
     value_func = function()
-      return renoise.song().selected_track.delay_column_visible
+      return rns.selected_track.delay_column_visible
     end,
   },
   {
@@ -1062,10 +1057,10 @@ MidiActions.assist_table = {
     is_integer = true,
     minimum = 1,
     maximum = function() 
-      return #renoise.song().selected_track.devices 
+      return #rns.selected_track.devices 
     end,
     observable = function()
-      return renoise.song().selected_device_index_observable
+      return rns.selected_device_index_observable
     end
   },
   {
@@ -1082,13 +1077,13 @@ MidiActions.assist_table = {
     is_integer = true,
     minimum = 1,
     maximum = function() 
-      return #renoise.song().instruments 
+      return #rns.instruments 
     end,
     observable = function()
-      return renoise.song().selected_instrument_index_observable
+      return rns.selected_instrument_index_observable
     end,
     value_func = function()
-      return renoise.song().selected_instrument_index
+      return rns.selected_instrument_index
     end
   },
   {
