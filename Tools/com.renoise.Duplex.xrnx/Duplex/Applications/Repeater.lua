@@ -810,7 +810,7 @@ function Repeater:update_grid(x,y)
           else
             str_value = ("1 / %i"):format(1/cell.divisor)
           end
-          if (round_value(mode_param.value) == cell.mode) and
+          if (cLib.round_value(mode_param.value) == cell.mode) and
             (mode_divisor.value_string == str_value)
           then
             x = grid_x
