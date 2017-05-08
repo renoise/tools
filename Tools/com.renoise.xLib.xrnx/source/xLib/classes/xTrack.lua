@@ -19,6 +19,8 @@ class 'xTrack'
 -- @return number 
 
 function xTrack.get_master_track_index()
+  TRACE("xTrack.get_master_track_index()")
+
   for i,v in pairs(rns.tracks) do
     if v.type == renoise.Track.TRACK_TYPE_MASTER then
       return i
@@ -31,6 +33,8 @@ end
 -- @return renoise.Track
 
 function xTrack.get_master_track()
+  TRACE("xTrack.get_master_track()")
+
   for i,v in pairs(rns.tracks) do
     if v.type == renoise.Track.TRACK_TYPE_MASTER then
       return v
@@ -44,6 +48,8 @@ end
 -- @return renoise.Track or nil 
 
 function xTrack.get_send_track(send_index)
+  TRACE("xTrack.get_send_track(send_index)",send_index)
+
   if (send_index <= rns.send_track_count) then
     local trk_idx = rns.sequencer_track_count + 1 + send_index
     return rns:track(trk_idx)
@@ -53,19 +59,36 @@ function xTrack.get_send_track(send_index)
 end
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Get total number of tracks matching the "type"
--- @param track_type (renoise.Track.TRACK_TYPE_xxx)
--- @return int, 
+-- [Static] check if any track is soloed
+-- @return boolean
 
-function xTrack.get_track_count(track_type)
+function xTrack:any_track_is_soloed()
+  TRACE("xTrack:any_track_is_soloed()")
 
-  local count=0
-  for k,v in ipairs(rns.tracks) do
-    if (v.type == track_type) then
-      count = count + 1
+  for v,track in ipairs(rns.tracks) do
+    if track.solo_state then
+      return true
     end
   end
-  return count
+  return false
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Get total number of tracks matching the "type"
+-- @param track_type (renoise.Track.TRACK_TYPE_xxx)
+-- @return table<int>
+
+function xTrack.get_tracks_by_type(track_type)
+  TRACE("xTrack.get_tracks_by_type(track_type)",track_type)
+
+  local rslt = {}
+  for k,v in ipairs(rns.tracks) do
+    if (v.type == track_type) then
+      table.insert(rslt,k)
+    end
+  end
+  return rslt
 
 end
 
@@ -120,6 +143,7 @@ end
 -- @return renoise.Track.TRACK_TYPE_xxx or nil 
 
 function xTrack.determine_track_type(track_index)
+  TRACE("xTrack.determine_track_type(track_index)",track_index)
 
   local master_idx = xTrack.get_master_track_index()
   local tracks = rns.tracks
@@ -205,6 +229,7 @@ end
 -- @return string, error message when failed
 
 function xTrack:get_pattern_track(seq_idx,trk_idx)
+  TRACE("xTrack:get_pattern_track(seq_idx,trk_idx)",seq_idx,trk_idx)
 
   local patt_idx = rns.sequencer:pattern(seq_idx)
   if not patt_idx then
@@ -225,6 +250,7 @@ end
 -- (similar to e.g. renoise.song().selection_in_pattern)
 
 function xTrack.get_selected_column_index()
+  TRACE("xTrack.get_selected_column_index()")
 
   if rns.selected_note_column then
     return rns.selected_note_column_index
@@ -242,6 +268,7 @@ end
 -- @return string, error message when failed 
 
 function xTrack.set_selected_column_index(track,col_idx)
+  TRACE("xTrack.set_selected_column_index(track,col_idx)",track,col_idx)
 
   if (track.type == renoise.Track.TRACK_TYPE_SEQUENCER) 
     and (track.visible_note_columns >= col_idx) 
@@ -255,4 +282,24 @@ function xTrack.set_selected_column_index(track,col_idx)
 
 end
 
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Set mute state for a note column in the selected track 
+-- @param col_idx (number)
+
+function xTrack.set_column_mute(col_idx)
+  TRACE("xTrack.set_column_mute(col_idx)",col_idx)
+
+  local track_idx = rns.selected_track_index
+  if (track_idx<xTrack.get_master_track_index()) then
+    for i = 1,12 do
+      local muted = (i > col_idx)
+      if (renoise.API_VERSION > 4) then
+        rns.tracks[track_idx]:set_column_is_muted(i,muted)
+      else
+        rns.tracks[track_idx]:mute_column(i, muted)
+      end
+    end
+  end
+end
 
