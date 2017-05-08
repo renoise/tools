@@ -214,7 +214,6 @@ end
 function PatternCursor:changeLineBy(val)
   TRACE("PatternCursor:changeLineBy(val)",val)
 
-  local rns = renoise.song()
   local line_index = rns.selected_line_index
   local seq_index = rns.selected_sequence_index
   local patt_index = rns.selected_pattern_index
@@ -247,7 +246,7 @@ function PatternCursor:changeLineBy(val)
     if self:isWrappedEdit() then
       -- head into next pattern
       new_seq_index = new_seq_index+1
-      local seq_length = #renoise.song().sequencer.pattern_sequence
+      local seq_length = #rns.sequencer.pattern_sequence
       --print("head into next pattern - new_seq_index,seq_length",new_seq_index,seq_length)
       if (new_seq_index > seq_length) then
         new_seq_index = seq_length
@@ -299,7 +298,6 @@ end
 
 function PatternCursor:changeLineTo(val)
 
-  local rns = renoise.song()
   local patt_index = rns.selected_pattern_index
   local patt = rns.patterns[patt_index]    
   rns.selected_line_index = cLib.clamp_value(
@@ -311,7 +309,6 @@ end
 
 function PatternCursor:isWrappedEdit()
 
-  local rns = renoise.song()
   if (self.options.wrap_mode.value == PatternCursor.WRAP_MODE_ON) or
     ((self.options.wrap_mode.value == PatternCursor.WRAP_MODE_AUTO) and
     rns.transport.wrapped_pattern_edit) 
@@ -327,7 +324,6 @@ end
 
 function PatternCursor:getStepSize()
 
-  local rns = renoise.song()
   return rns.transport.edit_step
   
 end
