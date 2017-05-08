@@ -97,6 +97,7 @@ end
 -- @return int (the difference in lines)
 
 function Mlrx_pos:quantize(quant)
+  TRACE("Mlrx_pos:quantize(quant)",quant)
 
   -- figure out the closest quantized line
   local tmp_line = self.line%quant
@@ -133,7 +134,7 @@ function Mlrx_pos:normalize(force_to_start)
     self.line = (force_to_start) and 1 or self.line-num_lines
 
     --print(" normalize - exceeded pattern length, line is now",self.line)
-    if not Mlrx:pattern_is_looped() then
+    if not xTransport.pattern_is_looped() then
       self.sequence = self.sequence+1
       --print(" normalize - increase sequence to",self.sequence)
       if (self.sequence > #rns.sequencer.pattern_sequence) then
