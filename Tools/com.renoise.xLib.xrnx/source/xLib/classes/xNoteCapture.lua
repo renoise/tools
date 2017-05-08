@@ -67,7 +67,7 @@ function xNoteCapture.previous(compare_fn, notepos, end_seq_idx)
         return 
       end
       
-      local patt_idx = xSongPos.get_pattern_index(notepos.sequence)
+      local patt_idx = rns.sequencer:pattern(notepos.sequence)
       local patt = rns.patterns[patt_idx]
       if (patt) then
         notepos.line = patt.number_of_lines
@@ -102,7 +102,7 @@ function xNoteCapture.next(compare_fn, notepos, end_seq_idx)
       if (notepos.sequence > max_seq_idx) then
         return 
       end
-      local patt_idx = xSongPos.get_pattern_index(notepos.sequence)
+      local patt_idx = rns.sequencer:pattern(notepos.sequence)
       local patt = rns.patterns[patt_idx]
       if (patt) then
         notepos.line = 1
@@ -123,7 +123,7 @@ end
 function xNoteCapture.search_track(notepos, compare_fn, reverse)
   TRACE("xNoteCapture.search_track(notepos,compare_fn)", notepos, compare_fn)
   
-  local patt_idx = xSongPos.get_pattern_index(notepos.sequence)
+  local patt_idx = rns.sequencer:pattern(notepos.sequence)
   local patt = rns.patterns[patt_idx]
   local patt_trk = patt.tracks[notepos.track]
   
