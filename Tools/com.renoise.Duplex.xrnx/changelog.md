@@ -3,7 +3,7 @@
 ## 1.01
 
 - Core: Several classes have been replaced with their cLib/xLib counterparts. 
-- Core: avoid that text expands size of viewbuilder buttons
+- Core/Display: retain size of viewbuilder buttons when setting long text string
 - Documentation: switched to a new format, github-flavored markdown. 
 - Added: Eran Dax Lonkers StepSequencer contributions + other features  
 - Added: Keyboard - HarmonicWrapped layout, tweaked configurations
