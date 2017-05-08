@@ -178,13 +178,13 @@ end
 function SliceMate:select(user_selected)
   TRACE("SliceMate:select(user_selected)",user_selected)
 
-  local slice_xnotepos = self:get_position()
+  local slice_xcursorpos = self:get_position()
   local pos = xNoteCapture.nearest(self.compare_fn)
   if not pos then
     self.instrument_status.value = ""
     self.instrument_index.value = 0  
   else
-    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(pos,slice_xnotepos)
+    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(pos,slice_xcursorpos)
     if not frame and sample_idx then
       local notecol = pos:get_column()
       self.position_slice.value = -1
@@ -369,12 +369,12 @@ end
 function SliceMate:get_position()
   TRACE("SliceMate:get_position()")
 
-  local slice_xnotepos = xCursorPos()
+  local slice_xcursorpos = xCursorPos()
   if not self.prefs.quantize_enabled.value then
-    return slice_xnotepos
+    return slice_xcursorpos
   end
 
-  local xsongpos = xSongPos(slice_xnotepos)
+  local xsongpos = xSongPos(slice_xcursorpos)
   if not rns.transport.playing  
     or (rns.transport.playing and not rns.transport.follow_player) 
   then 
@@ -391,10 +391,10 @@ function SliceMate:get_position()
 
   if (choices[self.prefs.quantize_amount.value]) then 
     choices[self.prefs.quantize_amount.value]()
-    slice_xnotepos.line = xsongpos.line
-    slice_xnotepos.sequence = xsongpos.sequence    
-    slice_xnotepos.fraction = 0    
-    return slice_xnotepos
+    slice_xcursorpos.line = xsongpos.line
+    slice_xcursorpos.sequence = xsongpos.sequence    
+    slice_xcursorpos.fraction = 0    
+    return slice_xcursorpos
   else 
     error("Unexpected quantize amount")
   end
@@ -411,8 +411,8 @@ end
 --  notecol
 --}
 
-function SliceMate:get_buffer_position(trigger_pos,slice_xnotepos,autofix)
-  TRACE("SliceMate:get_buffer_position(trigger_pos,slice_xnotepos,autofix)",trigger_pos,slice_xnotepos,autofix)
+function SliceMate:get_buffer_position(trigger_pos,slice_xcursorpos,autofix)
+  TRACE("SliceMate:get_buffer_position(trigger_pos,slice_xcursorpos,autofix)",trigger_pos,slice_xcursorpos,autofix)
 
   local patt_idx,patt,track,ptrack,line = trigger_pos:resolve()
   if not line then
@@ -471,7 +471,7 @@ function SliceMate:get_buffer_position(trigger_pos,slice_xnotepos,autofix)
   end 
 
   local frame,notecol = 
-    xSample.get_buffer_frame_by_notepos(sample,trigger_pos,slice_xnotepos,ignore_sxx)
+    xSample.get_buffer_frame_by_notepos(sample,trigger_pos,slice_xcursorpos,ignore_sxx)
   return frame,sample_idx,instr_idx,notecol
 
 end 
@@ -485,7 +485,7 @@ function SliceMate:insert_slice()
   TRACE("SliceMate:insert_slice()")
 
   local autofix = self.prefs.autofix_instr.value
-  local slice_xnotepos = self:get_position()
+  local slice_xcursorpos = self:get_position()
   local pos = xNoteCapture.nearest(self.compare_fn)
   if not pos then
     -- offer to insert note when nothing was found 
@@ -503,14 +503,14 @@ function SliceMate:insert_slice()
         .."\nautomatically, as they are encountered"
     elseif is_sliceable and self.ui:promp_initial_note_insert() then
       local instr_idx = rns.selected_instrument_index
-      local inserted,err = self:insert_sliced_note(slice_xnotepos,instr_idx,1)
+      local inserted,err = self:insert_sliced_note(slice_xcursorpos,instr_idx,1)
       if not inserted and err then 
         return false,err
       end   
     end 
   else
 
-    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(pos,slice_xnotepos,autofix)
+    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(pos,slice_xcursorpos,autofix)
     if not frame and sample_idx then 
       return false, ("Unable to insert slice:\n%s"):format(sample_idx) -- error message
     elseif sample_idx then
@@ -575,7 +575,7 @@ function SliceMate:insert_slice()
       end
 
       if self.prefs.insert_note.value then
-        local inserted,err = self:insert_sliced_note(slice_xnotepos,instr_idx,slice_idx+1,notecol)
+        local inserted,err = self:insert_sliced_note(slice_xcursorpos,instr_idx,slice_idx+1,notecol)
         if not inserted and err then 
           return false,err
         end 
@@ -589,14 +589,14 @@ function SliceMate:insert_slice()
 end
 
 ---------------------------------------------------------------------------------------------------
--- @param slice_xnotepos (xCursorPos), where to insert 
+-- @param slice_xcursorpos (xCursorPos), where to insert 
 -- @param instr_idx (number), instrument index 
 -- @param sample_idx (number), sample index - mapping decides which note to insert
 -- @param [src_notecol] (renoise.NoteColumn), carry over volume/panning when set 
 
 
-function SliceMate:insert_sliced_note(slice_xnotepos,instr_idx,sample_idx,src_notecol)
-  TRACE("SliceMate:insert_sliced_note(slice_xnotepos,instr_idx,sample_idx,src_notecol)",slice_xnotepos,instr_idx,sample_idx,src_notecol)
+function SliceMate:insert_sliced_note(slice_xcursorpos,instr_idx,sample_idx,src_notecol)
+  TRACE("SliceMate:insert_sliced_note(slice_xcursorpos,instr_idx,sample_idx,src_notecol)",slice_xcursorpos,instr_idx,sample_idx,src_notecol)
 
   local instr = rns.instruments[instr_idx]
   local sample = instr.samples[sample_idx]
@@ -604,11 +604,11 @@ function SliceMate:insert_sliced_note(slice_xnotepos,instr_idx,sample_idx,src_no
     return false,"Could not resolve sample"
   end
 
-  local patt_idx,patt,track,ptrack,line = slice_xnotepos:resolve()
+  local patt_idx,patt,track,ptrack,line = slice_xcursorpos:resolve()
   if not line then
     return false,"Could not resolve pattern-line"                    
   end
-  local notecol = line.note_columns[slice_xnotepos.column]
+  local notecol = line.note_columns[slice_xcursorpos.column]
   if not notecol then
     return false,"Could not resolve note-column"
   end 
@@ -617,7 +617,7 @@ function SliceMate:insert_sliced_note(slice_xnotepos,instr_idx,sample_idx,src_no
   --notecol.note_value = sample.sample_mapping.note_range[1]
   notecol.instrument_value = instr_idx-1
   if not self.prefs.quantize_enabled.value then
-    local delay_val = math.floor(slice_xnotepos.fraction * 255)
+    local delay_val = math.floor(slice_xcursorpos.fraction * 255)
     notecol.delay_value = delay_val
     if (delay_val > 0) then
       track.delay_column_visible = true
