@@ -69,11 +69,7 @@ function Message:get_numeric_value()
   TRACE("Message:get_numeric_value()")
 
   if (type(self.value) == "table") then
-    print(">>> self.value",self.value)
-    print(">>> self.context",self.context)
-    rprint(self.value)
     return self.value[2] -- velocity for MIDI NOTE, 
-
   else
     return self.value 
   end
