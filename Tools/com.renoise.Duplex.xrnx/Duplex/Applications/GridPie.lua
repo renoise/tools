@@ -384,7 +384,6 @@ function GridPie:_apply_pending_updates()
     return false
   end
 
-  local rns = renoise.song()
   local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
 
   if not gridpie_patt then
@@ -445,7 +444,6 @@ end
 function GridPie:adapt_gridpie_pattern()
   TRACE("GridPie:adapt_gridpie_pattern()")
   
-  local rns = renoise.song()
   local new_seq_idx = self:get_gridpie_seq_pos()
   local new_patt_idx = rns.sequencer:pattern(new_seq_idx)
   local new_patt = rns.patterns[new_patt_idx]
@@ -559,7 +557,7 @@ end
 function GridPie:is_session_recording()
 
   return (self.realtime_record and 
-    not renoise.song().transport.loop_pattern)
+    not rns.transport.loop_pattern)
 
 end
 
@@ -574,7 +572,6 @@ end
 function GridPie:clear_lines(track_idx,patt_idx,start_line,end_line)
   TRACE("GridPie:clear_lines()",track_idx,patt_idx,start_line,end_line)
 
-  local rns = renoise.song()
   local iter = rns.pattern_iterator:lines_in_pattern_track(patt_idx,track_idx)
 
   for pos,line in iter do
@@ -604,7 +601,6 @@ end
 function GridPie:alias_slot(track_idx,alias_p_idx)
   TRACE("GridPie:alias_slot()",track_idx,alias_p_idx)
 
-  local rns = renoise.song()
   local patt_track = rns.patterns[self.gridpie_patt_idx].tracks[track_idx]
   local alias_ptrack = rns.patterns[alias_p_idx].tracks[track_idx]
   -- if the alias pattern is in itself an alias:
@@ -630,8 +626,6 @@ end
 
 function GridPie:set_pattern_cache(patt_idx,track_idx,num_lines)
   --TRACE("GridPie:set_pattern_cache()",patt_idx,track_idx,num_lines)
-
-  local rns = renoise.song()
 
   if not self.patt_cache[patt_idx] then
     self.patt_cache[patt_idx] = table.create()
@@ -700,7 +694,6 @@ end
 -- @return int
 
 function GridPie:_get_v_limit()
-  local rns = renoise.song()
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
   return math.max(1,gridpie_seq_pos - self.matrix_height)
 end
@@ -709,7 +702,6 @@ end
 -- @return int
 
 function GridPie:_get_h_limit()
-  local rns = renoise.song()
   return math.max(1,rns.sequencer_track_count - self.matrix_width + 1)
 end
 
@@ -940,7 +932,7 @@ end
 
 function GridPie:align_track()
   if (self.options.follow_pos.value ~= FOLLOW_OFF) then
-    renoise.song().selected_track_index = self.x_pos
+    rns.selected_track_index = self.x_pos
   end
 end
 
@@ -948,7 +940,7 @@ end
 
 function GridPie:align_pattern()
   if (self.options.follow_pos.value == FOLLOW_TRACK_PATTERN) then
-    renoise.song().selected_sequence_index = self.y_pos
+    rns.selected_sequence_index = self.y_pos
   end
 end
 
@@ -961,8 +953,6 @@ end
 
 function GridPie:can_mute_pattern(seq_idx)
   TRACE("GridPie:can_mute_pattern()",seq_idx)
-
-  local rns = renoise.song()
 
   local able_to_toggle = true
   if not self:_slots_are_aligned(seq_idx) then
@@ -990,7 +980,6 @@ end
 function GridPie:_slots_are_aligned(seq_idx)
   TRACE("GridPie:_slots_are_aligned()",seq_idx)
 
-  local rns = renoise.song()
   local s_idx = nil
   local are_aligned = true
   for i = 1,rns.sequencer_track_count do
@@ -1021,7 +1010,6 @@ end
 function GridPie:is_garbage_pos(track_idx,seq_idx)
   --TRACE("GridPie:is_garbage_pos()",track_idx,seq_idx)
 
-  local rns = renoise.song()
   --local total_sequence = #rns.sequencer.pattern_sequence
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
 
@@ -1065,7 +1053,6 @@ end
 function GridPie:init_pm_slots_to(val)
   TRACE("GridPie:init_pm_slots_to()",val)
 
-  local rns = renoise.song()
   local sequencer = rns.sequencer
   --local total_sequence = #sequencer.pattern_sequence
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
@@ -1101,7 +1088,6 @@ end
 function GridPie:init_gp_pattern()
   TRACE("GridPie:init_gp_pattern()")
 
-  local rns = renoise.song()
   local sequencer = rns.sequencer
   local total_sequence = #sequencer.pattern_sequence
   local last_patt_idx = rns.sequencer:pattern(total_sequence)
@@ -1176,8 +1162,6 @@ end
 function GridPie:check_recording_status()
   TRACE("GridPie:check_recording_status()")
 
-  local rns = renoise.song()
-
   if rns.transport.playing and 
     rns.transport.edit_mode and 
     rns.transport.follow_player
@@ -1215,7 +1199,6 @@ function GridPie:build_cache()
   TRACE("GridPie:build_cache()")
 
   -- determine the total number of lines
-  local rns = renoise.song()
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
 
   for seq_idx = 1,gridpie_seq_pos do
@@ -1254,8 +1237,8 @@ function GridPie:make_slot_unique(ptrack,track_idx)
   
   if ptrack.is_alias then
     local src_patt_idx = ptrack.alias_pattern_index
-    local src_patt = renoise.song().patterns[src_patt_idx]
-    local src_ptrack = renoise.song().patterns[src_patt_idx].tracks[track_idx]
+    local src_patt = rns.patterns[src_patt_idx]
+    local src_ptrack = rns.patterns[src_patt_idx].tracks[track_idx]
     ptrack.alias_pattern_index = 0
     self.skip_gp_notifier = true
     ptrack:copy_from(src_ptrack)
@@ -1318,9 +1301,9 @@ end
 
 function GridPie:get_ptrack(seq_idx,track_idx)
 
-  local p_idx = renoise.song().sequencer:pattern(seq_idx)
+  local p_idx = rns.sequencer:pattern(seq_idx)
   if (p_idx) then
-    local p = renoise.song().patterns[p_idx]
+    local p = rns.patterns[p_idx]
     local ptrack = p.tracks[track_idx]
     if ptrack then
       return ptrack
@@ -1359,10 +1342,9 @@ end
 function GridPie:paint_cell(cell,x,y)
   --TRACE("GridPie:paint_cell()",cell,x,y)
   
-  local rns = renoise.song()
   local track_idx,seq_idx = self:get_idx_from_coords(x,y)
   local sel_seq_idx = rns.selected_sequence_index
-  local sel_track_idx = renoise.song().selected_track_index
+  local sel_track_idx = rns.selected_track_index
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
 
   -- figure out if track/sequence highlight is in range, at which index
@@ -1513,7 +1495,6 @@ end
 function GridPie:clear_track(track_idx)
   TRACE("GridPie:clear_track()",track_idx)
 
-  local rns = renoise.song()
   rns.patterns[self.gridpie_patt_idx].tracks[track_idx]:clear()
   self.poly_counter[track_idx] = nil
   self:brief_track_mute(track_idx)
@@ -1527,8 +1508,6 @@ end
 -- @param track_idx (int)
 
 function GridPie:brief_track_mute(track_idx)
-
-  local rns = renoise.song()
 
   if (rns.tracks[track_idx].type == renoise.Track.TRACK_TYPE_SEQUENCER) and
     (rns.tracks[track_idx].mute_state==renoise.Track.MUTE_STATE_ACTIVE) 
@@ -1557,7 +1536,6 @@ end
 function GridPie:copy_and_expand(patt_idx,dest_patt_idx,track_idx,num_lines,offset,lines_total,start_line,end_line)
   TRACE("GridPie:copy_and_expand()",patt_idx,dest_patt_idx,track_idx,num_lines,offset,lines_total,start_line,end_line)
 
-  local rns = renoise.song()
   local patt = rns.patterns[patt_idx]
   local track = patt:track(track_idx)
 
@@ -1698,7 +1676,6 @@ end
 
 function GridPie:goto_slot(track_idx)
 
-  local rns = renoise.song()
   local gp_seq_idx = self:get_gridpie_seq_pos()
   local gp_patt_idx = rns.sequencer:pattern(gp_seq_idx)
   local gp_ptrack = rns.patterns[gp_patt_idx].tracks[track_idx]
@@ -1741,7 +1718,6 @@ end
 function GridPie:clone_pattern()
   TRACE("GridPie:clone_pattern()")
 
-  local rns = renoise.song()
   local gp_seq_idx = self:get_gridpie_seq_pos()
   rns.sequencer:clone_range(gp_seq_idx,gp_seq_idx)
   self.v_update_requested = true
@@ -1758,7 +1734,6 @@ end
 function GridPie:toggler(x, y, pattern)
   TRACE("GridPie:toggler()",x, y, pattern)
 
-  local rns = renoise.song()
   local gp_seq_idx = self:get_gridpie_seq_pos()
   local track_idx,seq_idx = self:get_idx_from_coords(x,y)
 
@@ -1820,7 +1795,6 @@ end
 function GridPie:_toggle_slot(seq_idx,track_idx)
   TRACE("GridPie:_toggle_slot()",seq_idx,track_idx)
 
-  local rns = renoise.song()
   local patt_idx = rns.sequencer:pattern(seq_idx)
   --print("*** toggle_slot - patt_idx",patt_idx)
   local patt = rns.patterns[patt_idx]
@@ -2002,7 +1976,6 @@ end
 function GridPie:_toggle_pattern(seq_idx,track_idx)
   TRACE("GridPie:_toggle_pattern()",seq_idx,track_idx)
 
-  local rns = renoise.song()
   local patt_idx = rns.sequencer:pattern(seq_idx)
   local source_patt = rns.patterns[patt_idx]
   local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
@@ -2114,7 +2087,6 @@ end
 
 function GridPie:has_aliased_master(ptrk,track_idx)
 
-  local rns = renoise.song()
   if ptrk.is_alias then
     local mst_seq_idx = self.active_slots[track_idx]
     if mst_seq_idx and 
@@ -2140,8 +2112,6 @@ end
 
 function GridPie:toggle_slot_record(gridpie_patt,track_idx,mute,master_p_idx)
   TRACE("GridPie:toggle_slot_record()",gridpie_patt,track_idx,mute,master_p_idx)
-
-  local rns = renoise.song()
 
   if mute then
 
@@ -2234,7 +2204,6 @@ end
 function GridPie:set_record_patt_length(gridpie_patt,num_lines,old_num_lines)
   TRACE("GridPie:set_record_patt_length()",gridpie_patt,num_lines,old_num_lines)
 
-  local rns = renoise.song()
   --local new_num_lines = self:_restrict_to_pattern_length(num_lines,gridpie_patt)
   if (num_lines > gridpie_patt.number_of_lines) then
     -- if the pattern is being extended we check for the existence of
@@ -2264,7 +2233,6 @@ end
 function GridPie:remove_buffer_pattern()
 
   if self.gp_buffer_seq_pos then
-    local rns = renoise.song()
     local gridpie_seq_pos = self:get_gridpie_seq_pos()
     self.gridpie_patt_idx = self.gp_buffer_patt_idx
     local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
@@ -2296,7 +2264,6 @@ end
 function GridPie:_update_pm_mutes(seq_idx,track_idx,muted)
   TRACE("GridPie:_update_pm_mutes()",seq_idx,track_idx,muted)
 
-  local rns = renoise.song()
   for o = 1, rns.sequencer_track_count do
     local update_track = true
     if track_idx and (track_idx~=o) then
@@ -2334,8 +2301,6 @@ end
 
 function GridPie:_build_app()
   TRACE("GridPie:_build_app()")
-
-  local rns = renoise.song()
 
   -- determine grid size by looking at the control-map
   local cm = self.display.device.control_map
@@ -2621,7 +2586,6 @@ end
 function GridPie:assign_to_slot(bt,force)
   TRACE("GridPie:assign_to_slot()",bt,force)
 
-  local rns = renoise.song()
   local gp_seq_idx = self:get_gridpie_seq_pos()
   local gp_patt_idx = rns.sequencer:pattern(gp_seq_idx)
 
@@ -2752,8 +2716,6 @@ function GridPie:start_app(start_running)
   self._is_monochrome = is_monochrome(self.display.device.colorspace)
   self._has_been_started = true
 
-  local rns = renoise.song()
-
   -- initialize important stuff
   self:reset_tables()
   self:_set_page_sizes() 
@@ -2797,8 +2759,6 @@ function GridPie:stop_app()
   TRACE("GridPie:stop_app()")
 
   if self._has_been_started then
-
-    local rns = renoise.song()
 
     -- revert PM
     self:init_pm_slots_to(false)
@@ -2855,7 +2815,6 @@ end
 function GridPie:_attach_line_notifiers()
   TRACE("GridPie:_attach_line_notifiers()")
 
-  local rns = renoise.song()
   local patt_idx = rns.selected_pattern_index
   local patt = rns.patterns[patt_idx]
 
@@ -2880,8 +2839,6 @@ end
 --- remove current set of line notifiers
 
 function GridPie:_remove_line_notifiers()
-
-  local rns = renoise.song()
 
   for patt_idx,_ in pairs(self._line_notifiers) do
 
@@ -2911,7 +2868,6 @@ function GridPie:_restrict_to_pattern_length(num_lines,patt)
     return num_lines
   end
 
-  local rns = renoise.song()
   local session_recording = self:is_session_recording()
 
   if patt and session_recording then
@@ -2950,8 +2906,6 @@ function GridPie:_track_changes(pos)
   end
 
   TRACE("GridPie:_track_changes()",pos)
-
-  local rns = renoise.song()
 
   if (pos.track > rns.sequencer_track_count) then
     --print("*** track_changes - ignore changes to non-sequencer tracks")
@@ -3037,7 +2991,7 @@ function GridPie:resolve_patt_idx(patt_idx,track_idx)
   local tmp_idx = patt_idx
   while (tmp_idx~=0) do
     patt_idx = tmp_idx
-    patt = renoise.song().patterns[tmp_idx]
+    patt = rns.patterns[tmp_idx]
     tmp_idx = patt.tracks[track_idx].alias_pattern_index
   end
   --TRACE("GridPie:resolve_patt_idx() - patt_idx,track_idx",patt_idx,track_idx,"=patt_idx",patt_idx)
@@ -3064,9 +3018,7 @@ end
 
 function GridPie:update_homeless_tracks()
 
-  local rns = renoise.song()
-
-  if (table_count(self.homeless_tracks) == 0) then
+  if (cLib.table_count(self.homeless_tracks) == 0) then
     return
   end
 
@@ -3118,7 +3070,6 @@ function GridPie:on_idle()
     return
   end
 
-  local rns = renoise.song()
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
   local playing_pos = rns.transport.playback_pos.sequence
   local playback_line = rns.transport.playback_pos.line
@@ -3317,7 +3268,6 @@ end
 function GridPie:incremental_update(track_idx)
   TRACE("GridPie:incremental_update()",track_idx)
 
-  local rns = renoise.song()
   local rt_trk = self.realtime_tracks[track_idx]
   if not rt_trk then
     --print("*** incremental_update - cannot update track",track_idx)
@@ -3441,7 +3391,7 @@ end
 
 function GridPie:get_gridpie_seq_pos()
 
-  return #renoise.song().sequencer.pattern_sequence
+  return #rns.sequencer.pattern_sequence
 
 end
 
@@ -3453,7 +3403,6 @@ end
 
 function GridPie:edit_pos_in_gridpie()
 
-  local rns = renoise.song()
   local gridpie_seq_pos = self:get_gridpie_seq_pos()
   local last_patt_idx = rns.sequencer:pattern(gridpie_seq_pos)
   local rslt = (last_patt_idx == rns.selected_pattern_index) 
@@ -3471,7 +3420,6 @@ end
 function GridPie:mute_selected_track_slot(track_idx)
   TRACE("GridPie:mute_selected_track_slot()",track_idx)
 
-  local rns = renoise.song()
   if rns.sequencer.pattern_sequence[self.active_slots[track_idx]] then
     --print("*** about to mute track #",track_idx,"at seq-pos",self.active_slots[track_idx])
     rns.sequencer:set_track_sequence_slot_is_muted(
@@ -3518,7 +3466,6 @@ end
 function GridPie:playback_pos_to_gridpie(restart)
   TRACE("GridPie:playback_pos_to_gridpie()",restart)
 
-  local rns = renoise.song()
   local gp_seq_pos = self:get_gridpie_seq_pos()
   --[[
   if (rns.transport.playback_pos.sequence==gp_seq_pos) then
@@ -3579,7 +3526,6 @@ end
 function GridPie:_attach_to_song(new_song)
   TRACE("GridPie:_attach_to_song()",new_song)
 
-  local rns = renoise.song()
   self:_remove_notifiers(new_song,self._pattern_observables)
   self:_remove_notifiers(new_song,self._song_observables)
 
@@ -3593,7 +3539,6 @@ function GridPie:_attach_to_song(new_song)
       if not self.active then 
         return 
       end
-      local rns = renoise.song()
       local gridpie_seq_pos = self:get_gridpie_seq_pos()
       self._track_count = rns.sequencer_track_count
 
@@ -3679,7 +3624,6 @@ function GridPie:_attach_to_song(new_song)
         return 
       end
       
-      local rns = renoise.song()
       local gridpie_seq_pos = self:get_gridpie_seq_pos()
       if (notification.type == "remove") then
 
@@ -3813,7 +3757,7 @@ function GridPie:_attach_to_song(new_song)
     function()
       TRACE("GridPie:playing_observable fired...")
       if not self.active then return end
-      if renoise.song().transport.playing then
+      if rns.transport.playing then
         self:playback_pos_to_gridpie(true)
       end
       self:check_recording_status()
@@ -3829,7 +3773,7 @@ function GridPie:_attach_to_song(new_song)
         return 
       end
       if (self.options.follow_pos.value ~= FOLLOW_OFF) then
-        local track_idx = renoise.song().selected_track_index
+        local track_idx = rns.selected_track_index
 
         local page = math.floor((track_idx-1)/self.page_size_h)
         local new_x = page*self.page_size_h+1
@@ -3852,7 +3796,6 @@ function GridPie:_attach_to_song(new_song)
         return 
       end
 
-      local rns = renoise.song()
       local seq_idx = rns.selected_sequence_index
       local patt_idx = rns.sequencer.pattern_sequence[seq_idx]
       local patt = rns.patterns[patt_idx]
@@ -3889,7 +3832,6 @@ function GridPie:_attach_to_song(new_song)
       if not self.active then 
         return 
       end
-      local rns = renoise.song()
 
       self:check_recording_status()
 
@@ -3951,7 +3893,6 @@ end
 function GridPie:_attach_to_pattern(new_song)
   TRACE("GridPie:_attach_to_pattern()")
 
-  local rns = renoise.song()
   local patt = rns.patterns[rns.selected_pattern_index]
 
   --print("*** _attach_to_pattern - rns.selected_pattern_index",rns.selected_pattern_index)
@@ -3968,7 +3909,6 @@ function GridPie:_attach_to_pattern(new_song)
   patt.number_of_lines_observable:add_notifier(self,
     function()
       TRACE("GridPie:number_of_lines_observable fired...")
-      local rns = renoise.song()
       local patt_idx = rns.selected_pattern_index
       local seq_idx = rns.selected_sequence_index
 
@@ -4043,7 +3983,6 @@ end
 function GridPie:set_writeahead()
   TRACE("GridPie:set_writeahead()")
 
-  local rns = renoise.song()
   local bpm = rns.transport.bpm
   local lpb = rns.transport.lpb
 
@@ -4064,7 +4003,6 @@ end
 function GridPie:_keep_the_beat(old_lines,old_pos)
   TRACE("GridPie:_keep_the_beat()",old_lines,old_pos)
 
-  local rns = renoise.song()
   local meter = self.options.measure.value
   local gridpie_patt = rns.patterns[self.gridpie_patt_idx]
   local gridpie_seq_idx = self:get_gridpie_seq_pos()
@@ -4153,7 +4091,6 @@ end
 function GridPie:shorten_pattern(patt,old_len)
   TRACE("GridPie:shorten_pattern()",patt,old_len)
 
-  local rns = renoise.song()
   local lc = cLib.least_common(self.poly_counter:values())
   local changed = false
   local playpos = rns.transport.playback_pos
