@@ -71,7 +71,7 @@ function HarmonicLayout:get_pitches_from_index(idx)
     row = (self.kb.grid_w - row) + 1
   end
 
-  local scale = HARMONIC_SCALES[self.kb.scale_mode]
+  local scale = xScale.get_scale_by_name(self.kb.scale_mode)
   col = col - (self.kb.scale_key-1)
   if (col <= 0) then
     row = row + math.ceil(col/scale.count) - 1
