@@ -52,13 +52,12 @@ end
 -- @param scale_idx, number
 
 function xInstrument.set_scale_by_index(instr,scale_idx)
-  print("xInstrument.set_scale_by_index(instr,scale_idx)",instr,scale_idx)
+  TRACE("xInstrument.set_scale_by_index(instr,scale_idx)",instr,scale_idx)
 
   assert(type(instr)=="Instrument","Expected instr to be a renoise.Instrument")
   assert(type(scale_idx)=="number","Expected scale_idx to be a number")
 
   local scale = xScale.SCALES[scale_idx]
-  rprint(scale)
   if scale then
     instr.trigger_options.scale_mode = scale.name
   end
