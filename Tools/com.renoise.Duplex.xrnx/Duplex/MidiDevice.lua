@@ -646,8 +646,6 @@ function MidiDevice:sysex_callback(message)
       -- (message[3]) device id is irrelevant
       (message[4] == 6) then
 
-      local rns = renoise.song()
-
       if (message[5] == 1) then 
         --print("MMC Start")
         rns.transport:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
