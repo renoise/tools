@@ -31,7 +31,7 @@ the UISlider or the UIButton class (both extensions of this class).
     - supply "map" argument when creating instance (saves typing)
 
   0.98.17
-    - UIComponent event handlers should always return �false� when actively 
+    - UIComponent event handlers should always return `false` when actively 
       rejecting an event (such as when the application is sleeping/inactive), 
       allowing the MIDI message to be passed on to Renoise
 
