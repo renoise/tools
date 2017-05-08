@@ -13,11 +13,65 @@ Static methods for dealing with renoise.Instrument
 class 'xInstrument'
 
 --------------------------------------------------------------------------------
+-- Set the instrument to use the previous scale 
+-- @param instr, renoise.Instrument
+
+function xInstrument.set_previous_scale(instr)
+  TRACE("xInstrument.set_previous_scale(instr)",instr)
+
+  assert(type(instr)=="Instrument","Expected instr to be a renoise.Instrument")
+
+  local scale_name = instr.trigger_options.scale_mode
+  local scale_idx = xScale.get_scale_index_by_name(scale_name)
+  if (scale_idx > 1) then
+    xInstrument.set_scale_by_index(instr,scale_idx-1)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- Set the instrument to use the next scale 
+-- @param instr, renoise.Instrument
+
+function xInstrument.set_next_scale(instr)
+  TRACE("xInstrument.set_next_scale(instr)",instr)
+
+  assert(type(instr)=="Instrument","Expected instr to be a renoise.Instrument")
+
+  local scale_name = instr.trigger_options.scale_mode
+  local scale_idx = xScale.get_scale_index_by_name(scale_name)
+  if (scale_idx < #xScale.SCALES) then
+    xInstrument.set_scale_by_index(instr,scale_idx+1)
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- Set the instrument to use the a specific scale 
+-- @param instr, renoise.Instrument
+-- @param scale_idx, number
+
+function xInstrument.set_scale_by_index(instr,scale_idx)
+  print("xInstrument.set_scale_by_index(instr,scale_idx)",instr,scale_idx)
+
+  assert(type(instr)=="Instrument","Expected instr to be a renoise.Instrument")
+  assert(type(scale_idx)=="number","Expected scale_idx to be a number")
+
+  local scale = xScale.SCALES[scale_idx]
+  rprint(scale)
+  if scale then
+    instr.trigger_options.scale_mode = scale.name
+  end
+
+end
+
+--------------------------------------------------------------------------------
 -- [Static] Test whether the instrument contain sample slices
 -- @param instr (renoise.Instrument)
 -- @return bool
 
 function xInstrument.is_sliced(instr)
+  TRACE("xInstrument.is_sliced(instr)",instr)
 
   if (#instr.samples > 0) then
     return (instr.sample_mappings[1][1].read_only)
@@ -32,6 +86,7 @@ end
 -- @return boolean
 
 function xInstrument.is_keyzone_available(instr)
+  TRACE("xInstrument.is_keyzone_available(instr)",instr)
 
   if (#instr.phrases == 0) then
     return true
@@ -56,6 +111,7 @@ end
 -- @return boolean
 
 function xInstrument.is_triggering_phrase(instr)
+  TRACE("xInstrument.is_triggering_phrase(instr)",instr)
 
   if (#instr.phrases == 0) then
     return false
@@ -80,6 +136,8 @@ end
 -- @return boolean
 
 function xInstrument.get_phrase_playback_enabled(instr)
+  TRACE("xInstrument.get_phrase_playback_enabled(instr)",instr)
+
   --- implementation depends on API version
   if (renoise.API_VERSION > 4) then
     return not (instr.phrase_playback_mode == renoise.Instrument.PHRASES_OFF)
@@ -93,6 +151,8 @@ end
 -- @return boolean
 
 function xInstrument.set_phrase_playback_enabled(instr,bool)
+  TRACE("xInstrument.set_phrase_playback_enabled(instr,bool)",instr,bool)
+
   if (renoise.API_VERSION > 4) then
     -- this is a v4 method, so we assume Keymap trigger mode 
     local enum = bool and renoise.Instrument.PHRASES_PLAY_KEYMAP
@@ -133,6 +193,7 @@ end
 -- @return table<number> (sample indices)
 
 function xInstrument.get_samples_mapped_to_note(instr,note)
+  TRACE("xInstrument.get_samples_mapped_to_note(instr,note)",instr,note)
 
   local rslt = table.create()
   for sample_idx = 1,#instr.samples do 
@@ -196,6 +257,8 @@ end
 -- @return number, track index
 
 function xInstrument.resolve_midi_track(instr)
+  TRACE("xInstrument.resolve_midi_track(instr)",instr)
+
   if (instr.midi_input_properties.assigned_track == 0) then
     return rns.selected_track_index
   else
