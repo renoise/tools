@@ -41,10 +41,14 @@ function xSongSettings.store(arr,token_start,token_end)
 
   rslt:insert(token_start)
   for k,v in ipairs(lines) do
+    if (k == 1) then 
+      -- the table needs to be prefixed with a return statement,
+      -- or the table will evaluate to nothing...
+      v = "return "..v
+    end
     rslt:insert(v)
   end
   rslt:insert(token_end)
-
 
   rns.comments = rslt
 
@@ -52,7 +56,7 @@ end
 
 --------------------------------------------------------------------------------
 -- Retrive and apply the locally stored settings
--- TODO use sandboxing 
+-- TODO deserialize using sandbox
 -- @return table or nil, [string, error message]
 
 function xSongSettings.retrieve(token_start,token_end)
