@@ -632,7 +632,7 @@ end
 
 -- method for writing data into a pattern-track, a few lines at a time
 -- also: fancy detection of active state, duration of notes and more...
---
+-- TODO refactor this mess...
 -- @param writepos (Mlrx_pos) start from this position
 -- @param writeahead (int) process # of lines, starting from writepos (0 means single line is written)
 -- @param wraparound (bool) optional, true when writing across pattern boundaries
@@ -641,8 +641,11 @@ end
 function Mlrx_track:track_output(writepos,writeahead,wraparound,on_idle)
   --TRACE("Mlrx_track:track_output()",writepos,writeahead,wraparound,on_idle,self.rns_track_idx)
 
-
   local rns_trk = rns.tracks[self.rns_track_idx]
+  if not rns_trk then 
+    return 
+  end 
+
   local patt_idx = rns.sequencer.pattern_sequence[writepos.sequence]
   local patt = rns:pattern(patt_idx)
   local readahead = self.readahead
@@ -1690,7 +1693,7 @@ function Mlrx_track:attach_to_instr(first_run)
 
   -- handle when phrase mappings are moved around, resized
   for _,v in ipairs(self.instr.phrases) do
-    if (renoise.API_VERSION > 4) and (#self.instr.phrase_mappings == 0) then
+    if (renoise.API_VERSION > 4) then
       -- API v5 can have unmapped phrases
       -- TODO when API is fixed, allow quering each phrase for mapping
       -- (right now, calling v.mapping will throw an error)
