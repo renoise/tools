@@ -433,7 +433,6 @@ function cLib.parse_str(str)
     return nil,err
   end
 
-
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -451,6 +450,50 @@ function cLib.serialize_object(obj)
     return result 
   else
    return "???"
+  end
+end
+
+---------------------------------------------------------------------------------------------------
+-- Check if table values are all identical
+-- (useful e.g. for detecting if a color is tinted)
+-- @return boolean
+
+function cLib.table_has_equal_values(t)
+
+  local val = nil
+  for k,v in ipairs(t) do
+    if (val==nil) then
+      val = v
+    end
+    if (val~=v) then
+      return false
+    end
+  end
+  return true
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Quick'n'dirty table compare, compares values (not keys)
+-- @return boolean, true if identical
+
+function cLib.table_compare(t1,t2)
+  return (table.concat(t1,",")==table.concat(t2,","))
+end
+
+---------------------------------------------------------------------------------------------------
+-- Count table entries, including mixed types
+-- @return int or nil
+
+function cLib.table_count(t)
+  local n=0
+  if ("table" == type(t)) then
+    for key in pairs(t) do
+      n = n + 1
+    end
+    return n
+  else
+    return nil
   end
 end
 
