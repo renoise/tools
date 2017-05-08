@@ -4,27 +4,54 @@
 
 Duplex Matrix takes control of the pattern matrix in Renoise. See this [video demonstration](http://www.youtube.com/watch?v=K_kCaYV_T78) to learn how it can be used. 
 
-## Available options
-
+## Available mappings
+  
 | Name       | Description   |
-| -----------|---------------|
-| `play_mode` | What to do when playback is started (or re-started) |
-| `switch_mode` | What to do when switching from one pattern to another |
-| `bounds_mode` | What to do when a position outside the song is triggered |
-| `follow_track` | Align with the selected track in Renoise |
-| `page_size` | Specify the step size when using paged navigation |
-| `sequence_mode` | Determines how pattern triggers work |
+| -----------|---------------|  
+|`matrix`|Matrix: Press to toggle muted state<br>Hold to focus this track/pattern<br>Control value: |  
+|`prev_track_page`|Matrix: display previous track page|  
+|`next_seq_page`|Matrix: display next sequence page|  
+|`prev_seq_page`|Matrix: display previous sequence page|  
+|`next_track_page`|Matrix: display next track page|  
+|`triggers`|Matrix: Pattern-sequence triggers<br>Press and release to trigger pattern<br>Press multiple buttons to define loop<br>Press and hold to toggle loop<br>Control value: |  
 
-## Available mappings 
+## Default options 
+  
+> Can be overridden in [configurations](../Configurations.md)
 
-| Name       | Description   |
-| -----------|---------------|
-| `matrix` | Matrix: main button grid (group) |
-| `triggers` | Matrix: Pattern-sequence triggers |
-| `next_seq_page` | Matrix: display next sequence page |
-| `prev_seq_page` | Matrix: display previous sequence page |
-| `next_track_page` | Matrix: display next track page |
-| `prev_track_page` | Matrix: display previous track page |
+| Name          | Description   |
+| ------------- |---------------|  
+|`switch_mode`|What to do when switching from one pattern to another|  
+|`page_size`|Specify the step size when using paged navigation|  
+|`sequence_mode`|Determines how pattern triggers work: <br>Select 'Position only' for controllers that does not<br>support the release event. Select 'Position & Loop'<br>if your controller supports the release event, and you<br>want to be able to control the looped range|  
+|`follow_track`|Align with the selected track in Renoise|  
+|`bounds_mode`|What to do when a position outside the song is triggered|  
+|`play_mode`|What to do when playback is started (or re-started)|  
+
+## Default palette 
+  
+> Can be overridden in [configurations](../Configurations.md)
+
+| Name          | Color|Text|Value|
+| ------------- |------|----|-----|  
+|`prev_seq_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|▲|true|  
+|`slot_filled`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFF00; color: black">0xFF,0xFF,0x00</div>|▪|true|  
+|`out_of_bounds`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#404000; color: white">0x40,0x40,0x00</div>|·|false|  
+|`trigger_back`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>||nil|  
+|`prev_seq_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|▲|false|  
+|`prev_track_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|◄|true|  
+|`slot_master_empty`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#004000; color: white">0x00,0x40,0x00</div>|·|false|  
+|`slot_empty`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`slot_empty_muted`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#400000; color: white">0x40,0x00,0x00</div>|·|false|  
+|`next_seq_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|▼|false|  
+|`trigger_active`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>||nil|  
+|`slot_filled_muted`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FF4000; color: white">0xFF,0x40,0x00</div>|▫|false|  
+|`next_seq_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|▼|true|  
+|`prev_track_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|◄|false|  
+|`next_track_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|►|false|  
+|`next_track_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|►|true|  
+|`trigger_loop`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#4040FF; color: white">0x40,0x40,0xFF</div>||nil|  
+|`slot_master_filled`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#00FF00; color: white">0x00,0xFF,0x00</div>|▪|true|
 
 ## Changelog
 

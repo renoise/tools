@@ -241,6 +241,7 @@ function Mixer:__init(...)
   -- toggle, which defines if we're controlling the pre or post fx vol/pans
   self._postfx_mode = (self.options.pre_post.value == MODE_POSTFX)
 
+  --self:list_mappings_and_options(Mixer)
 
 end
 

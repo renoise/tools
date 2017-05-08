@@ -104,12 +104,6 @@ end
 function RoamingDSP:__init(...)
   TRACE("RoamingDSP:__init()")
 
-  --- (xAutomation) used for recording movements
-  --self.automation = xAutomation()
-
-  --- (bool) set while recording automation
-  --self._record_mode = true
-
   -- the various UIComponents
   self._controls = {}
   --self._controls.lock_button = nil   -- UIButton
@@ -142,15 +136,6 @@ function RoamingDSP:__init(...)
 
   -- determine stuff after options have been applied
 
-  --self.automation.latch_record = (self.options.record_method.value == RoamingDSP.RECORD_LATCH)
-
-  duplex_preferences.highres_automation:add_notifier(
-    function()
-      TRACE("duplex_preferences.highres_automation fired...")
-      self.automation.highres_mode = duplex_preferences.highres_automation.value
-    end
-  )
-
 end
 
 --------------------------------------------------------------------------------
@@ -177,7 +162,7 @@ function RoamingDSP:start_app()
 end
 
 --------------------------------------------------------------------------------
---- this search is performed on application start
+-- Initial select, performed on application start: 
 -- if not in locked mode: use the currently focused track->device
 -- if we are in locked mode: recognize any locked devices, but fall back
 --  to the focused track->device if no locked device was found
@@ -212,8 +197,7 @@ function RoamingDSP:initial_select()
 end
 
 --------------------------------------------------------------------------------
-
---- goto previous device
+-- Goto previous device
 -- search from locked device (if available), otherwise use the selected device
 -- @return bool
 
@@ -239,8 +223,7 @@ function RoamingDSP:goto_previous_device()
 end
 
 --------------------------------------------------------------------------------
-
---- goto next device
+-- Goto next device
 -- search from locked device (if available), otherwise use the selected device
 -- @return bool
 
@@ -266,8 +249,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- locate the prior device
+-- Locate the prior device
 -- @param track_index (int) start search from here
 -- @param device_index (int) start search from here
 -- @return table or nil
@@ -315,8 +297,7 @@ function RoamingDSP:search_previous_device(track_index,device_index)
 end
 
 --------------------------------------------------------------------------------
-
---- locate the next device
+-- Locate the next device
 -- @param track_index (int) start search from here
 -- @param device_index (int) start search from here
 -- @return table or nil
@@ -363,8 +344,7 @@ function RoamingDSP:search_next_device(track_index,device_index)
 end
 
 --------------------------------------------------------------------------------
-
---- attach to a device, transferring the 'tag' if needed
+-- Attach to a device, transferring the 'tag' if needed
 -- this is the final step of a "previous/next device" operation,
 -- or called during the initial search
 -- @param track_index (int) start search from here
@@ -388,8 +368,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- update the lit state of the previous/next device buttons
+-- Update the lit state of the previous/next device buttons
 -- @param track_index (int) 
 -- @param device_index (int) 
 
@@ -424,8 +403,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- look for a device that match the provided name
+-- Look for a device that match the provided name
 -- it is called right after the target device has been removed,
 -- or by initial_select()
 
@@ -451,8 +429,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- get the unique name of the device, as specified in options
+-- Get the unique name of the device, as specified in options
 -- @return string
 
 function RoamingDSP:get_unique_name()
@@ -467,11 +444,8 @@ function RoamingDSP:get_unique_name()
   
 end
 
-
-
 --------------------------------------------------------------------------------
-
---- test if the device is a valid target 
+-- Test if the device is a valid target 
 -- @param device (renoise.AudioDevice)
 -- @return bool
 
@@ -487,8 +461,7 @@ function RoamingDSP:device_is_valid(device)
 end
 
 --------------------------------------------------------------------------------
-
---- tag device (add unique identifier), clearing existing one(s)
+-- Tag device (add unique identifier), clearing existing one(s)
 -- @param device (renoise.AudioDevice), leave out to simply clear
 
 function RoamingDSP:tag_device(device)
@@ -551,8 +524,7 @@ function RoamingDSP:on_idle()
 end
 
 --------------------------------------------------------------------------------
-
---- return the currently focused track->device in Renoise
+-- Return the currently focused track->device in Renoise
 -- @return Device
 
 function RoamingDSP:get_selected_device()
@@ -564,8 +536,7 @@ function RoamingDSP:get_selected_device()
 end
 
 --------------------------------------------------------------------------------
-
---- attempt to select the current device 
+-- Attempt to select the current device 
 -- failing to do so will clear the target device
 
 function RoamingDSP:attach_to_selected_device()
@@ -584,8 +555,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- attach notifier to the device 
+-- Attach notifier to the device 
 -- called when we use previous/next device, set the initial device
 -- or are freely roaming the tracks
 
@@ -612,7 +582,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
+-- Retrieve a parameter from the target device by name
 -- @param name (string)
 -- @return DeviceParameter or nil
 
@@ -650,8 +620,7 @@ function RoamingDSP:update_automation(track_idx,param,value,playmode)
 end
 
 --------------------------------------------------------------------------------
-
---- keep track of devices (insert,remove,swap...)
+-- Keep track of devices (insert,remove,swap...)
 -- invoked by `attach_to_device()`
 -- @param track (renoise.Track)
 
@@ -689,15 +658,13 @@ function RoamingDSP:_attach_to_track_devices(track)
           end
         end
       end
-      --self.automation:stop_automation()
 
     end
   )
 end
 
 --------------------------------------------------------------------------------
-
---- select track + device, but only when follow_pos is enabled
+-- Select track + device, but only when follow_pos is enabled
 
 function RoamingDSP:follow_device_pos()
   TRACE("RoamingDSP:follow_device_pos()")
@@ -713,8 +680,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- update the state of the lock button
+-- Update the state of the lock button
 
 function RoamingDSP:update_lock_button()
   TRACE("RoamingDSP:update_lock_button()")
@@ -731,8 +697,6 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- inherited from Application
 -- @see Duplex.Application._build_app
 -- @return bool
 
@@ -809,8 +773,6 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- inherited from Application
 -- @see Duplex.Application.on_new_document
 
 function RoamingDSP:on_new_document()
@@ -823,8 +785,6 @@ function RoamingDSP:on_new_document()
 end
 
 --------------------------------------------------------------------------------
-
---- inherited from Application
 -- @see Duplex.Application.on_release_document
 
 function RoamingDSP:on_release_document()
@@ -837,13 +797,11 @@ function RoamingDSP:on_release_document()
 end
 
 --------------------------------------------------------------------------------
-
---- de-attach from the device
+-- De-attach from the device
 
 function RoamingDSP:clear_device()
 
   self:_remove_notifiers(self._parameter_observables)
-  --self.automation:stop_automation()
   self.target_device = nil
   self.track_index = nil
   self.device_index = nil
@@ -851,7 +809,7 @@ function RoamingDSP:clear_device()
 end
 
 --------------------------------------------------------------------------------
---- attach notifiers to the song, handle changes
+-- Attach notifiers to the song, handle changes
 -- @see Duplex.Automateable._attach_to_song
 
 function RoamingDSP:_attach_to_song()

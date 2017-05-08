@@ -23,29 +23,61 @@ Discussion of Duplex GridPie is located on the [Renoise forum](http://forum.reno
 ![GridPie_on_launchpad.png](../Images/GridPie_on_launchpad.png)  
 *The Duplex GridPie configuration for the Launchpad*
 
-## Available mappings 
-
+## Available mappings
+  
 | Name       | Description   |
-| -----------|---------------|
-| `grid` | The main button grid (group) |
-| `h_slider` | Slider, for selecting pattern in sequence |
-| `v_slider` | Slider, for selecting track in pattern |
-| `v_prev` | Button, for displaying previous part of sequence |
-| `v_next` | Button, for displaying next part of sequence |
-| `h_prev` | Button, for displaying previous tracks in pattern |
-| `h_next` | Button, for displaying next tracks in pattern |
+| -----------|---------------|  
+|`v_prev`|GridPie: Press and release to display previous part of sequence<br>Press and hold to display first pattern|  
+|`h_slider`|GridPie: select pattern in sequence|  
+|`v_slider`|GridPie: select track in pattern|  
+|`h_next`|GridPie: Press and release to display next tracks in pattern<br>Press and hold to go display last track|  
+|`h_prev`|GridPie: Press and release to display previous tracks in pattern<br>Press and hold to go display first track|  
+|`v_next`|GridPie: Press and release to display next part of sequence<br>Press and hold to display last pattern|  
+|`grid`|GridPie: Press and release to copy track<br>Press and hold to copy pattern<br>Control value: |  
 
-## Available options
+## Default options 
+  
+> Can be overridden in [configurations](../Configurations.md)
 
-| Name       | Description   |
-| -----------|---------------|
-| `follow_pos` | Sync the active pattern/track between Renoise & GridPie |
-| `measure` | Set this to the time signature of your song (default is 4) |
-| `page_size_v` | Specify the vertical page size |
-| `page_size_h` | Specify the horizontal page size |
-| `initialization` | How Grid Pie should behave when launched |
-| `shutdown` | How Grid Pie should behave when shut down |
-| `hold_enabled` | Set when controller is able to transmit release events |
+| Name          | Description   |
+| ------------- |---------------|  
+|`hold_enabled`|Enable this option only if your controller is capable<br>of transmitting 'release' events (copy a pattern<br>by pressing and holding a button in the grid)|  
+|`shutdown`|How Grid Pie should behave when shut down|  
+|`page_size_h`|Specify the horizontal page size|  
+|`initialization`|How Grid Pie should behave when launched|  
+|`page_size_v`|Specify the vertical page size|  
+|`measure`|Set this to the time signature of your song - it affects how<br>the 'beat-keeping' feature will work. It is likely<br>that you will use 'Four', as most music is in 4/4|  
+|`follow_pos`|Enable this to sync the active pattern/track between Renoise & GridPie|  
+
+## Default palette 
+  
+> Can be overridden in [configurations](../Configurations.md)
+
+| Name          | Color|Text|Value|
+| ------------- |------|----|-----|  
+|`empty_active`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#404000; color: white">0x40,0x40,0x00</div>|·|true|  
+|`out_of_bounds`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`gridpie_normal`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#808000; color: white">0x80,0x80,0x00</div>|·|false|  
+|`out_of_bounds_current`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#408000; color: white">0x40,0x80,0x00</div>|·|false|  
+|`button_prev_patt_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FF8000; color: white">0xFF,0x80,0x00</div>|▲|true|  
+|`button_prev_track_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FF8000; color: white">0xFF,0x80,0x00</div>|◄|true|  
+|`empty_active_current`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#404000; color: white">0x40,0x40,0x00</div>|·|true|  
+|`empty`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`button_prev_patt_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|▲|false|  
+|`inactive_content`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#400000; color: white">0x40,0x00,0x00</div>|·|false|  
+|`content_active_master`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#808000; color: white">0x80,0x80,0x00</div>|·|false|  
+|`content_active`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#804000; color: white">0x80,0x40,0x00</div>|·|false|  
+|`content_active_current`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#408000; color: white">0x40,0x80,0x00</div>|·|false|  
+|`gridpie_homeless`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFF00; color: black">0xFF,0xFF,0x00</div>|·|true|  
+|`button_prev_track_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|◄|false|  
+|`empty_current`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#004000; color: white">0x00,0x40,0x00</div>|·|false|  
+|`gridpie_alias`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFF00; color: black">0xFF,0xFF,0x00</div>|·|true|  
+|`button_next_track_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|►|false|  
+|`button_next_patt_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FF8000; color: white">0xFF,0x80,0x00</div>|▼|true|  
+|`button_next_track_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FF8000; color: white">0xFF,0x80,0x00</div>|►|true|  
+|`gridpie_current`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#408000; color: white">0x40,0x80,0x00</div>|·|false|  
+|`button_next_patt_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|▼|false|  
+|`content_selected`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFF00; color: black">0xFF,0xFF,0x00</div>|·|true| 
 
 ## Changelog
 

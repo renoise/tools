@@ -535,7 +535,7 @@ function Mlrx:__init(...)
   self.midi_in = nil
   self:select_midi_port(self.options.midi_controller.value-1)
 
-  --self:list_mappings_and_options(Mlrx.available_mappings,Mlrx.default_options)
+  --self:list_mappings_and_options(Mlrx)
 
 end
 

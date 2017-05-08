@@ -281,6 +281,7 @@ function MidiActions:__init(...)
   self._user_max = nil
 
   Application.__init(self,...)
+  --self:list_mappings_and_options(MidiActions)
 
 end
 

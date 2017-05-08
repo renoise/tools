@@ -47,11 +47,9 @@ for k,v in pairs(RoamingDSP.available_mappings) do
 end
 
 --------------------------------------------------------------------------------
-
---- Constructor method
+-- Constructor method
 -- @param (VarArg)
 -- @see Duplex.Application
-
 
 function Hydra:__init(...)
 
@@ -66,9 +64,9 @@ function Hydra:__init(...)
   self._input_slider = nil
   self._value_display = nil
 
-
   -- initialize the superclass
   RoamingDSP.__init(self,...)
+  --self:list_mappings_and_options(Hydra)
 
 end
 

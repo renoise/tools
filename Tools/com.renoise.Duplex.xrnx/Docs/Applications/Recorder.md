@@ -87,26 +87,39 @@ Note that when reading the following description, and using a controller with fa
 ![Recorder_on_launchpad.png](../Images/Recorder_on_launchpad.png)  
 *The Duplex Recorder configuration for the Launchpad*
 
+## Available mappings
 
-## Available mappings 
-
-| Name          | Description   |
-| ------------- |---------------|
-|`sliders`|Recorder: Switch between takes|  
+| Name       | Description   |
+| -----------|---------------|  
 |`recorders`|Recorder: Toggle recording mode|  
+|`sliders`|Recorder: Switch between takes|  
 
-## Available options 
+## Default options 
+  
+> Can be overridden in [configurations](../Configurations.md)
 
 | Name          | Description   |
-| ------------- |---------------|
-|`auto_seek`|Choose if new recordings should have autoseek enabled (note that autoseek will make 05xx triggering useless)|  
-|`autostart`|Determine how many lines to use for autostart (autostart will write the note to the pattern immediately after recording has finished. If the value is too low, the note might not play the first time, as the sample takes a moment to be initialized properly)|  
-|`beat_sync`|Choose if new recordings should automatically be synced to the song tempo (max. 512 lines)|  
-|`first_run`|First time Recorder is launched, provide instructions|  
-|`follow_track`|Enable this if you want the Recorder to align with the selected track in Renoise|  
-|`loop_mode`|Select the default loop mode for new recordings|  
-|`page_size`|Specify the step size when using paged navigation|  
+| ------------- |---------------|  
 |`trigger_mode`|Choose how notes are written to the pattern|  
+|`auto_seek`|Choose if new recordings should have autoseek enabled <br>(note that autoseek will make 05xx triggering useless)|  
+|`beat_sync`|Choose if new recordings should automatically<br>be synced to the song tempo (max. 512 lines)|  
+|`loop_mode`|Select the default loop mode for new recordings|  
+|`autostart`|Determine how many lines to use for autostart<br>(autostart will write the note to the pattern<br>immediately after recording has finished.<br>If the value is too low, the note might not<br>play the first time, as the sample takes a<br>moment to be initialized properly)|  
+|`first_run`|First time Recorder is launched, provide instructions|  
+|`follow_track`|Enable this if you want the Recorder to align with <br>the selected track in Renoise|  
+|`page_size`|Specify the step size when using paged navigation|  
+
+## Default palette 
+  
+> Can be overridden in [configurations](../Configurations.md)
+
+| Name          | Color|Text|Value|
+| ------------- |------|----|-----|  
+|`slider_dimmed`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#404040; color: white">0x40,0x40,0x40</div>||false|  
+|`recorder_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#400000; color: white">0x40,0x00,0x00</div>|○|false|  
+|`background`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>||false|  
+|`slider_lit`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>||true|  
+|`recorder_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FF4040; color: white">0xFF,0x40,0x40</div>|●|true|  
 
 ## Changelog
 

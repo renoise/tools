@@ -55,9 +55,9 @@ function PatternSequence:__init(...)
   self.controls = {}
 
   Application.__init(self,...)
+  --self:list_mappings_and_options(PatternSequence)
 
 end
-
 
 --------------------------------------------------------------------------------
 

@@ -238,6 +238,7 @@ function Matrix:__init(...)
   self._mute_notifier_disabled = false
 
   Application.__init(self,...)
+  --self:list_mappings_and_options(Matrix)
 
 end
 

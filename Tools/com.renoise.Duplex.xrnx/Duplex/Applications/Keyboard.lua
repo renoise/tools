@@ -4,7 +4,7 @@
 
 --[[--
 
-A replacement of the standard Renoise keyboard, supporting for MIDI and OSC.
+A replacement of the standard Renoise keyboard, supporting MIDI and OSC.
 
 #
 
@@ -432,6 +432,7 @@ function Keyboard:__init(...)
   self._controls.grid = table.create()
 
   Application.__init(self,...)
+  --self:list_mappings_and_options(Keyboard)
 
 end
 

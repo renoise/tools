@@ -394,7 +394,7 @@ function NotesOnWheels:__init(...)
   self.midi_in = nil
   self:select_midi_port(self.options.midi_keyboard.value-1)
 
-  --self:list_mappings_and_options(NotesOnWheels.available_mappings,NotesOnWheels.default_options)
+  --self:list_mappings_and_options(NotesOnWheels)
 
 end
 

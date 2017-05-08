@@ -10,6 +10,7 @@ Grid Pie lets you combine different parts of song, non-linearly, in real time.
 
 [View the README.md](https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/Applications/GridPie.md) (github)
 
+
 --]]
 
 --==============================================================================
@@ -345,18 +346,19 @@ function GridPie:__init(...)
   self._h_slider = nil
 
   Application.__init(self,...)
+  --self:list_mappings_and_options(GridPie)
 
 end
 
 --------------------------------------------------------------------------------
-
---- Method for adding pending updates, called whenever a pattern which is being
+-- Method for adding pending updates, called whenever a pattern which is being
 -- monitored has changed and a track requires a copy-expansion. 
 -- @param src_patt_idx (int) "unresolved" source pattern index
 -- @param pos (Table) pos.pattern, pos.track, pos.line
 
 function GridPie:_add_pending_update(src_patt_idx,pos)
   TRACE("GridPie:_add_pending_update()",src_patt_idx,pos)
+
   if not self.pending_updates[pos.track] then
     self.pending_updates[pos.track] = table.create()
   end
@@ -374,8 +376,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- copy/expand tracks once the scheduled updates have timed out
+-- Copy/expand tracks once the scheduled updates have timed out
 
 function GridPie:_apply_pending_updates()
   TRACE("GridPie:_apply_pending_updates()")
@@ -438,8 +439,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- prepare a newly cloned Grid Pie pattern before playback reaches it
+-- Prepare a newly cloned Grid Pie pattern before playback reaches it
 
 function GridPie:adapt_gridpie_pattern()
   TRACE("GridPie:adapt_gridpie_pattern()")
@@ -551,8 +551,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- helper method to determine if we are currently recording a session
+-- Helper method to determine if we are currently recording a session
 
 function GridPie:is_session_recording()
 
@@ -562,8 +561,7 @@ function GridPie:is_session_recording()
 end
 
 --------------------------------------------------------------------------------
-
---- clear lines using iterator
+-- Clear lines using iterator
 -- @param track_idx (int)
 -- @param patt_idx (int)
 -- @param start_line (int)
@@ -593,8 +591,7 @@ function GridPie:clear_lines(track_idx,patt_idx,start_line,end_line)
 end
 
 --------------------------------------------------------------------------------
-
---- set one of the recombination pattern-tracks as aliased
+-- Set one of the recombination pattern-tracks as aliased
 -- @param track_idx (int)
 -- @param alias_p_idx (int)
 

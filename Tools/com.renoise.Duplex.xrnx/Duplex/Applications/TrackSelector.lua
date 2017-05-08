@@ -165,7 +165,7 @@ function TrackSelector:__init(...)
 
   Application.__init(self,...)
 
-  --self:list_mappings_and_options(TrackSelector.available_mappings,TrackSelector.default_options)
+  --self:list_mappings_and_options(TrackSelector)
 
 
 end

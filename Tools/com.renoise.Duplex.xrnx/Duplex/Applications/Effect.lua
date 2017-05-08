@@ -58,7 +58,8 @@ Effect.default_options = {
 Effect.available_mappings = {
 
   parameters = {
-    description = "(UISlider...) Parameter value",
+    description = "Effect: Parameter value",
+    component = UISlider,
     distributable = true,
     greedy = true,
     -- grid support 
@@ -68,43 +69,54 @@ Effect.available_mappings = {
     index = 1,
   },
   param_next = {
-    description = "(UIButton) Next Parameter page",
+    description = "Effect: Next Parameter page",
+    component = UIButton,
     distributable = true,
   },
   param_prev = {
-    description = "(UIButton) Previous Parameter page",
+    description = "Effect: Previous Parameter page",
+    component = UIButton,
     distributable = true,
   },
   device = {
-    description = "(UIButton...) Select among devices via buttons",
+    description = "Effect: Select among devices via buttons",
+    component = {{UIButton}},
     distributable = true,
     greedy = true,
   },
   device_select = {
-    description = "(UISlider) Select device via knob/slider",
+    description = "Effect: Select device via knob/slider",
+    component = UISlider,
     orientation = ORIENTATION.HORIZONTAL,
   },
   device_next = {
-    description = "(UIButton) Select next device",
+    description = "Effect: Select next device",
+    component = UIButton,
   },
   device_prev = {
-    description = "(UIButton) Select previous device",
+    description = "Effect: Select previous device",
+    component = UIButton,
   },
   preset_next = {
-    description = "(UIButton) Select next device preset",
+    description = "Effect: Select next device preset",
+    component = UIButton,
   },
   preset_prev = {
-    description = "(UIButton) Select previous device preset",
+    description = "Effect: Select previous device preset",
+    component = UIButton,
   },
   device_name = {
-    description = "(UILabel) Display device name",
+    description = "Effect: Display device name",
+    component = UILabel,
   },
   param_names = {
-    description = "(UILabel...) Display parameter name",
+    description = "Effect: Display parameter name",
+    component = {{UILabel}},
     greedy = true,
   },
   param_values = {
-    description = "(UILabel...) Display parameter value",
+    description = "Effect: Display parameter value",
+    component = {{UILabel}},
     greedy = true,
   },
   param_active = {
@@ -213,7 +225,7 @@ function Effect:__init(...)
   self._param_active = {}
 
   Automateable.__init(self,...)
-
+  self:list_mappings_and_options(Effect)
 
 end
 

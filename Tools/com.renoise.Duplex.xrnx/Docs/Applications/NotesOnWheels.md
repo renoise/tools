@@ -43,50 +43,88 @@ Tool discussion is located on the [Renoise forum](http://forum.renoise.com/index
 
 
 ## Available mappings
+  
 
 | Name       | Description   |
-| -----------|---------------|
-|`choose_mode`|NOW: Choose mode|  
-|`extend`|NOW: Repeat sequence twice|  
-|`fill`|NOW: Fill entire track (can be very CPU intensive, use with caution!!)|  
-|`gate_adjust`|NOW: Adjust note length for all steps|  
-|`gate_sliders`|NOW: Change gate/duration for step |  
-|`global`|NOW: Toggle between global/parameter-only output|  
-|`learn`|NOW: Import sequence from pattern|  
-|`multi_adjust`|NOW: Adjust all steps (mode-dependant)|  
-|`multi_sliders`|NOW: Mode-dependant slider|  
-|`num_steps`|NOW: Number of steps|  
-|`offset_adjust`|NOW: Adjust sample-offset for all steps|  
-|`offset_sliders`|NOW: Change sample-offset for step |  
-|`pitch_adjust`|NOW: Transpose all steps|  
-|`pitch_sliders`|NOW: Change pitch for step |  
-|`position`|NOW: Displays position within sequence|  
-|`retrig_adjust`|NOW: Adjust retriggering for all steps|  
+| -----------|---------------|  
 |`retrig_sliders`|NOW: Change number of retrigs for step |  
+|`choose_mode`|NOW: Choose mode|  
+|`multi_sliders`|NOW: Mode-dependant slider|  
+|`shrink`|NOW: Reduce sequence to half the size|  
+|`shift_up`|NOW: Decrease line offset|  
+|`velocity_adjust`|NOW: Adjust volume for all steps|  
+|`shift_down`|NOW: Increase line offset|  
+|`pitch_adjust`|NOW: Transpose all steps|  
+|`global`|NOW: Toggle between global/parameter-only output|  
+|`step_spacing`|NOW: Line-space between steps|  
+|`fill`|NOW: Fill entire track (can be very CPU intensive, use with caution!!)|  
+|`set_mode_pitch`|NOW: Set mode to 'pitch'<br>Hold to write sequence to entire pattern|  
 |`set_mode_gate`|NOW: Set mode to 'duration'<br>Hold to write sequence to entire pattern|  
 |`set_mode_offset`|NOW: Set mode to 'offset'<br>Hold to write sequence to entire pattern|  
-|`set_mode_pitch`|NOW: Set mode to 'pitch'<br>Hold to write sequence to entire pattern|  
-|`set_mode_retrig`|NOW: Set mode to 'retrigger)<br>Hold to write sequence to entire pattern|  
+|`learn`|NOW: Import sequence from pattern|  
 |`set_mode_velocity`|NOW: Set mode to 'velocity'<br>Hold to write sequence to entire pattern|  
-|`shift_down`|NOW: Increase line offset|  
-|`shift_up`|NOW: Decrease line offset|  
-|`shrink`|NOW: Reduce sequence to half the size|  
-|`step_spacing`|NOW: Line-space between steps|  
-|`velocity_adjust`|NOW: Adjust volume for all steps|  
-|`velocity_sliders`|NOW: Change velocity for step |  
 |`write`|NOW: Write to pattern in realtime|  
+|`gate_sliders`|NOW: Change gate/duration for step |  
+|`pitch_sliders`|NOW: Change pitch for step |  
+|`multi_adjust`|NOW: Adjust all steps (mode-dependant)|  
+|`num_steps`|NOW: Number of steps|  
+|`retrig_adjust`|NOW: Adjust retriggering for all steps|  
+|`gate_adjust`|NOW: Adjust note length for all steps|  
+|`set_mode_retrig`|NOW: Set mode to 'retrigger)<br>Hold to write sequence to entire pattern|  
+|`position`|NOW: Displays position within sequence|  
+|`extend`|NOW: Repeat sequence twice|  
+|`offset_sliders`|NOW: Change sample-offset for step |  
+|`velocity_sliders`|NOW: Change velocity for step |  
+|`offset_adjust`|NOW: Adjust sample-offset for all steps|  
 
-## Available options
+## Default options 
+  
+> Can be overridden in [configurations](../Configurations.md)
 
-| Name       | Description   |
-| -----------|---------------|
-|`edit_sync`|Output to pattern while edit-mode (red border in Renoise) is active|  
-|`fill_mode`|Enable to extend output to the entire track|  
+| Name          | Description   |
+| ------------- |---------------|  
 |`global_mode`|Enable to start in global mode (output all parameters/steps)|  
+|`fill_mode`|Enable to extend output to the entire track|  
+|`edit_sync`|Output to pattern while edit-mode (red border in Renoise) is active|  
+|`write_method`|Determine how to write to the pattern|  
 |`midi_keyboard`|Use an external MIDI keyboard to control pitch/transpose|  
-|`offset_quantize`|Specifies number of possible sample-offset (9xx) commands|  
 |`offset_wrap`|Determine adjusting the sample-offset will wrap values or not|  
-|`write_method`|Determine how to write to the pattern<br>TOUCH [1] will only output notes while the controller is being used<br>LATCH [2] will start output once the controller is being used<br>WRITE [3] will output notes continously, no matter what|  
+|`offset_quantize`|Specifies number of possible sample-offset (9xx) commands|  
+
+## Default palette 
+  
+> Can be overridden in [configurations](../Configurations.md)
+
+| Name          | Color|Text|Value|
+| ------------- |------|----|-----|  
+|`set_velocity_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|Velocity|true|  
+|`fill_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|Fill|true|  
+|`set_gate_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|Gate|true|  
+|`set_velocity_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|Velocity|false|  
+|`set_retrig_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|Retrig|false|  
+|`set_pitch_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|Pitch|true|  
+|`shift_down_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|↓|false|  
+|`learn_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|Learn|true|  
+|`shrink_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|½|false|  
+|`shift_down_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|↓|true|  
+|`set_retrig_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|Retrig|true|  
+|`write_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|Write|false|  
+|`fill_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|Fill|false|  
+|`learn_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|Learn|false|  
+|`set_offset_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|Offset|true|  
+|`write_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|Write|true|  
+|`global_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|Global|true|  
+|`set_pitch_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|Pitch|false|  
+|`global_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|Global|false|  
+|`extend_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|x²|false|  
+|`extend_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|x²|true|  
+|`shrink_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|½|true|  
+|`position_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|▫|false|  
+|`position_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|▪|true|  
+|`shift_up_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|↑|true|  
+|`shift_up_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|↑|false|  
+|`set_gate_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|Gate|false|  
+|`set_offset_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|Offset|false|  
 
 ## Changelog
 

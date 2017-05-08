@@ -5,7 +5,7 @@
 | Name          | Description   |
 | ------------- |---------------|
 | Effect        | [Automapped control of effect-device parameters](Applications/Effect.md)|
-| GridPie       | [Non-linear mixing of pattern-tracks](Applications/GridPie.md))|
+| GridPie       | [Non-linear mixing of pattern-tracks](Applications/GridPie.md)|
 | Hydra         | [Automapped control of Hydra meta-devices](Applications/Hydra.md)|
 | Instrument    | [Control the instrument scale and key](Applications/Instrument.md)|
 | Keyboard      | [A grid/OSC-capable keyboard with dynamic layouts](Applications/Keyboard.md)|

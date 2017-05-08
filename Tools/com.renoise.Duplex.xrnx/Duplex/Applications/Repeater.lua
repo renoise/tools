@@ -213,8 +213,7 @@ function Repeater:__init(...)
   self.playmode = renoise.PatternTrackAutomation.PLAYMODE_POINTS
 
   RoamingDSP.__init(self,...)
-
-  --self:list_mappings_and_options(Repeater.available_mappings,Repeater.default_options)
+  --self:list_mappings_and_options(Repeater)
 
 end
 

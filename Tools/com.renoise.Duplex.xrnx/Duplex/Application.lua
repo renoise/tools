@@ -535,7 +535,6 @@ end
 function Application:list_mappings_and_options(app)
   TRACE("Application:list_mappings_and_options(app)",app)
 
-
   local can_be_overridden = "> Can be overridden in [configurations](../Configurations.md)"
 
   local replace_newlines = function(str)
@@ -544,49 +543,73 @@ function Application:list_mappings_and_options(app)
 
   LOG(">>> begin summary...")
 
+  -- mappings --
+
   LOG([[
 
 ## Available mappings
+]])
 
+  if (table.is_empty(app.available_mappings)) then 
+    LOG("*This application has no mappings.*")
+  else 
+    LOG([[
 | Name       | Description   |
 | -----------|---------------|]])
-  for k,v in pairs(app.available_mappings) do
-    LOG(("|`%s`|%s|"):format(k,replace_newlines(v.description)))
-  end 
+    for k,v in pairs(app.available_mappings) do
+      LOG(("|`%s`|%s|"):format(k,replace_newlines(v.description)))
+    end 
+  end
+
+  -- options --
 
   LOG([[
 
 ## Default options 
+]])
 
-]]..can_be_overridden..[[
+  if (table.is_empty(app.default_options)) then 
+    LOG("*This application has no options.*")
+  else 
+    LOG(can_be_overridden..[[
 
 
 | Name          | Description   |
 | ------------- |---------------|]])
-  for k,v in pairs(app.default_options) do
-    LOG(("|`%s`|%s|"):format(k,replace_newlines(v.description)))
-  end 
+    for k,v in pairs(app.default_options) do
+      LOG(("|`%s`|%s|"):format(k,replace_newlines(v.description)))
+    end 
+  end
+
+  -- palette --
 
   LOG([[
 
 ## Default palette 
+]])
 
-]]..can_be_overridden..[[
+  if (table.is_empty(app.default_palette)) then 
+    LOG("*This application has no palette.*")
+  else 
+    LOG(can_be_overridden..[[
 
 
 | Name          | Color|Text|Value|
 | ------------- |------|----|-----|]])
-  for k,v in pairs(app.default_palette) do
+    for k,v in pairs(app.default_palette) do
 
-    local text_color = (cColor.get_average(v.color) > 128) and "black" or "white"
-    local hex_color = cColor.color_table_to_hex_string(v.color,"#")
-
-    local str_swatch = ('<div style="padding-left:0.5em;padding-right:0.5em; background-color:%s; color: %s">0x%.2X,0x%.2X,0x%.2X</div>'):format(
-      hex_color,text_color,v.color[1],v.color[2],v.color[3])
-
-
-    LOG(("|`%s`|%s|%s|%s|"):format(k,str_swatch,v.text,cLib.serialize_object(v.val)))
-  end 
+      local str_swatch
+      if v.color then 
+        local text_color = (cColor.get_average(v.color) > 128) and "black" or "white"
+        local hex_color = cColor.color_table_to_hex_string(v.color,"#")
+        str_swatch = ('<div style="padding-left:0.5em;padding-right:0.5em; background-color:%s; color: %s">0x%.2X,0x%.2X,0x%.2X</div>'):format(
+          hex_color,text_color,v.color[1],v.color[2],v.color[3])
+      else 
+        str_swatch = "N/A"
+      end 
+      LOG(("|`%s`|%s|%s|%s|"):format(k,str_swatch,v.text or "",cLib.serialize_object(v.val)))
+    end 
+  end
 
   LOG(">>> end of summary...")
 

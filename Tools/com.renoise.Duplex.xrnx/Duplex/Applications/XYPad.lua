@@ -124,6 +124,7 @@ function XYPad:__init(...)
 
   RoamingDSP.__init(self,...)
 
+  --self:list_mappings_and_options(XYPad)
 
 end
 

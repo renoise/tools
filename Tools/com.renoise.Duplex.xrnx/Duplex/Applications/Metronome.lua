@@ -38,6 +38,7 @@ Metronome.default_palette = {
 function Metronome:__init(...)
 
   Application.__init(self,...)
+  self:list_mappings_and_options(Metronome)
 
 end
 

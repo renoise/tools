@@ -125,7 +125,7 @@ StepSequencer.default_options = {
       "All time",
       "Only in record mode"
     },
-    value = WRITE_MODE_RECORD_OFF,
+    value = WRITE_MODE_RECORD_ON,
   },
   play_notes = {
     label = "Play notes",
@@ -139,7 +139,7 @@ StepSequencer.default_options = {
       "No",
       "Yes"
     },
-    value = PLAY_NOTES_OFF,
+    value = PLAY_NOTES_ON,
   },  
   display_notes = {
     label = "Display notes",
@@ -152,7 +152,7 @@ StepSequencer.default_options = {
       "No",
       "Yes"
     },
-    value = DISPLAY_NOTES_OFF,
+    value = DISPLAY_NOTES_ON,
   },
   page_size = {
     label = "Page size",
@@ -336,7 +336,7 @@ function StepSequencer:__init(...)
 
   Application.__init(self,...)
 
-  --self:list_mappings_and_options(StepSequencer.available_mappings,StepSequencer.default_options)
+  --self:list_mappings_and_options(StepSequencer)
 
 end
 

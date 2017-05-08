@@ -9,6 +9,60 @@
 * Parameter subsets make it possible to control only certain values
 * Supports automation recording 
 
+## Available mappings
+  
+| Name       | Description   |
+| -----------|---------------|  
+|`param_prev`|Effect: Previous Parameter page|  
+|`device_prev`|Effect: Select previous device|  
+|`device`|Effect: Select among devices via buttons|  
+|`preset_next`|Effect: Select next device preset|  
+|`parameters`|Effect: Parameter value|  
+|`param_active`|(UILed...) Display active parameter|  
+|`device_name`|Effect: Display device name|  
+|`param_next`|Effect: Next Parameter page|  
+|`device_select`|Effect: Select device via knob/slider|  
+|`preset_prev`|Effect: Select previous device preset|  
+|`device_next`|Effect: Select next device|  
+|`param_values`|Effect: Display parameter value|  
+|`param_names`|Effect: Display parameter name|  
+
+## Default options 
+  
+> Can be overridden in [configurations](../Configurations.md)
+
+| Name          | Description   |
+| ------------- |---------------|  
+|`record_method`|Determine if/how to record automation |  
+|`include_parameters`|Select which parameter set you want to control.|  
+
+## Default palette 
+  
+> Can be overridden in [configurations](../Configurations.md)
+
+| Name          | Color|Text|Value|
+| ------------- |------|----|-----|  
+|`device_nav_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`slider_background`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#004000; color: white">0x00,0x40,0x00</div>|·|false|  
+|`slider_tip`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|·|true|  
+|`prev_device_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|◄|true|  
+|`prev_device_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|◄|false|  
+|`background`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`slider_track`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|·|true|  
+|`next_device_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|►|true|  
+|`next_preset_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|►|false|  
+|`device_nav_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|■|true|  
+|`prev_param_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|◄|false|  
+|`parameter_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>||false|  
+|`next_param_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|►|false|  
+|`parameter_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>||true|  
+|`next_param_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|►|true|  
+|`prev_param_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|◄|true|  
+|`next_preset_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|►|true|  
+|`prev_preset_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|◄|true|  
+|`prev_preset_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|◄|false|  
+|`next_device_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|►|false|  
+
 ## Changelog
 
 1.01

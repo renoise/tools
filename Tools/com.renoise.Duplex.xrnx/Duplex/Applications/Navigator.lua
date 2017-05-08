@@ -175,7 +175,7 @@ function Navigator:__init(...)
 
   Application.__init(self,...)
 
-  --self:list_mappings_and_options(Navigator.available_mappings,Navigator.default_options)
+  --self:list_mappings_and_options(Navigator)
 
 end
 

@@ -104,6 +104,7 @@ Rotate.default_palette = {
 function Rotate:__init(...)
 
   Application.__init(self,...)
+  --self:list_mappings_and_options(Rotate)
 
 end
 

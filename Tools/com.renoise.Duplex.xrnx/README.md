@@ -1,6 +1,6 @@
 # Duplex
 
-*MIDI/OSC controller playground for Renoise.*
+*MIDI/OSC controller framework for Renoise.*
 
 Duplex is a collection of scripts that you install as a single Renoise tool. The scripts can run on a wide range of hardware, and works together to offer full, bi-directional control of the Renoise mixer/effects/pattern matrix. But Duplex is also about the weird and wonderful stuff, like custom-built sequencers and performance tools.
 

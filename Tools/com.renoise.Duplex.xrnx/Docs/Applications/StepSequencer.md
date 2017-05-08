@@ -44,34 +44,64 @@ The mode is activated immediately after you enable Playback Follow in Renoise (u
 ![Config_launchpad_stepsequencer.png](../Images/Config_launchpad_stepsequencer.png)  
 *The Duplex StepSequencer configuration for the Launchpad*
 
-## Available mappings 
+## Available mappings
+  
 
-| Name          | Description   |
-| ------------- |---------------|
-|`track`|Sequencer: Flip through tracks|  
-|`grid`|Sequencer: press to toggle note on/off<br>[Hold single button] to copy note<br>[Hold multiple buttons] to adjust level/transpose
+| Name       | Description   |
+| -----------|---------------|  
+|`track`|Sequencer: Flip through tracks/columns|  
+|`cycle_layout`|Sequencer: Cycle through available grid layouts|  
+|`grid`|Sequencer: press to toggle note on/off<br>Hold single button to copy note<br>Hold multiple buttons to adjust level/transpose<br>Control value: |  
 |`line`|Sequencer: Flip up/down through lines|  
-|`transpose`|Sequencer: 4 buttons for transpose|<br>1st: Oct down<br>2nd: Semi down<br>3rd: Semi up<br>4th: Oct up|  
+|`transpose`|Sequencer: 4 buttons for transpose<br>1st: Oct down<br>2nd: Semi down<br>3rd: Semi up<br>4th: Oct up<br>Control value: |  
 |`levelsteps`|Sequencer: Increase the note volume step wise|  
 |`levelslider`|Sequencer: Adjust note volume|  
-|`level`|Sequencer: Adjust note volume. Tthis control serves two purposes, as it will also display the currently playing line. Therefore, it needs to be the same size as the grid (rows if ORIENTATION.VERTICAL, columns if ORIENTATION.HORIZONTAL)|  
+|`level`|Sequencer: Adjust note volume|  
 |`next_line`|Sequencer: Go to next line|  
-|`prev_line`|Sequencer: Go to previous line| 
+|`prev_line`|Sequencer: Go to previous line|  
 
-## Available options 
+## Default options 
+  
+> Can be overridden in [configurations](../Configurations.md)
 
 | Name          | Description   |
-| ------------- |---------------|
-|`follow_column`|Enable this if you want to align the sequencer to the currently selected column in pattern|  
-|`follow_line`|Enable this if you want to align the sequencer with the selected line in pattern|  
-|`volume_steps`|Specify the step size of the volume-steps button|  
-|`follow_track`|Enable this if you want to align the sequencer to the selected track in pattern|  
+| ------------- |---------------|  
+|`follow_column`|Enable this if you want to align the sequencer to <br>the currently selected column in pattern|  
+|`follow_line`|Enable this if you want to align the sequencer with <br>the selected line in pattern|  
+|`volume_steps`|Specify the step size of the<br>volume-steps button|  
+|`follow_track`|Enable this if you want to align the sequencer to <br>the selected track in pattern|  
 |`page_size`|Specify the step size when using paged navigation|  
-|`write_mode`|Choose if you want to write notes to the pattern dependent from Renoise's edit mode.|  
-|`line_increment`|Choose the number of lines to jump for each step when flipping through pattern|  
-|`play_notes`|Choose if you want to play the instrument / note on pushing a trigger pad or grid button. If 'Write mode' is set to 'Only in edit mode', notes will be played only if edit mode is off.|  
+|`write_mode`|Choose if you want to write notes to the pattern<br>dependent from Renoise's edit mode.|  
+|`line_increment`|Choose the number of lines to jump for each step <br>when flipping through pattern|  
+|`play_notes`|Choose if you want to play the instrument / note<br>on pushing a trigger pad or grid button.<br>If 'Write mode' is set to 'Only in edit mode' <br>notes will be played only if edit mode is off.|  
 |`display_notes`|Choose if you want to display the note valuesonto the grid buttons in Duplex|  
-|`grid_mode`|Choose if you want to edit multiple tracks with the grid or only one track.|  
+|`grid_mode`|Choose if you want to edit multiple tracks<br>with the grid or only one track.|  
+    
+## Default palette 
+  
+> Can be overridden in [configurations](../Configurations.md)
+
+| Name          | Color|Text|Value|
+| ------------- |------|----|-----|  
+|`slot_level_1`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#0040FF; color: white">0x00,0x40,0xFF</div>|▪|true|  
+|`out_of_bounds`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#404000; color: white">0x40,0x40,0x00</div>|·|false|  
+|`next_line_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|+ln|true|  
+|`slot_level_4`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#00FFFF; color: black">0x00,0xFF,0xFF</div>|▪|true|  
+|`prev_line_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|-ln|false|  
+|`slot_level_2`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#0080FF; color: white">0x00,0x80,0xFF</div>|▪|true|  
+|`slot_empty`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`slot_level_3`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#00C0FF; color: black">0x00,0xC0,0xFF</div>|▪|true|  
+|`slot_level_5`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#40FFFF; color: black">0x40,0xFF,0xFF</div>|▪|true|  
+|`transpose_12_up`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#00FFFF; color: black">0x00,0xFF,0xFF</div>|+12|false|  
+|`slot_muted`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#400000; color: white">0x40,0x00,0x00</div>|▫|false|  
+|`slot_highlight`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|·|false|  
+|`next_line_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|+ln|false|  
+|`prev_line_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|-ln|true|  
+|`transpose_1_up`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#40C0FF; color: black">0x40,0xC0,0xFF</div>|+1|false|  
+|`transpose_12_down`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FF00FF; color: black">0xFF,0x00,0xFF</div>|-12|false|  
+|`transpose_1_down`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#C040FF; color: black">0xC0,0x40,0xFF</div>|-1|false|  
+|`slot_level_6`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#80FFFF; color: black">0x80,0xFF,0xFF</div>|▪|true|  
+|`slot_current`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
 
 ## Changelog
 

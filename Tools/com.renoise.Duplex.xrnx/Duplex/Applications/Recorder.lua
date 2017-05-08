@@ -259,7 +259,7 @@ function Recorder:__init(...)
 
   Application.__init(self,...)
 
-  --self:list_mappings_and_options(Recorder.available_mappings,Recorder.default_options)
+  --self:list_mappings_and_options(Recorder)
 
 end
 

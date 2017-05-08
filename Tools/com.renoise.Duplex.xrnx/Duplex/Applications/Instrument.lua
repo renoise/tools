@@ -62,6 +62,7 @@ function Instrument:__init(...)
   self._controls = {}
 
   Application.__init(self,...)
+  --self:list_mappings_and_options(Instrument)
 
 end
 

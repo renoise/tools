@@ -184,7 +184,7 @@ function Transport:__init(...)
 
   Application.__init(self,...)
 
-  --self:list_mappings_and_options(Transport.available_mappings,Transport.default_options)
+  --self:list_mappings_and_options(Transport)
 
 end
 

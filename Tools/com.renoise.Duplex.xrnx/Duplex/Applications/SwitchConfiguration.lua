@@ -65,6 +65,8 @@ function SwitchConfiguration:__init(...)
 
   Application.__init(self,...)
 
+  --self:list_mappings_and_options(SwitchConfiguration)
+
 end
 
 --------------------------------------------------------------------------------

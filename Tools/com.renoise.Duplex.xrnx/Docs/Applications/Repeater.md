@@ -14,32 +14,60 @@ The Duplex Repeater application allows you to take control of any repeater DSP d
 ![Repeater_on_remote_sl.png](../Images/Repeater_on_remote_sl.png)  
 *The Duplex Repeater configuration for the Remote SL MKII*
 
-## Available mappings 
+## Available mappings
+  
 
-| Name          | Description   |
-| ------------- |---------------|
-|`divisor_slider`|Repeater: Control divisor using a fader/knob|  
-|`grid`|Repeater: button grid|  
-|`lock_button`|Lock/unlock device|  
-|`mode_even`|Repeater: Set mode to 'even'|  
+| Name       | Description   |
+| -----------|---------------|  
 |`mode_dotted`|Repeater: Set mode to 'dotted'|  
-|`mode_triplet`|Repeater: Set mode to 'triplet'|  
-|`mode_free`|Repeater: Set mode to 'free'|  
+|`lock_button`|RoamingDSP: Lock/unlock device|  
+|`grid`|Repeater: button grid|  
+|`next_device`|RoamingDSP: Next device|  
+|`prev_device`|RoamingDSP: Previous device|  
 |`mode_slider`|Repeater: Control mode using a fader/knob|  
-|`next_device`|See [RoamingDSP](RoamingDSP.md)|  
-|`prev_device`|See [RoamingDSP](RoamingDSP.md)|  
+|`divisor_slider`|Repeater: Control divisor using a fader/knob|  
+|`mode_free`|Repeater: Set mode to 'free'|  
+|`mode_even`|Repeater: Set mode to 'even'|  
+|`mode_triplet`|Repeater: Set mode to 'triplet'|  
 
-## Available options 
+## Default options 
+  
+> Can be overridden in [configurations](../Configurations.md)
 
 | Name          | Description   |
-| ------------- |---------------|
+| ------------- |---------------|  
+|`mode_select`|Determine the working mode of the grid:<br>Free: scale between 1/1 and 1/128<br>Even: display only 'even' divisors<br>Triplet: display only 'triplet' divisors<br>Dotted: display only 'dotted' divisors<br>Automatic: display 'even','triplet' and 'dotted' <br>  divisors, each on a separate line (automatic layout)|  
+|`record_method`|Determine if/how to record automation |  
+|`follow_pos`|Follow the selected device in the DSP chain|  
+|`locked`|Disable locking if you want the controls to<br>follow the currently selected device |  
+|`hold_option`|Determine what to do when a button is released|  
 |`divisor_max`|Specify the minimum divisor value|  
 |`divisor_min`|Specify the minimum divisor value|  
-|`hold_option`|Determine what to do when a button is released|  
-|`mode_select`|Determine the working mode of the grid:<br>Free: scale between 1/1 and 1/128<br>Even: display only 'even' divisors<br>Triplet: display only 'triplet' divisors<br>Dotted: display only 'dotted' divisors<br>Automatic: display 'even','triplet' and 'dotted' divisors, each on a separate line (automatic layout)|  
-|`locked`|See [RoamingDSP](RoamingDSP.md) |  
-|`record_method`|See [RoamingDSP](RoamingDSP.md)|  
-|`follow_pos`|See [RoamingDSP](RoamingDSP.md)|  
+
+## Default palette 
+  
+> Can be overridden in [configurations](../Configurations.md)
+
+| Name          | Color|Text|Value|
+| ------------- |------|----|-----|  
+|`disabled`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>||false|  
+|`mode_even_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|E|true|  
+|`mode_triplet_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|T|true|  
+|`prev_device_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|◄|true|  
+|`prev_device_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|◄|false|  
+|`mode_dotted_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|D|true|  
+|`mode_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|■|true|  
+|`mode_free_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|F|false|  
+|`enabled`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>||true|  
+|`next_device_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|►|true|  
+|`mode_free_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|F|true|  
+|`mode_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`mode_even_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|E|false|  
+|`lock_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|♥|true|  
+|`next_device_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|►|false|  
+|`mode_dotted_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|D|false|  
+|`lock_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|♥|false|  
+|`mode_triplet_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|T|false|  
 
 ## Changelog
 

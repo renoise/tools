@@ -72,49 +72,80 @@ of stuck notes when you're changing octave from within Renoise while pressing on
 
 Tool discussion is located on the [Renoise forum](http://forum.renoise.com/index.php?/topic/33806-new-tool-duplex-keyboard/)
 
-## Available mappings 
-
+## Available mappings
+  
 | Name       | Description   |
-| -----------|---------------|
-| `keys` | Keyboard: trigger notes using keyboard |
-| `key_grid` | Keyboard: trigger notes using buttons or pads |
-| `pitch_bend` | Keyboard: pitch-bend wheel |
-| `mod_wheel` | Keyboard: mod wheel |
-| `pressure` | Keyboard: channel pressure |
-| `volume` | Keyboard: volume control |
-| `volume_sync` | Keyboard: sync volume with Renoise |
-| `octave_down` | Keyboard: transpose keyboard down |
-| `octave_up` | Keyboard: transpose keyboard up |
-| `octave_set` | Keyboard: set active keyboard octave |
-| `octave_sync` | Keyboard: sync octave with Renoise |
-| `track_set` | Keyboard: set active keyboard track |
-| `track_sync` | Keyboard: sync track with Renoise |
-| `instr_set` | Keyboard: set active keyboard instrument |
-| `instr_sync` | Keyboard: sync instrument with Renoise |
-| `cycle_layout` | Keyboard: cycle between available layouts |
-| `all_notes_off` | Keyboard: stop all playing notes |
+| -----------|---------------|  
+|`track_sync`|Keyboard: sync track with Renoise|  
+|`volume_sync`|Keyboard: sync volume with Renoise|  
+|`key_grid`|Keyboard: trigger notes using buttons or pads|  
+|`track_set`|Keyboard: set active keyboard track|  
+|`volume`|Keyboard: volume control|  
+|`keys`|Keyboard: trigger notes using keyboard|  
+|`instr_set`|Keyboard: set active keyboard instrument|  
+|`octave_down`|Keyboard: transpose keyboard down|  
+|`mod_wheel`|Keyboard: mod wheel|  
+|`cycle_layout`|Keyboard: cycle between available layouts|  
+|`all_notes_off`|Keyboard: stop all playing notes|  
+|`pressure`|Keyboard: channel pressure|  
+|`octave_up`|Keyboard: transpose keyboard up|  
+|`octave_sync`|Keyboard: sync octave with Renoise|  
+|`octave_set`|Keyboard: set active keyboard octave|  
+|`instr_sync`|Keyboard: sync instrument with Renoise|  
+|`pitch_bend`|Keyboard: pitch-bend wheel|  
 
-## Available options
+## Default options 
+  
+> Can be overridden in [configurations](../Configurations.md)
 
-| Name       | Description   |
-| -----------|---------------|
-| `instr_index` | Choose which instrument to control |
-| `track_index` | Choose which track to use  |
-| `velocity_mode` | Determine how to act on velocity range (the range specified in the control-map)  |
-| `keyboard_mode` | Determine how notes should be triggered  |
-| `base_volume` | Determine how to control keyboard volume  |
-| `channel_pressure` | Determine how to treat incoming channel pressure |
-| `pitch_bend` | Determine how to treat incoming pitch bend messages |
-| `mod_wheel` | Determine how to treat incoming mod wheel messages |
-| `release_type` | Determine how to respond when the same key is triggered multiple times |
-| `button_width` | Specify the button width (when in grid mode) |
-| `button_height` | Specify the button height (when in grid mode) |
-| `base_octave` | Specify the default starting octave |
-| `upper_note` | Specify a note as upper boundary |
-| `lower_note` | Specify a note as lower boundary |
-| `grid_layout` | Specify a keyboard layout for the grid |
+| Name          | Description   |
+| ------------- |---------------|  
+|`mod_wheel`|Determine how to treat incoming mod wheel messages|  
+|`release_type`|Determine how to respond when the same key is triggered<br>multiple times without being released inbetween hits: <br>'wait' means to wait until all pressed keys are released, <br>'release when possible' will use the first opportunity to <br> release the note (enable if you experience stuck notes)|  
+|`button_width`|Specify the button width (when in grid mode)|  
+|`base_volume`|Determine how to control keyboard volume|  
+|`keyboard_mode`|Determine how notes should be triggered|  
+|`lower_note`|Specify a note as lower boundary|  
+|`pitch_bend`|Determine how to treat incoming pitch bend messages|  
+|`channel_pressure`|Determine how to treat incoming channel pressure|  
+|`base_octave`|Specify the default starting octave|  
+|`velocity_mode`|Determine how to act on velocity range (the range specified in the control-map)|  
+|`button_height`|Specify the button height (when in grid mode)|  
+|`instr_index`|Choose which instrument to control|  
+|`grid_layout`|Specify a keyboard layout for the grid|  
+|`upper_note`|Specify a note as upper boundary|  
+|`track_index`|Choose which track to use |  
 
+## Default palette 
+  
+> Can be overridden in [configurations](../Configurations.md)
 
+| Name          | Color|Text|Value|
+| ------------- |------|----|-----|  
+|`volume_sync_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`key_released`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`key_out_of_bounds`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`volume_sync_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|■|true|  
+|`all_notes_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|⚡|false|  
+|`slider_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#C08080; color: black">0xC0,0x80,0x80</div>|·|false|  
+|`cycle_layout_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>||false|  
+|`key_pressed`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|·|true|  
+|`cycle_layout_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>||true|  
+|`all_notes_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|⚡|true|  
+|`track_sync_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|■|true|  
+|`slider_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFC0FF; color: black">0xFF,0xC0,0xFF</div>|▪|true|  
+|`octave_sync_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`octave_up_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|+12|false|  
+|`instr_sync_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|■|true|  
+|`octave_down_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|-12|true|  
+|`octave_sync_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|■|true|  
+|`octave_up_on`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|+12|true|  
+|`key_released_selected`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#808040; color: white">0x80,0x80,0x40</div>|·|false|  
+|`octave_down_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|-12|false|  
+|`track_sync_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
+|`key_released_content`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#404040; color: white">0x40,0x40,0x40</div>|·|false|  
+|`key_pressed_content`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#FFFFFF; color: black">0xFF,0xFF,0xFF</div>|·|true|  
+|`instr_sync_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
 
 ## Changelog
 
