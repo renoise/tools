@@ -277,7 +277,7 @@ function Recorder:start_app()
   end
 
   renoise.app().window.sample_record_dialog_is_visible = false
-  self:_attach_to_song(renoise.song())
+  self:_attach_to_song(rns)
 
 end
 
@@ -293,9 +293,9 @@ function Recorder:on_idle()
     return 
   end
 
-  local playing = renoise.song().transport.playing
-  local line =  renoise.song().transport.playback_pos.line
-  local patt = renoise.song().patterns[renoise.song().selected_pattern_index]
+  local playing = rns.transport.playing
+  local line =  rns.transport.playback_pos.line
+  local patt = rns.patterns[rns.selected_pattern_index]
 
   -- do we need to perform a complete refresh? 
   if(self._update_requested) then
@@ -307,7 +307,7 @@ function Recorder:on_idle()
   if self._immediate_take then
       self._prepare = true
       TRACE("Recorder: start_stop_sample_recording()")
-      renoise.song().transport:start_stop_sample_recording()
+      rns.transport:start_stop_sample_recording()
       self._immediate_take = false
   end
 
@@ -342,8 +342,8 @@ function Recorder:on_idle()
 
   -- update slow blinking etc.
   -- stopped mode is special case, will not blink
-  local lpb = renoise.song().transport.lpb
-  local line_num = (renoise.song().transport.playback_pos.line/lpb)+1
+  local lpb = rns.transport.lpb
+  local line_num = (rns.transport.playback_pos.line/lpb)+1
   local blink = (math.floor(line_num%2)==1)
   -- hack#1 for stopped player (always toggle)
   if(not self._playing) then
@@ -443,8 +443,8 @@ function Recorder:on_idle()
   end
 
   -- did we change current_pattern?
-  if (self._current_pattern ~= renoise.song().selected_pattern_index) then
-    self._current_pattern = renoise.song().selected_pattern_index
+  if (self._current_pattern ~= rns.selected_pattern_index) then
+    self._current_pattern = rns.selected_pattern_index
   end
 
 end
@@ -457,7 +457,9 @@ end
 function Recorder:on_new_document()
   TRACE("Recorder:on_new_document()")
 
-  self:_attach_to_song(renoise.song())
+  rns = renoise.song()
+
+  self:_attach_to_song()
 
 end
 
@@ -519,7 +521,7 @@ function Recorder:_finalize_recording()
   self._finalizing = true
   self:_restore_slider_tip(self._active_track_idx)
   TRACE("Recorder: start_stop_sample_recording()")
-  renoise.song().transport:start_stop_sample_recording()
+  rns.transport:start_stop_sample_recording()
 
 end
 
@@ -596,7 +598,7 @@ function Recorder:_do_post_recording()
     self:_write_to_pattern(track,sample_lines)
 
     -- rename instrument 
-    local instr = renoise.song().instruments[instr_idx]
+    local instr = rns.instruments[instr_idx]
     instr.name = sample.name
 
     -- select the sample
@@ -767,7 +769,7 @@ function Recorder:_locate_instruments()
 
   self._tracks = table.create()
 
-  for i,instr in ipairs(renoise.song().instruments) do
+  for i,instr in ipairs(rns.instruments) do
 
     local matches = string.gmatch(instr.name,"[%D]+([%d]+)[%D]+([%d]+)")
     for track_idx,instr_index in matches do
@@ -798,8 +800,8 @@ end
 
 -- adds notifiers to song, set essential values
 
-function Recorder:_attach_to_song(song)
-  TRACE("Recorder:_attach_to_song",song)
+function Recorder:_attach_to_song()
+  TRACE("Recorder:_attach_to_song")
 
   if not self._created then
     return
@@ -807,11 +809,11 @@ function Recorder:_attach_to_song(song)
 
   self:_update_sample_count()
   self:_locate_instruments()
-  self._playing = renoise.song().transport.playing
-  self._current_pattern = renoise.song().selected_pattern_index
+  self._playing = rns.transport.playing
+  self._current_pattern = rns.selected_pattern_index
 
   -- when switching pattern in Renoise
-  song.selected_pattern_index_observable:add_notifier(
+  rns.selected_pattern_index_observable:add_notifier(
     function(obj)
       TRACE("Recorder:selected_pattern_index_observable fired...",obj)
 
@@ -824,7 +826,7 @@ function Recorder:_attach_to_song(song)
     end
   )
   -- when changing track in Renoise
-  song.selected_track_index_observable:add_notifier(
+  rns.selected_track_index_observable:add_notifier(
     function()
       TRACE("Recorder:selected_track_observable fired...")
 
@@ -838,7 +840,7 @@ function Recorder:_attach_to_song(song)
     end
   )
   -- when inserting/deleting/swapping tracks
-  song.tracks_observable:add_notifier(
+  rns.tracks_observable:add_notifier(
     function(obj)
       TRACE("Recorder:tracks_observable fired...")
 
@@ -847,7 +849,7 @@ function Recorder:_attach_to_song(song)
       if(obj.type=="insert")then
 
         local copy = false
-        for i = #renoise.song().tracks,obj.index,-1 do
+        for i = #rns.tracks,obj.index,-1 do
           if(self._tracks[i])then
             copy = true
           end
@@ -869,7 +871,7 @@ function Recorder:_attach_to_song(song)
       elseif(obj.type=="remove")then
 
         local copy = false
-        for i = obj.index,#renoise.song().tracks do
+        for i = obj.index,#rns.tracks do
           if(self._tracks[i])then
             copy = true
           end
@@ -949,11 +951,11 @@ function Recorder:_attach_to_song(song)
   
   )
   -- monitor changes to the pattern's content
-  song.selected_pattern_observable:add_notifier(
+  rns.selected_pattern_observable:add_notifier(
     function()
       -- remove existing line notifier (if it exists)
-      local patt = song.patterns[self._current_pattern]
-      if (song.selected_pattern_index ~= self._current_pattern) and
+      local patt = rns.patterns[self._current_pattern]
+      if (rns.selected_pattern_index ~= self._current_pattern) and
           (patt:has_line_notifier(self._track_changes,self)) then
         patt:remove_line_notifier(self._track_changes,self)
       end
@@ -978,8 +980,7 @@ function Recorder:_follow_track()
   if (self.options.follow_track.value == self.FOLLOW_TRACK_OFF) then
     return
   end
-  local song = renoise.song()
-  local track_idx = song.selected_track_index
+  local track_idx = rns.selected_track_index
   local page = self:_get_track_page(track_idx)
   if (page~=self._track_page) then
     self._track_page = page
@@ -1012,8 +1013,7 @@ end
 function Recorder:_attach_line_notifier()
   TRACE("Recorder:_attach_line_notifier()")
 
-  local song = renoise.song()
-  local patt = song.patterns[song.selected_pattern_index]
+  local patt = rns.patterns[rns.selected_pattern_index]
   if not (patt:has_line_notifier(self._track_changes,self))then
     patt:add_line_notifier(self._track_changes,self)
   end
@@ -1060,7 +1060,7 @@ function Recorder:_update_selected_sample(track,patt_idx)
 
   track.selected_sample = nil
   local skip_event = true
-  local patt = renoise.song().patterns[patt_idx]
+  local patt = rns.patterns[patt_idx]
   local track_type = xTrack.determine_track_type(track.index)
   if (track_type==renoise.Track.TRACK_TYPE_SEQUENCER) then
     local note = patt.tracks[track.index].lines[1].note_columns[1]
@@ -1093,7 +1093,7 @@ function Recorder:_update_sample_count()
   TRACE("Recorder:_update_sample_count()")
 
   local num = 0
-  for k,v in ipairs(renoise.song().instruments) do
+  for k,v in ipairs(rns.instruments) do
     if (#v.samples>0)then
       local sample_name = v.samples[1].name
       local str = string.sub(sample_name,1,15)
@@ -1123,7 +1123,7 @@ function Recorder:_get_recording_index()
 
   -- the name we're looking for
   local lookfor = string.format("Recorded Sample %02d",(self._sample_count))
-  for k,v in ipairs(renoise.song().instruments) do
+  for k,v in ipairs(rns.instruments) do
     if(v.name==lookfor) then
       TRACE("Recorder:_get_recording_index:",k)
       return k
@@ -1208,7 +1208,7 @@ function Recorder:_process_input(track,obj)
     -- prepare for recording
     self._prepare = true
     TRACE("Recorder: start_stop_sample_recording()")
-    renoise.song().transport:start_stop_sample_recording()
+    rns.transport:start_stop_sample_recording()
     restore_index()
     return false
 
@@ -1226,8 +1226,8 @@ function Recorder:_select_sample(track,idx)
     local sample = track.samples[idx]
     if sample and sample.instrument_value then
       local real_index = sample.instrument_value+1
-      if (renoise.song().instruments[real_index]) then
-        renoise.song().selected_instrument_index = real_index
+      if (rns.instruments[real_index]) then
+        rns.selected_instrument_index = real_index
       end
     end
   end
@@ -1247,7 +1247,7 @@ function Recorder:_update_all()
 
   local page_width = self:_get_page_width()
   local page_width = self:_get_page_width()
-  local track_idx = renoise.song().selected_track_index 
+  local track_idx = rns.selected_track_index 
 
   for control_idx=1,#self._controls.sliders do
     local button = self._controls.buttons[control_idx]
@@ -1265,7 +1265,7 @@ function Recorder:_update_all()
           --print("*** about to remove ghost with track idx",track_idx)
           self:_remove_ghost(track_idx)
           if (count~=0) then
-            local patt_idx = renoise.song().selected_pattern_index
+            local patt_idx = rns.selected_pattern_index
             self:_update_selected_sample(track,patt_idx)
           end
         else
@@ -1552,7 +1552,7 @@ function Recorder:_write_to_pattern(track,sample_lines)
   if (self.options.autostart.value==self.AUTOSTART_OFF) then
     sample_lines = nil -- this will skip autostarting
   elseif (self.options.autostart.value==self.AUTOSTART_LPB) then
-    autostart = renoise.song().transport.lpb
+    autostart = rns.transport.lpb
   else
     autostart = self.options.autostart.value-2
   end
@@ -1578,11 +1578,11 @@ function Recorder:get_sample_lines(sample)
   end
 
   local sframes = sample.sample_buffer.number_of_frames
-  local bpm = renoise.song().transport.bpm
+  local bpm = rns.transport.bpm
   local srate = sample.sample_buffer.sample_rate
   local secs = (sframes/srate)
   local ms_per_beat = (bpm/60)
-  local lpb = renoise.song().transport.lpb
+  local lpb = rns.transport.lpb
   -- apply rounding to the final result
   return math.floor((secs*ms_per_beat*lpb)+.5)
 
@@ -1627,7 +1627,7 @@ function RecorderTrack:write_to_pattern(trigger_mode,sample_lines,autostart)
   local note_val = 48
   local volume_val = 128
   local track_index = self.index
-  local patt_track = renoise.song().selected_pattern.tracks[track_index]
+  local patt_track = rns.selected_pattern.tracks[track_index]
   local note = patt_track:line(1).note_columns[1]
   local fx = patt_track:line(1).effect_columns[1]
   local sample = self.samples[self.selected_sample]
@@ -1669,7 +1669,7 @@ function RecorderTrack:write_to_pattern(trigger_mode,sample_lines,autostart)
   end
 
   -- first check that the line exist at all
-  local song_track = renoise.song().tracks[track_index]
+  local song_track = rns.tracks[track_index]
   local insert_line = autostart
   if not (patt_track:line(insert_line)) then
     local msg = "Notice: Could not write offset note: pattern is too short"
@@ -1744,7 +1744,7 @@ function RecorderTrack:_rename_samples(idx)
     sample.name = string.gsub(sample.name,"%d+",function(w) 
       return idx or "N/A"
     end,1)
-    local instr = renoise.song().instruments[sample.instrument_value+1]
+    local instr = rns.instruments[sample.instrument_value+1]
     if instr then
       instr.name = sample.name
     end
@@ -1856,7 +1856,7 @@ end
 --------------------------------------------------------------------------------
 
 function RecorderSample:get_sample()
-  return renoise.song().instruments[self.instrument_value+1].samples[1]
+  return rns.instruments[self.instrument_value+1].samples[1]
 end
 
 --------------------------------------------------------------------------------
