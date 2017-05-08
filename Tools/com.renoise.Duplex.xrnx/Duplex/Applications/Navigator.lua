@@ -217,7 +217,6 @@ end
 function Navigator:_build_app()
   TRACE("Navigator:_build_app()")
 
-  local rns = renoise.song()
   local cm = self.display.device.control_map
 
   -- create the pattern position/length control 
@@ -244,8 +243,6 @@ function Navigator:_build_app()
     })
     c.on_press = function(obj,idx)
       --print("blockpos on_press",obj,idx)
-
-      local rns = renoise.song()
 
       if (self.options.operation.value == MODE_POSITION) then
         self:_jump_to_index(idx)
@@ -274,8 +271,6 @@ function Navigator:_build_app()
         return
       end
 
-      local rns = renoise.song()
-
       if (idx == self._first_idx) then
         --print("released the first pressed button")
         if not self._held_event_fired then
@@ -303,8 +298,6 @@ function Navigator:_build_app()
       if self._held_event_fired then
         return
       end
-
-      local rns = renoise.song()
 
       -- only the first pressed button can be held
       if (self._first_idx ~= idx) then
@@ -384,8 +377,6 @@ end
 function Navigator:_attach_to_song()
   TRACE("Navigator:_attach_to_song")
 
-  local rns = renoise.song()
-
   -- initialize important stuff
   self._playing = rns.transport.playing
   self._index_update_requested = true
@@ -409,7 +400,6 @@ function Navigator:_attach_to_song()
 
   rns.transport.playing_observable:add_notifier(
     function()
-      local rns = renoise.song()
       local playing = rns.transport.playing
       if playing ~= self._playing then
         self._index_update_requested = true
@@ -426,7 +416,6 @@ end
 function Navigator:_goto_prev_block()
   TRACE("Navigator:_goto_prev_block")
 
-  local rns = renoise.song()
   if rns.transport.loop_block_enabled then
     local coeff = rns.transport.loop_block_range_coeff
     local block_start = rns.transport.loop_block_start_pos.line
@@ -449,7 +438,6 @@ end
 function Navigator:_goto_next_block()
   TRACE("Navigator:_goto_next_block")
 
-  local rns = renoise.song()
   if rns.transport.loop_block_enabled then
     local coeff = rns.transport.loop_block_range_coeff
     local block_start = rns.transport.loop_block_start_pos.line
@@ -473,8 +461,6 @@ end
 
 function Navigator:_update_blockpos_range()
   TRACE("Navigator:_update_blockpos_range")
-
-  local rns = renoise.song()
 
   if not self._loop_start then
     self._blockpos:set_range(0,0,true)
@@ -528,14 +514,11 @@ function Navigator:on_idle()
     return 
   end
 
-  local rns = renoise.song()
-
   -- prevent loop from migrating into a new pattern when
   -- it shouldn't 
   ---------------------------------------------------------
 
   if self._jump_pos then
-    local rns = renoise.song()
     local seq_count = #rns.sequencer.pattern_sequence
     local start_pos = rns.transport.loop_range[1]
     local end_pos = rns.transport.loop_range[2]
@@ -636,7 +619,6 @@ end
 function Navigator:_obtain_active_index()
   --TRACE("Navigator:_obtain_active_index()")
 
-  local rns = renoise.song()
   if self._inside_pattern then
     local active_line =  (self._playing) and 
       rns.transport.playback_pos.line or rns.transport.edit_pos.line
@@ -691,7 +673,6 @@ end
 function Navigator:_get_lines_per_unit(seq_idx)
   --TRACE("Navigator:_get_lines_per_unit(seq_idx)",seq_idx)
 
-  local rns = renoise.song()
   seq_idx = seq_idx or rns.selected_sequence_index
 
   local patt_idx = rns.sequencer:pattern(seq_idx)
@@ -713,7 +694,6 @@ function Navigator:_is_inside_pattern()
     return true
   end
 
-  local rns = renoise.song()
   local edit_pos = rns.transport.edit_pos.sequence
   local playback_pos = rns.transport.playback_pos.sequence
   return (edit_pos == playback_pos) 
@@ -729,7 +709,6 @@ end
 function Navigator:_jump_to_index(ctrl_idx)
   TRACE("Navigator:_jump_to_index(ctrl_idx)",ctrl_idx)
 
-  local rns = renoise.song()
   local active_line = self:_get_line_from_index(ctrl_idx-1)
   local rng = self._blockpos:get_range()
   local line_count = nil
@@ -858,8 +837,6 @@ end
 function Navigator:_set_looped_range()
   TRACE("Navigator:_set_looped_range")
 
-  local rns = renoise.song()
-
   -- figure out which of the positions that should come first
   local swap_pos = false
   if (self._first_pos.sequence > self._second_pos.sequence) then
@@ -948,7 +925,7 @@ function Navigator:_set_looped_range()
       local column_idx = rns.selected_note_column_index > 0 and 
         rns.selected_note_column_index or
         rns.selected_effect_column_index + 
-          renoise.song().tracks[track_idx].visible_note_columns
+          rns.tracks[track_idx].visible_note_columns
       rns.selection_in_pattern = { 
         start_column = column_idx,
         end_column = column_idx,
@@ -976,8 +953,6 @@ end
 
 function Navigator:_clear_looped_range()
   --TRACE("Navigator:_clear_looped_range")
-
-  local rns = renoise.song()
 
   local has_sequence_range,cached_seq = false,nil
   if (rns.transport.loop_sequence_range[1] ~= 0) and
@@ -1019,8 +994,6 @@ end
 
 function Navigator:_has_looped_range()
   --TRACE("Navigator:_has_looped_range")
-
-  local rns = renoise.song()
 
   -- check if block loop is active
   if rns.transport.loop_block_enabled then
