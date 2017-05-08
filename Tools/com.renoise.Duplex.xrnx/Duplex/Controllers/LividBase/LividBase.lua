@@ -50,36 +50,34 @@ function LividBase:output_value(pt,xarg,ui_obj)
     local color = self:quantize_color(pt.color)
     local rslt = nil
 
-    if table_compare(color,LividBase.COLOR_OFF) then
+    if cLib.table_compare(color,LividBase.COLOR_OFF) then
       rslt = 0
-    elseif table_compare(color,LividBase.COLOR_WHITE) then
+    elseif cLib.table_compare(color,LividBase.COLOR_WHITE) then
       rslt = 1
-    elseif table_compare(color,LividBase.COLOR_GREEN) then
+    elseif cLib.table_compare(color,LividBase.COLOR_GREEN) then
       rslt = 127
-    elseif table_compare(color,LividBase.COLOR_YELLOW) then
+    elseif cLib.table_compare(color,LividBase.COLOR_YELLOW) then
       rslt = 64
-    elseif table_compare(color,LividBase.COLOR_BLUE) then
+    elseif cLib.table_compare(color,LividBase.COLOR_BLUE) then
       rslt = 32
-    elseif table_compare(color,LividBase.COLOR_RED) then
+    elseif cLib.table_compare(color,LividBase.COLOR_RED) then
       rslt = 16
-    elseif table_compare(color,LividBase.COLOR_MAGENTA) then
+    elseif cLib.table_compare(color,LividBase.COLOR_MAGENTA) then
       rslt = 8
-    elseif table_compare(color,LividBase.COLOR_CYAN) then
+    elseif cLib.table_compare(color,LividBase.COLOR_CYAN) then
       rslt = 4
     end
 
-    --[[
-    print("pt.color",rprint(pt.color))
-    print("rslt",rslt)
-    rprint(xarg)
-    ]]
+    -- print("pt.color",rprint(pt.color))
+    -- print("rslt",rslt)
+    -- rprint(xarg)
 
     return rslt
 
   else
 
     -- otherwise, echo back
-    print("echo back",rprint(pt),MidiDevice.output_value(self,pt,xarg,ui_obj))
+    --print("echo back",rprint(pt),MidiDevice.output_value(self,pt,xarg,ui_obj))
     return MidiDevice.output_value(self,pt,xarg,ui_obj)
 
   end
