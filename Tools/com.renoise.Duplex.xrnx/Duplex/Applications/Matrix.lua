@@ -265,9 +265,8 @@ function Matrix:_update_slots()
   end
 
   local skip_event = true
-  local song = renoise.song()
-  local sequence = song.sequencer.pattern_sequence
-  local tracks = song.tracks
+  local sequence = rns.sequencer.pattern_sequence
+  local tracks = rns.tracks
   local seq_offset = self._edit_page*self._height
   local master_idx = xTrack.get_master_track_index()
   local patt_idx = nil
@@ -284,13 +283,13 @@ function Matrix:_update_slots()
         local bt_y = seq_index-seq_offset
         button = self._controls._buttons[bt_x][bt_y]
 
-        if((sequence[seq_index]) and (song.tracks[track_idx]))then
+        if((sequence[seq_index]) and (rns.tracks[track_idx]))then
 
           -- gain information about the slot
           patt_idx = sequence[seq_index]
-          slot_muted = song.sequencer:track_sequence_slot_is_muted(
+          slot_muted = rns.sequencer:track_sequence_slot_is_muted(
             track_idx, seq_index)
-          slot_empty = song.patterns[patt_idx].tracks[track_idx].is_empty
+          slot_empty = rns.patterns[patt_idx].tracks[track_idx].is_empty
 
           if (not slot_empty) then
             if (track_idx==master_idx)then -- master track
@@ -339,7 +338,7 @@ function Matrix:start_app()
     return
   end
 
-  self:_attach_to_song(renoise.song())
+  self:_attach_to_song(rns)
 
 
 end
@@ -372,7 +371,7 @@ function Matrix:on_idle()
   end
 
   -- update range?
-  local rng = renoise.song().transport.loop_sequence_range
+  local rng = rns.transport.loop_sequence_range
   if (rng[1]~=self._loop_sequence_range[1]) or
     (rng[2]~=self._loop_sequence_range[2]) 
   then
@@ -380,9 +379,9 @@ function Matrix:on_idle()
     self:_update_range()
   end
 
-  if renoise.song().transport.playing then
+  if rns.transport.playing then
 
-    local pos = renoise.song().transport.playback_pos
+    local pos = rns.transport.playback_pos
 
     -- ??? playback_pos might briefly contain the wrong value
     if (pos.sequence ~= self._playback_pos.sequence)then
@@ -438,7 +437,9 @@ end
 function Matrix:on_new_document()
   TRACE("Matrix:on_new_document()")
 
-  self:_attach_to_song(renoise.song())
+  rns = renoise.song()
+
+  self:_attach_to_song()
 
 end
 
@@ -453,7 +454,7 @@ function Matrix:_check_page_change()
   TRACE("Matrix:_check_page_change")
 
   self._play_page = self:_get_play_page()
-  if(renoise.song().transport.follow_player)then
+  if(rns.transport.follow_player)then
     if(self._play_page~=self._edit_page)then
       self._edit_page = self._play_page
       self:_update_seq_navigation()
@@ -564,7 +565,7 @@ end
 function Matrix:_update_seq_page_count()
   TRACE("Matrix:_update_seq_page_count()")
 
-  local seq_len = #renoise.song().sequencer.pattern_sequence
+  local seq_len = #rns.sequencer.pattern_sequence
   self._seq_page_count = math.floor((seq_len-1)/self._height)
   self:_update_seq_navigation()
 
@@ -578,7 +579,7 @@ function Matrix:_update_track_page_count()
   TRACE("Matrix:_update_track_page_count()")
 
   local page_width = self:_get_track_page_width()
-  self._track_page_count = math.floor((#renoise.song().tracks-1)/page_width)
+  self._track_page_count = math.floor((#rns.tracks-1)/page_width)
   self:_update_track_navigation()
 
 end
@@ -592,7 +593,7 @@ function Matrix:_update_range()
   if self._controls._trigger then
 
     --local rng = self._controls._trigger:get_range()
-    local rng = renoise.song().transport.loop_sequence_range
+    local rng = rns.transport.loop_sequence_range
     self._loop_sequence_range = rng
 
     -- set the range
@@ -673,8 +674,8 @@ function Matrix:_retrigger_pattern()
   TRACE("Matrix:retrigger_pattern()")
 
   local play_pos = self._playback_pos.sequence
-  if renoise.song().sequencer.pattern_sequence[play_pos] then
-    renoise.song().transport:trigger_sequence(play_pos)
+  if rns.sequencer.pattern_sequence[play_pos] then
+    rns.transport:trigger_sequence(play_pos)
     self:_update_position(play_pos)
   end
 end
@@ -702,7 +703,7 @@ end
 function Matrix:_get_play_page()
   TRACE("Matrix:_get_play_page()")
 
-  local play_pos = renoise.song().transport.playback_pos
+  local play_pos = rns.transport.playback_pos
   return math.floor((play_pos.sequence-1)/self._height)
 
 end
@@ -716,7 +717,7 @@ end
 function Matrix:_get_edit_page()
   TRACE("Matrix:_get_edit_page()")
 
-  local edit_pos = renoise.song().transport.edit_pos
+  local edit_pos = rns.transport.edit_pos
   return math.floor((edit_pos.sequence-1)/self._height)
 
 end
@@ -734,8 +735,7 @@ function Matrix:_follow_track()
     return
   end
 
-  local song = renoise.song()
-  local track_idx = song.selected_track_index
+  local track_idx = rns.selected_track_index
   local page = self:_get_track_page(track_idx)
   local page_width = self:_get_track_page_width()
   if (page~=self._track_page) then
@@ -927,21 +927,21 @@ function Matrix:_build_app()
         elseif (self.options.play_mode.value == PLAY_MODE_PLAY) then
           return false
         elseif (self.options.play_mode.value == PLAY_MODE_TOGGLE) then
-          renoise.song().transport:stop()
+          rns.transport:stop()
         elseif (self.options.play_mode.value == PLAY_MODE_SCHEDULE) then
           seq_index = self._playback_pos.sequence + 
             (self._height*self._edit_page)
-          if renoise.song().sequencer.pattern_sequence[seq_index] then
-            renoise.song().transport:set_scheduled_sequence(seq_index)
+          if rns.sequencer.pattern_sequence[seq_index] then
+            rns.transport:set_scheduled_sequence(seq_index)
           end
         end
 
-      elseif not renoise.song().sequencer.pattern_sequence[seq_index] then
+      elseif not rns.sequencer.pattern_sequence[seq_index] then
 
         TRACE("Matrix: position out of bounds")
 
         if (self.options.bounds_mode.value == BOUNDS_MODE_STOP) then
-          renoise.song().transport:stop()
+          rns.transport:stop()
         end
         obj._cached_index = 0 -- hackish  
         return false
@@ -953,19 +953,19 @@ function Matrix:_build_app()
         if (self.options.play_mode.value == PLAY_MODE_RETRIG) then
           self:_retrigger_pattern()
         elseif (self.options.play_mode.value == PLAY_MODE_PLAY) then
-          if (not renoise.song().transport.playing) then
-            if renoise.song().sequencer.pattern_sequence[seq_index] then
-              renoise.song().transport:trigger_sequence(seq_index)
+          if (not rns.transport.playing) then
+            if rns.sequencer.pattern_sequence[seq_index] then
+              rns.transport:trigger_sequence(seq_index)
             end
           end
         elseif (self.options.play_mode.value == PLAY_MODE_SCHEDULE) then
-          if renoise.song().sequencer.pattern_sequence[seq_index] then
-            renoise.song().transport:set_scheduled_sequence(seq_index)
+          if rns.sequencer.pattern_sequence[seq_index] then
+            rns.transport:set_scheduled_sequence(seq_index)
           end
         elseif (self.options.play_mode.value == PLAY_MODE_TOGGLE) then
-          if (not renoise.song().transport.playing) then
-            if renoise.song().sequencer.pattern_sequence[seq_index] then
-              renoise.song().transport:trigger_sequence(seq_index)
+          if (not rns.transport.playing) then
+            if rns.sequencer.pattern_sequence[seq_index] then
+              rns.transport:trigger_sequence(seq_index)
               -- TODO : set index (for slightly faster update)
               return false
             end
@@ -976,36 +976,36 @@ function Matrix:_build_app()
 
         TRACE("Matrix: switch to new position")
 
-        if (not renoise.song().transport.playing) then
+        if (not rns.transport.playing) then
           -- start playback if stopped
-          if renoise.song().sequencer.pattern_sequence[seq_index] then
-            renoise.song().transport:trigger_sequence(seq_index)
+          if rns.sequencer.pattern_sequence[seq_index] then
+            rns.transport:trigger_sequence(seq_index)
             return false
           end
         else
           if(self.options.switch_mode.value == SWITCH_MODE_SCHEDULE) then
-            if renoise.song().sequencer.pattern_sequence[seq_index] then
+            if rns.sequencer.pattern_sequence[seq_index] then
               -- schedule, but do not update display
-              renoise.song().transport:set_scheduled_sequence(seq_index)
+              rns.transport:set_scheduled_sequence(seq_index)
               self._scheduled_pattern = seq_index
               obj:start_blink(obj_index)
               return false
             end
           elseif(self.options.switch_mode.value == SWITCH_MODE_SWITCH) then
             -- instantly switch position:
-            local new_pos = renoise.song().transport.playback_pos
+            local new_pos = rns.transport.playback_pos
             new_pos.sequence = seq_index
             -- if the desired pattern-line does not exist,start from 0
-            local patt_idx = renoise.song().sequencer.pattern_sequence[seq_index]
-            local num_lines = renoise.song().patterns[patt_idx].number_of_lines
+            local patt_idx = rns.sequencer.pattern_sequence[seq_index]
+            local num_lines = rns.patterns[patt_idx].number_of_lines
             if(new_pos.line>num_lines)then
               new_pos.line = 1
             end
-            renoise.song().transport.playback_pos = new_pos
+            rns.transport.playback_pos = new_pos
           elseif(self.options.switch_mode.value == SWITCH_MODE_STOP) then
-            renoise.song().transport:stop()
+            rns.transport:stop()
           elseif(self.options.switch_mode.value == SWITCH_MODE_TRIG) then
-            if renoise.song().sequencer.pattern_sequence[seq_index] then
+            if rns.sequencer.pattern_sequence[seq_index] then
               self._playback_pos.sequence = seq_index
               self:_retrigger_pattern()
             end
@@ -1019,7 +1019,7 @@ function Matrix:_build_app()
 
       -- check if the range is empty (0,0)
       if (rng[1]==0) and (rng[2]==0) then
-        renoise.song().transport.loop_sequence_range = {0,0}
+        rns.transport.loop_sequence_range = {0,0}
         return
       end
 
@@ -1029,18 +1029,18 @@ function Matrix:_build_app()
       local end_index = rng[2] + (self._height*self._edit_page)
 
       -- check if the range is out-of-bounds
-      if not renoise.song().sequencer.pattern_sequence[start_index] then
+      if not rns.sequencer.pattern_sequence[start_index] then
         -- completely out-of-bounds, ignore
         return false
-      elseif not renoise.song().sequencer.pattern_sequence[end_index] then
+      elseif not rns.sequencer.pattern_sequence[end_index] then
         -- partially out-of-bounds, correct
-        local sequence_length = #renoise.song().sequencer.pattern_sequence
-        renoise.song().transport.loop_sequence_range = {start_index,sequence_length}
+        local sequence_length = #rns.sequencer.pattern_sequence
+        rns.transport.loop_sequence_range = {start_index,sequence_length}
         return false
       else
         -- range is within current page
         self._loop_sequence_range = {start_index,end_index}
-        renoise.song().transport.loop_sequence_range = self._loop_sequence_range
+        rns.transport.loop_sequence_range = self._loop_sequence_range
       end
     end
 
@@ -1064,27 +1064,27 @@ function Matrix:_build_app()
           local x_pos = x + self._track_offset
           local y_pos = y + (self._height*self._edit_page)
           --obj:toggle()
-          if (#renoise.song().tracks>=x_pos) then
-            renoise.song().selected_track_index = x_pos
+          if (#rns.tracks>=x_pos) then
+            rns.selected_track_index = x_pos
           end
-          if renoise.song().sequencer.pattern_sequence[y_pos] then
-            renoise.song().selected_sequence_index = y_pos
+          if rns.sequencer.pattern_sequence[y_pos] then
+            rns.selected_sequence_index = y_pos
           end
         end
         c.on_press = function() 
-          local seq = renoise.song().sequencer
-          local patt_seq = renoise.song().sequencer.pattern_sequence
+          local seq = rns.sequencer
+          local patt_seq = rns.sequencer.pattern_sequence
           local master_idx = xTrack.get_master_track_index()
           local seq_offset = self._edit_page*self._height
-          --local sequence = renoise.song().sequencer.pattern_sequence
+          --local sequence = rns.sequencer.pattern_sequence
           local track_idx = x+self._track_offset
           local seq_idx = y+seq_offset
           local patt_idx = patt_seq[y+seq_offset]
-          local patt = renoise.song().patterns[patt_idx]
+          local patt = rns.patterns[patt_idx]
           if track_idx == master_idx then
             -- master track is not toggle-able
             return 
-          elseif not renoise.song().tracks[track_idx] then
+          elseif not rns.tracks[track_idx] then
             -- outside track bounds
             return 
           elseif not patt_seq[y+seq_offset] then
@@ -1093,7 +1093,7 @@ function Matrix:_build_app()
           else
             -- toggle matrix slot state
             local is_muted = seq:track_sequence_slot_is_muted(track_idx,seq_idx)
-            renoise.song().sequencer:set_track_sequence_slot_is_muted(
+            rns.sequencer:set_track_sequence_slot_is_muted(
               (track_idx),(y+seq_offset),(not is_muted))
           end
 
@@ -1113,16 +1113,16 @@ end
 
 --- add notifiers to relevant parts of the song
 
-function Matrix:_attach_to_song(song)
-  TRACE("Matrix:_attach_to_song()",song)
+function Matrix:_attach_to_song()
+  TRACE("Matrix:_attach_to_song()")
 
   if not self._height then
     LOG("*** Can't attach to song - required property (height) not set")
   end
 
-  local track_idx = renoise.song().selected_track_index
-  self._playing = renoise.song().transport.playing
-  self._playback_pos = renoise.song().transport.playback_pos
+  local track_idx = rns.selected_track_index
+  self._playing = rns.transport.playing
+  self._playback_pos = rns.transport.playback_pos
   self._play_page = self:_get_play_page()
   self._edit_page = self:_get_edit_page()
   self._track_page = self:_get_track_page(track_idx)
@@ -1134,21 +1134,21 @@ function Matrix:_attach_to_song(song)
   self:_update_slots()
   self:_follow_track()
 
-  song.sequencer.pattern_assignments_observable:add_notifier(
+  rns.sequencer.pattern_assignments_observable:add_notifier(
     function()
       TRACE("Matrix: pattern_assignments_observable fired...")
       self._update_slots_requested = true
     end
   )
   
-  song.sequencer.pattern_sequence_observable:add_notifier(
+  rns.sequencer.pattern_sequence_observable:add_notifier(
     function(e)
       TRACE("Matrix: pattern_sequence_observable fired...")
       self._update_slots_requested = true
     end
   )
 
-  song.sequencer.pattern_slot_mutes_observable:add_notifier(
+  rns.sequencer.pattern_slot_mutes_observable:add_notifier(
     function()
       TRACE("Matrix:pattern_slot_mutes_observable fired...")
       -- TODO skip this when setting mute state from controller
@@ -1160,7 +1160,7 @@ function Matrix:_attach_to_song(song)
     end
   )
 
-  song.transport.follow_player_observable:add_notifier(
+  rns.transport.follow_player_observable:add_notifier(
     function()
       TRACE("Matrix:follow_player_observable fired...")
       if(self._play_page~=self._edit_page)then
@@ -1177,7 +1177,7 @@ function Matrix:_attach_to_song(song)
   end
 
   local function attach_slot_notifiers()
-    local patterns = song.patterns
+    local patterns = rns.patterns
     for _,pattern in pairs(patterns) do
       local pattern_tracks = pattern.tracks
       for _,pattern_track in pairs(pattern_tracks) do
@@ -1193,7 +1193,7 @@ function Matrix:_attach_to_song(song)
   attach_slot_notifiers()
   
   -- and to new slots  
-  song.tracks_observable:add_notifier(
+  rns.tracks_observable:add_notifier(
     function()
       TRACE("Matrix:tracks_changed fired...")
       self._update_slots_requested = true
@@ -1202,7 +1202,7 @@ function Matrix:_attach_to_song(song)
     end
   )
 
-  song.patterns_observable:add_notifier(
+  rns.patterns_observable:add_notifier(
     function()
       TRACE("Matrix:patterns_changed fired...")
       self._update_slots_requested = true
@@ -1211,7 +1211,7 @@ function Matrix:_attach_to_song(song)
   )
 
   -- follow active track in Renoise
-  song.selected_track_index_observable:add_notifier(
+  rns.selected_track_index_observable:add_notifier(
     function()
       TRACE("Matrix:selected_track_observable fired...")
       if not self.active then 
