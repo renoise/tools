@@ -442,7 +442,7 @@ function xSongPos:next_bar()
   TRACE("xSongPos:next_bar()")
 
   local lines_beat = rns.transport.lpb
-  local lines_bar = lines_beat * renoise.song().transport.metronome_beats_per_bar
+  local lines_bar = lines_beat * rns.transport.metronome_beats_per_bar
   local next_beat = math.ceil(self.line/lines_bar)
   local next_line = 1 + next_beat*lines_bar
   self:increase_by_lines(next_line - self.line)
@@ -505,18 +505,6 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- [Static] Retrieve the pattern index 
--- @param seq_idx, sequence index 
--- @return int or nil 
-
-function xSongPos.get_pattern_index(seq_idx)
-  TRACE("xSongPos:get_pattern_index(seq_idx)",seq_idx)
-
-  return rns.sequencer:pattern(seq_idx)
-
-end
-
----------------------------------------------------------------------------------------------------
--- [Static] Retrieve the pattern index 
 -- OPTIMIZE how to implement a caching mechanism? 
 -- @param seq_idx, sequence index 
 -- @return int or nil 
@@ -526,7 +514,7 @@ function xSongPos.get_pattern_num_lines(seq_idx)
 	
   assert(type(seq_idx) == "number")
 
-  local patt_idx = xSongPos.get_pattern_index(seq_idx)
+  local patt_idx = rns.sequencer:pattern(seq_idx)
   if patt_idx then
     return rns:pattern(patt_idx).number_of_lines
   end
