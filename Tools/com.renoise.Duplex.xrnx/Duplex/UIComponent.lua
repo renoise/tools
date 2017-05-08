@@ -31,7 +31,7 @@ the UISlider or the UIButton class (both extensions of this class).
     - supply "map" argument when creating instance (saves typing)
 
   0.98.17
-    - UIComponent event handlers should always return “false” when actively 
+    - UIComponent event handlers should always return ï¿½falseï¿½ when actively 
       rejecting an event (such as when the application is sleeping/inactive), 
       allowing the MIDI message to be passed on to Renoise
 
@@ -297,13 +297,9 @@ function UIComponent:set_palette(palette)
 
   for i,_ in pairs(palette)do
     for k,v in pairs(palette[i])do
-      --print("UIComponent:set_palette",i,_,k,v)
       if self.palette[i] and (type(self.palette[i][k])~="nil") then
         if (k == "color") and (type(v)=="table") then 
-          --print("comparing",rprint(self.palette[i][k]))
-          --print("with",rprint(v))
-          if (not table_compare(self.palette[i][k],v)) then
-            --self.palette[i][k] = table.rcopy(v)
+          if (not cLib.table_compare(self.palette[i][k],v)) then
             self.palette[i][k] = v
             changed = true
             --print("*** set_palette - component has changed (color)",i,k)
