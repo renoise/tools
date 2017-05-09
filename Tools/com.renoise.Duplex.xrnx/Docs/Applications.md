@@ -4,6 +4,7 @@
 
 | Name          | Description   |
 | ------------- |---------------|
+| Automateable   | [Base-application for automation recording](Applications/Automateable.md)|
 | Effect        | [Automapped control of effect-device parameters](Applications/Effect.md)|
 | GridPie       | [Non-linear mixing of pattern-tracks](Applications/GridPie.md)|
 | Hydra         | [Automapped control of Hydra meta-devices](Applications/Hydra.md)|
@@ -20,7 +21,7 @@
 | PatternSequence | [For navigating the pattern sequence (prev/next pattern)](Applications/PatternSequence.md)|
 | Recorder      | [Record and remix incoming audio in realtime](Applications/Recorder.md)|
 | Repeater      | [Automapped control of Repeater audio-devices](Applications/Repeater.md)|
-| RoamingDSP    | [Application for 'roaming 'control of a DSP device](Applications/RoamingDSP.md)|
+| RoamingDSP    | [Base-application for 'roaming 'control of DSP devices](Applications/RoamingDSP.md)|
 | Rotate        | [Rotate pattern or selection/track in pattern](Applications/Rotate.md)|
 | StepSequencer | [A flexible step sequencer for grid-based interfaces](Applications/StepSequencer.md)|
 | SwitchConfiguration | [To switch between hardware-configurations](Applications/SwitchConfiguration.md)|

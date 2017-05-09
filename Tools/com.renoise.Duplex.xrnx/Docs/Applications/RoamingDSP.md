@@ -6,7 +6,7 @@
 
 This class offers 'roaming 'control of a DSP device, which means that you can lock onto a specific type of device, and navigate between similar devices.
 
-RoamingDSP is not an application in itself, but rather, a baseclass that other applications can choose to extend. 
+RoamingDSP is not an application in itself, but rather, a baseclass that other applications can choose to extend. RoamingDSP itself extends [Automateable](Automateable.md), which provides automation recording capabilities.
 
 ## How it works
 
