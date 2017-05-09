@@ -1,5 +1,7 @@
 # Duplex.Applications.Mixer
 
+< Back to [Applications](../Applications.md)
+
 ## Features
 
 ### Parameter pick-up

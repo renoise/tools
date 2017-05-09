@@ -55,3 +55,7 @@ immediately be reflected on the device.
 ![Duplex_options.png](Images/Duplex_options.png)  
 *The Duplex options dialog*
 
+
+#
+
+> < Previous - [Installation](Docs/Installation.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Bundled Applications](Docs/Applications.md) >

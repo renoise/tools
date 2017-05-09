@@ -22,6 +22,7 @@ Let's pick apart a simple control-map like this one:
       <Name>Example control-map</Name>
       <Author>Danoise</Author>
 	    <Description>An example on how to write a control-map</Description>
+      <States/>
       <Parameters>
         <Column>
           <Row>
@@ -50,32 +51,12 @@ The first three nodes are informational, and appear in the Duplex browser:
 
 |Node  |Type | Description   |
 |------|-----|---------------|
-|`<Name>`|string|A descriptive name for the control-map.
-|`<Author>`|string|The author name here - e.g. your name.
-|`<Description>`|string|A brief description of the control-map. This is a particularly useful place to show instructions to the user if/when a special preset needs to be loaded before things will work as expected. 
+|`<Name>`|text|A descriptive name for the control-map.
+|`<Author>`|text|The author name here - e.g. your name.
+|`<Description>`|text|A brief description of the control-map. This is a particularly useful place to show instructions to the user if/when a special preset needs to be loaded before things will work as expected. 
+|`State`|XML|Defines possible states for the control-map. States allow you to change the control-map in real-time. See [this section](#states--when-static-maps-are-not-enough) for more information.
+|`Parameters`|XML|This is where the actual layout of the controller is specified. You can add `Row`, `Column`, and `Group` nodes here.|
 
-
-### The `Parameters` node
-
-You can add `Row`, `Column`, and `Group` nodes inside the `Parameters` node. 
-
-### The `State` node
-
-Defines a state for the control-map. States allow dynamic switching of control-map nodes, while a configuration is running.  
-Please refer to [this section](#states-when-static-maps-are-not-enough) to learn more about how they work.
-
-|Attribute |Type  | Description   |
-|----------|----- |---------------|
-|`name`|string| a unique name for identifying the state, and for prefixing nodes|
-|`type`|enum| "toggle", "momentary" or "trigger", determine how to respond to events
-|`value`|string| the incoming message that we want to match against (see [matching by value](#matching-by-value). 
-|`match`|number| the exact value to match (e.g. CC number with value "5") 
-|`exclusive`|string| specify a(ny) name for states that should be mutually exclusive
-|`invert`|bool| when true, trigger will light up when state is inactive 
-|`receive_when_inactive`|bool| when/if to receive/send parameter messages 
-|`hide_when_inactive` |bool| when/if to show/hide parameters
-|`disable_when_inactive`|bool| when/if to enable/disable parameters
-|`active`|bool| set the initial state
 
 ### The `Row` and `Column` node
 
@@ -143,8 +124,7 @@ Some additional properties are added by Duplex while the tool is running. No nee
 
 ### The `SubParam` node
 
-A subparameter is required when a single parameter is representing multiple values - for example, an XY-pad specifies both X and Y.  
-The accepted attributes depend on the type of widget.
+A subparameter is required when a single parameter is representing multiple values. Sub-parameters are not that common, and only required by a few widgets (e.g. the XYPad). The accepted attributes depend on the type of widget.
 
 |Name   |Type  | Description   |
 |-------|----- |---------------|
@@ -179,6 +159,20 @@ Now, since a control-map is an XML document, you might think of it as static. Bu
 
 Almost everything in a control-map can be affected by states: `<Group>`, `<Row>`, `<Column>` and `<Param>`. 
 
+These are the attributes you can add to a `<State>` node:
+
+|Attribute |Type  | Description   |
+|----------|----- |---------------|
+|`name`|string| a unique name for identifying the state, and for prefixing nodes|
+|`type`|enum| "toggle", "momentary" or "trigger", determine how to respond to events
+|`value`|string| the incoming message that we want to match against (see [matching by value](#matching-by-value). 
+|`match`|number| the exact value to match (e.g. CC number with value "5") 
+|`exclusive`|string| specify a(ny) name for states that should be mutually exclusive
+|`invert`|bool| when true, trigger will light up when state is inactive 
+|`receive_when_inactive`|bool| when/if to receive/send parameter messages 
+|`hide_when_inactive` |bool| when/if to show/hide parameters
+|`disable_when_inactive`|bool| when/if to enable/disable parameters
+|`active`|bool| set the initial state
 
 ### How to define a toggling state 
 
@@ -207,62 +201,6 @@ Once the two states have been defined, the rest is simply a question of prefixin
     <Parameters>
 
 
-## Changelog
-  
-0.99.5
-- <Param @throttle> (new), enable/disable (MIDI) message throttling
+#
 
-0.99.3
-- <Param @match> (new), match a specific (CC) value 
-- <Param @match_from, @match_to> (new), match a (CC) value-range 
-- <Param @mode> (new), specify resolution (7/14 bit) and operation (absolute/relative)
-- <Param @class> (new), interpret parameter in the context of a specific device class
-
-0.99.2
-- Faster, more flexible parameter matching 
-  - all messages are processed on startup, cached/memoized where possible
-  - OSC patterns now support "captures", see get_osc_params() for more info
-  - get_osc_params(): when using wildcards, returns table of regexp-matches
-- <Param @invert> (new), allows inverting the value (flip min/max)
-- <Param @soft_echo> (new) update device only when changed via virtual UI
-- <Param @font> (new), specify the font type - relevant for @type=labels only
-- <Param @velocity_enabled> attribute has been retired
-- <Param @is_virtual> attribute has been retired, just enter a blank @value
-- <Param @type="key"> widget type has been retired (use @type="button")
-- <SubParam> new node type for combining several parameters into one
-  (finally, we can have a "proper" xypad control for MIDI devices)
-- <Group @visible> (new), set to false to hide the entire group 
-
-0.99.1 
-- TWEAK No more need to explicitly state "is_virtual" for parameters that only
-  exist in the virtual UI - just leave the value attribute blank
-
-0.98.14
-- cache parameters
-    o Faster retrieval of MIDI parameters (put in cache once requested)
-- New input method `xypad`, for creating XYPad controls in the 
-  virtual control surface (paired-value support, however only OSC devices can 
-  define this input method)
-- new input method: `key` - for accepting note-input from 
-  individual buttons/pads (Note: OBSOLETE)
-- Control-map/virtual control surface: `keyboard` - a new input method for 
-  representing a keyboard (the control surface will draw a series of keys)
-    o In the control-map, you can specify it`s range (number of keys)
-- Control-map/XML parsing:
-    o Attribute names can now contain underscore
-- Control-map/note value syntax: octave wildcard - you can now put an asterisk 
-  in place of the octave to make mapping respond to the note only (e.g. `C-*`). 
-  Used in the Midi-keyboard Grid Pie configuration to make navigation buttons 
-  appear across all the black keys
-
-0.95
-- New button type: pushbutton (like togglebutton, has internal state control)
-  - UISlider, UIToggleButton made compatible with pushbutton (special case)
-  - We can now emulate sliders on the TouchOSC template (page 2)
-  - Nocturn and Remote will now be able to support hold/release events
-- "name" attribute now optional (excluded from validation)
-- "size" attribute now also applied to dials (see MPD24/32)
-- Streamlined methods for detecting group size, grid mode
-
-0.9
-- First release
+> < Previous - [Custom Configurations](Docs/Configurations.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Frequently Asked Questions](Docs/FAQ.md) >

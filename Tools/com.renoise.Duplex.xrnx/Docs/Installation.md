@@ -19,4 +19,8 @@ Some features in Duplex is relying on the internal OSC server.
 ... TODO
 
 
+#
+
+> Next - [Getting Started](GettingStarted.md) >
+
 

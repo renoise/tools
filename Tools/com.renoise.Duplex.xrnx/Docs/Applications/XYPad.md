@@ -1,5 +1,7 @@
 # Duplex.Applications.XYPad
 
+< Back to [Applications](../Applications.md)
+
 ## Features
 * Built-in automation recording 
 * Supports knobs, a MIDI keyboard's touchpad or an OSC device's accelerometer

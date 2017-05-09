@@ -1,5 +1,7 @@
 # Duplex.Applications.Recorder
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 Use the Recorder application to record and loop any signal that you feed into Renoise, be that your voice, a guitar etc. 

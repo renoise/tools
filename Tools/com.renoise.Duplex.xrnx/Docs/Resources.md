@@ -18,3 +18,6 @@ The [luadoc reference](https://renoise.github.io/luadocs/duplex/index.html) offe
 [How To Start Editing Duplex Files](http://forum.renoise.com/index.php/topic/28284-how-to-start-editing-duplex-files/) (Renoise Forum) 
 
 
+#
+
+> < Previous - [Frequently Asked Questions](Docs/FAQ.md)

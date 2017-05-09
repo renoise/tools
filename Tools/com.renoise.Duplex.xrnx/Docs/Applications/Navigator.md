@@ -1,5 +1,7 @@
 # Duplex.Application.Navigator
 
+< Back to [Applications](../Applications.md)
+
 ## Features 
 
   * Single press & release to move playback to the indicated position

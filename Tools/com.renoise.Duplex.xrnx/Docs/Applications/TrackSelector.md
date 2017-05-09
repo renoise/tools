@@ -1,5 +1,7 @@
 # Duplex.Applications.TrackSelector
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 The Duplex TrackSelector application allows you to select between tracks, including shortcuts for master & send tracks

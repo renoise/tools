@@ -1,5 +1,7 @@
 # Duplex.Application.StepSequencer
 
+< Back to [Applications](../Applications.md)
+
 ## Introduction
 
 The Duplex StepSequencer is a step sequencer for grid/pad-based controllers. You operate it by holding and pressing buttons in specific combinations - as a consequence, your controller must be able to send both press and release events. 

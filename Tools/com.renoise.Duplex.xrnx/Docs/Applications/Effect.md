@@ -1,5 +1,7 @@
 # Duplex.Applications.Effect
 
+< Back to [Applications](../Applications.md)
+
 ## Features
 
 * Access every parameter of every effect device (including plugins)

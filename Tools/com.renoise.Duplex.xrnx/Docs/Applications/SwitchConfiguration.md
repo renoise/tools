@@ -1,5 +1,7 @@
 # Duplex.Applications.SwitchConfiguration
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 SwitchConfiguration can be used for switching hardware configurations on-the-fly.

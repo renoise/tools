@@ -1,5 +1,7 @@
 # Duplex.Applications.Keyboard
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 The Duplex Keyboard is a flexible keyboard replacement for Renoise. It offers the following extra features

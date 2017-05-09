@@ -1,5 +1,7 @@
 # Duplex.Applications.MidiActions
 
+< Back to [Applications](../Applications.md)
+
 ## About 
 
 MidiActions will expose standard Renoise mappings as fully bi-directional mappings, with customizable scaling (exponential, logarithmic, linear) and range. 

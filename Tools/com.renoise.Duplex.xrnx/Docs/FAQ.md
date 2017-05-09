@@ -21,3 +21,6 @@
 |How can I add more applications to my device?| Yes, see chapter 5: Device configurations for extensive information on how to customize your controller |
 |How to enable the scripting console in Renoise|The [Renoise API repository](https://github.com/renoise/xrnx) has instructions for enabling the scripting console|
 
+#
+
+> < Previous - [Control-map reference](Docs/Controlmaps.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Links and Resources](Docs/Resources.md) >

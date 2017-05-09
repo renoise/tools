@@ -209,3 +209,6 @@ Together, these can represent some value/state across a wide range of controller
 And the text is useful too - especially as the virtual recreation of the controller shown in Renoise can contain special, "icon-like" characters. 
 
 
+#
+
+> < Previous - [Devices & Troubleshooting](Docs/Controllers.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Control-map reference](Docs/Controlmaps.md) >

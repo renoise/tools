@@ -1,5 +1,7 @@
 # Duplex.Applications.Matrix
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 Duplex Matrix takes control of the pattern matrix in Renoise. See this [video demonstration](http://www.youtube.com/watch?v=K_kCaYV_T78) to learn how it can be used. 

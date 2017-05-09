@@ -1,5 +1,7 @@
 # Duplex.Applications.Rotate
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 The Duplex Rotate application allows you to rotate a track/pattern upwards or downwards, optionally including automation. The application is an implementation of taktik's [Rotate tool](http://tools.renoise.com/tools/rotate-pattern)

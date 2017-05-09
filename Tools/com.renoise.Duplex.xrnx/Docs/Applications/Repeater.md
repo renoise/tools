@@ -1,4 +1,6 @@
-# Duplex.Applications.Recorder
+# Duplex.Applications.Repeater
+
+< Back to [Applications](../Applications.md)
 
 ## About
 

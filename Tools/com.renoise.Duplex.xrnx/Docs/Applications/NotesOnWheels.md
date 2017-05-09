@@ -1,5 +1,7 @@
 # Duplex.Applications.NotesOnWheels
 
+< Back to [Applications](../Applications.md)
+
 ## About 
 
 N.O.W. allows you to create a sequence and control all aspects of each step (such as the pitch, velocity etc.) in realtime. 

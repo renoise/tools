@@ -1,5 +1,7 @@
 # Duplex.Applications.Hydra
 
+< Back to [Applications](../Applications.md)
+
 ## Features
 
 * Device locking

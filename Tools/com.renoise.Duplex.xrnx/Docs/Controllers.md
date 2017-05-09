@@ -40,3 +40,6 @@ As a general rule, whenever possible, operation should be plug-and-play. The fol
 
 > Don't forget to check the [Duplex FAQ](FAQ.md) as well
 
+#
+
+> < Previous - [Bundled Applications](Applications.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Custom Configurations](Docs/Configurations.md) >

@@ -1,5 +1,7 @@
 # Duplex.Applications.Instrument
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 This application can control certain properties of the selected instrument

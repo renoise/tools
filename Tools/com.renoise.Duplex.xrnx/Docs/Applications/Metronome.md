@@ -1,5 +1,7 @@
 # Duplex.Applications.Metronome
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 Metronome is a sample application, meant to demonstrate how to write an application with Duplex.  

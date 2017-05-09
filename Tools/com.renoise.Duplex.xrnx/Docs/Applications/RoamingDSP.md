@@ -1,5 +1,7 @@
 # Duplex.RoamingDSP
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 This class offers 'roaming 'control of a DSP device, which means that you can lock onto a specific type of device, and navigate between similar devices.

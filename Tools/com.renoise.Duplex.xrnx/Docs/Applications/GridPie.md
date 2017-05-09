@@ -1,5 +1,7 @@
 # Duplex.Applications.GridPie
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 Grid Pie is a performance interface. It lets the user combine different parts of a linear song, non-linearly, in real time, using a special looping pattern as a live drafting area. It does so by taking over the Pattern Matrix.

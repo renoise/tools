@@ -1,5 +1,7 @@
 # Duplex.Applications.PatternCursor
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 PatternCursor allows you to navigate between lines in the pattern editor.

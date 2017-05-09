@@ -1,5 +1,7 @@
 # Duplex.Applications.PatternSequence
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 The PatternSequence application allows you to control the Renoise pattern-sequence.

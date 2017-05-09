@@ -1,5 +1,7 @@
 # Duplex.Applications.Mlrx
 
+< Back to [Applications](../Applications.md)
+
 ## About
 
 Mlrx is a live performance loop sequencer for Renoise, inspired by mlr by tehn. 
