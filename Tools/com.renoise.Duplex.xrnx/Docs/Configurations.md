@@ -211,4 +211,4 @@ And the text is useful too - especially as the virtual recreation of the control
 
 #
 
-> < Previous - [Devices & Troubleshooting](Docs/Controllers.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Control-map reference](Docs/Controlmaps.md) >
+> < Previous - [Devices & Troubleshooting](Controllers.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Control-map reference](Controlmaps.md) >

@@ -58,4 +58,4 @@ immediately be reflected on the device.
 
 #
 
-> < Previous - [Installation](Docs/Installation.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Bundled Applications](Docs/Applications.md) >
+> < Previous - [Installation](Installation.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Bundled Applications](Applications.md) >

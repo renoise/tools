@@ -42,4 +42,4 @@ As a general rule, whenever possible, operation should be plug-and-play. The fol
 
 #
 
-> < Previous - [Bundled Applications](Applications.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Custom Configurations](Docs/Configurations.md) >
+> < Previous - [Bundled Applications](Applications.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Custom Configurations](Configurations.md) >

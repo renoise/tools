@@ -20,4 +20,4 @@ The [luadoc reference](https://renoise.github.io/luadocs/duplex/index.html) offe
 
 #
 
-> < Previous - [Frequently Asked Questions](Docs/FAQ.md)
+> < Previous - [Frequently Asked Questions](FAQ.md)

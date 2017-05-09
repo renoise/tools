@@ -203,4 +203,4 @@ Once the two states have been defined, the rest is simply a question of prefixin
 
 #
 
-> < Previous - [Custom Configurations](Docs/Configurations.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Frequently Asked Questions](Docs/FAQ.md) >
+> < Previous - [Custom Configurations](Configurations.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Frequently Asked Questions](FAQ.md) >

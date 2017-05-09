@@ -28,3 +28,5 @@
 | Transport     | [Control the Renoise playback/transport](Applications/Transport.md)|
 | XY-Pad        | [Automapped control of XY-Pad meta-devices](Applications/XYPad.md)|
 
+
+> < Previous - [Getting Started](GettingStarted.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Controllers & Troubleshooting](Controllers.md) >

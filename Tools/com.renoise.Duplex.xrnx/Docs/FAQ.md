@@ -23,4 +23,4 @@
 
 #
 
-> < Previous - [Control-map reference](Docs/Controlmaps.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Links and Resources](Docs/Resources.md) >
+> < Previous - [Control-map reference](Controlmaps.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Links and Resources](Resources.md) >
