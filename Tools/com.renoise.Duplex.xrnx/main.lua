@@ -11,12 +11,14 @@ require "Duplex"
 -- locals
 --------------------------------------------------------------------------------
 
--- the one and only browser
+-- the browser/option dialogs
 local browser = nil
+local options = Options()
 
 -- workaround for http://goo.gl/UnSDnw
 local waiting_to_show_browser = nil
 
+local vb = renoise.ViewBuilder()
 
 --------------------------------------------------------------------------------
 
@@ -39,19 +41,83 @@ local function create_browser(config, start_running)
     browser:set_configuration(config, start_running)
   end
 
+  options.browser = browser
+
 
 end
 
 
 --------------------------------------------------------------------------------
-
 -- show the duplex browser dialog and optionally lauch a configuration
 
-local function show_dialog(config, start_running)
+function show_duplex_browser(config, start_running)
   --LOG("main:show_dialog()",config, start_running)
-
   create_browser(config, start_running)
   browser:show()
+end
+
+--------------------------------------------------------------------------------
+--- Display message for OSC server tests
+
+passed_osc_test = function()
+  local obs = browser._osc_client._test_passed_observable
+  if obs:has_notifier(passed_osc_test) then
+    obs:remove_notifier(passed_osc_test)  
+  end
+  local msg = "Duplex detected the Renoise OSC server, all good!"
+  renoise.app():show_message(msg)
+end
+
+failed_osc_test = function()
+
+    local msg = "Duplex was unable to detect the Renoise OSC server!"
+              .."\n"
+              .."\nTo trigger instruments and send MIDI messages, "
+              .."\nthe OSC server in Renoise needs to be enabled and"
+              .."\nset to the same values as Duplex:"
+              .."\n"
+              .."\nCheck with Renoise > Preferences > OSC "
+
+    local view = vb:column{
+      margin = DEFAULT_MARGIN,
+      spacing = DEFAULT_SPACING,
+        vb:multiline_textfield{        
+          text = msg,
+          width = 300,
+          height = 140,
+        },
+      vb:horizontal_aligner{
+        mode = "justify",
+        width = 300,
+        vb:row{
+          vb:checkbox{
+            bind = duplex_preferences.run_server_test,
+          },
+          vb:text{
+            text = "Perform this check on startup"
+          },
+        },
+        vb:row{
+          vb:button{
+            text = "Duplex Options...",
+            notifier = function()
+              options:show()
+            end
+          }
+        }
+      },
+    }
+    local title = "⚠ Possible configuration issue"
+    renoise.app():show_custom_dialog(title,view)
+
+end
+
+--------------------------------------------------------------------------------
+
+local function release_all_devices()
+  if (browser) then
+    browser:set_configuration()
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -120,9 +186,16 @@ end
 -- main browser entry
 
 renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:Show Duplex Browser...",
+  name = "Main Menu:Tools:Duplex:Show Browser...",
   invoke = function() 
-    show_dialog() 
+    show_duplex_browser() 
+  end,
+}
+
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Duplex:Tool Options...",
+  invoke = function() 
+    options:show()
   end,
 }
 
@@ -164,7 +237,7 @@ for _,device_name in pairs(available_devices) do
             return (browser ~= nil and browser:configuration_running(config))
           end,
           invoke = function() 
-            show_dialog(config) 
+            show_duplex_browser(config) 
           end
         }
 
@@ -174,107 +247,11 @@ for _,device_name in pairs(available_devices) do
 end
 
 renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:Release all open devices",
+  name = "--- Main Menu:Tools:Duplex:Release all devices",
   invoke = function() 
-    if (browser) then
-      browser:set_configuration()
-    end
+    release_all_devices()
   end
 }
-
-renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:Display on startup",
-  selected = function()
-    return duplex_preferences.display_browser_on_start.value
-  end,
-  invoke = function() 
-    duplex_preferences.display_browser_on_start.value = 
-      not duplex_preferences.display_browser_on_start.value
-  end
-}
-
-renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:High-res automation",
-  selected = function()
-    return duplex_preferences.highres_automation.value
-  end,
-  invoke = function() 
-    duplex_preferences.highres_automation.value = 
-      not duplex_preferences.highres_automation.value
-  end
-}
-
-
---[[
-renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:Enable NRPN support",
-  selected = function()
-    return duplex_preferences.nrpn_support.value
-  end,
-  invoke = function() 
-    duplex_preferences.nrpn_support.value = 
-      not duplex_preferences.nrpn_support.value
-      if duplex_preferences.nrpn_support.value then
-        local msg = "You have selected to enable NRPN support. Please note that the"
-                  .."\nfeature is currently experimental and might have undesired."
-                  .."\nside-effects (please see http://goo.gl/BiIW6)"
-        renoise.app():show_message(msg)
-      end
-  end
-}
-]]
-
-
-renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:Dump MIDI to console",
-  selected = function()
-    return duplex_preferences.dump_midi.value
-  end,
-  invoke = function() 
-    duplex_preferences.dump_midi.value = not duplex_preferences.dump_midi.value
-    if (browser) then
-      browser:set_dump_midi(duplex_preferences.dump_midi.value)
-    end
-    if duplex_preferences.dump_midi.value then
-      local msg = "You have selected to dump MIDI data into the Renoise scripting console"
-                .."\nThis is useful when you want to identify some problem, or figure out"
-                .."\nwhich messages your device is transmitting."
-                .."\n"
-                .."\nNote that you have to enable scripting in Renoise before you can see"
-                .."\nthe scripting console (howto: http://code.google.com/p/xrnx/)"
-      renoise.app():show_message(msg)
-    end
-  end
-}
-renoise.tool():add_menu_entry {
-  name = "Main Menu:Tools:Duplex:Dump OSC to console",
-  selected = function()
-    return duplex_preferences.dump_osc.value
-  end,
-  invoke = function() 
-    duplex_preferences.dump_osc.value = not duplex_preferences.dump_osc.value
-    if (browser) then
-      browser:set_dump_osc(duplex_preferences.dump_osc.value)
-    end
-    if duplex_preferences.dump_osc.value then
-      local msg = "You have selected to dump OSC messages into the Renoise scripting console"
-                .."\nThis is useful when you want to identify some problem, or figure out"
-                .."\nwhich messages your device is transmitting."
-                .."\n"
-                .."\nNote that you have to enable scripting in Renoise before you can see"
-                .."\nthe scripting console (howto: http://code.google.com/p/xrnx/)"
-      renoise.app():show_message(msg)
-    end
-  end
-}
-
-renoise.tool():add_menu_entry {
-  name = "--- Main Menu:Tools:Duplex:Documentation [github]",
-  invoke = function() 
-    renoise.app():open_url("https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Duplex.xrnx")
-  end
-}
-
 
 --------------------------------------------------------------------------------
 -- keybindings
@@ -284,7 +261,7 @@ renoise.tool():add_keybinding {
   name = "Global:Duplex:Show Browser...",
   invoke = function(repeated) 
     if (not repeated) then 
-      show_dialog() 
+      show_duplex_browser() 
     end
   end
 }
