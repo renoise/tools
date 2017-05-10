@@ -21,7 +21,6 @@ xAutomation.FOLLOW_MODE = {
 --- How to write data into an envelope
 --   - INTERLEAVE: leave existing data as-is (renoise default)
 --   - PUNCH_IN: remove existing data (using writeahead)
---   - (TODO) LATCH: keep erasing data ahead of play-position
 xAutomation.WRITE_MODE = {
   INTERLEAVE = "interleave",
   PUNCH_IN = "punch_in",
@@ -202,6 +201,7 @@ function xAutomation:get_position()
 end
 
 ---------------------------------------------------------------------------------------------------
+-- [Class] attach to the song and listen for tempo change (always maintain writeahead)
 
 function xAutomation:_attach_to_song()
 
