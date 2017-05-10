@@ -68,9 +68,9 @@ function LividBase:output_value(pt,xarg,ui_obj)
       rslt = 4
     end
 
-    -- print("pt.color",rprint(pt.color))
-    -- print("rslt",rslt)
-    -- rprint(xarg)
+    --print("pt.color",rprint(pt.color))
+    --print("rslt",rslt)
+    --rprint(xarg)
 
     return rslt
 
