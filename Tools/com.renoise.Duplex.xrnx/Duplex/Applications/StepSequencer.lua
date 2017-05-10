@@ -1707,7 +1707,7 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
   line_idx = line_idx+self._edit_page*self.options.line_increment.value
 
   local rns_track_idx = StepSequencer._get_actual_track_index(track_idx)
-  if (rns_track_idx >= xTrack.get_master_track_index()) then 
+  if not rns_track_idx or (rns_track_idx >= xTrack.get_master_track_index()) then 
     return false 
   end
   
