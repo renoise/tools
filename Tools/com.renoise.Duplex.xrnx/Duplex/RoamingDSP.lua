@@ -139,7 +139,7 @@ function RoamingDSP:__init(...)
 end
 
 --------------------------------------------------------------------------------
--- @see Duplex.Automateable.start_app
+-- @see Duplex.Application.start_app
 -- @return bool or nil
 
 function RoamingDSP:start_app()
@@ -153,7 +153,7 @@ function RoamingDSP:start_app()
     return false
   end
 
-  if not Automateable.start_app(self) then
+  if not Application.start_app(self) then
     return false
   end
 
@@ -583,7 +583,7 @@ end
 
 --------------------------------------------------------------------------------
 -- Retrieve a parameter from the target device by name
--- @param name (string)
+-- @param param_name (string)
 -- @return DeviceParameter or nil
 
 function RoamingDSP:get_device_param(param_name)
@@ -597,7 +597,6 @@ function RoamingDSP:get_device_param(param_name)
   end
 
 end
-
 
 --------------------------------------------------------------------------------
 -- Update automation 
