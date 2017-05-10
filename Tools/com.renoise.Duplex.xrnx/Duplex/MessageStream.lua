@@ -324,28 +324,19 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
     -- (the virtual UI is not included in this, as its widgets
     -- always represent the actual parameter)
     if not msg.is_virtual then
-      --print("*** MessageStream:input_message - msg.xarg.state_ids",rprint(msg.xarg.state_ids))
       for k,v in ipairs(msg.xarg.state_ids) do
         local state = state_ctrl.states[v]
-        --print("*** MessageStream:input_message - state",rprint(state))
         if state and 
           not state.active and
           not state.xarg.receive_when_inactive
         then
-          --print("*** MessageStream:input_message - ignore message (inactive state)",v)
           return false
         end
       end
     end
 
-    --print("*** MessageStream:input_message - pass message (active state or receive_when_inactive)",msg)
-
     -- check for matching value
     ---------------------------------------------------------
-    --print("*** MessageStream:input_message - msg.value",rprint(msg.value))
-    --print("*** MessageStream:input_message - msg.xarg.match",msg.xarg.match)
-    --print("*** MessageStream:input_message - msg.xarg.mode",msg.xarg.mode)
-
     if msg.xarg.match and 
       not (msg.xarg.match == msg.value)
     then
@@ -395,7 +386,7 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
           event_types[evt_type]()
         end
       end
-    else
+    else      
       -- broadcast to all relevant UIComponents, let them decide
       -- whether to act on the message or not ...
       local ui_component_matched = false
@@ -403,20 +394,14 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
       for _,listener in ipairs(listeners) do 
         -- test the message, cache matches
         -- match when we determine that the message has the right x/y coords
-        --print("msg.xarg",rprint(msg.xarg))
         if UIComponent.test(listener.obj,msg) then
           table.insert(self._temp_cache,listener.obj)
-          --print("*** tested ui_obj",evt_type,msg.xarg.value,msg.xarg.group_name)
-          --print("*** self.queued_messages",self.queued_messages)
-          --print("*** memoize ui_component_ref",evt_type,msg.xarg.value,listener.obj,listener.obj.state)
-
           if post_pass_check() then
             ui_component_matched = listener.handler(msg)
             --print("ui_component_matched",ui_component_matched)
           end
         end
       end
-      --print("self.queued_messages",self.queued_messages)
       -- last queued message: add temporary matches to permanent cache
       if (self.queued_messages == 0) then
         self.queued_messages = -1
@@ -437,13 +422,14 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
     end
 
   else
-    print(">>> not running")
     -- pass on messages when process is not running
     if pass_setting then
       pass_msg = true
     end
 
   end
+
+  --print(">>> pass_msg,msg.midi_msgs",pass_msg,msg.midi_msgs)
 
   -- ensure that we have MIDI data before passing message
   if pass_msg and msg.midi_msgs and
