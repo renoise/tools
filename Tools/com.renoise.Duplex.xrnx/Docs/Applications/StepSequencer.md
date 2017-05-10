@@ -114,7 +114,10 @@ The mode is activated immediately after you enable Playback Follow in Renoise (u
 
 ## Changelog
 
-1,02
+1.03
+- Fixed: error when pressing button in out-of-bounds area
+
+1.02
 - Changed default options (always write, enable preview and note names)
 
 1.01
