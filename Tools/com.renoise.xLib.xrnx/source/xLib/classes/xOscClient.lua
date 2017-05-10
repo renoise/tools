@@ -71,7 +71,7 @@ end
 -- @return string, error message when failed
 
 function xOscClient:create(osc_host,osc_port)
-  print("xOscClient:create(osc_host,osc_port)",osc_host,osc_port)
+  TRACE("xOscClient:create(osc_host,osc_port)",osc_host,osc_port)
 
   --assert(osc_host and osc_port,"Expected osc_host and osc_port as arguments")
   if not osc_host and not osc_port then
@@ -262,7 +262,7 @@ end
 -- TODO: switch to API method for detection once available
 
 function xOscClient:_detect_server()
-  print("xOscClient:_detect_server()")
+  TRACE("xOscClient:_detect_server()")
 
   if not self._connection then
     LOG("*** xOscClient: can't detect server, no connection was established")
