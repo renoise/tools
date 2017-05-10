@@ -283,7 +283,7 @@ function xRulesUI:build()
           vb:checkbox{
             visible = false,
             notifier = function()
-              renoise.app():open_url(self.owner.homepage)
+              renoise.app():open_url("https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.xRules.xrnx")
             end
           },
           vb:text{
