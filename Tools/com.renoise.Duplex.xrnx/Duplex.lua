@@ -10,7 +10,7 @@
 
 rns = nil
 _trace_filters = nil
-_trace_filters = {"^xOscClient*"}
+--_trace_filters = {"^xOscClient*"}
 --_trace_filters = {"^StateController*"}
 --_trace_filters = {"^Recorder*","^UISlider*"}
 --_trace_filters = {".*"}
