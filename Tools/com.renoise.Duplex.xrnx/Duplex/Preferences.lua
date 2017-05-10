@@ -55,15 +55,15 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   -- higher values equal less acceleration (default is 10)
   slider_acceleration = 10,
 
-  --- (number) the amount of extrapolation applied to automation
-  extrapolation_strength = 3,
-
   --- (table) theming support: specify the default button color
   -- @field red 0xc1
   -- @field blue 0x34
   -- @field green 0x11
   -- @table theme_color
   theme_color = {0xc1,0x34,0x11},
+
+  --- (bool) detect osc server on startup 
+  run_server_test = true,
 
   --- (bool) when enabled, the Duplex browser is displayed on startup
   display_browser_on_start = true,
@@ -83,9 +83,6 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   --- (int) the internal OSC port address
   -- (set this to whatever the renoise OSC server is set to)
   osc_server_port = 8000,
-
-  --- (bool) when OSC is being run the first time, display a message
-  osc_first_run = true,
 
   --- list of user configuration settings (like MIDI device names, app configs)
   -- added during runtime for all available configs:
