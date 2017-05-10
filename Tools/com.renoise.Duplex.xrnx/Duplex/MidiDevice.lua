@@ -638,8 +638,7 @@ function MidiDevice:sysex_callback(message)
       self.port_in, #message))
   end
   
-  -- the internal MIDI trigger functionality (via OscClient) does not support 
-  -- sysex messages, however the MMC functionality is emulated here:
+  -- MMC functionality is emulated here:
 
   if (#message == 6) then
     if (message[2] == 127) and
