@@ -106,6 +106,24 @@ function Options:_create_content_view()
         }
       },
     },
+    vb:column{
+      style = "group",
+      width = "100%",
+      margin = DEFAULT_MARGIN,
+      spacing = DEFAULT_SPACING,      
+      vb:text{
+        text = "MIDI options",
+        font = "bold",
+      },
+      vb:row{
+        vb:checkbox{
+          bind = duplex_preferences.mmc_transport_enabled,
+        },
+        vb:text{
+          text = "Enable MMC transport"
+        }
+      },
+    },
 
     vb:column{
       style = "group",
