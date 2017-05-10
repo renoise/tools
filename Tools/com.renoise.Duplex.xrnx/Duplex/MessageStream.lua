@@ -13,6 +13,9 @@ A device can only belong to a single stream, but nothing stops the stream from r
 
 ### Changes
 
+  1.03
+    - Optimize: switch to table-based lookups where possible
+
   0.99.3
     - Ability to cache multiple matched ui-components (implemented as queue)
     - Integration with StateController
@@ -48,14 +51,12 @@ function MessageStream:__init(process)
 
   --- (table) listeners for faders,dials,xy pads
   self.change_listeners = table.create()
-
   --- (table) listeners for buttons
   self.press_listeners = table.create()
   --- (table) listeners for buttons
   self.hold_listeners = table.create()
   --- (table) listeners for buttons
   self.release_listeners = table.create()
-
   --- (table) listeners for keys
   self.key_press_listeners = table.create() 
   --- (table) listeners for keys
@@ -66,9 +67,6 @@ function MessageStream:__init(process)
   self.pitch_change_listeners = table.create()
   --- (table) listeners for keys
   self.channel_pressure_listeners = table.create()
-
-  --- (number) how long before triggering `hold` event
-  self.button_hold_time = duplex_preferences.button_hold_time.value
 
   --- (@{Duplex.Message}) most recent message
   self.current_msg = nil 
@@ -92,9 +90,7 @@ function MessageStream:__init(process)
   -- of messages have been received
   self._temp_cache = {}
 
-
 end
-
 
 --------------------------------------------------------------------------------
 
@@ -103,11 +99,13 @@ end
 function MessageStream:on_idle()
   --TRACE("MessageStream:on_idle()")
 
+  local button_hold_time = duplex_preferences.button_hold_time.value
+
   for i,msg in ipairs(self.pressed_buttons) do
     if (not msg.held_event_fired) and
       (msg.xarg.type == "button" or
        msg.xarg.type == "pushbutton") and
-       (msg.timestamp + self.button_hold_time < os.clock()) then
+       (msg.timestamp + button_hold_time < os.clock()) then
       -- broadcast to attached listeners
       for _,listener in ipairs(self.hold_listeners)  do 
         listener.handler(msg) 
@@ -119,8 +117,7 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- Here we receive a message from the device, and pass it to all the relevant
+-- Here we receive a message from the device, and pass it to all the relevant
 -- UIComponents. If a listener's handler method actively reject the message 
 -- (by explicitly returning false in the event-handling method), we instead 
 -- (can choose to) pass the message on to Renoise as a MIDI message
@@ -131,90 +128,104 @@ function MessageStream:input_message(msg)
 
   self.current_msg = msg
 
-  --print("*** MessageStream:input_message - msg.value",rprint(msg.value))
-
-
   -- handle states (update display accordingly)
-  ---------------------------------------------------------
-
   local state_ctrl = self.process.display.state_ctrl
   state_ctrl:handle_message(msg)
 
   -- invoke listener methods 
-  ---------------------------------------------------------
+  -- this needs to cover all input types (INPUT_TYPE)
+  local input_types = {
+    ["button"] = function() self:_process_button_message(msg) end,
+    ["togglebutton"] = function() self:_process_button_message(msg) end,
+    ["pushbutton"] = function() self:_process_button_message(msg) end,
+    ["fader"] = function() self:_process_fader_message(msg) end,
+    ["dial"] = function() self:_process_fader_message(msg) end,
+    ["xypad"] = function() self:_process_fader_message(msg) end,
+    ["keyboard"] = function() self:_process_note_message(msg) end,
+  }
 
-  if (msg.xarg.type == "fader" or 
-    msg.xarg.type == "dial" or
-    msg.xarg.type == "xypad") then
-
-    -- "analogue" input, value between max/min
-    -- check if we have associated a pitch-bend or key-pressure handler 
-    -- before processinh the message as a standard "change" event
-    -- (please note that pitch & key pressure is never passed on, 
-    -- this can be achieved by using an application like Keyboard)
-    --print("*** MessageStream: CONTROLLER_XFADER")
-    if (msg.context == DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
-      --print("*** MessageStream: DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE")
-      self:_handle_or_pass(msg,self.channel_pressure_listeners,DEVICE_EVENT.CHANNEL_PRESSURE)
-    elseif (msg.context == DEVICE_MESSAGE.MIDI_PITCH_BEND) then
-      --print("*** MessageStream: DEVICE_MESSAGE.MIDI_PITCH_BEND")
-      self:_handle_or_pass(msg,self.pitch_change_listeners,DEVICE_EVENT.PITCH_CHANGED)
-    else
-      --print("*** MessageStream: standard change event")
-      self:_handle_or_pass(msg,self.change_listeners,DEVICE_EVENT.VALUE_CHANGED)
-    end
-
-  elseif (msg.xarg.type == "keyboard") then
-    -- keyboard input (note), check if key was pressed or released
-    if (msg.value == msg.xarg.minimum) or (msg.is_note_off) then
-      self:_handle_or_pass(msg,self.key_release_listeners,DEVICE_EVENT.KEY_RELEASED)
-    else
-      --print("MessageStream:_handle_or_pass - key_press_listeners")
-      self:_handle_or_pass(msg,self.key_press_listeners,DEVICE_EVENT.KEY_PRESSED)
-    end
-
-  elseif string.find(msg.xarg.type,"button") then
-    --  "binary" input, value either max or min 
-    --print("*** MessageStream: msg.context == CONTROLLER_XBUTTON")
-    -- keyboard (note) input is supported as well, but it's a
-    -- special case: note-on will need to be "maximixed" before
-    -- it's able to trigger buttons)
-    if (msg.context == DEVICE_MESSAGE.MIDI_NOTE) and (not msg.is_note_off) then
-      msg.value = msg.xarg.maximum
-    end
-
-    if (msg.value == msg.xarg.maximum) and (not msg.is_note_off) then
-      --print("*** MessageStream:  interpret this as pressed")
-      self.pressed_buttons:insert(msg)
-      self:_handle_or_pass(msg,self.press_listeners,DEVICE_EVENT.BUTTON_PRESSED)
-
-    elseif (msg.value == msg.xarg.minimum) or (msg.is_note_off) then
-      --print("*** MessageStream:  interpret this as release")
-      -- for toggle buttons, broadcast releases to listeners as well
-      if (not msg.is_virtual) and
-        (msg.xarg.type == "togglebutton")
-      then
-        self:_handle_or_pass(msg,self.press_listeners,DEVICE_EVENT.BUTTON_PRESSED)
-      else
-        self:_handle_or_pass(msg,self.release_listeners,DEVICE_EVENT.BUTTON_RELEASED)
-      end
-      
-      -- remove from pressed_buttons
-      for i,button_msg in ipairs(self.pressed_buttons) do
-        if (msg.xarg.id == button_msg.xarg.id) then
-          self.pressed_buttons:remove(i)
-        end
-      end
-
-    end
-
+  if input_types[msg.xarg.type] then
+    input_types[msg.xarg.type]()
   else
     error(("Internal Error. Please report: " ..
       "unknown msg.xarg.type'%s'"):format(msg.xarg.type or "nil"))
   end
+
 end
 
+--------------------------------------------------------------------------------
+-- handle "analog" input, value between max/min
+-- @see MessageStream.input_message
 
+function MessageStream:_process_fader_message(msg)
+  TRACE("MessageStream:_process_fader_message(msg)",msg)
+
+  -- check if we have associated a pitch-bend or key-pressure handler 
+  -- before processing the message as a standard "change" event
+  if (msg.context == DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
+    self:_handle_or_pass(msg,self.channel_pressure_listeners,DEVICE_EVENT.CHANNEL_PRESSURE)
+  elseif (msg.context == DEVICE_MESSAGE.MIDI_PITCH_BEND) then
+    self:_handle_or_pass(msg,self.pitch_change_listeners,DEVICE_EVENT.PITCH_CHANGED)
+  else
+    self:_handle_or_pass(msg,self.change_listeners,DEVICE_EVENT.VALUE_CHANGED)
+  end
+end
+
+--------------------------------------------------------------------------------
+-- handle "binary" input, value either max or min 
+-- @see MessageStream.input_message
+
+function MessageStream:_process_button_message(msg)
+  TRACE("MessageStream:_process_button_message(msg)",msg)
+
+  -- keyboard (note) input is supported as well, but it's a
+  -- special case: note-on will need to be "maximixed" before
+  -- it's able to trigger buttons)
+  if (msg.context == DEVICE_MESSAGE.MIDI_NOTE) and (not msg.is_note_off) then
+    msg.value = msg.xarg.maximum
+  end
+
+  if (msg.value == msg.xarg.maximum) and (not msg.is_note_off) then
+    --print("*** MessageStream:  interpret this as pressed")
+    self.pressed_buttons:insert(msg)
+    self:_handle_or_pass(msg,self.press_listeners,DEVICE_EVENT.BUTTON_PRESSED)
+
+  elseif (msg.value == msg.xarg.minimum) or (msg.is_note_off) then
+    --print("*** MessageStream:  interpret this as release")
+    -- for toggle buttons, broadcast releases to listeners as well
+    if (not msg.is_virtual) and
+      (msg.xarg.type == "togglebutton")
+    then
+      self:_handle_or_pass(msg,self.press_listeners,DEVICE_EVENT.BUTTON_PRESSED)
+    else
+      self:_handle_or_pass(msg,self.release_listeners,DEVICE_EVENT.BUTTON_RELEASED)
+    end
+    
+    -- remove from pressed_buttons
+    for i,button_msg in ipairs(self.pressed_buttons) do
+      if (msg.xarg.id == button_msg.xarg.id) then
+        self.pressed_buttons:remove(i)
+      end
+    end
+
+  end
+
+end
+
+--------------------------------------------------------------------------------
+-- handle keyboard input (note)
+-- @see MessageStream.input_message
+
+function MessageStream:_process_note_message(msg)
+  TRACE("MessageStream:_process_note_message(msg)",msg)
+
+  if (msg.value == msg.xarg.minimum) or (msg.is_note_off) then
+    self:_handle_or_pass(msg,self.key_release_listeners,DEVICE_EVENT.KEY_RELEASED)
+  else
+    self:_handle_or_pass(msg,self.key_press_listeners,DEVICE_EVENT.KEY_PRESSED)
+  end
+
+end
 
 --------------------------------------------------------------------------------
 
@@ -226,42 +237,26 @@ end
 function MessageStream:add_listener(obj,evt_type,handler)
   TRACE('MessageStream:add_listener:'..evt_type)
   
-  if (evt_type == DEVICE_EVENT.BUTTON_PRESSED) then
-    self.press_listeners:insert({ handler = handler, obj = obj })
+  local event_types = {
+    [DEVICE_EVENT.BUTTON_PRESSED] = function(t) self.press_listeners:insert(t) end,
+    [DEVICE_EVENT.VALUE_CHANGED] = function(t) self.change_listeners:insert(t) end,
+    [DEVICE_EVENT.BUTTON_HELD] = function(t) self.hold_listeners:insert(t) end,
+    [DEVICE_EVENT.BUTTON_RELEASED] = function(t) self.release_listeners:insert(t) end,
+    [DEVICE_EVENT.KEY_PRESSED] = function(t) self.key_press_listeners:insert(t) end,
+    [DEVICE_EVENT.KEY_RELEASED] = function(t) self.key_release_listeners:insert(t) end,
+    [DEVICE_EVENT.KEY_HELD] = function(t) self.key_hold_listeners:insert(t) end,
+    [DEVICE_EVENT.PITCH_CHANGED] = function(t) self.pitch_change_listeners:insert(t) end,
+    [DEVICE_EVENT.CHANNEL_PRESSURE] = function(t) self.channel_pressure_listeners:insert(t) end,
+  }
 
-  elseif (evt_type == DEVICE_EVENT.VALUE_CHANGED) then
-    self.change_listeners:insert({ handler = handler, obj = obj })
-
-  elseif (evt_type == DEVICE_EVENT.BUTTON_HELD) then
-    self.hold_listeners:insert({ handler = handler, obj = obj })
-    
-  elseif (evt_type == DEVICE_EVENT.BUTTON_RELEASED) then
-    self.release_listeners:insert({ handler = handler, obj = obj })
-  
-  elseif (evt_type == DEVICE_EVENT.KEY_PRESSED) then
-    self.key_press_listeners:insert({ handler = handler, obj = obj })
-
-  elseif (evt_type == DEVICE_EVENT.KEY_HELD) then
-    self.key_hold_listeners:insert({ handler = handler, obj = obj })
-    
-  elseif (evt_type == DEVICE_EVENT.KEY_RELEASED) then
-    self.key_release_listeners:insert({ handler = handler, obj = obj })
-  
-  elseif (evt_type == DEVICE_EVENT.PITCH_CHANGED) then
-    self.pitch_change_listeners:insert({ handler = handler, obj = obj })
-  
-  elseif (evt_type == DEVICE_EVENT.CHANNEL_PRESSURE) then
-    self.channel_pressure_listeners:insert({ handler = handler, obj = obj })
-  
+  if event_types[evt_type] then 
+    event_types[evt_type]({ handler = handler, obj = obj })
   else
     error(("Internal Error. Please report: " ..
       "unknown evt_type '%s'"):format(tostring(evt_type) or "nil"))
   end
 
-  --TRACE("MessageStream:Number of listeners after addition:",#self.press_listeners, #self.change_listeners, #self.hold_listeners, #self.release_listeners, #self.key_press_listeners, #self.key_hold_listeners, #self.key_release_listeners, #self.pitch_change_listeners, #self.channel_pressure_listeners)
-
 end
-
 
 --------------------------------------------------------------------------------
 
@@ -282,33 +277,20 @@ function MessageStream:remove_listener(obj,evt_type)
     end
   end
 
-  if (evt_type == DEVICE_EVENT.BUTTON_PRESSED) then
-    remove_listeners(self.press_listeners)
+  local event_types = {
+    [DEVICE_EVENT.BUTTON_PRESSED] = function() remove_listeners(self.press_listeners) end,
+    [DEVICE_EVENT.VALUE_CHANGED] = function() remove_listeners(self.change_listeners) end,
+    [DEVICE_EVENT.BUTTON_HELD] = function() remove_listeners(self.hold_listeners) end,
+    [DEVICE_EVENT.BUTTON_RELEASED] = function() remove_listeners(self.release_listeners) end,
+    [DEVICE_EVENT.KEY_PRESSED] = function() remove_listeners(self.key_press_listeners) end,
+    [DEVICE_EVENT.KEY_RELEASED] = function() remove_listeners(self.key_release_listeners) end,
+    [DEVICE_EVENT.KEY_HELD] = function() remove_listeners(self.key_hold_listeners) end,
+    [DEVICE_EVENT.PITCH_CHANGED] = function() remove_listeners(self.pitch_change_listeners) end,
+    [DEVICE_EVENT.CHANNEL_PRESSURE] = function() remove_listeners(self.channel_pressure_listeners) end,
+  }
 
-  elseif (evt_type == DEVICE_EVENT.VALUE_CHANGED) then
-    remove_listeners(self.change_listeners)
-
-  elseif (evt_type == DEVICE_EVENT.BUTTON_HELD) then
-    remove_listeners(self.hold_listeners)
-    
-  elseif (evt_type == DEVICE_EVENT.BUTTON_RELEASED) then
-    remove_listeners(self.release_listeners)
-
-  elseif (evt_type == DEVICE_EVENT.KEY_RELEASED) then
-    remove_listeners(self.key_release_listeners)
-
-  elseif (evt_type == DEVICE_EVENT.KEY_HELD) then
-    remove_listeners(self.key_hold_listeners)
-
-  elseif (evt_type == DEVICE_EVENT.KEY_PRESSED) then
-    remove_listeners(self.key_press_listeners)
-
-  elseif (evt_type == DEVICE_EVENT.PITCH_CHANGED) then
-    remove_listeners(self.pitch_change_listeners)
-
-  elseif (evt_type == DEVICE_EVENT.CHANNEL_PRESSURE) then
-    remove_listeners(self.channel_pressure_listeners)
-
+  if (event_types[evt_type]) then
+    event_types[evt_type]()
   else
      error(("Internal Error. Please report: " .. 
       "unknown evt_type '%s'"):format(tostring(evt_type) or "nil"))
@@ -318,7 +300,7 @@ function MessageStream:remove_listener(obj,evt_type)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Handle or pass: invoke event handlers or pass on to Renoise as MIDI
 -- (only valid msg context is DEVICE_MESSAGE.MIDI_NOTE)
@@ -390,38 +372,27 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
   end
 
   if self.process:running() then
-
     -- attempt to look up previously memoized UIComponents
     local ui_component_refs = self.message_cache[evt_type][msg.xarg.value]
-    --local ui_component_refs = nil
     if ui_component_refs then
-  
       if not post_pass_check() then
         return
       end
-
       for k,v in ipairs(ui_component_refs) do
-
         --print("*** _handle_or_pass - use cached ui_component_ref",msg.xarg.value,v)
-        -- note: put the most often used / frequent messages at the top
-        if (evt_type == DEVICE_EVENT.VALUE_CHANGED) then
-          v:do_change(msg)
-        elseif (evt_type == DEVICE_EVENT.BUTTON_PRESSED) then
-          v:do_press(msg)
-        elseif (evt_type == DEVICE_EVENT.BUTTON_RELEASED) then
-          v:do_release(msg)
-        elseif (evt_type == DEVICE_EVENT.BUTTON_HELD) then
-          v:do_hold(msg)
-        elseif (evt_type == DEVICE_EVENT.KEY_PRESSED) then
-          v:do_press(msg)
-        elseif (evt_type == DEVICE_EVENT.KEY_RELEASED) then
-          v:do_release(msg)
-        elseif (evt_type == DEVICE_EVENT.KEY_HELD) then
-          v:do_hold(msg)
-        elseif (evt_type == DEVICE_EVENT.PITCH_CHANGED) then
-          v:do_change(msg)
-        elseif (evt_type == DEVICE_EVENT.CHANNEL_PRESSURE) then
-          v:do_change(msg)
+        local event_types = {
+          [DEVICE_EVENT.BUTTON_PRESSED] = function() v:do_press(msg) end,
+          [DEVICE_EVENT.VALUE_CHANGED] = function() v:do_change(msg) end,
+          [DEVICE_EVENT.BUTTON_HELD] = function() v:do_hold(msg) end,
+          [DEVICE_EVENT.BUTTON_RELEASED] = function() v:do_release(msg) end,
+          [DEVICE_EVENT.KEY_PRESSED] = function() v:do_press(msg) end,
+          [DEVICE_EVENT.KEY_RELEASED] = function() v:do_release(msg) end,
+          [DEVICE_EVENT.KEY_HELD] = function() v:do_hold(msg) end,
+          [DEVICE_EVENT.PITCH_CHANGED] = function() v:do_change(msg) end,
+          [DEVICE_EVENT.CHANNEL_PRESSURE] = function() v:do_change(msg) end,
+        }
+        if (event_types[evt_type]) then
+          event_types[evt_type]()
         end
       end
     else
@@ -430,12 +401,9 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
       local ui_component_matched = false
       --print("*** _handle_or_pass - #listeners",#listeners)
       for _,listener in ipairs(listeners) do 
-
         -- test the message, cache matches
         -- match when we determine that the message has the right x/y coords
-
         --print("msg.xarg",rprint(msg.xarg))
-
         if UIComponent.test(listener.obj,msg) then
           table.insert(self._temp_cache,listener.obj)
           --print("*** tested ui_obj",evt_type,msg.xarg.value,msg.xarg.group_name)
@@ -447,12 +415,8 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
             --print("ui_component_matched",ui_component_matched)
           end
         end
-
-
       end
-
       --print("self.queued_messages",self.queued_messages)
-
       -- last queued message: add temporary matches to permanent cache
       if (self.queued_messages == 0) then
         self.queued_messages = -1
@@ -473,14 +437,13 @@ function MessageStream:_handle_or_pass(msg,listeners,evt_type)
     end
 
   else
+    print(">>> not running")
     -- pass on messages when process is not running
     if pass_setting then
       pass_msg = true
     end
 
   end
-
-  --print("pass_msg",pass_msg)
 
   -- ensure that we have MIDI data before passing message
   if pass_msg and msg.midi_msgs and

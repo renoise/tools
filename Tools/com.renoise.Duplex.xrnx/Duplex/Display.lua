@@ -13,6 +13,9 @@ The Display will also build the control surface, an interactive representation o
 
 ### Changes
 
+  1.03
+    - Optimize: switch to table-based lookups where possible
+
   0.99.4
     - "skip_echo" is checked here, no more need to do so in output_value()
 
@@ -94,8 +97,6 @@ function Display:__init(process)
   -- (this is added immediately after initializing the Display, as we
   -- need a valid reference to ourselves - search for "StateApplication")
   self.state_ctrl = nil
-
-
 
 end
 
@@ -215,30 +216,6 @@ function Display:apply_to_objects(group_name,callback)
   end
 
 end
-
---------------------------------------------------------------------------------
-
---- Disable an entire section of the display
--- (the enabled state of individual UIComponent is not affected)
--- @param state (bool) enabled when true, disabled when false
--- @param group_name[opt] (string or nil), leave out to match all
---[[
-function Display:set_active_state(state,group_name)
-  TRACE("Display:set_active_state",state,group_name)
-
-  local callback = function(group)
-    --print("*** set_active_state - callback",group)
-    for k,param in ipairs(group) do
-      local widget = self.vb.views[param.xarg.id]
-      widget.active = state
-    end
-  end
-
-  self:apply_to_groups(group_name,callback)
-
-end
-]]
-
 
 --------------------------------------------------------------------------------
 
@@ -369,7 +346,6 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
   -- @ create our output value 
   -- at this stage, we might directly communicate with the hardware, 
   -- in which case the "skip_hardware" flag can be set to true
-  -- 
 
   local value,skip_hardware = nil,nil
 
@@ -411,56 +387,63 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
 
   --@
 
-
   -- update virtual control surface
   ---------------------------------------------------------
-
   if not skip_ui then
 
     local widget = nil
-    if (self.vb and self.vb.views) then 
+    if self.vb and self.vb.views then 
       widget = self.vb.views[param.xarg.id]
     end
 
-    if (widget) then
+    if widget then
 
-      local widget_type = type(widget)
-      if (widget_type == "Button") then
-
+      local handle_button_widget = function()
         local set_widget = widget_hooks["button"].set_widget
         set_widget(self,widget,param.xarg,ui_obj,point,value)
+      end
 
-      elseif (widget_type == "RotaryEncoder") or 
-        (widget_type == "MiniSlider") or
-        (widget_type == "Slider")
-      then
+      local handle_fader_widget = function()
         widget:remove_notifier(self.ui_notifiers[param.xarg.id])
         widget.value = tonumber(value)
         widget:add_notifier(self.ui_notifiers[param.xarg.id])
-      
-      elseif (widget_type == "XYPad") then
+      end
 
+      local handle_xypad_widget = function()
         widget:remove_notifier(self.ui_notifiers[param.xarg.id])
         widget.value = {
           x=value[1],
           y=value[2]
         }
         widget:add_notifier(self.ui_notifiers[param.xarg.id])
+      end
 
-      elseif (widget_type == "MultiLineText") then
-
+      local handle_text_widget = function()
         widget.text = tostring(value)
-
-      elseif (widget_type == "Rack") then
-
+      end
+      
+      local handle_custom_widget = function()
         -- Custom widgets (e.g. keyboard)
         --print("*** set_parameter - ui_obj",ui_obj)
-
         local set_widget = widget_hooks[param.xarg.type].set_widget
         if set_widget then
           set_widget(self,widget,param.xarg,ui_obj,point,value)
         end
+      end
 
+      local widget_types = {
+        ["Button"] = function() handle_button_widget() end,
+        ["RotaryEncoder"] = function() handle_fader_widget() end,
+        ["MiniSlider"] = function() handle_fader_widget() end,
+        ["Slider"] = function() handle_fader_widget() end,
+        ["XYPad"] = function() handle_xypad_widget() end,
+        ["MultiLineText"] = function() handle_text_widget() end,
+        ["Rack"] = function() handle_custom_widget() end,
+      }
+
+      local widget_type = type(widget)
+      if widget_types[widget_type] then
+        widget_types[widget_type]()
       else
         error(("Internal Error. Please report: " .. 
           "unexpected or unknown widget type '%s'"):format(type(widget)))
@@ -469,12 +452,9 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
 
   end 
 
-
   -- update hardware display
   ---------------------------------------------------------
-
   if not skip_hardware then
-
 
     -- check states to see if we should produce output
     for _,state_id in ipairs(param.xarg.state_ids) do
@@ -506,10 +486,10 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
       end
 
 
-    else --/subparams
+    else 
+      -- no subparams
  
       local msg_type = cm:determine_type(param.xarg.value)
-
       if not (msg_type == DEVICE_MESSAGE.OSC) then
 
         -- determine the channel (specified or default)
@@ -519,49 +499,38 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
             self.device.default_midi_channel
         end
 
-        if (msg_type == DEVICE_MESSAGE.MIDI_NOTE) then
+        local msg_types = {
+          [DEVICE_MESSAGE.MIDI_NOTE] = function() 
+            local num = self.device:extract_midi_note(param.xarg.value)
+            self.device:send_note_message(num,math.floor(value),channel,param.xarg,point)
+          end,
+          [DEVICE_MESSAGE.MIDI_CC] = function() 
+            local send_multibyte = string.find(param.xarg.mode,"_14") and true or false
+            local num = self.device:extract_midi_cc(param.xarg.value)
+            self.device:send_cc_message(num,math.floor(value),channel,send_multibyte)
+          end,
+          [DEVICE_MESSAGE.MIDI_PITCH_BEND] = function() 
+            -- normally, you wouldn't send back pitch bend messages (skip_echo)
+            -- but under some circumstances (Mackie Control) it is needed
+            self.device:send_pitch_bend_message(math.floor(value),channel,param.xarg.mode)
+          end,
+          [DEVICE_MESSAGE.MIDI_NRPN] = function() 
+            local send_only_msb = string.find(param.xarg.mode,"_7") and true or false
+            local num = self.device:extract_midi_nrpn(param.xarg.value)
+            self.device:send_nrpn_message(num,math.floor(value),channel,send_only_msb)
+          end,
+          [DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE] = function() --[[ do nothing ]] end,
+          [DEVICE_MESSAGE.MIDI_PROGRAM_CHANGE] = function() --[[ do nothing ]] end,
+        }
 
-          local num = self.device:extract_midi_note(param.xarg.value)
-          self.device:send_note_message(num,math.floor(value),channel,param.xarg,point)
-
-        elseif (msg_type == DEVICE_MESSAGE.MIDI_CC) then
-
-          local send_multibyte = string.find(param.xarg.mode,"_14") and true or false
-          local num = self.device:extract_midi_cc(param.xarg.value)
-          self.device:send_cc_message(num,math.floor(value),channel,send_multibyte)
-
-        elseif (msg_type == DEVICE_MESSAGE.MIDI_PITCH_BEND) then
-
-          -- normally, you wouldn't send back pitch bend messages (skip_echo)
-          -- but under some circumstances (Mackie Control) it is needed
-          self.device:send_pitch_bend_message(math.floor(value),channel,param.xarg.mode)
-
-        elseif (msg_type == DEVICE_MESSAGE.MIDI_NRPN) then
-
-          local send_only_msb = string.find(param.xarg.mode,"_7") and true or false
-          local num = self.device:extract_midi_nrpn(param.xarg.value)
-          self.device:send_nrpn_message(num,math.floor(value),channel,send_only_msb)
-
-        elseif (msg_type == DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
-
-          -- do nothing
-
-        --elseif (msg_type == DEVICE_MESSAGE.MIDI_KEY) then
-
-          -- do nothing
-
-        elseif (msg_type == DEVICE_MESSAGE.MIDI_PROGRAM_CHANGE) then
-
-          -- do nothing
-
+        if msg_types[msg_type] then
+          msg_types[msg_type]()
         else
           error(("Internal Error. Please report: " ..
             "unknown or unhandled msg_type: '%s'"):format(msg_type or "nil"))
         end
 
       else
-
-
         -- it's recommended that wireless devices have their 
         -- messages bundled (or some might get lost)
         --print("*** set_parameter - self.device.bundle_messages",self.device.bundle_messages)
@@ -570,12 +539,11 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
         else
           self.device:send_osc_message(param.xarg.value,value)
         end
-
       end
 
     end
 
-  end
+  end -- /not skip_hardware
 
 end
 
@@ -620,7 +588,6 @@ function Display:build_control_surface()
 
 end
 
-
 --------------------------------------------------------------------------------
 
 ---  Generate messages for the virtual control-surface (creates a 
@@ -648,8 +615,6 @@ function Display:generate_message(value, param, released)
     msg.context = self.device.control_map:determine_type(param.xarg.value)
   end
 
-  --msg.timestamp = os.clock()
-
   -- include as copy (do not modify original)
   msg.xarg = table.rcopy(param.xarg)
 
@@ -657,8 +622,9 @@ function Display:generate_message(value, param, released)
     msg.is_note_off = true
   end
 
-  -- if possible, create a "virtual" midi message 
-  -- (we might want to pass this on to Renoise)
+  ---------------------------------------------------------
+  -- attempt to create a "virtual" midi message 
+  -- (for passing on to Renoise)
 
   if (param.xarg.type == "keyboard") then
     msg.midi_msgs = {value}
@@ -672,59 +638,51 @@ function Display:generate_message(value, param, released)
           self.device.default_midi_channel
       end
 
-      if (msg.context==DEVICE_MESSAGE.MIDI_CC) then
-
+      local handle_cc = function()
         -- value specifies the CC value
         local cc_num = extract_cc_num(param.xarg.value)
         msg.midi_msgs = {{175+msg.channel,cc_num,math.floor(value)}}
+      end
 
-      elseif (msg.context==DEVICE_MESSAGE.MIDI_NOTE) then
-
+      local handle_note = function()
         -- value specifies the velocity
         local note_pitch = value_to_midi_pitch(param.xarg.value)+12
         msg.midi_msgs = {{143+msg.channel,note_pitch,value[2]}}
-
-      elseif (msg.context==DEVICE_MESSAGE.MIDI_PITCH_BEND) then
-
-        -- value specifies the pitch bend amount
-        msg.midi_msgs = {{223+msg.channel,math.floor(value),0}}
-
-      elseif (msg.context==DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE) then
-
-        -- value specifies the pressure amount
-        msg.midi_msgs = {{207+msg.channel,0,math.floor(value)}}
-
-      elseif (msg.context==DEVICE_MESSAGE.MIDI_KEY) then
-
-        -- do nothing
-
-      elseif (msg.context==DEVICE_MESSAGE.MIDI_PROGRAM_CHANGE) then
-
-        -- do nothing
-
-      elseif (msg.context==DEVICE_MESSAGE.MIDI_NRPN) then
-
-        -- do nothing
-
       end
 
-      --print("*** Display: generate_message - virtually generated midi msg...")
-      --rprint(msg.midi_msg)
-      --print("msg.is_note_off",msg.is_note_off,released)
+      local handle_pitch_bend_ = function()
+        -- value specifies the pitch bend amount
+        msg.midi_msgs = {{223+msg.channel,math.floor(value),0}}
+      end
+
+      local handle_channel_pressure = function()
+        -- value specifies the pressure amount
+        msg.midi_msgs = {{207+msg.channel,0,math.floor(value)}}
+      end
+
+      local msg_types = {
+        [DEVICE_MESSAGE.MIDI_CC] = function() handle_cc() end,
+        [DEVICE_MESSAGE.MIDI_NOTE] = function() handle_note() end,
+        [DEVICE_MESSAGE.MIDI_PITCH_BEND] = function() handle_pitch_bend() end,
+        [DEVICE_MESSAGE.MIDI_CHANNEL_PRESSURE] = function() handle_channel_pressure() end,
+        [DEVICE_MESSAGE.MIDI_KEY] = function() --[[ do nothing ]] end,
+        [DEVICE_MESSAGE.MIDI_PROGRAM_CHANGE] = function() --[[ do nothing ]] end,
+        [DEVICE_MESSAGE.MIDI_NRPN] = function() --[[ do nothing ]] end,
+      }
+
+      if msg_types[msg.context] then 
+        msg_types[msg.context]()
+      end 
 
     end
   end
 
-  -- flag as virtually generated message
   msg.is_virtual = true
-
   msg.device = self.device
 
-  -- send the message
   self.device.message_stream:input_message(msg)
 
 end
-
 
 --------------------------------------------------------------------------------
 
@@ -739,13 +697,11 @@ function Display:_walk_table(t, done, deep)
   deep = deep and deep + 1 or 1  --  
   done = done or {}
 
-
   -- remember and increase id (all node types)
   local register_param = function(param,id)
     param.xarg.id = tostring(id)
     self.state_ctrl.registered_ids[id] = param
   end
-
 
   for key, value in pairs(t) do
     if (type(value) == "table" and not done[value]) then
@@ -947,7 +903,6 @@ function Display:_walk_table(t, done, deep)
   end
 end
 
-
 --------------------------------------------------------------------------------
 
 --- Validate/fix groups and try to give the control map author some
@@ -980,8 +935,6 @@ function Display:_validate_group(xarg)
     xarg.name = "Undefined"
   end
 end
-
- 
  
 --------------------------------------------------------------------------------
 
