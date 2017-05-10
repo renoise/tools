@@ -1106,7 +1106,7 @@ end
 --------------------------------------------------------------------------------
 -- adds notifiers to song
 -- invoked when a new document becomes available
--- @see also: Duplex.Automateable._attach_to_song
+-- @see Duplex.Automateable._attach_to_song
 
 function Mixer:_attach_to_song()
   TRACE("Mixer:_attach_to_song")
@@ -1294,7 +1294,7 @@ function Mixer:_attach_to_tracks(new_song)
           if (self.active) then
             local value = volume.value
             -- compensate for potential loss of precision 
-            if not self._record_mode and not 
+            if not 
               cLib.float_compare(self._controls.volume[control_index].value, value, 1000) 
             then
               self:set_track_volume(control_index, value)
