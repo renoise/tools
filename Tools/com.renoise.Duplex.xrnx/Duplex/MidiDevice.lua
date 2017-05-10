@@ -573,16 +573,11 @@ function MidiDevice:build_message(value_str,msg_value,msg_context,msg_channel,ms
 
   if (value_str) then
 
-    --print("*** msg_context",msg_context)
-    --print("*** msg_value",msg_value)
-    --print("*** value_str,msg_value",value_str,msg_value)
-
     -- add the channel info to the value
     value_str = string.format("%s|Ch%i",value_str,msg_channel)
 
     -- retrieve all matching parameters
     local params = self.control_map:get_midi_params(value_str)
-    --print("get_midi_params",#params)
 
     -- pass unmatched messages to renoise?
     if (#params == 0) then
@@ -592,9 +587,6 @@ function MidiDevice:build_message(value_str,msg_value,msg_context,msg_channel,ms
     end
 
     for k,param in ipairs(params) do
-
-      --print("param.xarg",rprint(param.xarg))
-
       -- when we have received a 14-bit message, but the parameters
       -- explicitly specifies a 7-bit mode, scale value to 7-bit range
       if (bit_depth == 14) and
@@ -639,56 +631,29 @@ function MidiDevice:sysex_callback(message)
   end
   
   -- MMC functionality is emulated here:
-
-  if (#message == 6) then
-    if (message[2] == 127) and
-      -- (message[3]) device id is irrelevant
-      (message[4] == 6) then
-
-      if (message[5] == 1) then 
-        --print("MMC Start")
-        rns.transport:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
-      elseif (message[5] == 2) then 
-        --print("MMC Stop")
-        rns.transport:stop()
-      elseif (message[5] == 3) then
-        --print("MMC Deferred play")
-        rns.transport:start(renoise.Transport.PLAYMODE_CONTINUE_PATTERN)
-      elseif (message[5] == 4) then
-        --print("MMC Fast Forward")
-        local play_pos = rns.transport.playback_pos
-        play_pos.sequence = play_pos.sequence + 1
-        local seq_len = #rns.sequencer.pattern_sequence
-        if (play_pos.sequence <= seq_len) then
-          local new_patt_idx = rns.sequencer.pattern_sequence[play_pos.sequence]
-          local new_patt = rns:pattern(new_patt_idx)
-          if (play_pos.line > new_patt.number_of_lines) then
-            play_pos.line = 1
-          end
-          rns.transport.playback_pos = play_pos
+  if duplex_preferences.mmc_transport_enabled.value then
+    if (#message == 6) then
+      if (message[2] == 127) and
+        -- (message[3]) device id is irrelevant
+        (message[4] == 6) 
+      then
+        if (message[5] == 1) then -- MMC Stop
+          rns.transport:stop()
+        elseif (message[5] == 2) then -- MMC Play
+          rns.transport:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
+        elseif (message[5] == 3) then -- MMC Deferred Play
+          rns.transport:start(renoise.Transport.PLAYMODE_CONTINUE_PATTERN)
+        elseif (message[5] == 4) then -- MMC Fast Fwd
+          xTransport.forward()
+        elseif (message[5] == 5) then -- MMC Rewind
+          xTransport.rewind()
+        elseif (message[5] == 6) then -- MMC Punch In
+          rns.transport.edit_mode = true
+        elseif (message[5] == 7) then -- MMC Punch Out
+          rns.transport.edit_mode = false
+        elseif (message[5] == 9) then -- MMC Pause
+          rns.transport:stop()
         end
-      elseif (message[5] == 5) then
-        --print("MMC Rewind")
-        local play_pos = rns.transport.playback_pos
-        play_pos.sequence = play_pos.sequence - 1
-        if (play_pos.sequence < 1) then
-          play_pos.sequence = 1
-        end
-        local new_patt_idx = rns.sequencer.pattern_sequence[play_pos.sequence]
-        local new_patt = rns:pattern(new_patt_idx)
-        if (play_pos.line > new_patt.number_of_lines) then
-          play_pos.line = 1
-        end
-        rns.transport.playback_pos = play_pos
-      elseif (message[5] == 6) then
-        --print("MMC Record Strobe")
-        rns.transport.edit_mode = true
-      elseif (message[5] == 7) then
-        --print("MMC Record Exit")
-        rns.transport.edit_mode = false
-      elseif (message[5] == 9) then
-        --print("MMC Pause")
-        rns.transport:stop()
       end
     end
   end
@@ -701,6 +666,7 @@ end
 -- (used by send_cc, send_pitch_bend etc. methods)
 
 function MidiDevice:send_midi(msg)
+  TRACE("MidiDevice:send_midi(msg)",msg)
 
   if (not self.midi_out or not self.midi_out.is_open) then
     return
