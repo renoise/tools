@@ -14,7 +14,7 @@ These steps are optional, but might provide a better experience.
 Duplex recieves MIDI input directly from your devices, and these devices are not necessarily the same as the ones you've selected in the Renoise MIDI preferences - the tool has a completely independant input/output system.  
 For this reason, you might want to consider disabling the device in Renoise preferences, or messages might arrive twice. 
 
-This doesn't necessarily mean that you will loose your existing MIDI mappings - Duplex has a useful feature which allows you to pass 'unhandled' MIDI messages through to Renoise. Please [look here](Concepts.md#midi-through--pass-unhandled-messages) for more details. 
+This doesn't necessarily mean that you will loose your existing MIDI mappings - Duplex has a useful feature which allows you to pass 'unhandled' MIDI messages through to Renoise. Please [look here](Concepts.md#midi-thru--pass-unhandled-messages) for more details. 
 
 
 ### Enable the Renoise OSC Server 

@@ -69,7 +69,7 @@ Each configuration has a settings dialog, which contain the device configuration
 | ------------- |---------------|
 |In|MIDI Input port for the device
 |Out|MIDI Output port for the device
-|Pass Unhandled Messages|Lets unmapped parameters (buttons and sliders) pass their MIDI messages on to Renoise. [Learn more](Concepts.md#midi-through--pass-unhandled-messages) about this feature.
+|Pass Unhandled Messages|Lets unmapped parameters (buttons and sliders) pass their MIDI messages on to Renoise. [Learn more](Concepts.md#midi-thru--pass-unhandled-messages) about this feature.
 
 #### OSC Device Settings
 
