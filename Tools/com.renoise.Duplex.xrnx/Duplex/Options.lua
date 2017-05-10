@@ -94,7 +94,7 @@ function Options:_create_content_view()
       margin = DEFAULT_MARGIN,
       spacing = DEFAULT_SPACING,      
       vb:text{
-        text = "Record options",
+        text = "MIDI & Recording",
         font = "bold",
       },
       vb:row{
@@ -104,16 +104,6 @@ function Options:_create_content_view()
         vb:text{
           text = "High-res automation"
         }
-      },
-    },
-    vb:column{
-      style = "group",
-      width = "100%",
-      margin = DEFAULT_MARGIN,
-      spacing = DEFAULT_SPACING,      
-      vb:text{
-        text = "MIDI options",
-        font = "bold",
       },
       vb:row{
         vb:checkbox{
