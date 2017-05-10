@@ -1,5 +1,13 @@
 # Duplex Changelog
 
+## 1.02
+
+- Core: replace OscClient with xOscClient
+- Added: Detect Renoise OSC server on startup
+- Added: Tool options dialog + clean up menu
+- StepSequencer: Changed default options (always write, enable preview and note names)
+- Updated documentation
+
 ## 1.01
 
 - Core: Several classes have been replaced with their cLib/xLib counterparts. 
