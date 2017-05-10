@@ -1,5 +1,12 @@
 # Duplex Changelog
 
+## 1.03
+- Core: Improve performance by using table-based lookups where possible
+- Added: MMC transport control is now optional, can be enabled/disabled via options
+- Added: pitch-bend as an additional input method for the UISlider component
+  (this also fixes issue with Mackie Control: https://github.com/renoise/xrnx/issues/50)
+- Fixed: StepSequencer: error when pressing button in out-of-bounds area
+
 ## 1.02
 
 - Core: replace OscClient with xOscClient
