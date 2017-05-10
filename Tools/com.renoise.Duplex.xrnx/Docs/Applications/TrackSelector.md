@@ -6,6 +6,8 @@
 
 The Duplex TrackSelector application allows you to select between tracks, including shortcuts for master & send tracks
 
+* Supports [paged navigation](../Concepts.md#paged-navigation)
+
 ## Available mappings
 
 | Name       | Description   |

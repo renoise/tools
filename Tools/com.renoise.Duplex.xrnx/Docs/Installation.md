@@ -11,13 +11,21 @@ These steps are optional, but might provide a better experience.
 
 ### Review your MIDI device preferences
 
-Duplex is able to complement or replace a MIDI configuration for Renoise. If you are planning to use specific MIDI hardware exclusively with Duplex, you might want to let it be the single source for receiving those messages. This can potentially avoid that "orphaned" MIDI messages (such as control-change message with no mappings) are processed by Renoise as well as Duplex.
+Duplex recieves MIDI input directly from your devices, and these devices are not necessarily the same as the ones you've selected in the Renoise MIDI preferences - the tool has a completely independant input/output system.  
+For this reason, you might want to consider disabling the device in Renoise preferences, or messages might arrive twice. 
+
+This doesn't necessarily mean that you will loose your existing MIDI mappings - Duplex has a useful feature which allows you to pass 'unhandled' MIDI messages through to Renoise. Please [look here](Concepts.md#midi-through--pass-unhandled-messages) for more details. 
+
 
 ### Enable the Renoise OSC Server 
 
-Some features in Duplex is relying on the internal OSC server.  
-... TODO
+When you first start Duplex, it will attempt to detect if the server is running and show you a message if the server could not be found. The internal OSC server in Renoise will allow Duplex to send MIDI messages to Renoise. Therefore, it needs to be enabled before applications such as Keyboard will work as expected.
 
+Enabling the server is done through `Renoise > Preferences > OSC`. You will need to set Duplex to the exact same configuration as Renoise, which by default is the following:
+
+    Protocol: Udp
+    Host: 127.0.0.1
+    Port: 8000
 
 #
 

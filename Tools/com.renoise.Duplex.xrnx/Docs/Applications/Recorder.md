@@ -9,6 +9,7 @@ Use the Recorder application to record and loop any signal that you feed into Re
 * Flexible mappings: record using buttons, dials etc.
 * Loop samples with different lengths, allowing for poly-rhythms.
 * Supports sessions - restore recorded sessions next song is loaded
+* Supports [paged navigation](../Concepts.md#paged-navigation)
 
 ### How it works
 

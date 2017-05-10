@@ -6,6 +6,13 @@
 
 The Duplex StepSequencer is a step sequencer for grid/pad-based controllers. You operate it by holding and pressing buttons in specific combinations - as a consequence, your controller must be able to send both press and release events. 
 
+Features at a glance: 
+
+* Multiple grid layouts (multi/single track)
+* Copy/paste of notes, "batch" adjust volume and pitch
+* Realtime preview (trigger instrument notes)
+* Supports [paged navigation](../Concepts.md#paged-navigation) for tracks and lines
+
 ## Modes/Layouts 
 
 The sequencer can be used in two different modes:

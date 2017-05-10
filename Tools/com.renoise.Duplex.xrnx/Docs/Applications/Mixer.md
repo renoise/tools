@@ -4,6 +4,10 @@
 
 ## Features
 
+### Paged navigation
+
+The Mixer supports [paged navigation](../Concepts.md#paged-navigation) for all its parameter groups: volume/panning/mute/solo
+
 ### Parameter pick-up
 
 When the 'soft takeover' option is enabled, values will not be changed until you move a fader across the threshold point (the current value). This helps to avoid sudden jumps in levels.
@@ -47,7 +51,7 @@ Assigning the levels, mute and/or solo mapping to the same group (the grid) will
 
 | Name          | Description   |
 | ------------- |---------------|  
-|`page_size`|Specify the step size when using paged navigation|  
+|`page_size`|Specify the step size when using [paged navigation](../Concepts.md#paged-navigation)|  
 |`record_method`|Determine if/how to record automation |  
 |`sync_pre_post`|Decide if switching Pre/Post is reflected <br>both in Renoise and on the controller|  
 |`pre_post`|Change if either Pre or Post FX volume/pan is controlled|  
