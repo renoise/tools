@@ -1,11 +1,12 @@
---[[============================================================================
+--[[===============================================================================================
 -- Duplex.UISlider
 -- Inheritance: UIComponent > UISlider
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 The Slider supports different input methods: buttons or faders/dials.
 
+## Nodes
 
 ### Dial mode / fader mode
 
@@ -46,36 +47,37 @@ The Slider supports different input methods: buttons or faders/dials.
   Setting this to true will enable you to toggle off any active button, and thus 
   gain an extra value-step from any series of buttons. 
 
-### Other features
+## Other features
 
 - Built-in quantize for MIDI devices (only output when values change)
-- Built-in support for relative encoder/dials. The actual type of relative encoder is specified in your control-map (see @{Duplex.Globals.PARAM_MODE})
+- Built-in support for relative encoder/dials. The actual type of encoder 
+  is specified in your control-map (see @{Duplex.Globals.PARAM_MODE})
 
-### Examples
+## Examples
 
   Duplex comes with a sample configuration for the UISlider. Launch the
   duplex browser and choose Custombuilt > UISlider Demo
 
-### Changelog
+## Changelog
 
-  0.99.5
-    - Added support for 14-bit CC and NRPN (absolute/relative modes)
-    - Encoder acceleration (amount specified in Duplex prefs)
+1.03
+- Added pitch-bend as an additional input method
 
-  0.99
-    - Got rid of "dimmed" method (just call set_palette instead)
-    - Support ORIENTATION.NONE for two-dimensional layout
+0.99.5
+- Added support for 14-bit CC and NRPN (absolute/relative modes)
+- Encoder acceleration (amount specified in Duplex prefs)
 
-
-
+0.99
+- Got rid of "dimmed" method (just call set_palette instead)
+- Support ORIENTATION.NONE for two-dimensional layout
 
 --]]
 
---==============================================================================
+--=================================================================================================
 
 class 'UISlider' (UIComponent)
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Initialize the UISlider class
 -- @param app (@{Duplex.Application})
@@ -149,7 +151,7 @@ function UISlider:__init(app,map)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- A button was pressed
 -- @param msg (@{Duplex.Message})
@@ -182,7 +184,7 @@ function UISlider:do_press(msg)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- A value was changed (slider, dial)
 -- set index + precise value within the index
@@ -372,7 +374,7 @@ function UISlider:do_change(msg)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Check if parameter-quantization is in force
 -- @param val (number) a value between floor and ceiling
@@ -404,7 +406,7 @@ function UISlider:output_quantize(val,mode)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Set the value (will also update the index)
 -- @param val (float), a number between 0 and .ceiling
@@ -427,7 +429,7 @@ function UISlider:set_value(val,skip_event)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Set index (will also update the value)
 -- @param idx (integer) 
@@ -450,7 +452,7 @@ function UISlider:set_index(idx,skip_event)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Set the slider orientation 
 -- (only relevant when assigned to buttons)
@@ -469,7 +471,7 @@ function UISlider:set_orientation(value)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Get the orientation 
 -- @return @{Duplex.Globals.ORIENTATION}
@@ -480,9 +482,9 @@ function UISlider:get_orientation()
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Overridden from UIComponent
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Override UIComponent with this method
 -- @param size (int)
@@ -508,7 +510,7 @@ function UISlider:set_size(size,opt)
   end
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Expanded UIComponent test
 -- @param msg (@{Duplex.Message})
@@ -546,7 +548,7 @@ function UISlider:test(msg)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Update the appearance - inherited from UIComponent
 -- @see Duplex.UIComponent
@@ -621,7 +623,7 @@ function UISlider:draw()
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Set the position using x/y or index within group
 -- @see Duplex.UIComponent
@@ -636,7 +638,7 @@ function UISlider:set_pos(x,y)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Add event listeners
 --    DEVICE_EVENT.BUTTON_PRESSED
@@ -649,21 +651,29 @@ function UISlider:add_listeners()
   self:remove_listeners()
 
   if self.on_press then
-    self.app.display.device.message_stream:add_listener(
-      self,DEVICE_EVENT.BUTTON_PRESSED,
-      function(msg) return self:do_press(msg) end )
+    self.app.display.device.message_stream:add_listener(self,DEVICE_EVENT.BUTTON_PRESSED,
+      function(msg) 
+        return self:do_press(msg) 
+      end
+    )
   end
 
   if self.on_change then
-    self.app.display.device.message_stream:add_listener(
-      self,DEVICE_EVENT.VALUE_CHANGED,
-      function(msg) return self:do_change(msg) end )
+    self.app.display.device.message_stream:add_listener(self,DEVICE_EVENT.VALUE_CHANGED,
+      function(msg) 
+        return self:do_change(msg) 
+      end 
+    )
+    self.app.display.device.message_stream:add_listener(self,DEVICE_EVENT.PITCH_CHANGED,
+      function(msg) 
+        return self:do_change(msg) 
+      end 
+    )
   end
 
 end
 
-
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Remove previously attached event listeners
 -- @see Duplex.UIComponent
@@ -671,20 +681,15 @@ end
 function UISlider:remove_listeners()
   TRACE("UISlider:remove_listeners()")
 
-  self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT.BUTTON_PRESSED)
-
-  self.app.display.device.message_stream:remove_listener(
-    self,DEVICE_EVENT.VALUE_CHANGED)
-
+  self.app.display.device.message_stream:remove_listener(self,DEVICE_EVENT.BUTTON_PRESSED)
+  self.app.display.device.message_stream:remove_listener(self,DEVICE_EVENT.VALUE_CHANGED)
+  self.app.display.device.message_stream:remove_listener(self,DEVICE_EVENT.PITCH_CHANGED)
 
 end
 
-
-
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Private
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Determine index by position, depends on orientation
 -- @param column (Number)
@@ -715,7 +720,7 @@ function UISlider:_determine_index_by_pos(column,row)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Trigger the external handler method
 -- @return true when message was handled, false when not
@@ -738,7 +743,7 @@ function UISlider:_invoke_handler()
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Detect if the control is assigned to button widget(s)
 
