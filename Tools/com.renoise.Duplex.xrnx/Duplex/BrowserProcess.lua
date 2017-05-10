@@ -624,7 +624,7 @@ function BrowserProcess:show_settings_dialog()
   end
 
   self._settings_dialog = renoise.app():show_custom_dialog(
-    "Duplex: Device Settings", self._settings_view)
+    "Duplex: Device / Configuration", self._settings_view)
 
 
 end
