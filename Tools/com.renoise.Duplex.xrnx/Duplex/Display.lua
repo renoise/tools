@@ -650,7 +650,7 @@ function Display:generate_message(value, param, released)
         msg.midi_msgs = {{143+msg.channel,note_pitch,value[2]}}
       end
 
-      local handle_pitch_bend_ = function()
+      local handle_pitch_bend = function()
         -- value specifies the pitch bend amount
         msg.midi_msgs = {{223+msg.channel,math.floor(value),0}}
       end
