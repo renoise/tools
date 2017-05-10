@@ -190,7 +190,7 @@ Sysex messages are often used for messages that deal with highly specific aspect
 
 ## xRules Lua Reference
 
-xRules is using a 'sandboxed' environment to execute lua code. From here, you can access Renoise API features as well as a number of additional methods and properties, as defined by xRules:
+xRules is using a 'sandboxed' environment to execute lua code. From here, you can access [Renoise API features](https://github.com/renoise/xrnx/tree/master/Documentation) as well as a number of additional methods and properties, as defined by xRules:
 
 ### Methods
 
