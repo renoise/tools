@@ -89,17 +89,13 @@ function Browser:__init(initial_configuration, start_configuration)
   --- (string) set when we temporarily have selected "None" as device, 
   -- and want to revert the list choice 
   self._requested_device = nil
-  
-  --- (string) cast OSC host as standard types instead of Observable-X types,
-  -- as the socket will only accept basic string & numbers as arguments
-  local osc_host = duplex_preferences.osc_server_host.value
 
-  --- (int) OSC port address - cast as standard types instead of Observable-X types
-  local osc_port = duplex_preferences.osc_server_port.value
-
-  --- (@{Duplex.OscClient}) takes care of sending internally routed notes
+  --- (xOscClient) takes care of sending internally routed notes
   -- to Renoise (not created if host/port is not defined)
-  self._osc_client = OscClient(osc_host,osc_port)
+  self._osc_client = xOscClient{
+    osc_host = duplex_preferences.osc_server_host.value,
+    osc_port = duplex_preferences.osc_server_port.value,
+  }
   
   --- (@{Duplex.OscVoiceMgr}) the voice manager is handling triggered note messages
   -- (needs the osc_client)
@@ -108,10 +104,9 @@ function Browser:__init(initial_configuration, start_configuration)
   --- (renoise.ViewBuilder) viewbuilder for all our views
   self._vb = renoise.ViewBuilder()
   
-  --- (renoise.Dialog) referenc to the main dialog 
+  --- (renoise.Dialog) reference to the main dialog 
   self._dialog = nil
   
-
   -- build the GUI
   -------------------------------------
 
@@ -132,6 +127,15 @@ function Browser:__init(initial_configuration, start_configuration)
   ---- attach to configuration settings
   -------------------------------------
 
+  -- OSC Client changed
+  duplex_preferences.osc_server_host:add_notifier(function()
+    self._osc_client.osc_host = duplex_preferences.osc_server_host.value
+  end)
+
+  duplex_preferences.osc_server_port:add_notifier(function()
+    self._osc_client.osc_port = duplex_preferences.osc_server_port.value
+  end)
+
   -- MIDI port setup changed
   renoise.Midi.devices_changed_observable():add_notifier(
     Browser._available_device_ports_changed, self
@@ -151,8 +155,56 @@ function Browser:__init(initial_configuration, start_configuration)
       )
     end
   end    
+
+  -- debug options changes
+  duplex_preferences.dump_midi:add_notifier(function()
+    self:set_dump_midi(duplex_preferences.dump_midi.value)
+    if duplex_preferences.dump_midi.value then
+      local msg = "You have selected to dump MIDI data into the Renoise scripting console"
+                .."\nThis is useful when you want to identify some problem, or figure out"
+                .."\nwhich messages your device is transmitting."
+                .."\n"
+                .."\nNote that you have to enable scripting in Renoise before you can see"
+                .."\nthe scripting console (howto: https://github.com/renoise/xrnx)"
+      renoise.app():show_message(msg)
+    end
+
+  end)
+
+  duplex_preferences.dump_osc:add_notifier(function()
+    self:set_dump_osc(duplex_preferences.dump_osc.value)
+    if duplex_preferences.dump_osc.value then
+      local msg = "You have selected to dump OSC messages into the Renoise scripting console"
+                .."\nThis is useful when you want to identify some problem, or figure out"
+                .."\nwhich messages your device is transmitting."
+                .."\n"
+                .."\nNote that you have to enable scripting in Renoise before you can see"
+                .."\nthe scripting console (howto: http://code.google.com/p/xrnx/)"
+      renoise.app():show_message(msg)
+    end
+  end)
+
+  ---- test connection to osc server
+  -------------------------------------
+  if duplex_preferences.run_server_test.value then
+    self:run_server_test()
+  end
+
 end
 
+--------------------------------------------------------------------------------
+
+function Browser:run_server_test()
+  TRACE("Browser:run_server_test()")
+
+  local obs = self._osc_client._test_failed_observable
+  if not obs:has_notifier(failed_osc_test) then
+    self._osc_client._test_failed_observable:add_notifier(failed_osc_test)  
+  end
+  
+  self._osc_client:_detect_server()
+
+end
 
 --------------------------------------------------------------------------------
 
