@@ -124,7 +124,6 @@ INPUT_TYPE = {
   "dial",             -- basic rotary encoder 
   "xypad",            -- XY pad 
   "keyboard",         -- keyboard
-  "key",              -- key (drum-pad)
   "label",            -- text display
 }
 
