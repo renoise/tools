@@ -47,6 +47,9 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   --- (boolean) enable highres recording for xAutomation 
   highres_automation = true,
 
+  --- (boolean) enable MMC transport messages (see MidiDevice)
+  mmc_transport_enabled = true,
+
   --- (number) the seconds required to trigger `DEVICE_EVENT.BUTTON_HELD`
   -- fractional values are supported, 0.5 is half a second
   button_hold_time = 0.5,
