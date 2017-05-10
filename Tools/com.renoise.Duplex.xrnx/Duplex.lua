@@ -10,7 +10,7 @@
 
 rns = nil
 _trace_filters = nil
---_trace_filters = {"^UIButton*"}
+_trace_filters = {"^xOscClient*"}
 --_trace_filters = {"^StateController*"}
 --_trace_filters = {"^Recorder*","^UISlider*"}
 --_trace_filters = {".*"}
@@ -31,6 +31,7 @@ require (_xlibroot.."xTrack")
 require (_xlibroot.."xTransport")
 require (_xlibroot.."xScale")
 require (_xlibroot.."xInstrument")
+require (_xlibroot.."xOscClient")
 require (_xlibroot.."xNoteColumn")
 require (_xlibroot.."xPatternSequencer")
 require (_xlibroot.."xSongSettings")
@@ -63,11 +64,12 @@ require "Duplex/ControlMap"
 require "Duplex/Device"
 require "Duplex/MidiDevice"
 require "Duplex/OscDevice"
-require "Duplex/OscClient"
+--require "Duplex/OscClient"
 require "Duplex/OscVoiceMgr"
 require "Duplex/Application"
 require "Duplex/Automateable" -- extends Application
 require "Duplex/RoamingDSP" -- extends Automateable
+require "Duplex/Options"
 require "Duplex/Browser"
 require "Duplex/BrowserProcess"
 
