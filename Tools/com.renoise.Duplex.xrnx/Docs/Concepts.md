@@ -34,5 +34,29 @@ The feature is implemented as a checkbox in the [device-configuration dialog](Ge
 
 > Strictly speaking, you don't need unmapped parameters to try out this feature. Just follow the instructions here, while making sure that the application is not running. This works, as only running applications will try to handle messages. 
 
+## MMC Transport Control
+
+Duplex has built-in support for a set of MMC commands, providing direct control over the Renoise transport. These commands are evaluated as long as the following conditions are true:
+
+* The MIDI device sending the MMC messages is active in Duplex 
+* MMC has been enabled in the [Options dialog](GettingStarted.md#the-options-dialog)
+
+
+|Name |Action taken|Sysex data (hex) |
+|-----|------------|-----------------|
+|MMC Stop|      Stop playing|       F0 7F 7F 06 01 F7
+|MMC Play|      Start playing|      F0 7F 7F 06 02 F7 
+|MMC Deferred Play|Continue playing|F0 7F 7F 06 03 F7 
+|MMC Fast Fwd|  Next pattern|       F0 7F 7F 06 04 F7	 
+|MMC Rewind|    Previous pattern|   F0 7F 7F 06 05 F7	 
+|MMC Punch In|  Enable edit mode|   F0 7F 7F 06 06 F7	 
+|MMC Punch Out| Disable edit mode|  F0 7F 7F 06 07 F7	 
+|MMC Record     Pause|-|          F0 7F 7F 06 08 F7	 
+|MMC Pause|     Stop Playing|       F0 7F 7F 06 09 F7	 
+|MMC Eject|     -|                F0 7F 7F 06 0A F7	 
+|MMC Chase|     -|                F0 7F 7F 06 0B F7	 
+|MMC Cmd Error Reset|-|           F0 7F 7F 06 0C F7	 
+|MMC Reset|-|                     F0 7F 7F 06 0D F7	 
+
 
 

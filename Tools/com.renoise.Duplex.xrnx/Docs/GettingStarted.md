@@ -46,13 +46,13 @@ The Options dialog can be launched from the tool menu.
 |Show browser|Display the Duplex browser, the primary UI for displaying and navigating devices
 |Display on startup| Enable this to show the Duplex browser on startup. This will only have an effect when one or more device configurations have been selected to “autostart”
 |High-res automation| Enable high-res automation recording for all applications that implement [Automateable](Applications/Automateable.md)
+|Enable MMC transport| Allow direct control of the Renoise transport via [MMC Messages](Concepts.md#mmc-transport-control)
 |OSC Protocol| The Renoise OSC server protocol that Duplex requires
 |OSC Host| The OSC host that Duplex should connect to
 |OSC Host| The OSC port number that Duplex should use
 |Dump MIDI| Print MIDI messages to the Renoise scripting terminal
 |Dump OSC| Print OSC messages to the Renoise scripting terminal
 |Links & Resources| Online documentation and support (open links in browser)
-
 
 
 ### The Device / Configuration dialog
