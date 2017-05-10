@@ -272,53 +272,6 @@ end
 
 --------------------------------------------------------------------------------
 
---- figure out the physical dimensions of a given group 
--- @param group_name (string) control-map group name
--- @return width (int)
--- @return height (int)
---[[
-function Display:get_group_dimensions(group_name)
-  TRACE("Display:resize_group(group_name)",group_name)
-
-  local cm = self.device.control_map
-  local group_params = cm:get_params(group_name)
-  if group_params then
-    local group = cm.groups[group_name]
-    local columns = group.columns
-    local row_count, col_count = 1,1
-    local total_height, total_width = 0,0
-    local row_width, row_height = 0,0
-    for k,grp_param in ipairs(group_params) do
-
-      local grp_widget = self.vb.views[grp_param.xarg.id]
-      if grp_widget.visible then
-        row_width = row_width + grp_widget.width
-        row_height = math.max(row_height,grp_widget.height)
-      end
-
-      col_count = col_count+1
-
-      if (col_count > columns) then
-        -- remember the width and height of this row
-        total_width = math.max(total_width,row_width)
-        total_height = total_height + row_height
-        row_width,row_height = 0,0
-        col_count = 1
-        row_count = row_count+1
-      end
-
-    end
-
-    return total_width,total_height
-
-  end
-
-
-end
-]]
-
---------------------------------------------------------------------------------
-
 --- Update any UIComponent that has been modified since the last update
 -- (called continously)
 
@@ -328,7 +281,7 @@ function Display:update(foo)
   if (not self.view) then
     return
   end
-
+  
   if(self.scheduler)then
     self.scheduler:on_idle()
   end
