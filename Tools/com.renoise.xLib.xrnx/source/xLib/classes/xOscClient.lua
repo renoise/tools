@@ -299,7 +299,7 @@ function xOscClient:_test_idle_notifier()
   end
 
   local clock_diff = os.clock() - self._test_clock
-  if (clock_diff > 0.2) then -- failed test 
+  if (clock_diff > 1) then -- failed test 
     remove_obs()
     self._test_failed_observable:bang()
   else
