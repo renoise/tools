@@ -259,7 +259,9 @@ end
 
 --------------------------------------------------------------------------------
 -- Confirm that the internal OSC server is configured and running - 
--- TODO: switch to API method for detection once available
+-- TODO: switch to API method for detection once available, this method is 
+-- only reliable for as long as there are no more than 3 concurrent attempts
+-- (after that, the active_clipboard_index will point to the original value)
 
 function xOscClient:_detect_server()
   TRACE("xOscClient:_detect_server()")
