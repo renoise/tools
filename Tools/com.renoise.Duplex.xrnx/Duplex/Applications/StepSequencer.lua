@@ -1387,7 +1387,7 @@ end
 
 --------------------------------------------------------------------------------
 -- Check if a given track is within the visible range
--- @param track_idx (int)
+-- @param rns_track_idx (int)
 -- @return boolean
 
 function StepSequencer:_track_is_visible(rns_track_idx)
