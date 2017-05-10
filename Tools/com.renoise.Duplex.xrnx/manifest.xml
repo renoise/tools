@@ -2,11 +2,11 @@
 <RenoiseScriptingTool>
   <ApiVersion>5.0</ApiVersion>
   <Id>com.renoise.Duplex</Id>
-  <Version>1.01</Version>
+  <Version>1.02</Version>
   <Author>danoise [bjorn.nesby@googlemail.com]</Author>
   <Name>Duplex Browser</Name>
-  <Category>Midi Controllers</Category>
-  <Description>Main userinterface for Duplex, the official Renoise scripting API for working with OSC &amp; MIDI controller devices. The Duplex browser allows you to select applications (Mixer, Matrix, Effect...) and run them on supported devices. Creates a new menu 'Duplex' in the global 'Tools' menu.</Description>
+  <Category>Midi Controllers, OSC Controllers</Category>
+  <Description>Duplex is a collection of scripts that can run on a wide range of hardware, and offer full, bi-directional control of the Renoise mixer/effects/pattern matrix. Creates a new menu 'Duplex' in the global 'Tools' menu.</Description>
   <Icon />
 </RenoiseScriptingTool>
 
