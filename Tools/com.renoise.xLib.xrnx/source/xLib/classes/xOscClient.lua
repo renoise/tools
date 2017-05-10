@@ -1,16 +1,15 @@
 --[[============================================================================
--- Duplex.xOscClient
+-- xLib.xOscClient
 ============================================================================]]--
 
 --[[--
 
-xOscClient is a simple OSC client 
+xOscClient wraps a renoise.Socket with some handy methods 
 .
 #
 
 * Connects to the built-in OSC server in Renoise, 
 * Produce realtime messages (notes or MIDI messages)
-
 
 --]]
 
@@ -18,10 +17,12 @@ xOscClient is a simple OSC client
 
 class 'xOscClient' 
 
+  xOscClient.MIN_PORT = 1024
+  xOscClient.MAX_PORT = 65535
+
 --------------------------------------------------------------------------------
 -- [Constructor] Accepts a table argument for initializing the class 
 -- @param table{
---    first_run (boolean),
 --    osc_host (string),
 --    osc_port (number)
 --  }
@@ -30,10 +31,6 @@ function xOscClient:__init(...)
   TRACE("xOscClient:__init(...)")
 
   local args = cLib.unpack_args(...)
-
-  -- bool, display a message the first time a note message is sent
-  self.first_run = property(self.get_first_run,self.set_first_run)
-  self.first_run_observable = renoise.Document.ObservableBoolean()
 
   --- string
   self.osc_host = property(self.get_osc_host,self.set_osc_host)
@@ -45,14 +42,22 @@ function xOscClient:__init(...)
 
   -- internal --
 
+  -- number, used for internal server test 
+  self._test_clock = nil
+  self._test_new_value = nil
+  self._test_old_value = nil
+  self._test_failed_observable = renoise.Document.ObservableBang()
+  self._test_passed_observable = renoise.Document.ObservableBang()
+
   --- the socket connection, nil if not established
   self._connection = nil
 
   -- initialize --
 
-  self.first_run = args.first_run or false
-
-  self:create(args.osc_host,args.osc_port)
+  local created,err = self:create(args.osc_host,args.osc_port) 
+  if not created and err then 
+    LOG(err)
+  end 
 
 
 end
@@ -66,16 +71,21 @@ end
 -- @return string, error message when failed
 
 function xOscClient:create(osc_host,osc_port)
+  print("xOscClient:create(osc_host,osc_port)",osc_host,osc_port)
 
   --assert(osc_host and osc_port,"Expected osc_host and osc_port as arguments")
   if not osc_host and not osc_port then
     return
   end
 
+  if self._connection then 
+    self._connection:close()
+  end
+
 	local client, socket_error = renoise.Socket.create_client(osc_host, osc_port, renoise.Socket.PROTOCOL_UDP)
 	if (socket_error) then 
     self._connection = nil
-    return false, "Warning: failed to start the internal OSC client"
+    return false, "*** Warning: xOscClient failed to start the internal OSC client"
 	else
     self._connection = client
     self.osc_host_observable.value = osc_host
@@ -95,8 +105,10 @@ end
 -- @return bool, true when triggered
 
 function xOscClient:trigger_instrument(note_on,instr,track,note,velocity)
+  TRACE("xOscClient:trigger_instrument(note_on,instr,track,note,velocity)",note_on,instr,track,note,velocity)
   
   if not self._connection then
+    LOG("*** xOscClient: can't trigger notes without a connection")    
     return false
   end
 
@@ -112,7 +124,7 @@ function xOscClient:trigger_instrument(note_on,instr,track,note,velocity)
   else
     header = "/renoise/trigger/note_off"
     -- show instructions when releasing note
-    self:_show_instructions()
+    --self:_show_instructions()
   end
 
   local osc_msg = renoise.Osc.Message(header,osc_vars)
@@ -131,6 +143,7 @@ function xOscClient:trigger_midi(t)
   TRACE("xOscClient:trigger_midi(t)",t)
   
   if not self._connection then
+    LOG("*** xOscClient: can't trigger MIDI without a connection")  
     return false
   end
 
@@ -193,7 +206,7 @@ function xOscClient:trigger_raw(xmsg)
   assert(type(xmsg)=="xMidiMessage","Expected xMidiMessage as argument")
 
   if (xmsg.message_type == xMidiMessage.TYPE.SYSEX) then
-    local err = "Warning: the internal OSC server does not support sysex messages"
+    local err = "*** Warning: the internal OSC server does not support sysex messages"
     return false,err
   end
 
@@ -206,38 +219,6 @@ function xOscClient:trigger_raw(xmsg)
 
 end
 
-
---------------------------------------------------------------------------------
--- [Class] Display usage instructions the first time the class is used
-
-function xOscClient:_show_instructions()
-
-  if self.first_run then
-    self.first_run = false
-    local msg = "IMPORTANT ONE-TIME MESSAGE"
-              .."\n"
-              .."\nTo be able to trigger instruments and send MIDI messages, the"
-              .."\ninternal OSC server in Renoise needs to be enabled (go to "
-              .."\nRenoise preferences > OSC settings to enable this feature)"
-              .."\n"
-              .."\nThanks!"
-    renoise.app():show_message(msg)
-  end
-
-end
-
---------------------------------------------------------------------------------
--- Get/set methods
---------------------------------------------------------------------------------
-
-function xOscClient:get_first_run()
-  return self.first_run_observable.value
-end
-
-function xOscClient:set_first_run(val)
-  self.first_run_observable.value = val
-end
-
 --------------------------------------------------------------------------------
 
 function xOscClient:get_osc_host()
@@ -245,7 +226,14 @@ function xOscClient:get_osc_host()
 end
 
 function xOscClient:set_osc_host(val)
+  TRACE("xOscClient:set_osc_port(val)",val)
+
   self.osc_host_observable.value = val
+  local created,err = self:create(val,self.osc_port_observable.value)  
+  if not created and err then 
+    LOG(err)
+  end 
+  
 end
 
 --------------------------------------------------------------------------------
@@ -255,9 +243,74 @@ function xOscClient:get_osc_port()
 end
 
 function xOscClient:set_osc_port(val)
+  TRACE("xOscClient:set_osc_port(val)",val)
+
+  if (val > xOscClient.MAX_PORT) or (val < xOscClient.MIN_PORT) then
+    local msg = "Cannot set to a port number outside this range: %d-%d"
+    error(msg:format(xOscClient.MAX_PORT,xOscClient.MIN_PORT))
+  end    
   self.osc_port_observable.value = val
+  local created,err = self:create(self.osc_host_observable.value,val)
+  if not created and err then 
+    LOG(err)
+  end 
+
 end
 
 --------------------------------------------------------------------------------
+-- Confirm that the internal OSC server is configured and running - 
+-- TODO: switch to API method for detection once available
 
+function xOscClient:_detect_server()
+  print("xOscClient:_detect_server()")
+
+  if not self._connection then
+    LOG("*** xOscClient: can't detect server, no connection was established")
+    return false
+  end
+
+  renoise.tool().app_idle_observable:add_notifier(self,xOscClient._test_idle_notifier)
+
+  -- trigger the change using a fairly obscure property: 
+  -- active_clipboard_index (will not modify undo history)
+  self._test_clock = os.clock()
+  self._test_old_value = renoise.app().active_clipboard_index
+  self._test_new_value = 1+(self._test_old_value%4)
+  self._connection:send(
+    renoise.Osc.Message("/renoise/evaluate", { 
+      {tag="s", value="renoise.app().active_clipboard_index = "..self._test_new_value} 
+    })
+  )  
+
+end
+
+--------------------------------------------------------------------------------
+-- Server test - check if the property was "instantly" changed (0.2s)
+
+function xOscClient:_test_idle_notifier()
+
+  local remove_obs = function()
+    local obs = renoise.tool().app_idle_observable
+    if obs:has_notifier(self,xOscClient._test_idle_notifier) then 
+      obs:remove_notifier(self,xOscClient._test_idle_notifier)
+    end
+    -- also restore old value
+    renoise.app().active_clipboard_index = self._test_old_value
+  end
+
+  local clock_diff = os.clock() - self._test_clock
+  if (clock_diff > 0.2) then -- failed test 
+    remove_obs()
+    self._test_failed_observable:bang()
+  else
+    local curr_value = renoise.app().active_clipboard_index
+    if (curr_value == self._test_new_value) then -- passed test
+      local msg = "xOscClient: Renoise OSC server was found at %s:%d"
+      LOG(msg:format(self._connection.peer_address,self._connection.peer_port))
+      remove_obs()
+      self._test_passed_observable:bang()
+    end
+  end
+
+end
 
