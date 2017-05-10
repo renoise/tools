@@ -114,6 +114,9 @@ The mode is activated immediately after you enable Playback Follow in Renoise (u
 
 ## Changelog
 
+1,02
+- Changed default options (always write, enable preview and note names)
+
 1.01
 - Tool-dev: use cLib/xLib libraries
 - Added: "cycle_layout" (mapping) - cycles through available grid modes
