@@ -584,7 +584,6 @@ MidiActions.assist_table = {
     label = "S.Mute",
     is_boolean = true,
     value_func = function(trk_idx)
-      local rns = rns
       if rns.tracks[trk_idx] then
         local seq_idx = rns.selected_sequence_index
         local is_muted = rns.sequencer:track_sequence_slot_is_muted(trk_idx, seq_idx)
@@ -659,7 +658,6 @@ MidiActions.assist_table = {
       return true
     end,
     observable = function(trk_idx)
-      local rns = rns
       local track = rns.tracks[trk_idx]
       if track then
         return rns.tracks[trk_idx].mute_state_observable
@@ -681,7 +679,6 @@ MidiActions.assist_table = {
     label = "SendTrkMuteToggle",
     is_boolean = true,
     value_func = function(send_index)
-      local rns = rns
       local track = xTrack.get_send_track(send_index)
       if track then
         if track.mute_state == renoise.Track.MUTE_STATE_ACTIVE and
@@ -693,7 +690,6 @@ MidiActions.assist_table = {
       return true
     end,
     observable = function(send_index)
-      local rns = rns
       local track = xTrack.get_send_track(send_index)
       if track then
         return track.mute_state_observable
