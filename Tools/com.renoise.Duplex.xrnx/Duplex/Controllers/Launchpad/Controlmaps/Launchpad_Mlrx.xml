@@ -234,10 +234,10 @@
 
 					<Row>
 						<Group name="track_controls" >
-							<Param value="E-8" type="button" maximum="127" minimum="0"/>
-							<Param value="F-8" type="button" maximum="127" minimum="0"/>
-							<Param value="F#8" type="button" maximum="127" minimum="0"/>
-							<Param value="G-8" type="button" maximum="127" minimum="0"/>
+							<Param value="E-8" type="button" maximum="127" minimum="0" aspect="0.66" size="1.5" />
+							<Param value="F-8" type="button" maximum="127" minimum="0" aspect="0.66" size="1.5" />
+							<Param value="F#8" type="button" maximum="127" minimum="0" aspect="0.66" size="1.5" />
+							<Param value="G-8" type="button" maximum="127" minimum="0" aspect="0.66" size="1.5" />
 							<Param value="G#8" type="button" maximum="127" minimum="0"/>
 							<Param value="A-8" type="button" maximum="127" minimum="0"/>
 							<Param value="A#8" type="button" maximum="127" minimum="0"/>
@@ -248,7 +248,7 @@
 							<Param type="label" size="3" aspect="0.33" text="lock cycle to\nedit-step"/>
 						</Group>
 						<Group name="automation">
-							<Param value="C-9" type="button" maximum="127" minimum="0"/>
+							<Param value="C-9" type="button" maximum="127" minimum="0" aspect="0.66" size="1.5" />
 							<Param type="label" size="2" aspect="0.33" text="automate"/>
 						</Group>
 					</Row>
@@ -268,22 +268,29 @@
 							<Param type="button" maximum="1" minimum="0"/>
 							<Param type="button" maximum="1" minimum="0"/>
 						</Group>
+            <Group name="drift" >
+              <Param type="label" size="1.75" aspect="0.6" text="drifting"/>
+              <Param type="dial" maximum="1" minimum="0"/>
+              <Param type="button" maximum="1" minimum="0"/>
+            </Group>
+            
 					</Row>
 					<Row>
 						<Group name="source_mode" >
 							<Param type="label" size="1.75" aspect="0.6" text="sound\nsource"/>
-							<Param type="button" maximum="1" minimum="0"/>
-							<Param type="button" maximum="1" minimum="0"/>
+							<Param type="button" aspect="0.66" size="1.5" maximum="1" minimum="0"/>
+							<Param type="button" aspect="0.66" size="1.5" maximum="1" minimum="0"/>
 						</Group>
-						<Group name="toggle_loop" orientation="horizontal" rows="5" >
+						<Group name="toggle_loop" orientation="horizontal"  >
 							<Param type="label" size="1.75" aspect="0.6" text="sample\nloop"/>
 							<Param type="button" maximum="1" minimum="0"/>
 
 						</Group>
-						<Group name="shuffle" orientation="horizontal" rows="5" >
+						<Group name="shuffle" orientation="horizontal"  >
 							<Param type="label" size="1.75" aspect="0.6" text="shuffle"/>
 							<Param type="dial" maximum="1" minimum="0"/>
 							<Param type="button" maximum="1" minimum="0"/>
+							<Param type="label" maximum="1" minimum="0"/>
 						</Group>
 					</Row>
 				</Column>

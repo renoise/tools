@@ -171,11 +171,27 @@ duplex_configurations:insert {
           group_name = "shuffle",
           index = 2,
         },
+        shuffle_label = {
+          group_name = "shuffle",
+          index = 4,
+        },
         toggle_shuffle_cut = {
           group_name = "shuffle",
           index = 3,
         },
 
+        drift_label = {
+          group_name = "drift",
+          index = 1,
+        },
+        drift_amount = {
+          group_name = "drift",
+          index = 2,
+        },
+        drift_enable = {
+          group_name = "drift",
+          index = 3,
+        },
 
       },
 
