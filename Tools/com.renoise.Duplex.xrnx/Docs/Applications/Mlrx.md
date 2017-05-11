@@ -5,18 +5,22 @@
 ## About
 
 Mlrx is a live performance loop sequencer for Renoise, inspired by mlr by tehn. 
-Due to it's grid-centric layout, Mlrx will only be fun to use if you have a grid/pad-controller. 
-
 It comes with a comprehensive set of features:
 
 * Independantly playing samples and/or phrases in any tempo
-* Many triggering modes and options can be defined for each track
-* Supports samples, sliced samples and phrases 
+* Can use samples, sliced samples and phrases as the sound source
+* A huge amount of triggering modes and options can be defined per track
+* All options are embedded in the song itself and restored between sessions
 * "Streaming" output means seamless transitions between patterns, loops
-* Record everything you do into patterns or phrases (create from scratch)
+* Record everything into patterns or phrases (create from scratch)
 * Use an additional MIDI controller for transposing & triggering
 
 Tool discussion is located on the [Renoise forum](http://forum.renoise.com/index.php?/topic/38924-new-tool-30-mlrx/)
+
+## Example configuration 
+
+![mlrx_on_monome.gif](../Images/mlrx_on_monome.gif)  
+*mrlx running on the monome128*
 
 ## Available mappings
   

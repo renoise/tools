@@ -81,17 +81,14 @@ The first one is the "device configuration". Here it is a again, taken out of co
       thumbnail = "Controllers/Custombuilt/R-control.bmp",
     },
 
-The `protocol` tells Duplex if the device is MIDI or OSC-based. Possible values are DEVICE_PROTOCOL.MIDI and DEVICE_PROTOCOL.OSC.
-
-The `display_name` is the device name shown in the Duplex browser. It's possible to call the controller anything you want - this can help to differentiate between multiple device. This is useful when you own multiple units of identical hardware and want them to appear under different names.
-
-The `class_name` is only needed when the controller has 'special requirements'. The name refers to a lua class which can translate messages going back and forth between the controller and Renoise. 
-
-Next, the `device_port_in` and `device_port_out`. These are MIDI input and output port names. The values provide a default name, and are optional. If the provided name doesn't appear on the user's machine, a different one can be chosen via the Duplex browser. 
-
-The `control_map` property is containing the path to the [control-map](Controlmaps.md) that is used for the configuration, relative to the root of the Duplex tool folder. 
-
-The `thumbnail` property is optional, a miniature graphic that is shown when displaying device options in the Duplex browser (again, the path relative to the root of the Duplex tool folder)
+|Name|Description|
+|----|-----------|
+|`protocol`| Tells Duplex if the device is MIDI or OSC-based. <br>Possible values are DEVICE_PROTOCOL.MIDI and DEVICE_PROTOCOL.OSC.
+|`display_name`| The device name shown in the Duplex browser. It's possible to call the controller anything you want - this can help to differentiate between multiple device. This is useful when you own multiple units of identical hardware and want them to appear under different names.
+|`class_name`| Only needed when the controller has 'special requirements'. The name refers to a lua class which can translate messages going back and forth between the controller and Renoise. 
+|`device_port_in`<br>`device_port_out`| The MIDI input and output port names. The values provide a default name, and are optional. If the provided name doesn't appear on the user's machine, a different one can be chosen via the Duplex browser. 
+|`control_map`| The path to the [control-map](Controlmaps.md) that is used for the configuration, relative to the root of the Duplex tool folder. 
+|`thumbnail`| [Optional] a miniature graphic (.bmp or .png) that is shown when displaying device options in the Duplex browser (again, the path relative to the root of the Duplex tool folder)
 
 
 ### Applications
@@ -166,9 +163,11 @@ Here is an mapping which specifies all possible properties:
       orientation = ORIENTATION.HORIZONTAL,
     },
 
-* `group_name` : refers to the name of the control-map group. Usually, you would enter the literal name of the group (e.g. "FaderGroup"), but sometimes, it's more convenient to assign a group name using _wildcard syntax_ (see below). 
-* `index` : a numeric value which refer to a specific position within that group. When a mapping is greedy, the index is usually ignored.  
-* `orientation (optional)` : when the application feature you are mapping supports both vertical and horizontal layout, you can define it here. Possible values are ORIENTATION.HORIZONTAL and ORIENTATION.VERTICAL.
+|Name|Description|
+|----|-----------|
+|`group_name`|refers to the name of the control-map group. Usually, you would enter the literal name of the group (e.g. "FaderGroup"), but sometimes, it's more convenient to assign a group name using _wildcard syntax_ (see below). 
+|`index`|a numeric value which refer to a specific position within that group. When a mapping is greedy, the index is usually ignored.  
+|`orientation`| (optional) when the application feature you are mapping supports both vertical and horizontal layout, you can define it here. Possible values are ORIENTATION.HORIZONTAL and ORIENTATION.VERTICAL.
 
 > **Wildcard syntax** : This is a special way of entering group names, in which you enter an asterisk as placeholder for something else - e.g. entering `FaderGroup*` will match `FaderGroup1`, `FaderGroup2`, and any other group whose name starts with "FaderGroup".
 This feature is also referred to as _distributed groups_, and is mostly used when you need to distribute an application feature across multiple, disparate locations on the controller that doesn't fit into a single group.
@@ -188,7 +187,24 @@ When Duplex is running a configuration, each application is initialized using it
   
 > To learn which options are available for each application, check the [documentation](Applications.md). 
 
-Note that the user can still modify all these options as he/she pleases, using the Duplex browser. By specifying options in the configuration, you only provide a good "starting point".
+Note that the user can still modify all these options as he/she pleases, using the Duplex browser. Any configuration you make only provides a good "starting point".
+
+**Hidden options** : If you feel that a given configuration has too many options (after all, some options are pretty device-specific), you can define them as hidden:
+
+    Keyboard = {
+      mappings = { 
+        -- your mappings..
+      },
+      options = {
+        -- your options..
+      }
+      hidden_options = {  
+        "channel_pressure","pitch_bend"
+      },
+    },
+      
+
+
 
 ### Application palette
 
