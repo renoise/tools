@@ -83,7 +83,7 @@ StepSequencer.default_options = {
     end,
     items = {
       "Follow",
-      "Don't follow'"
+      "Don't follow"
     },
     value = FOLLOW_COLUMN_OFF,
   },
@@ -107,11 +107,7 @@ StepSequencer.default_options = {
                 .."\nwith the grid or only one track.",
     on_change = function(inst)
       inst:_build_app()
-      inst:_update_line_count()
-      inst:_update_line_buttons()
-      inst:_update_grid_mode()
-      inst._update_grid_requested = true
-      renoise.app():show_status("Grid mode changed.")
+      inst:_update_all()
     end,
     items = {
       "Multiple tracks",
@@ -960,7 +956,7 @@ function StepSequencer:_build_layout_cycler()
 end
 
 ---------------------------------------------------------------------------------------------------
--- call every update method 
+-- Call every update method 
 
 function StepSequencer:_update_all()
   TRACE("StepSequencer:_update_all()")
@@ -983,7 +979,6 @@ function StepSequencer:_update_grid_mode()
   print("StepSequencer:_update_grid_mode()")
 
   local obj = self._cycle_layout
-  print(">>> obj",obj)
   if obj then 
     if (self.options.grid_mode.value == GRID_MODE_SINGLE) then 
       obj:set(self.palette.grid_mode_single)
