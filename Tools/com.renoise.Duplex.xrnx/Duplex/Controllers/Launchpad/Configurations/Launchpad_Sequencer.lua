@@ -21,92 +21,61 @@ duplex_configurations:insert {
 
   applications = {
     StepSequencer = {
-      -- ORIENTATION.VERTICAL layout (default)
       mappings = {
         grid = {
+          component = {{UIButton}},
           group_name = "Grid",
           orientation = ORIENTATION.HORIZONTAL,
         },
         level = {
+          component = UIButtonStrip,
           group_name = "Position",
           orientation = ORIENTATION.HORIZONTAL,
         },
         prev_line = {
+          component = UIButton,
           group_name = "Controls",
-          orientation = ORIENTATION.HORIZONTAL,
           index = 3
         },
         next_line = {
+          component = UIButton,
           group_name = "Controls",
-          orientation = ORIENTATION.HORIZONTAL,
           index = 4
         },
         track = {
+          component = UISpinner,
           group_name = "Controls",
           orientation = ORIENTATION.HORIZONTAL,
           index = 1
         },
         transpose = {
+          component = {UIButton,UIButton,UIButton,UIButton},
           group_name = "Treatments",
           orientation = ORIENTATION.HORIZONTAL,
           index = 5
         },
+        cycle_layout = {
+          component = UIButton,
+          group_name = "Treatments",
+          index = 1,
+        }
       },
       options = {
         --line_increment = 8,
         --follow_track = 1,
         --page_size = 5,
       }
-
-      --[[
-
-      -- enable this instead for ORIENTATION.HORIZONTAL layout
-
-      mappings = {
-        grid = {
-          group_name = "Grid",
-          orientation = ORIENTATION.HORIZONTAL,
-        },
-        level = {
-          group_name = "Controls",
-          orientation = ORIENTATION.HORIZONTAL,
-        },
-        line = {
-          group_name = "Triggers",
-          orientation = ORIENTATION.VERTICAL,
-          index = 1
-        },
-        track = {
-          group_name = "Triggers",
-          orientation = ORIENTATION.VERTICAL,
-          index = 3
-        },
-        transpose = {
-          group_name = "Triggers",
-          orientation = ORIENTATION.VERTICAL,
-          index = 5
-        },
-      },
-      ]]
     },
     Rotate = {
       mappings = {
         track_in_pattern_up = {
           group_name = "Treatments",
-          index = 1
+          index = 3
         },
         track_in_pattern_down = {
           group_name = "Treatments",
-          index = 2
-        },
-        whole_pattern_up = {
-          group_name = "Treatments",
-          index = 3
-        },
-        whole_pattern_down = {
-          group_name = "Treatments",
           index = 4
-        }
+        },
       }
     },
     
