@@ -896,27 +896,33 @@ function StepSequencer:_build_transpose()
         c:set(self.palette.transpose_12_up)
       end
       c.on_press = function(obj)
-        
-        -- check for held grid notes
-        local held = self:_walk_held_keys(
-          function(x,y)
-            if (self:_get_orientation()==ORIENTATION.HORIZONTAL) then
-              x,y = y,x
-            end
-            local notecol = self:get_notecolumn(x,y)
-            if notecol then 
-              local newval = notecol.note_value + transpose
-              if (newval > 0 and newval < 120) then 
-                notecol.note_value = newval
-              end
-            end
-          end,
-          true
-        )
-        if (held == 0) then -- no keys down, change basenote instead of transpose
+
+        if self:_can_play_note() then 
+          -- change basenote while auditioning
           self:_transpose_basenote(transpose)
+        else 
+          -- check for held grid notes
+          local held = self:_walk_held_keys(
+            function(x,y)
+              if (self:_get_orientation()==ORIENTATION.HORIZONTAL) then
+                x,y = y,x
+              end
+              local notecol = self:get_notecolumn(x,y)
+              if notecol then 
+                local newval = notecol.note_value + transpose
+                if (newval > 0 and newval < 120) then 
+                  notecol.note_value = newval
+                end
+              end
+            end,
+            true
+          )
+          if (held == 0) then -- no keys down, change basenote instead of transpose
+            self:_transpose_basenote(transpose)
+          end
         end
-      end
+
+      end -- /on_press
       
       self._transpose[k] = c
       
@@ -1765,7 +1771,7 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
         self._toggle_exempt[x][y] = true
         -- and update the button ...
         self:_draw_grid_button(btn,notecol,current_track)
-      elseif ( self:_play_note() ) then
+      elseif ( self:_can_play_note() ) then
         -- trigger note 
         self.voice_mgr:trigger(self,instr_index,rns_track_idx, base_note , self._base_volume , false)
       else
@@ -1773,7 +1779,7 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
       end
     else
       -- trigger note 
-      if ( self:_play_note() and self.options.write_mode.value == WRITE_MODE_RECORD_ON ) then
+      if ( self:_can_play_note() and self.options.write_mode.value == WRITE_MODE_RECORD_ON ) then
         self.voice_mgr:trigger(self,instr_index,rns_track_idx, base_note , self._base_volume , false)
       end
     end
@@ -1796,25 +1802,10 @@ function StepSequencer:_process_grid_event(x,y, state, btn)
       end
 
     end
-     -- release note
-    if ( self:_play_note() ) then
-       self.voice_mgr:release(self,instr_index,rns_track_idx, base_note , self._base_volume , false)
-    end
+     -- always release all notes
+    self.voice_mgr:remove_all_voices()
 
   end
-
-
-  -- -- trigger notes 
-  -- if ( rns.transport.edit_mode == false 
-  --      and self.options.play_notes.value == PLAY_NOTES_ON ) then
-  --   if ( state ) then
-  --     self.voice_mgr:trigger(self,instr_index,rns_track_idx, base_note , self._base_volume , false)
-  --   else 
-  --     self.voice_mgr:release(self,instr_index,rns_track_idx, base_note , self._base_volume , false)
-  --   end
-  -- end
-
-
 
   return true
 end
@@ -2020,8 +2011,8 @@ end
 -- Check if note should be triggered
 -- @return boolean
 
-function StepSequencer:_play_note()
-  TRACE("StepSequencer:_play_note()")
+function StepSequencer:_can_play_note()
+  TRACE("StepSequencer:_can_play_note()")
   if ( rns.transport.edit_mode == false and
     self.options.play_notes.value == PLAY_NOTES_ON ) 
   then
