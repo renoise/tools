@@ -10,7 +10,7 @@
 
 rns = nil
 _trace_filters = nil
---_trace_filters = {"^xOscClient*"}
+--_trace_filters = {"^StepSequencer*"}
 --_trace_filters = {"^StateController*"}
 --_trace_filters = {"^Recorder*","^UISlider*"}
 --_trace_filters = {".*"}
@@ -29,6 +29,7 @@ require (_xlibroot.."xMidiMessage")
 require (_xlibroot.."xAutomation")
 require (_xlibroot.."xTrack")
 require (_xlibroot.."xTransport")
+require (_xlibroot.."xPattern")
 require (_xlibroot.."xScale")
 require (_xlibroot.."xInstrument")
 require (_xlibroot.."xOscClient")
