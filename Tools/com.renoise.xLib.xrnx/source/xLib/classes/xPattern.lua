@@ -18,7 +18,22 @@ class 'xPattern'
 -- Move edit cursor to first quarter of the pattern 
 -- (same as pressing F9 in the pattern editor)
 
+function xPattern.jump_to_line(idx)
+  print("xPattern.jump_to_line(idx)",idx)
+
+  if (idx <= rns.selected_pattern.number_of_lines) 
+    or (idx > 0)
+  then
+    rns.selected_line_index = idx
+  end
+end
+
+-------------------------------------------------------------------------------
+-- Move edit cursor to first quarter of the pattern 
+-- (same as pressing F9 in the pattern editor)
+
 function xPattern.jump_to_first_quarter_row()
+  TRACE("xPattern.jump_to_first_quarter_row()")
   rns.selected_line_index = 1
 end
 
@@ -27,6 +42,7 @@ end
 -- (same as pressing F10 in the pattern editor)
 
 function xPattern.jump_to_second_quarter_row()
+  TRACE("xPattern.jump_to_second_quarter_row()")
   rns.selected_line_index = 1 + rns.selected_pattern.number_of_lines/4*1
 end
 
@@ -35,6 +51,7 @@ end
 -- (same as pressing F11 in the pattern editor)
 
 function xPattern.jump_to_third_quarter_row()
+  TRACE("xPattern.jump_to_third_quarter_row()")
   rns.selected_line_index = 1 + rns.selected_pattern.number_of_lines/4*2
 end
 
@@ -43,6 +60,7 @@ end
 -- (same as pressing F12 in the pattern editor)
 
 function xPattern.jump_to_fourth_quarter_row()
+  TRACE("xPattern.jump_to_fourth_quarter_row()")
   rns.selected_line_index = 1 + rns.selected_pattern.number_of_lines/4*3
 end
 
@@ -51,6 +69,7 @@ end
 -- (respects wrapped pattern edit setting)
 
 function xPattern.move_to_next_pattern_row()
+  TRACE("xPattern.move_to_next_pattern_row()")
   local pattern = rns.selected_pattern
   local line_idx = rns.selected_line_index
   line_idx = math.min(pattern.number_of_lines,line_idx+1)
@@ -80,6 +99,7 @@ end
 -- (respects wrapped pattern edit setting)
 
 function xPattern.move_to_previous_pattern_row()
+  TRACE("xPattern.move_to_previous_pattern_row()")
   local line_idx = rns.selected_line_index
   line_idx = math.max(1,line_idx-1)
   local wrapped_edit = rns.transport.wrapped_pattern_edit
