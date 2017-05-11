@@ -76,6 +76,7 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- [Static] Get total number of tracks matching the "type"
+-- Necessary as `renoise.song().sequencer_track_count` doesn't consider group tracks 
 -- @param track_type (renoise.Track.TRACK_TYPE_xxx)
 -- @return table<int>
 
