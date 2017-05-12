@@ -35,7 +35,6 @@ local DATA_TPL = table.create()
 local DATA_TICK_DELAY = table.create()
 local DATA_TICK_CUT = table.create()
 
-
 --------------------------------------------------------------------------------
 -- Helper functions
 --------------------------------------------------------------------------------
@@ -116,9 +115,8 @@ function export_build_data(plan)
 
   -- Setup data table
   for i=1,total_instruments do
-    DATA[i] = table.create()
+    DATA[i] = table.create()    
   end
-
   local i = 255 -- instrument_value, 255 means empty
   local j = 0 -- e.g. DATA[i][j]
 
@@ -192,7 +190,7 @@ function export_build_data(plan)
                 DATA_TPL[pos] = fx_col.amount_string
               elseif '0Q' == fx_col.number_string  then
                 -- 0Qxx, Delay all notes by xx ticks.
-                DATA_TICK_DELAY[pos] = fx_col.amount_string
+                DATA_TICK_DELAY[pos] = fx_col.amount_string              
               end
             end
           end
@@ -207,8 +205,9 @@ function export_build_data(plan)
             -- NNA and a more realistic note duration could, in theory,
             -- be calculated with the length of the sample and the instrument
             -- ADSR properties.
-
+            local midicc = false
             local note_col = current_pattern_track:line(line_index).note_columns[column_index]
+            local fx_col = current_pattern_track:line(line_index).effect_columns[1]
             if
               not constrain_to_selected or
               constrain_to_selected and note_col.is_selected
@@ -225,7 +224,7 @@ function export_build_data(plan)
                 tick_delay = note_col.volume_string:sub(2)
               elseif note_col.volume_string:find('C') == 1 then
                 tick_cut = note_col.volume_string:sub(2)
-              end
+              end      
               -- Panning col
               if 0 <= note_col.panning_value and note_col.panning_value <= 128 then
                 panning = note_col.panning_value
@@ -234,29 +233,46 @@ function export_build_data(plan)
               elseif note_col.panning_string:find('C') == 1 then
                 tick_cut = note_col.panning_string:sub(2)
               end
+               -- Midi control messages
+              if 'M0' == note_col.panning_string then
+                midicc = true
+              end             
               -- Note OFF
               if
                 not note_col.is_empty and
-                j > 0 and DATA[i][j].pos_end == 0
+                j > 0 and DATA[i][j].pos_end == 0 or                
+                note_col.note_value == 120
               then
                 DATA[i][j].pos_end = pos
                 DATA[i][j].delay_end = note_col.delay_value
                 DATA[i][j].tick_delay_end = tick_delay
               elseif
                 tick_cut ~= nil and
-                j > 0 and DATA[i][j].pos_end == 0
+                j > 0 and DATA[i][j].pos_end == 0 or
+                note_col.note_value == 120 
               then
                 DATA[i][j].pos_end = pos
                 DATA[i][j].delay_end = note_col.delay_value
                 DATA[i][j].tick_delay_end = tick_cut
               end
               -- Note ON
+              -- dbug(("note: '%d' instrument: '%d'"):format(note_col.note_value, note_col.instrument_value));
               if
                 note_col.instrument_value ~= 255 and
-                DATA[note_col.instrument_value + 1] ~= nil
+                DATA[note_col.instrument_value + 1] ~= nil and
+                note_col.note_value ~= 121 or
+                midicc == true
               then
+                local cc_number = 0
+                local cc_value = 0
+                local par = 0                
+                if midicc == true then
+                  par = pos
+                  cc_number = fx_col.number_string
+                  cc_value = fx_col.amount_string                  
+                end
                 i = note_col.instrument_value + 1 -- Lua vs C++
-                DATA[i]:insert{
+                DATA[i]:insert {
                   note = note_col.note_value,
                   pos_start = pos,
                   pos_end = 0,
@@ -265,12 +281,17 @@ function export_build_data(plan)
                   delay_end = 0,
                   tick_delay_end = 0,
                   volume = volume,
+                  par = par,                 
+                  cc_number = cc_number,
+                  cc_value = cc_value
                   -- panning = panning, -- TODO: Do something with panning var
                   -- track = track_index,
                   -- column = column_index,
                   -- sequence_index = sequence_index,
                 }
+                if note_col.note_value ~= 121 then
                 j = table.count(DATA[i])
+                end
                 if tick_cut ~= nil then
                   DATA[i][j].pos_end = pos
                   DATA[i][j].tick_delay_end = tick_cut
@@ -386,7 +407,7 @@ function _export_note_on(tn, sort_me, data, idx)
   -- Create MF2T message
   local pos_d = _export_pos_to_float(data.pos_start, data.delay_start,
     tonumber(data.tick_delay_start, 16), idx)
-  if pos_d ~= false then
+  if pos_d ~= false and data.note ~= 121 then
     local msg = "On ch=" .. MIDI_CHANNEL .. " n=" ..  data.note .. " v=" .. math.min(data.volume, 127)
     sort_me:insert{pos_d, msg, tn}
   end
@@ -398,9 +419,19 @@ function _export_note_off(tn, sort_me, data, idx)
   -- Create MF2T message
   local pos_d = _export_pos_to_float(data.pos_end, data.delay_end,
     tonumber(data.tick_delay_end, 16), idx)
-  if pos_d ~= false then
+  if pos_d ~= false and pos_d > 0 and data.note ~= 121 then
     local msg = "Off ch=" .. MIDI_CHANNEL .. " n=" ..  data.note .. " v=0"
     sort_me:insert{pos_d, msg, tn}
+  end
+end
+
+-- MidiCC
+function _export_midi_cc(tn, sort_me, data, idx)
+  -- Create MF2T message
+  local pos_par = _export_pos_to_float(data.par, 0, 0, idx)  
+  if pos_par ~= false and pos_par > 0 then
+    local msg = "Par ch=" .. MIDI_CHANNEL .. " c=" ..  tonumber(data.cc_number,16) .. " v=" .. tonumber(data.cc_value,16)
+    sort_me:insert{pos_par, msg, tn}
   end
 end
 
@@ -413,7 +444,7 @@ function export_midi()
   midi:setBpm(RNS.transport.bpm); -- Initial BPM
 
   -- Debug
-  -- dbug(DATA)
+  -- dbug(DATA)  
   -- dbug(DATA_BPM)
   -- dbug(DATA_LPB)
   -- dbug(DATA_TPL)
@@ -466,6 +497,7 @@ function export_midi()
       for j=1,#DATA[i] do
         _export_note_on(tn, sort_me, DATA[i][j], idx)
         _export_note_off(tn, sort_me, DATA[i][j], idx)
+        _export_midi_cc(tn, sort_me, DATA[i][j], idx)       
         -- Yield every 250 notes to avoid timeout nag screens
         if (j % 250 == 0) then
           renoise.app():show_status(export_status_progress())
