@@ -246,7 +246,6 @@ function xStream:__init(...)
   self.osc_client = xOscClient{
     osc_host = self.prefs.osc_client_host.value,
     osc_port = self.prefs.osc_client_port.value,
-    first_run = self.prefs.osc_client_first_run.value,
   }
 
   self.ui = xStreamUI{
@@ -434,10 +433,6 @@ function xStream:__init(...)
 
   -- osc client --
 
-  self.osc_client.first_run_observable:add_notifier(function()
-    TRACE("*** osc_client.first_run_observable fired...")
-    self.prefs.osc_client_first_run.value = self.osc_client.first_run_observable.value
-  end)
   self.osc_client.osc_host_observable:add_notifier(function()
     TRACE("*** osc_client.osc_host_observable fired...")
     self.prefs.osc_client_host.value = self.osc_client.osc_host_observable.value
@@ -445,6 +440,10 @@ function xStream:__init(...)
   self.osc_client.osc_port_observable:add_notifier(function()
     TRACE("*** osc_client.osc_port_observable fired...")
     self.prefs.osc_client_port.value = self.osc_client.osc_port_observable.value
+  end)
+  self.osc_client._test_failed_observable:add_notifier(function()
+    TRACE("*** osc_client._test_failed_observable fired...")
+    -- TODO make user aware of the issue
   end)
 
   -- tool --
