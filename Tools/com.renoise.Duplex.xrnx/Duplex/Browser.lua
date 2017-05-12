@@ -99,7 +99,7 @@ function Browser:__init(initial_configuration, start_configuration)
   
   --- (@{Duplex.OscVoiceMgr}) the voice manager is handling triggered note messages
   -- (needs the osc_client)
-  self._voice_mgr = OscVoiceMgr()
+  self.voice_mgr = OscVoiceMgr()
   
   --- (renoise.ViewBuilder) viewbuilder for all our views
   self._vb = renoise.ViewBuilder()
