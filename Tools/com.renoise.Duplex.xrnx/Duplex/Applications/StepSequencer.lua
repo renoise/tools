@@ -345,8 +345,18 @@ function StepSequencer:__init(...)
   --- don't toggle off if pressing multiple on / transposing / etc
   self._toggle_exempt = { } 
 
+  --- OscVoiceMgr, 
+  self.voice_mgr = nil
+
+  --== initialize ==--
+
   Application.__init(self,...)
   --self:list_mappings_and_options(StepSequencer)
+
+  self.voice_mgr = self._process.browser.voice_mgr
+  assert(self.voice_mgr,"Internal Error. Please report: " ..
+    "expected OSC voice-manager to be present")
+
 
 end
 
@@ -361,10 +371,6 @@ function StepSequencer:start_app()
   if not Application.start_app(self) then
     return
   end
-
-  self.voice_mgr = self._process.browser._voice_mgr
-  assert(self.voice_mgr,"Internal Error. Please report: " ..
-    "expected OSC voice-manager to be present")
 
   self._follow_player = rns.transport.follow_player
 

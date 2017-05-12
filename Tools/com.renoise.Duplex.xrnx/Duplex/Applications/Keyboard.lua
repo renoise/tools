@@ -406,7 +406,7 @@ function Keyboard:__init(...)
   --- number, grid height
   self.grid_h = nil
 
-  --- voice manager
+  --- OscVoiceMgr, takes care of playing notes
   self.voice_mgr = nil
 
   --- control-map parameters
@@ -431,8 +431,14 @@ function Keyboard:__init(...)
   self._controls = {}
   self._controls.grid = table.create()
 
+  --== initialize ==--
+
   Application.__init(self,...)
   --self:list_mappings_and_options(Keyboard)
+
+  self.voice_mgr = self._process.browser.voice_mgr
+  assert(self.voice_mgr,"Internal Error. Please report: " ..
+    "expected OSC voice-manager to be present")
 
 end
 
@@ -454,10 +460,6 @@ function Keyboard:trigger(note_on,instr_idx,pitch,velocity,grid_index)
     LOG("Cannot trigger note, keyboard has been disabled")
     return false
   end
-
-  --local voice_mgr = self._process.browser._voice_mgr
-  --assert(voice_mgr,"Internal Error. Please report: " ..
-  --  "expected OSC voice-manager to be present")
 
   -- reject notes that are outside valid range
   if note_on and (pitch>UPPER_NOTE) or (pitch<LOWER_NOTE) then
@@ -511,12 +513,10 @@ function Keyboard:trigger(note_on,instr_idx,pitch,velocity,grid_index)
 
   local voice_count = #self.voice_mgr.playing
 
-  --print("trigger note_on,instr,track,pitch,velocity",note_on,instr,track,pitch,velocity)
   local transp = 0
   local keep = (self.options.release_type.value == RELEASE_TYPE_WAIT)
   --if note_on and not release_only then
   if note_on then
-    --print("*** trigger note,is_midi",is_midi)
     local do_trigger = true
     if is_midi and (self.options.keyboard_mode.value ~= KEYBOARD_TRIGGER_ALL) then
       do_trigger = false
@@ -525,7 +525,6 @@ function Keyboard:trigger(note_on,instr_idx,pitch,velocity,grid_index)
       self.voice_mgr:trigger(self,instr_idx,track,pitch,velocity,keep,is_midi)
     end
   else
-    --print("*** release note,is_midi",is_midi)
     transp = self.voice_mgr:release(self,instr_idx,track,pitch,velocity,is_midi)
   end
 
@@ -539,9 +538,7 @@ function Keyboard:trigger(note_on,instr_idx,pitch,velocity,grid_index)
   -- return false if the note is already playing
   if not transp then
     if not note_on and keep then
-      --rprint(voice_mgr.playing)
       local is_active = self.voice_mgr:note_is_active(instr_idx,pitch)
-      --print("Keyboard:trigger() - is_active",is_active)
       if is_active then
         return false
       end
@@ -571,9 +568,6 @@ end
 function Keyboard:inside_note_range(pitch)
   --TRACE("Keyboard:inside_note_range()",pitch)
 
-  --print("Keyboard:inside_note_range() - self.upper_note",self.upper_note)
-  --print("Keyboard:inside_note_range() - self.lower_note",self.lower_note)
-
   if (pitch>self.upper_note) or (pitch<self.lower_note) then
     return false
   end
@@ -586,19 +580,17 @@ end
 -- @param idx (int)
 
 function Keyboard:get_nth_note(idx)
-  --print("Keyboard:get_nth_note()",idx)
+  TRACE("Keyboard:get_nth_note()",idx)
 
   local scale = xScale.get_scale_by_name(self.scale_mode)
   local oct = 0
   if (idx > scale.count) then
     oct = math.floor(idx/scale.count)
-    --print("get_nth_note - oct",oct)
     idx = idx%scale.count
     if (idx == 0) then
       idx = scale.count
       oct = oct-1
     end
-    --print("get_nth_note - idx",idx)
   end
 
   local count = 0
@@ -607,7 +599,6 @@ function Keyboard:get_nth_note(idx)
       count = count+1
     end
     if (count == idx) then
-      --print("get nth note",idx,(k + (oct*12)))
       return k + (oct*12)
     end
   end
@@ -662,10 +653,6 @@ function Keyboard:_maintain_held_notes(voice_count,instr_idx,grid_index,velocity
 
   if hold_mode then 
     local voice_diff = #self.voice_mgr.playing - voice_count
-    --print("*** Keyboard:trigger - held notes PRE",rprint(self.held_notes))
-    --print("*** Keyboard:trigger - voice_diff",voice_diff)
-    --print("*** Keyboard:trigger - voice_count",voice_count)
-    --print("*** Keyboard:trigger - #self.voice_mgr.playing",#self.voice_mgr.playing)
     if voice_diff > 0 then
       -- adding new held notes
       for k = 1,voice_diff do
@@ -689,7 +676,6 @@ function Keyboard:_maintain_held_notes(voice_count,instr_idx,grid_index,velocity
         end
       end 
     end
-    --print("*** Keyboard:trigger - held notes POST",rprint(self.held_notes))
     
   end
 
@@ -733,7 +719,6 @@ function Keyboard:on_scale_change()
   -- retrigger notes
   for k,v in ipairs(held_notes) do
     local grid_notes = self._layout:get_pitches_from_index(v.grid_index)
-    --print("grid_notes",rprint(grid_notes))
     for k2,v2 in ipairs(grid_notes) do
       self:trigger(true,instr_idx,v2,v.velocity,v.grid_index)
     end
@@ -765,10 +750,6 @@ end
 
 function Keyboard:start_app()
   TRACE("Keyboard:start_app()")
-
-  self.voice_mgr = self._process.browser._voice_mgr
-  assert(self.voice_mgr,"Internal Error. Please report: " ..
-    "expected OSC voice-manager to be present")
 
   -- register to receive voice notifications 
   -- (events triggered by other applications)
@@ -903,8 +884,6 @@ function Keyboard:_build_app()
     local distributed_group = false
     local group_size,col_count,unit_x,unit_y 
 
-    --print("*** Keyboard.build_app - map.group_name",map.group_name)
-
     if string.find(map.group_name,"*") then
 
       distributed_group = true
@@ -927,8 +906,6 @@ function Keyboard:_build_app()
 
       end
 
-      --print("*** Keyboard.build_app - #key_params",#key_params)
-
     else
 
       -- standard grid layout
@@ -940,9 +917,6 @@ function Keyboard:_build_app()
       end
 
     end
-
-    --print("*** Keyboard.build_app #B - unit_x,unit_y",unit_x,unit_y)
-    --print("*** Keyboard.build_app - grid_w,self.grid_h",grid_w,self.grid_h)
 
     local skip = nil
 
@@ -991,7 +965,6 @@ function Keyboard:_build_app()
               else
                 c:set_pos(x,y)
               end
-              --print("*** Keyboard - build_app - x,y",x,y)
 
             end
 
@@ -1015,7 +988,6 @@ function Keyboard:_build_app()
               -- grid style triggering: ask our layout for notes,
               -- then loop through matches (can be more than one)
               local grid_notes = self._layout:get_pitches_from_index(ctrl_idx)
-              --print("on_press() - grid_notes",rprint(grid_notes))
               for k,note_pitch in ipairs(grid_notes) do
 
                 local triggered,instr_idx = self:trigger(true,instr_idx,note_pitch,velocity,ctrl_idx)
@@ -1043,7 +1015,6 @@ function Keyboard:_build_app()
             c.on_release = function(obj)
 
               local instr_idx = self:get_instrument_index() 
-              --print("*** on_release - instr_idx",instr_idx)
 
               -- if we switched instrument while pressing the button, 
               -- release on the originating instrument 
@@ -1052,14 +1023,12 @@ function Keyboard:_build_app()
                 (self.pressed_buttons[ctrl_idx].instr_idx~= instr_idx)
               then
                 instr_idx = self.pressed_buttons[ctrl_idx].instr_idx
-                --print("*** changed instr_idx into",instr_idx)
               end
 
               local grid_notes = self._layout:get_pitches_from_index(ctrl_idx)
               for k,note_pitch in ipairs(grid_notes) do
 
                 local released,instr_idx = self:trigger(false,instr_idx,note_pitch,0,ctrl_idx)
-                --print("*** Keyboard: key_grid released",released)
                 if released then
                   self.pressed_buttons[ctrl_idx] = nil
                   self:update_grid()
@@ -1109,7 +1078,6 @@ function Keyboard:_build_app()
     c.ceiling = 127
     c.on_change = function(obj)
       local msg = nil
-      --print(obj.value)
       if (self.options.pitch_bend.value == BROADCAST_PITCHBEND) then
         msg = {224,0,obj.value}
       elseif (self.options.pitch_bend.value > BROADCAST_PITCHBEND) then
@@ -1358,8 +1326,6 @@ function Keyboard:_build_app()
         slider_size = cm:count_rows(map.group_name)
       end
     end
-    --print("self._controls.volume - slider_size",slider_size)
-    --print("self._controls.volume - map.orientation",map.orientation)
 
     local c = UISlider(self,map)
     c:set_size(slider_size)
