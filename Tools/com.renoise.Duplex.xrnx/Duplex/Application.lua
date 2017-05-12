@@ -530,6 +530,30 @@ function Application:_add_component(c)
 end  
 
 --------------------------------------------------------------------------------
+
+function Application.copy_properties(source,target)
+
+  local properties = {
+    'available_mappings',
+    'default_options',
+    'default_palette',
+  }
+
+  local assign_values = function(name)
+    for k,v in pairs(source[name]) do
+      target[name][k] = v
+    end
+  end
+
+  for k,v in ipairs(properties) do
+    if source[v] and target[v] then
+      assign_values(v)
+    end
+  end
+
+end
+
+--------------------------------------------------------------------------------
 -- (For documentation) print application summary in markdown syntax
 
 function Application:list_mappings_and_options(app)
