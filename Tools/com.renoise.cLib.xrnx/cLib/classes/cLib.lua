@@ -293,7 +293,7 @@ end
 --- [Static] Inverse logarithmic scaling (exponential)
 
 function cLib.inv_log_scale(ceiling,val)
-  return ceiling-log_scale(ceiling,ceiling-val+1)
+  return ceiling-cLib.log_scale(ceiling,ceiling-val+1)
 end
 
 ---------------------------------------------------------------------------------------------------
