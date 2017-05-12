@@ -38,13 +38,7 @@ Hydra.available_mappings = {
   }
 }
 
---  merge with superclass 
-for k,v in pairs(RoamingDSP.default_options) do
-  Hydra.default_options[k] = v
-end
-for k,v in pairs(RoamingDSP.available_mappings) do
-  Hydra.available_mappings[k] = v
-end
+Application.copy_properties(RoamingDSP,Hydra)
 
 --------------------------------------------------------------------------------
 -- Constructor method

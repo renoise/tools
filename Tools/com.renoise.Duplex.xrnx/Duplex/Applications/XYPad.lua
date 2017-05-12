@@ -75,18 +75,7 @@ XYPad.default_palette = {
   grid_off        = { color = {0x40,0x40,0x00}, text = "·", val=false },  
 }
 
---  merge superclass options, mappings & palette --
-
-for k,v in pairs(RoamingDSP.default_options) do
-  XYPad.default_options[k] = v
-end
-for k,v in pairs(RoamingDSP.available_mappings) do
-  XYPad.available_mappings[k] = v
-end
-for k,v in pairs(RoamingDSP.default_palette) do
-  XYPad.default_palette[k] = v
-end
-
+Application.copy_properties(RoamingDSP,XYPad)
 
 --------------------------------------------------------------------------------
 

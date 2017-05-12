@@ -155,17 +155,7 @@ Repeater.default_palette = {
 
 }
 
---  merge superclass options, mappings & palette --
-
-for k,v in pairs(RoamingDSP.default_options) do
-  Repeater.default_options[k] = v
-end
-for k,v in pairs(RoamingDSP.available_mappings) do
-  Repeater.available_mappings[k] = v
-end
-for k,v in pairs(RoamingDSP.default_palette) do
-  Repeater.default_palette[k] = v
-end
+Application.copy_properties(RoamingDSP,Repeater)
 
 --------------------------------------------------------------------------------
 
