@@ -107,6 +107,7 @@ xVoiceManager.EVENT = {
 
 
 function xVoiceManager:__init(...)
+  TRACE("xVoiceManager:__init(...)",...)
 
   local args = cLib.unpack_args(...)
 
@@ -158,16 +159,16 @@ function xVoiceManager:__init(...)
 
   renoise.tool().app_new_document_observable:add_notifier(function()
     rns = renoise.song()
-    self:attach_to_song()
+    self:_attach_to_song()
   end)
 
   renoise.tool().app_idle_observable:add_notifier(function()
     if (self.duration > 0) then
-      self:check_expired()
+      self:_check_expired()
     end
   end)
 
-  self:attach_to_song()
+  self:_attach_to_song()
 
 end
 
@@ -291,7 +292,7 @@ function xVoiceManager:input_message(xmsg)
     xmsg._originating_octave = xmsg.octave
   end
 
-  self:register(xmsg)
+  self:_register(xmsg)
   return xmsg,#self.voices
 
 end
@@ -328,54 +329,6 @@ function xVoiceManager:input_note_column(xnotecol,col_idx,line_idx)
   if xmsg then
     self:input_message(xmsg)
   end
-
-end
-
----------------------------------------------------------------------------------------------------
--- [Class] Register/add a voice
-
-function xVoiceManager:register(xmsg)
-  TRACE("xVoiceManager:register(xmsg)",xmsg)
-
-  if (self.voice_limit > 0) 
-    and (#self.voices == self.voice_limit)
-  then
-
-    LOG("Steal the oldest voice and re-use that column")
-    local steal_column_idx = self.voices[1].note_column_index
-    self:steal_voice()
-    xmsg.note_column_index = steal_column_idx
-
-  elseif self.column_allocation then
-
-    local available_columns = self:get_available_columns(xmsg.track_index)
-    if not table.is_empty(available_columns) then
-      -- use the incoming message's column if available
-      local is_available = xmsg.note_column_index 
-        and available_columns[xmsg.note_column_index] or false
-      if is_available then
-      else
-        -- use the first available column, starting from current
-        for k = xmsg.note_column_index,12 do
-          if available_columns[k] then
-            xmsg.note_column_index = k
-            break
-          end
-        end
-      end
-    else
-      LOG("No more note columns available, using the last one")
-      self:steal_voice()
-      xmsg.note_column_index = 12
-    end
-  end
-
-  table.insert(self.voices,xmsg)
-  self.voices_observable:insert(#self.voices)
-
-  -- trigger observable after adding
-  self.triggered_index = #self.voices
-  self.triggered_observable:bang()
 
 end
 
@@ -430,21 +383,6 @@ function xVoiceManager:release(voice_idx)
 
   table.remove(self.voices,voice_idx)
   self.voices_observable:remove(voice_idx)
-
-end
-
----------------------------------------------------------------------------------------------------
--- [Class] Check if any voices have expired (when duration is set)
-
-function xVoiceManager:check_expired()
-  --TRACE("xVoiceManager:check_expired()")
-
-  for k,v in ripairs(self.voices) do
-    local age = os.clock() - v.timestamp
-    if (age > self.duration) then
-      self:release(k)
-    end
-  end
 
 end
 
@@ -520,10 +458,11 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- [Class] Get the first column which does not have a playing voice assigned to it
--- @param track_idx
+-- @param track_idx, which track to check 
 -- @return table<number>, available column indices
 
 function xVoiceManager:get_available_columns(track_idx)
+  TRACE("xVoiceManager:get_available_columns(track_idx)",track_idx)
 
   local available_indices = {true,true,true,true,true,true,true,true,true,true,true,true}
   for k,v in ipairs(self.voices) do
@@ -537,7 +476,8 @@ end
 ---------------------------------------------------------------------------------------------------
 -- [Class] Release the oldest voice (release, then trigger stolen_observable)
 
-function xVoiceManager:steal_voice()
+function xVoiceManager:_steal_voice()
+  TRACE("xVoiceManager:_steal_voice()")
 
   if (#self.voices < 0) then
     LOG("No active voice, nothing to steal...")
@@ -549,13 +489,13 @@ function xVoiceManager:steal_voice()
 
   self:release(self.stolen_index)
 
-
 end
 
 ---------------------------------------------------------------------------------------------------
 -- [Class] Monitor changes to tracks and instruments
 
-function xVoiceManager:attach_to_song()
+function xVoiceManager:_attach_to_song()
+  TRACE("xVoiceManager:_attach_to_song()")
 
   rns.instruments_observable:add_notifier(function(arg)
     TRACE("xVoiceManager: instruments_observable fired...",arg)
@@ -680,6 +620,7 @@ end
 
 function xVoiceManager:get_lowest()
   TRACE("xVoiceManager:get_lowest()")
+
   local rslt,idx 
   local pitch = 999
   for k,v in ipairs(self.voices) do
@@ -690,4 +631,70 @@ function xVoiceManager:get_lowest()
     end
   end
   return rslt,idx
+
 end
+
+---------------------------------------------------------------------------------------------------
+-- [Class] Register/add a voice
+-- @param xmsg (xMidiMessage) should be a MIDI note-message
+
+function xVoiceManager:_register(xmsg)
+  TRACE("xVoiceManager:_register(xmsg)",xmsg)
+
+  if (self.voice_limit > 0) 
+    and (#self.voices == self.voice_limit)
+  then
+
+    LOG("Steal the oldest voice and re-use that column")
+    local steal_column_idx = self.voices[1].note_column_index
+    self:_steal_voice()
+    xmsg.note_column_index = steal_column_idx
+
+  elseif self.column_allocation then
+
+    local available_columns = self:get_available_columns(xmsg.track_index)
+    if not table.is_empty(available_columns) then
+      -- use the incoming message's column if available
+      local is_available = xmsg.note_column_index 
+        and available_columns[xmsg.note_column_index] or false
+      if is_available then
+      else
+        -- use the first available column, starting from current
+        for k = xmsg.note_column_index,12 do
+          if available_columns[k] then
+            xmsg.note_column_index = k
+            break
+          end
+        end
+      end
+    else
+      LOG("No more note columns available, using the last one")
+      self:_steal_voice()
+      xmsg.note_column_index = 12
+    end
+  end
+
+  table.insert(self.voices,xmsg)
+  self.voices_observable:insert(#self.voices)
+
+  -- trigger observable after adding
+  self.triggered_index = #self.voices
+  self.triggered_observable:bang()
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Class] Check if any voices have expired (when duration is set)
+
+function xVoiceManager:_check_expired()
+  TRACE("xVoiceManager:_check_expired()")
+
+  for k,v in ripairs(self.voices) do
+    local age = os.clock() - v.timestamp
+    if (age > self.duration) then
+      self:release(k)
+    end
+  end
+
+end
+
