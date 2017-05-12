@@ -83,6 +83,12 @@ RoamingDSP.default_palette = {
   next_device_off   = { color = {0x00,0x00,0x00}, text = "►", val=false },
 }
 
+<<<<<<< pr/74
+=======
+
+Application.copy_properties(Automateable,RoamingDSP)
+
+>>>>>>> local
 --------------------------------------------------------------------------------
 --  merge superclass options, mappings & palette --
 
@@ -439,7 +445,9 @@ function RoamingDSP:get_unique_name()
   local app_name = self._app_name
   local inst = self._instance_name
 
-  local unique_name = ("%s:%s_%s_%s"):format(inst,dev_name,cfg_name,app_name)
+  -- a nice trick: adding the instance name at the end will show the device 
+  -- using the standard name (our extra information will be hidden)
+  local unique_name = ("%s_%s_%s:%s"):format(dev_name,cfg_name,app_name,inst)
   return unique_name
   
 end
