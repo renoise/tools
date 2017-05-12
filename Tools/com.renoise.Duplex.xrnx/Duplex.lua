@@ -65,7 +65,6 @@ require "Duplex/ControlMap"
 require "Duplex/Device"
 require "Duplex/MidiDevice"
 require "Duplex/OscDevice"
---require "Duplex/OscClient"
 require "Duplex/OscVoiceMgr"
 require "Duplex/Application"
 require "Duplex/Automateable" -- extends Application
