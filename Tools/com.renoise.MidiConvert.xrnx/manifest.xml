@@ -2,8 +2,8 @@
 <RenoiseScriptingTool doc_version="0">
   <ApiVersion>5</ApiVersion>
   <Id>com.renoise.MidiConvert</Id>
-  <Version>0.94</Version>
-  <Author>Dac Chartrand, Marvin Tjon, Bjorn Nesby</Author>
+  <Version>0.95</Version>
+  <Author>Dac Chartrand, Marvin Tjon, Bjorn Nesby, reaby</Author>
   <Name>Midi Convert</Name>
   <Category>Tools</Category>
   <Description>Converts a Renoise song into a MIDI file. Notes are grouped by instrument and exported per track. Creates "Export Song to MIDI..." in the  File menu, "Selection:Export to MIDI..." in the Pattern Editor menu, and an "Export Selection to MIDI" keybinding.</Description>
