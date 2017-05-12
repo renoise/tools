@@ -23,7 +23,7 @@ The code is decently commented, includes a generic Midi.lua class that can be re
 * ZKxx: Set TPL
 * 0Qxx: Delay all notes by xx ticks
 
-### MIDI Commands (in pattern)
+### MIDI Commands
 * M0 xxyy: Set CC Number/Value
 
 ### Volume Column
