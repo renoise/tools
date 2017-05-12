@@ -83,12 +83,8 @@ RoamingDSP.default_palette = {
   next_device_off   = { color = {0x00,0x00,0x00}, text = "►", val=false },
 }
 
-<<<<<<< pr/74
-=======
-
 Application.copy_properties(Automateable,RoamingDSP)
 
->>>>>>> local
 --------------------------------------------------------------------------------
 --  merge superclass options, mappings & palette --
 
