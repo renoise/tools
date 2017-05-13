@@ -1,75 +1,96 @@
 --[[============================================================================
-xPattern
+xPatternPos
 ============================================================================]]--
 
 --[[--
 
-Static methods for dealing with a renoise.Pattern
+Static methods for manipulating the position within a renoise.Pattern
 .
 #
 
-TODO rename to xPatternNavigation
+Note: all xPatternPos methods operate on actual selected objects (pattern, line). This is different from xSongPos, where you can pass an imaginary position around. 
+
+## Changelog
+
+0.51
+- renamed to xPatternPos - clarifies the purpose
 
 ]]
 
-class 'xPattern'
+class 'xPatternPos'
 
--------------------------------------------------------------------------------
--- Move edit cursor to first quarter of the pattern 
--- (same as pressing F9 in the pattern editor)
+---------------------------------------------------------------------------------------------------
+-- [Static] restrict to pattern (will only affect the line)
+-- @param line_idx, number
+-- @return int or nil, [string, error message]
 
-function xPattern.jump_to_line(idx)
-  print("xPattern.jump_to_line(idx)",idx)
+function xPatternPos.restrict_line_index(line_idx)
 
-  if (idx <= rns.selected_pattern.number_of_lines) 
-    or (idx > 0)
-  then
-    rns.selected_line_index = idx
-  end
+  assert(type(line_idx)=="number","Expected 'line_idx' to be a number")
+  return cLib.clamp_value(line_idx,1,rns.selected_pattern.number_of_lines)
+
 end
 
 -------------------------------------------------------------------------------
--- Move edit cursor to first quarter of the pattern 
+-- [Static] 'Safely'' move cursor to specific position in pattern
 -- (same as pressing F9 in the pattern editor)
 
-function xPattern.jump_to_first_quarter_row()
-  TRACE("xPattern.jump_to_first_quarter_row()")
+function xPatternPos.jump_to_line(line_idx)
+  print("xPatternPos.jump_to_line(idx)",idx)
+
+  -- make the line safe
+  line_idx = xSongPos.restrict_line_index(rns.selected_pattern,line_idx)
+  --[[
+  if (idx <= rns.selected_pattern.number_of_lines) 
+    or (idx > 0)
+  then
+  ]]
+    rns.selected_line_index = idx
+  --end
+end
+
+-------------------------------------------------------------------------------
+-- [Static] Move edit cursor to first quarter of the pattern 
+-- (same as pressing F9 in the pattern editor)
+
+function xPatternPos.jump_to_first_quarter_row()
+  TRACE("xPatternPos.jump_to_first_quarter_row()")
   rns.selected_line_index = 1
 end
 
 -------------------------------------------------------------------------------
--- Move edit cursor to second quarter of the pattern 
+-- [Static] Move edit cursor to second quarter of the pattern 
 -- (same as pressing F10 in the pattern editor)
 
-function xPattern.jump_to_second_quarter_row()
-  TRACE("xPattern.jump_to_second_quarter_row()")
+function xPatternPos.jump_to_second_quarter_row()
+  TRACE("xPatternPos.jump_to_second_quarter_row()")
   rns.selected_line_index = 1 + rns.selected_pattern.number_of_lines/4*1
 end
 
 -------------------------------------------------------------------------------
--- Move edit cursor to third quarter of the pattern 
+-- [Static] Move edit cursor to third quarter of the pattern 
 -- (same as pressing F11 in the pattern editor)
 
-function xPattern.jump_to_third_quarter_row()
-  TRACE("xPattern.jump_to_third_quarter_row()")
+function xPatternPos.jump_to_third_quarter_row()
+  TRACE("xPatternPos.jump_to_third_quarter_row()")
   rns.selected_line_index = 1 + rns.selected_pattern.number_of_lines/4*2
 end
 
 -------------------------------------------------------------------------------
--- Move edit cursor to fourth quarter of the pattern 
+-- [Static] Move edit cursor to fourth quarter of the pattern 
 -- (same as pressing F12 in the pattern editor)
 
-function xPattern.jump_to_fourth_quarter_row()
-  TRACE("xPattern.jump_to_fourth_quarter_row()")
+function xPatternPos.jump_to_fourth_quarter_row()
+  TRACE("xPatternPos.jump_to_fourth_quarter_row()")
   rns.selected_line_index = 1 + rns.selected_pattern.number_of_lines/4*3
 end
 
 -------------------------------------------------------------------------------
--- Move edit cursor to next line 
+-- [Static] Move edit cursor to next line 
 -- (respects wrapped pattern edit setting)
 
-function xPattern.move_to_next_pattern_row()
-  TRACE("xPattern.move_to_next_pattern_row()")
+function xPatternPos.move_to_next_pattern_row()
+  TRACE("xPatternPos.move_to_next_pattern_row()")
   local pattern = rns.selected_pattern
   local line_idx = rns.selected_line_index
   line_idx = math.min(pattern.number_of_lines,line_idx+1)
@@ -95,11 +116,11 @@ function xPattern.move_to_next_pattern_row()
 end
 
 -------------------------------------------------------------------------------
--- Move edit cursor to previous line 
+-- [Static] Move edit cursor to previous line 
 -- (respects wrapped pattern edit setting)
 
-function xPattern.move_to_previous_pattern_row()
-  TRACE("xPattern.move_to_previous_pattern_row()")
+function xPatternPos.move_to_previous_pattern_row()
+  TRACE("xPatternPos.move_to_previous_pattern_row()")
   local line_idx = rns.selected_line_index
   line_idx = math.max(1,line_idx-1)
   local wrapped_edit = rns.transport.wrapped_pattern_edit

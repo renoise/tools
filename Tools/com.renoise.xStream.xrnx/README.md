@@ -382,6 +382,8 @@ It's recommended to open the scripting console for more detailed feedback and th
 
 ### Classes
 
+See the [xLib luadoc reference](https://renoise.github.io/luadocs/xlib/index.html) for more information
+
 	xLib
 	xLine
 	xStream
@@ -392,7 +394,7 @@ It's recommended to open the scripting console for more detailed feedback and th
 	xOscMessage
 	xAutomation
 	xParameter
-  xPattern
+  xPatternPos
   xPatternSequencer
 	xPlayPos
 	xAudioDevice
