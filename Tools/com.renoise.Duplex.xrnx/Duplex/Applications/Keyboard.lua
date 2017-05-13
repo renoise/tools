@@ -1073,7 +1073,7 @@ function Keyboard:_build_app()
 
   local map = self.mappings.pitch_bend
   if (map.group_name) then
-    local c = UIPitchBend(self,map)
+    local c = UISlider(self,map)
     c.value = 64
     c.ceiling = 127
     c.on_change = function(obj)
@@ -1095,7 +1095,7 @@ function Keyboard:_build_app()
 
   local map = self.mappings.mod_wheel
   if (map.group_name) then
-    local c = UIPitchBend(self,map)
+    local c = UISlider(self,map)
     c.ceiling = 127
     c.on_change = function(obj)
       local msg = nil

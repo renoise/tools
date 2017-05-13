@@ -29,7 +29,7 @@ require (_xlibroot.."xMidiMessage")
 require (_xlibroot.."xAutomation")
 require (_xlibroot.."xTrack")
 require (_xlibroot.."xTransport")
-require (_xlibroot.."xPattern")
+require (_xlibroot.."xPatternPos")
 require (_xlibroot.."xScale")
 require (_xlibroot.."xInstrument")
 require (_xlibroot.."xOscClient")
@@ -57,8 +57,6 @@ require "Duplex/UISlider"
 require "Duplex/UISpinner"
 require "Duplex/UIPad"
 require "Duplex/UIKey"
-require "Duplex/UIKeyPressure"
-require "Duplex/UIPitchBend"
 require "Duplex/UILabel"
 require "Duplex/UILed"
 require "Duplex/ControlMap"
