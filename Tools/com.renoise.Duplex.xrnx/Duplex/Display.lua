@@ -258,10 +258,6 @@ function Display:update(foo)
   if (not self.view) then
     return
   end
-  
-  if(self.scheduler)then
-    self.scheduler:on_idle()
-  end
 
   -- OSC devices need this when sending message bundles
   -- and MIDI devices when receiving NRPN messages
