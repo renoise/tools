@@ -5,8 +5,14 @@ cScheduler
 --[[--
 
 Schedule tasks to execute after a defined amount of time
-.
+
 #
+
+## Changelog 
+
+1.04
+- Dynamically add/detach idle notifier as the need arises 
+
 
 ]]--
 
@@ -56,6 +62,12 @@ function cScheduler:add_task(ref,func,delay, ...)
   local task = cScheduledTask(ref,func,delay,arg)
   self.tasks:insert(task)
 
+  local obs = renoise.tool().app_idle_observable
+  local fn = cScheduler.on_idle
+  if not obs:has_notifier(self,fn) then
+    obs:add_notifier(self,fn)
+  end
+
   return task
 
 end
@@ -76,6 +88,15 @@ function cScheduler:remove_task(ref)
       return
     end
   end
+
+  if (#self.tasks == 0) then
+    local obs = renoise.tool().app_idle_observable
+    local fn = cScheduler.on_idle
+    if obs:has_notifier(self,fn) then
+      obs:remove_notifier(self,fn)
+    end
+  end
+
 end
 
 
