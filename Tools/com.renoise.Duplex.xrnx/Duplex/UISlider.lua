@@ -60,8 +60,11 @@ The Slider supports different input methods: buttons or faders/dials.
 
 ## Changelog
 
+1.04
+- Added CHANNEL_PRESSURE as additional input method
+
 1.03
-- Added pitch-bend as an additional input method
+- Added PITCH_CHANGED as additional input method
 
 0.99.5
 - Added support for 14-bit CC and NRPN (absolute/relative modes)
@@ -639,10 +642,7 @@ function UISlider:set_pos(x,y)
 end
 
 ---------------------------------------------------------------------------------------------------
-
---- Add event listeners
---    DEVICE_EVENT.BUTTON_PRESSED
---    DEVICE_EVENT.VALUE_CHANGED
+-- Add event listeners
 -- @see Duplex.UIComponent.add_listeners
 
 function UISlider:add_listeners()
@@ -669,13 +669,17 @@ function UISlider:add_listeners()
         return self:do_change(msg) 
       end 
     )
+    self.app.display.device.message_stream:add_listener(self,DEVICE_EVENT.CHANNEL_PRESSURE,
+      function(msg) 
+        return self:do_change(msg) 
+      end 
+    )
   end
 
 end
 
 ---------------------------------------------------------------------------------------------------
-
---- Remove previously attached event listeners
+-- Remove previously attached event listeners
 -- @see Duplex.UIComponent
 
 function UISlider:remove_listeners()
@@ -684,6 +688,7 @@ function UISlider:remove_listeners()
   self.app.display.device.message_stream:remove_listener(self,DEVICE_EVENT.BUTTON_PRESSED)
   self.app.display.device.message_stream:remove_listener(self,DEVICE_EVENT.VALUE_CHANGED)
   self.app.display.device.message_stream:remove_listener(self,DEVICE_EVENT.PITCH_CHANGED)
+  self.app.display.device.message_stream:remove_listener(self,DEVICE_EVENT.CHANNEL_PRESSURE)
 
 end
 
