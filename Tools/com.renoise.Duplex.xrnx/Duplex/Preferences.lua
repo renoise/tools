@@ -66,7 +66,7 @@ duplex_preferences = renoise.Document.create("ScriptingToolPreferences") {
   theme_color = {0xc1,0x34,0x11},
 
   --- (bool) detect osc server on startup 
-  run_server_test = true,
+  run_server_test = false,
 
   --- (bool) when enabled, the Duplex browser is displayed on startup
   display_browser_on_start = true,
