@@ -1127,7 +1127,8 @@ function StepSequencer:post_jump_update()
   self:_update_line_buttons()
 
   if (self.options.follow_line.value == FOLLOW_LINE_SET) then
-    xPattern.jump_to_line(self:_get_line_offset()+1)
+    local line_idx = self:_get_line_offset()+1
+    xPattern.jump_to_line(safe_line)
   end
 
 end
@@ -1564,7 +1565,7 @@ function StepSequencer:_attach_to_song()
   self._song_notifiers:insert(obs)
   obs:add_notifier(self,function()
     TRACE("StepSequencer:_pattern_notifier()")
-    self:_attach_to_pattern(self._current_pattern_index)
+    self:_attach_to_pattern(rns.selected_pattern_index)
   end)
 
   obs = rns.transport.follow_player_observable
