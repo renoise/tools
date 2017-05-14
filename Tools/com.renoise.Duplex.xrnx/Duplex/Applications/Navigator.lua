@@ -416,17 +416,11 @@ end
 function Navigator:_goto_prev_block()
   TRACE("Navigator:_goto_prev_block")
 
-  if rns.transport.loop_block_enabled then
-    local coeff = rns.transport.loop_block_range_coeff
-    local block_start = rns.transport.loop_block_start_pos.line
-    local num_lines = rns.selected_pattern.number_of_lines
-    local shift_lines = math.floor(num_lines/coeff)
-    local new_pos = block_start-shift_lines
-    if (new_pos >= 1) then
-      local idx = self:_get_index_from_line(new_pos)
-      self:_jump_to_index(idx)
-      return true
-    end
+  local prev_line_idx = xBlockLoop.get_previous_line_index()
+  if prev_line_idx and (prev_line_idx >= 1) then
+    local idx = self:_get_index_from_line(new_pos)
+    self:_jump_to_index(idx)
+    return true
   end
 
   return false
@@ -438,19 +432,13 @@ end
 function Navigator:_goto_next_block()
   TRACE("Navigator:_goto_next_block")
 
-  if rns.transport.loop_block_enabled then
-    local coeff = rns.transport.loop_block_range_coeff
-    local block_start = rns.transport.loop_block_start_pos.line
-    local num_lines = rns.selected_pattern.number_of_lines
-    local shift_lines = math.floor(num_lines/coeff)
-    local new_pos = block_start+shift_lines
-    if (new_pos < num_lines) then
-      local idx = self:_get_index_from_line(new_pos)
-      self:_jump_to_index(idx)
-      return true
-    end
+  local prev_line_idx = xBlockLoop.get_next_line_index()
+  local num_lines = rns.selected_pattern.number_of_lines
+  if (prev_line_idx < num_lines) then
+    local idx = self:_get_index_from_line(new_pos)
+    self:_jump_to_index(idx)
+    return true
   end
-
   return false
 
 end
@@ -702,7 +690,7 @@ end
 
 --------------------------------------------------------------------------------
 
---- navigate to the line indicated by the index¨
+--- navigate to the line indicated by the index
 -- also: carry over loop, if this option has been enabled
 -- @param ctrl_idx (int), 1-blockpos_size
 
@@ -858,46 +846,21 @@ function Navigator:_set_looped_range()
 
   if (self._first_pos.sequence == self._second_pos.sequence) then
 
-    -- the following will enforece a valid coefficient range
-
-    local line_count = self._second_pos.line - self._first_pos.line
-    local coeff = num_lines/line_count
-    local matched_coeff = false
-    local valid_coeffs = nil
-    if (self.options.valid_coeffs.value == VALID_COEFF_ALL) then
-      valid_coeffs = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}
-    elseif (self.options.valid_coeffs.value == VALID_COEFF_FOUR) then
-      valid_coeffs = {1,2,4,8,16}
-    elseif (self.options.valid_coeffs.value == VALID_COEFF_THREE) then
-      valid_coeffs = {1,2,3,6,12}
-    end
-    local closest_match = nil
-    for k,v in ipairs(valid_coeffs) do
-      if (v == coeff) then
-        matched_coeff = true
-      elseif (v > coeff) then
-        if (math.ceil(coeff) == v) then
-          closest_match = valid_coeffs[k]
-        else
-          closest_match = valid_coeffs[k-1]
-        end
-        break
-      end
-    end
-
-    -- if not a valid coefficient, expand the size
-    if not matched_coeff then
-      matched_coeff = closest_match
-      line_count = math.floor(num_lines/closest_match)
-      self._second_pos.line = self._first_pos.line+line_count
-    end
-
-    -- if result goes beyond boundary, move back
-    if (self._second_pos.line > num_lines+1) then
-      local offset = num_lines-self._second_pos.line+1
-      self._first_pos.line = self._first_pos.line + offset
-      self._second_pos.line = self._second_pos.line + offset
-    end
+    -- create a normalized range (one that Renoise can select)
+    local coeffs = {}
+    if (self.options.valid_coeffs.value == xBlockLoop.COEFF_MODE.ALL) then
+      coeffs = xBlockLoop.COEFFS_ALL
+    elseif (self.options.valid_coeffs.value == xBlockLoop.COEFF_MODE.FOUR) then
+      coeffs = xBlockLoop.COEFFS_FOUR
+    elseif (self.options.valid_coeffs.value == xBlockLoop.COEFF_MODE.THREE) then
+      coeffs = xBlockLoop.COEFFS_THREE
+    else
+      error("Unexpected xBlockLoop.COEFF_MODE")
+    end 
+    local start_line,end_line = 
+      xBlockLoop.normalize_line_range(self._first_pos.line,self._second_pos.line,num_lines,coeffs)
+    self._first_pos.line = start_line
+    self._second_pos.line = end_line
 
   end
 
