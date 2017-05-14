@@ -153,8 +153,8 @@ function Options:_create_content_view()
         vb:valuebox{
           width = 96,
           bind = duplex_preferences.osc_server_port,
-          min = xOscClient.MIN_PORT,
-          max = xOscClient.MAX_PORT,
+          min = xLib.MIN_OSC_PORT,
+          max = xLib.MAX_OSC_PORT,
         },
       },
       vb:row{
