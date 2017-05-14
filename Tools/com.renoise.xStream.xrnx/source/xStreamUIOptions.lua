@@ -640,9 +640,9 @@ function xStreamUIOptions:on_idle()
   local view = self.vb.views["xStreamImplStats"]
   if view then
     local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
-      ..("\nLines Travelled: %d"):format(xs.stream.writepos.lines_travelled)
-      ..("\nReadPosition: %d,%d"):format(xs.stream.readpos.sequence,xs.stream.readpos.line)
-      ..("\nWritePosition: %d,%d"):format(xs.stream.writepos.sequence,xs.stream.writepos.line)
+      ..("\nLines Travelled: %d"):format(xs.stream.travelled)
+      ..("\nStream Position: %d,%d"):format(xs.stream.pos.sequence,xs.stream.pos.line)
+      --..("\nWritePosition: %d,%d"):format(xs.stream.writepos.sequence,xs.stream.writepos.line)
       ..("\nWriteahead: %d lines"):format(xs.stream.writeahead)
       ..("\nSelected model: %s"):format(xs.selected_model and xs.selected_model.name or "N/A") 
       ..("\nStream active: %s"):format(xs.active and "true" or "false") 
