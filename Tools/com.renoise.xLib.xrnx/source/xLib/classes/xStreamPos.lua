@@ -34,9 +34,11 @@ function xStreamPos:__init()
   --- (xPlayPos) precise playback position
   self.playpos = xPlayPos()
 
-  --- (SongPos) overall progression of the stream 
+  --- (SongPos) stream position 
   self.pos = rns.transport.playback_pos
-  self.travelled = 0
+
+  --- number, represents the total number of streamed lines 
+  self.xinc = 0
 
   --- (xBlockLoop)
   self.xblock = nil
@@ -87,7 +89,7 @@ function xStreamPos:reset()
   else
     self.pos = rns.transport.edit_pos
   end
-  self.travelled = 0
+  self.xinc = 0
 
 end
 
@@ -100,7 +102,7 @@ function xStreamPos:start()
   self:reset()
   if rns.transport.playing then    
     if not self.just_started_playback then
-      self.travelled = -1
+      self.xinc = -1
       self:_increase_by(1)
     else
       self:_increase_by(1)
@@ -166,8 +168,8 @@ end
 function xStreamPos:_increase_by(lines)
   TRACE("xStreamPos:_increase_by(lines)",lines)
   TRACE(">>> self.pos",self.pos)
-  local travelled = xSongPos.increase_by_lines(lines,self.pos)
-  self.travelled = self.travelled + travelled
+  local xinc = xSongPos.increase_by_lines(lines,self.pos)
+  self.xinc = self.xinc + xinc
 end 
 
 ---------------------------------------------------------------------------------------------------
@@ -175,8 +177,8 @@ end
 function xStreamPos:_decrease_by(lines)
   TRACE("xStreamPos:_decrease_by(lines)",lines)
   TRACE(">>> self.pos",self.pos)
-  local travelled = xSongPos.decrease_by_lines(lines,self.pos)
-  self.travelled = self.travelled + travelled
+  local xinc = xSongPos.decrease_by_lines(lines,self.pos)
+  self.xinc = self.xinc + xinc
 end 
 
 ---------------------------------------------------------------------------------------------------
@@ -282,7 +284,7 @@ function xStreamPos:_set_pos(pos)
         self.pos = rns.transport.playback_pos
       end
       self.pos.sequence = pos.sequence
-      self.travelled = self.travelled-self.writeahead
+      self.xinc = self.xinc-self.writeahead
       if self.refresh_fn then
         self.refresh_fn()
       end
@@ -330,14 +332,14 @@ function xStreamPos:update()
 
   local prev_block = function()
     -- move read-pos back to block start point
-    local travelled = self.travelled 
+    local xinc = self.xinc 
     self:_decrease_by(self.xblock.length)
 
     -- can result in negative value ??? 
     local line_idx = self.pos.line,-self.writeahead
     local seq_idx = self.pos.sequence
     self.pos.line = xSongPos.enforce_block_boundary("decrease",{line=line_idx,sequencer=seq_idx})
-    self.travelled = travelled-self.writeahead
+    self.xinc = xinc-self.writeahead
     if self.refresh_fn then
       self.refresh_fn()
     end
@@ -346,9 +348,9 @@ function xStreamPos:update()
 
   local next_block = function()
     if self.pos then
-      local travelled = self.travelled
+      local xinc = self.xinc
       self:_increase_by(self.xblock.length-self.writeahead)
-      self.travelled = travelled-self.writeahead
+      self.xinc = xinc-self.writeahead
       if self.refresh_fn then
         self.refresh_fn()
       end

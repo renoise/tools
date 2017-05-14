@@ -202,7 +202,7 @@ function xStream:__init(...)
         end
       end
       local live_mode = true
-      self.buffer:write_output(self.stream.pos,self.stream.travelled,nil,live_mode)
+      self.buffer:write_output(self.stream.pos,self.stream.xinc,nil,live_mode)
     end
   end
   self.stream.refresh_fn = function()
@@ -756,7 +756,7 @@ function xStream:schedule_item(model_name,preset_index,preset_bank_name)
   -- space of already-computed lines, wipe the buffer
   if self._scheduled_pos then
     local happening_in_lines = self._scheduled_travelled
-      - (self.stream.travelled)
+      - (self.stream.xinc)
     --print("happening_in_lines",happening_in_lines)
     if (happening_in_lines <= self.stream.writeahead) then
       --print("wipe the buffer")
@@ -774,29 +774,29 @@ function xStream:compute_scheduling_pos()
   TRACE("xStream:compute_scheduling_pos()")
 
   self._scheduled_pos = xSongPos.create(self.stream.playpos)
-  self._scheduled_travelled = self.stream.travelled
+  self._scheduled_travelled = self.stream.xinc
 
   --print("*** xStream.SCHEDULE.PATTERN - PRE self._scheduled_pos",self._scheduled_pos)
   --if self._scheduled_pos then
   --end
 
-  local travelled = 0
+  local xinc = 0
   if (self.scheduling == xStream.SCHEDULE.LINE) then
     error("Scheduling should already have been applied")
   elseif (self.scheduling == xStream.SCHEDULE.BEAT) then
-    travelled = xSongPos.next_beat(self._scheduled_pos)
+    xinc = xSongPos.next_beat(self._scheduled_pos)
     --print("*** xStream.SCHEDULE.BEAT - self._scheduled_pos",self._scheduled_pos)
   elseif (self.scheduling == xStream.SCHEDULE.BAR) then
-    travelled = xSongPos.next_bar(self._scheduled_pos)  
+    xinc = xSongPos.next_bar(self._scheduled_pos)  
     --print("*** xStream.SCHEDULE.BAR - self._scheduled_pos",self._scheduled_pos)
   elseif (self.scheduling == xStream.SCHEDULE.BLOCK) then
-    travelled = xSongPos.next_block(self._scheduled_pos)
+    xinc = xSongPos.next_block(self._scheduled_pos)
     --print("*** xStream.SCHEDULE.BLOCK - self._scheduled_pos",self._scheduled_pos)
   elseif (self.scheduling == xStream.SCHEDULE.PATTERN) then
     -- if we are within a blockloop, do not set a schedule position
     -- (once the blockloop is disabled, this function is invoked)
     if not rns.transport.loop_block_enabled then
-      travelled = xSongPos.next_pattern(self._scheduled_pos)
+      xinc = xSongPos.next_pattern(self._scheduled_pos)
       --print("*** xStream.SCHEDULE.PATTERN - self._scheduled_pos",self._scheduled_pos)
     else
       self._scheduled_pos = nil
@@ -806,7 +806,7 @@ function xStream:compute_scheduling_pos()
   end
 
   if self._scheduled_pos then
-    self._scheduled_travelled = self._scheduled_travelled + travelled
+    self._scheduled_travelled = self._scheduled_travelled + xinc
   else 
     self._scheduled_travelled = nil
   end
@@ -1412,18 +1412,18 @@ end
 -- temporarily switching to a different set of buffers
 -- @param from_line (int)
 -- @param to_line (int) 
--- @param [travelled] (int) where the callback 'started'
+-- @param [xinc] (int) where the callback 'started'
 
-function xStream:apply_to_range(from_line,to_line,travelled)
-  TRACE("xStream:apply_to_range(from_line,to_line,travelled)",from_line,to_line,travelled)
+function xStream:apply_to_range(from_line,to_line,xinc)
+  TRACE("xStream:apply_to_range(from_line,to_line,xinc)",from_line,to_line,xinc)
 
   local xpos = {
     sequence = rns.transport.edit_pos.sequence,
     line = from_line
   }
 
-  if not travelled then 
-    travelled = 0
+  if not xinc then 
+    xinc = 0
   end
 
   local live_mode = false -- start from first line
@@ -1446,7 +1446,7 @@ function xStream:apply_to_range(from_line,to_line,travelled)
   -- write output
   self.active = true
   self.stream.pos.line = from_line
-  self.buffer:write_output(xpos,travelled,num_lines,live_mode)
+  self.buffer:write_output(xpos,xinc,num_lines,live_mode)
 
   -- restore settings
   self.active = cached_active
