@@ -162,12 +162,6 @@ function xVoiceManager:__init(...)
     self:_attach_to_song()
   end)
 
-  renoise.tool().app_idle_observable:add_notifier(function()
-    if (self.duration > 0) then
-      self:_check_expired()
-    end
-  end)
-
   self:_attach_to_song()
 
 end
@@ -262,6 +256,7 @@ function xVoiceManager:input_message(xmsg)
     return
   end
 
+  -- check if voice is already active 
   local voice_idx = self:get_voice_index(xmsg)
   if voice_idx then
     if (xmsg.message_type == xMidiMessage.TYPE.NOTE_OFF) then
@@ -681,6 +676,14 @@ function xVoiceManager:_register(xmsg)
   self.triggered_index = #self.voices
   self.triggered_observable:bang()
 
+
+  if (self.duration > 0) then
+    local obs = renoise.tool().app_idle_observable
+    if not obs:has_notifier(self,xVoiceManager._check_expired) then
+      renoise.tool().app_idle_observable:add_notifier(self,xVoiceManager._check_expired)
+    end
+  end
+
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -692,9 +695,16 @@ function xVoiceManager:_check_expired()
   for k,v in ripairs(self.voices) do
     local age = os.clock() - v.timestamp
     if (age > self.duration) then
-      self:release(k)
+      self:release(k)      
     end
   end
+
+  if (#self.voices == 0) then 
+    local obs = renoise.tool().app_idle_observable
+    if obs:has_notifier(self,xVoiceManager._check_expired) then
+      renoise.tool().app_idle_observable:remove_notifier(self,xVoiceManager._check_expired)
+    end
+  end 
 
 end
 
