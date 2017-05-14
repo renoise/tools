@@ -121,7 +121,7 @@ function xAutomation:record(track_idx,param,value,value_mode)
     ptrack_auto:add_point_at(pos.line,value)
   else
     if self.highres_mode then
-      local highres_pos = xCursorPos.get_highres_pos()
+      local highres_pos = xPlayPos.get()
       local line_fract = highres_pos.line + highres_pos.fraction
       self:clear_range(line_fract,self.writeahead,ptrack_auto)
       ptrack_auto:add_point_at(line_fract,value)
