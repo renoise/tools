@@ -2,24 +2,64 @@
 
 < Back to [Applications](../Applications.md)
 
-## Features 
+## About
 
-  * Single press & release to move playback to the indicated position
-  * When stopped, press & release will cause the edit-pos to move 
-  * Pressing two buttons will create a block-loop with that approximate size
-  * When a loop has been created, hold any button to cleared it again
+Navigator can manipulate the playback position and block-loop of a pattern in realtime. You can do this, even playback is happening in a different pattern than the currently selected one. 
 
-## How to use
+The application has three mappings, and is suitable for almost any controller (see [requirements](#requirements)). 
 
-To take advantage of this application, you need to assign a number of buttons to the "blockpos" - the more buttons, the higher precision you will get. Generally speaking, you want to map either 4, 8 or 16 buttons for music which is based on a 4/4 measure. 
+## Basic operation
+
+  * Tap a button to move to a new position in the pattern.
+  * When playback is stopped, moves the edit-position instead.
+  * Press+hold a single button to loop and/or select this range. 
+  * Pressing two buttons will create a loop range between the buttons.
+
+### Controlling looped ranges
+
+If you have looped a range, you can move this around as well. The following rules apply:
+
+* If you press _inside_ the loop, the position is changed (like a normal button tap)
+* If you press _outside_ the loop, the loop is moved to this position *
+* If you press and hold _inside_ the loop, the loop is collapsed/cleared
+
+> *&nbsp;Use [@loop_carry](...) to decide if the playback position should be updated as well.
+
+### Measures: 4/4 and beyond
+
+Generally speaking, most music is based on a 4/4 measure. Navigator knows this, but it's smart enough to auto-detect if the pattern length is a power of three. For example, a 64-line pattern is a power of four, as 64 divided by four is 16. But it can't be a power of three, because 64/3 isn't a whole number. 
+
+This is how typical 64-line pattern would look like, if you had 4 buttons:
+
+    ┌───1───┬───2───┬───3───┬───4───┐
+    │  1-16 │ 17-32 │ 33-48 │ 49-64 │
+    └───────┴───────┴───────┴───────┘
+
+A 24-line pattern would also work with powers of four:
+
+    ┌───1───┬───2───┬───3───┬───4───┐
+    │  1-6  │  7-12 │ 13-18 │ 19-24 │
+    └───────┴───────┴───────┴───────┘
+
+Using powers of three, you can of course divide a 24-line pattern into three equal parts. But if the number of buttons on your controller does not line up perfectly, controlling it can be a bit "funny". Consider the following (controlling three parts with four buttons):
+
+    ┌───1─────┬─2───────3┬──────4───┐
+    │   1-8   │   9-16   │  17-24   │
+    └─────────┴──────────┴──────────┘
+
+In this example, pressing buttons 1+2 would select the range from 1-16, and pressing 3+4 would select the range from 9-24. So starting the range from the third button actually selected a range that begins _earlier_ than ending the range with the second button. 
+
+## Requirements
+
+Some of Navigators functionality is only available for devices that are capable of transmitting 'release' events. All range-based operations (such as hold-to-loop or hold-to-select) have this requirement.  
 
 ## Available mappings
   
 | Name       | Description   |
 | -----------|---------------|  
-|`prev_block`|Navigator: Move the blockloop backwards|  
-|`next_block`|Navigator: Move the blockloop forward|  
-|`blockpos`|Navigator: Pattern position/blockloop<br>Press and release to change position/block<br>Press and hold to enable/disable loop<br>Press multiple buttons to define blockloop<br>Control-map value: |  
+|`prev_block`|Navigator: Move the blockloop backwards
+|`next_block`|Navigator: Move the blockloop forward
+|`blockpos`|Navigator: Pattern position/blockloop<br>[Press and release] to change position/block<br>[Press and hold] to enable/disable loop<br>[Press multiple buttons] to define blockloop 
 
 ## Default options 
   
@@ -27,7 +67,7 @@ To take advantage of this application, you need to assign a number of buttons to
 
 | Name          | Description   |
 | ------------- |---------------|  
-|`operation`|Here you can choose if you want to be able to<br>control both the position and looped range,<br>or just the position. Note that setting the<br>range will require that your controller is <br>capable of transmitting 'release' events.|  
+|`operation`|Here you can choose if you want to be able to<br>control both the position and looped range,<br>or just the position. |  
 |`loop_carry`|Enable this feature to have the looped range<br>'carried over' when a new position is set|  
 |`pattern_select`|Match the pattern selection with the loop|  
 |`valid_coeffs`|Select the set of coefficients that best <br>fit your particular musical content |  
