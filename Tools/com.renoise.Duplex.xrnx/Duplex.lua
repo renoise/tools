@@ -24,6 +24,7 @@ require (_clibroot.."cColor")
 require (_clibroot.."cScheduler")
 require (_clibroot.."cProcessSlicer")
 
+require (_xlibroot.."xLib")
 require (_xlibroot.."xMessage")
 require (_xlibroot.."xMidiMessage")
 require (_xlibroot.."xAutomation")
