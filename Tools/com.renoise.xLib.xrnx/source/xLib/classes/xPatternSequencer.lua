@@ -12,20 +12,24 @@ Static methods for working with the renoise.PatternSequence
 
 class 'xPatternSequencer' 
 
---[[
 ---------------------------------------------------------------------------------------------------
--- TODO
-function xPatternSequencer:get_next_pattern()
+-- [Static] Check if position is within actual song boundaries
+-- @param seq_idx, int
+-- @return bool
+
+function xPatternSequencer.within_bounds(seq_idx)
+  TRACE("xPatternSequencer.within_bounds(seq_idx)",seq_idx)
+
+  if (seq_idx > #rns.sequencer.pattern_sequence) then
+    return false
+  elseif (seq_idx < 1) then
+    return false
+  else
+    return true
+  end
 
 end
 
----------------------------------------------------------------------------------------------------
--- TODO
-
-function xPatternSequencer:get_previous_pattern()
-
-end
-]]
 ---------------------------------------------------------------------------------------------------
 -- [Static] Enable loop for the section that playback is currently located in
 
@@ -148,3 +152,22 @@ function xPatternSequencer.get_playing_pattern()
   local idx = rns.transport.playback_pos.sequence
   return rns.patterns[rns.sequencer.pattern_sequence[idx]]
 end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Retrieve the pattern index 
+-- OPTIMIZE how to implement a caching mechanism? 
+-- @param seq_idx, sequence index 
+-- @return int or nil 
+
+function xPatternSequencer.get_number_of_lines(seq_idx)
+  TRACE("xPatternSequencer.get_number_of_lines(seq_idx)",seq_idx)
+	
+  assert(type(seq_idx) == "number")
+
+  local patt_idx = rns.sequencer:pattern(seq_idx)
+  if patt_idx then
+    return rns:pattern(patt_idx).number_of_lines
+  end
+
+end
+
