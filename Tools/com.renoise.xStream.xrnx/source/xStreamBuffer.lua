@@ -59,10 +59,12 @@ end
 function xStreamBuffer:update_read_buffer()
   TRACE("xStreamBuffer:update_read_buffer()")
 
-  local pos = self.xstream.stream.readpos
+  local pos = xSongPos.create(self.xstream.stream.pos) -- readpos
+  local xinc = self.xstream.stream.travelled -- readpos
+  
   if pos then
     for k = 0,self.xstream.stream.writeahead-1 do
-      local xinc = pos.lines_travelled
+      
       if self.scheduled[xinc] then
         self.pattern_buffer[xinc] = self.scheduled[xinc]
       else
@@ -70,7 +72,8 @@ function xStreamBuffer:update_read_buffer()
           pos.sequence,pos.line,self.xstream.include_hidden,self.xstream.track_index)
         --print("update_read_buffer - read from pattern - xinc,pos",xinc,pos)
       end
-      pos:increase_by_lines(1)
+      local travelled = xSongPos.increase_by_lines(1,pos)
+      xinc = xinc + travelled
     end
     self:wipe_futures()
   end
@@ -85,7 +88,7 @@ end
 function xStreamBuffer:wipe_past()
   TRACE("xStreamBuffer:wipe_past()")
 
-  local from_idx = self.xstream.stream.writepos.lines_travelled - 1
+  local from_idx = self.xstream.stream.travelled - 1
   for i = from_idx,self.lowest_xinc,-1 do
     self.output_buffer[i] = nil
     self.pattern_buffer[i] = nil
@@ -107,7 +110,7 @@ end
 function xStreamBuffer:wipe_futures()
   TRACE("xStreamBuffer:wipe_futures()")
 
-  local from_idx = self.xstream.stream.writepos.lines_travelled
+  local from_idx = self.xstream.stream.travelled
   if rns.transport.playing then
     -- when live streaming, exclude current line
     from_idx = from_idx+1
@@ -118,14 +121,18 @@ function xStreamBuffer:wipe_futures()
     self.output_buffer[i] = nil
   end
 
-  self.highest_xinc = self.xstream.stream.writepos.lines_travelled
+  self.highest_xinc = self.xstream.stream.travelled
   --print("*** xStreamBuffer:wipe_futures - self.highest_xinc",self.highest_xinc)
 
   -- pull the read position back to this point
-  self.xstream.stream.readpos = xSongPos(self.xstream.stream.writepos)
+  --[[
+  print(">>> self.xstream.stream.pos",self.xstream.stream.pos)
+  self.xstream.stream.readpos = xSongPos.create(self.xstream.stream.pos)
+  print(">>> self.xstream.stream.readpos",self.xstream.stream.readpos)
   if rns.transport.playing then
-    self.xstream.stream.readpos:increase_by_lines(1)
+    self.xstream.stream:_increase_read_position(1)
   end
+  ]]
 
 end
 
@@ -149,59 +156,55 @@ function xStreamBuffer:clear()
 end
 
 -------------------------------------------------------------------------------
--- get a xSongPos based on buffer read-position
+-- create a SongPos based on buffer read-position
 -- (only be reliable as long as outer conditions does not change - loops,etc.)
 -- @param xinc (int)
 -- @return xSongPos
 
-function xStreamBuffer:get_pos(xinc)
-  TRACE("xStreamBuffer:get_pos(xinc)",xinc)
+function xStreamBuffer:get_songpos(xinc)
+  TRACE("xStreamBuffer:get_songpos(xinc)",xinc)
 
-  local pos = xSongPos(self.xstream.stream.writepos)
-  local delta = xinc - pos.lines_travelled
-  pos:increase_by_lines(delta)
-  --print("xStreamBuffer:get_pos - POST",pos)
+  local pos = xSongPos.create(self.xstream.stream.pos)
+  local delta = xinc - self.xstream.stream.travelled
+  xSongPos.increase_by_lines(delta,pos)
   return pos
 
 end
 
 -------------------------------------------------------------------------------
 -- return a buffer position which correspond to the desired schedule
--- @param schedule (int or xStream.SCHEDULE), schedule when negative 
--- @return int (xSongPos)
+-- @param schedule, xStream.SCHEDULE
+-- @return int
 
 function xStreamBuffer:get_scheduled_pos(schedule)
   TRACE("xStreamBuffer:get_scheduled_pos(schedule)",schedule)
 
   local live_mode = rns.transport.playing
-  local writepos = self.xstream.stream.writepos
+  local pos = self.xstream.stream.pos
 
   local schedules = {
     [xStream.SCHEDULE.LINE] = function()
-      local pos = xSongPos(writepos)
+      local travelled = 0
       if live_mode then
-        pos:increase_by_lines(1)
+        travelled = xSongPos.increase_by_lines(1,pos)
       end
-      return pos
+      return travelled
     end,
     [xStream.SCHEDULE.BEAT] = function()
-      local pos = xSongPos(writepos)
-      pos:decrease_by_lines(1) -- too cautious when on next line?
-      pos:next_beat()
-      return pos
+      local travelled = xSongPos.decrease_by_lines(1,pos) -- too cautious when on next line?
+      travelled = travelled + xSongPos.next_beat(pos)
+      return travelled
     end,
     [xStream.SCHEDULE.BAR] = function()
-      local pos = xSongPos(writepos)
-      pos:next_bar()
-      return pos
+      local travelled = xSongPos.next_bar(pos)
+      return travelled
     end,
   }
 
   if schedules[schedule] then
-    local pos = schedules[schedule]()
-    local delta = pos.lines_travelled - writepos.lines_travelled
-    pos.lines_travelled = writepos.lines_travelled + delta
-    return pos
+    local travelled = schedules[schedule]()
+    --local delta =  - self.xstream.stream.travelled
+    return self.xstream.stream.travelled + travelled
   else
     error("Unsupported schedule type, please use NONE/BEAT/BAR")
   end
@@ -231,8 +234,9 @@ function xStreamBuffer:schedule_line(xline,xinc)
   TRACE("xStreamBuffer:schedule_line(xline,xinc)",xline,xinc)
 
   if not xinc then xinc = self:get_xinc() end
-  local writepos = self.xstream.stream.writepos
-  local delta = xinc - writepos.lines_travelled
+  local pos = self.xstream.stream.pos
+  local travelled = self.xstream.stream.travelled
+  local delta = xinc - travelled
   local live_mode = rns.transport.playing
 
   -- any range: insert into events table 
@@ -240,9 +244,9 @@ function xStreamBuffer:schedule_line(xline,xinc)
 
   if (delta <= self.xstream.stream.writeahead) then
     if (delta == 1) then
-      -- immediate output
+      print("*** immediate output")
       self:wipe_futures()
-      self:write_output(writepos,2,live_mode)
+      self:write_output(pos,travelled,2,live_mode)
     else
       -- within output range - insert into output_buffer
       self.output_buffer[xinc] = xLine.apply_descriptor(xline)
@@ -263,8 +267,7 @@ function xStreamBuffer:schedule_note_column(xnotecol,col_idx,xinc)
   assert(type(col_idx)=="number")
 
   if not xinc then xinc = self:get_xinc() end
-  local pos = self:get_pos(xinc)
-  local xline = self:get_input(xinc,pos) 
+  local xline = self:get_input(xinc,self:get_songpos(xinc)) 
   xline.note_columns[col_idx] = xnotecol
   self:schedule_line(xline,xinc)
 
@@ -279,8 +282,7 @@ function xStreamBuffer:schedule_effect_column(xeffectcol,col_idx,xinc)
   assert(type(col_idx)=="number")
 
   if not xinc then xinc = self:get_xinc() end
-  local pos = self:get_pos(xinc)
-  local xline = self:get_input(xinc,pos)
+  local xline = self:get_input(xinc,self:get_songpos(xinc))
   --print("schedule_effect_column - xline",rprint(xline))
   xline.effect_columns[col_idx] = xeffectcol
   self:schedule_line(xline,xinc)
@@ -296,9 +298,8 @@ end
 function xStreamBuffer:get_xinc()
   TRACE("xStreamBuffer:get_xinc()")
 
-  local writepos = self.xstream.stream.writepos
-  local live_mode = rns.transport.playing
-  return writepos.lines_travelled + (live_mode and 1 or 0)
+  local live_mode = rns.transport.playing and 1 or 0
+  return self.xstream.stream.travelled + live_mode
 
 end
 
@@ -382,21 +383,20 @@ function xStreamBuffer:create_content(num_lines)
     error("No callback method has been specified")
   end
 
-  local readpos = self.xstream.stream.readpos
+  local pos = xSongPos.create(self.xstream.stream.pos) -- readpos
+  local xinc = self.xstream.stream.travelled
 
-  -- special case: if the pattern was deleted from the song, the readpos
+  -- special case: if the pattern was deleted from the song, the pos
   -- might be referring to a non-existing pattern - in such a case,
   -- we re-initialize to the current position
-  -- TODO "proper" align of readpos via patt-seq notifications in xStreamPos 
-  if not rns.sequencer.pattern_sequence[readpos.sequence] then
+  -- TODO "proper" align of pos via patt-seq notifications in xStreamPos 
+  if not rns.sequencer.pattern_sequence[pos.sequence] then
     LOG("*** xStreamBuffer:create_content - fixing missing pattern sequence")
-    readpos = xSongPos(rns.transport.playback_pos)
+    pos = rns.transport.playback_pos
   end
   
 
   for i = 0, num_lines-1 do
-
-    local xinc = readpos.lines_travelled
     
     -- handle scheduling ----------------------------------
 
@@ -404,10 +404,9 @@ function xStreamBuffer:create_content(num_lines)
     local contains_code = nil
     local change_to_scheduled = false
     if self.xstream._scheduled_pos and self.xstream._scheduled_model then
-      local compare_to = 1 + readpos.lines_travelled - num_lines + i
-      if (self.xstream._scheduled_pos.lines_travelled <= compare_to) then
+      local compare_to = 1 + xinc - num_lines + i
+      if (self.xstream._scheduled_travelled <= compare_to) then
         change_to_scheduled = true
-        --print("*** xStreamBuffer:create_content, scheduled - readpos,scheduled_pos,compare_to",readpos,self._scheduled_pos.lines_travelled,compare_to)
       end
     end
     if change_to_scheduled then
@@ -420,21 +419,21 @@ function xStreamBuffer:create_content(num_lines)
     end
 
     if not contains_code then
-      --LOG("*** Skip, callback does not provide any functionality")
+      LOG("*** Skip, callback does not provide any functionality")
       -- TODO stacked model - forward 
     else
 
       -- retrieve existing content --------------------------
 
-      local xline = self:get_input(xinc,readpos)
+      local xline = self:get_input(xinc,pos)
 
       -- process the callback -------------------------------
 
       local buffer_content = nil
       local success,err = pcall(function()
-        buffer_content = callback(xinc,xLine(xline),xSongPos(readpos))
+        buffer_content = callback(xinc,xLine(xline),xSongPos.create(pos))
       end)
-      --print("processed callback - xinc,readpos",xinc,readpos)
+      print("processed callback - xinc,pos",xinc,pos)
       if not success and err then
         LOG("*** Error: please review the callback function - "..err)
         -- TODO display runtime errors separately (runtime_status)
@@ -457,7 +456,8 @@ function xStreamBuffer:create_content(num_lines)
 
     -- update counters -------------------------------
 
-    readpos:increase_by_lines(1)
+    local travelled = xSongPos.increase_by_lines(1,pos)
+    xinc = xinc + travelled
 
   end
 
@@ -466,12 +466,12 @@ end
 -------------------------------------------------------------------------------
 -- will produce output for the next number of lines
 --  * generate content as needed or pull it from the buffer
--- @param xpos (xSongPos), always writepos when streaming 
--- @param num_lines (int), use writeahead if not defined
+-- @param pos (SongPos), always pos when streaming 
+-- @param [num_lines] (int), use writeahead if not defined
 -- @param live_mode (bool), skip line at playpos when true
 
-function xStreamBuffer:write_output(xpos,num_lines,live_mode)
-  TRACE("xStreamBuffer:write_output(xpos,num_lines,live_mode)",xpos,num_lines,live_mode)
+function xStreamBuffer:write_output(pos,travelled,num_lines,live_mode)
+  TRACE("xStreamBuffer:write_output(pos,travelled,num_lines,live_mode)",pos,travelled,num_lines,live_mode)
 
   if not self.xstream.selected_model then
     return
@@ -485,16 +485,15 @@ function xStreamBuffer:write_output(xpos,num_lines,live_mode)
   self:wipe_past()
 
   -- generate new content as needed
-  local has_content,missing_from = 
-    self:has_content(xpos.lines_travelled,num_lines-1)
-  if not has_content then
-    self:create_content(num_lines-(missing_from-xpos.lines_travelled))
+  local has_content,missing_from = self:has_content(travelled,num_lines-1)
+  if not has_content then 
+    self:create_content(num_lines-(missing_from-travelled))
   end
 
   local tmp_pos -- temp line-by-line position
 
   -- TODO decide this elsewhere (optimize)
-  local patt_num_lines = xSongPos.get_pattern_num_lines(xpos.sequence)
+  local patt_num_lines = xPatternSequencer.get_number_of_lines(pos.sequence)
 
   local phrase = nil
   local ptrack_auto = nil
@@ -502,32 +501,31 @@ function xStreamBuffer:write_output(xpos,num_lines,live_mode)
 
   for i = 0,num_lines-1 do
     
-    tmp_pos = xSongPos({sequence=xpos.sequence,line=xpos.line+i})
-    tmp_pos.bounds_mode = self.xstream.bounds_mode
+    tmp_pos = {sequence=pos.sequence,line=pos.line+i}
     --print("*** write_output i,tmp_pos",i,tmp_pos)
 
     if (tmp_pos.line > patt_num_lines) then
       -- exceeded pattern
-      if (self.xstream.loop_mode ~= xSongPos.LOOP_BOUNDARY.NONE) then
+      if (xSongPos.DEFAULT_LOOP_MODE ~= xSongPos.LOOP_BOUNDARY.NONE) then
         -- normalize the songpos and redial 
-        --print("*** exceeded pattern PRE",tmp_pos,num_lines-i)
-        tmp_pos.lines_travelled = xpos.lines_travelled + i - 1
-        tmp_pos:normalize()
-        --print("*** exceeded pattern POST",tmp_pos,num_lines-i)
-        self:write_output(tmp_pos,num_lines-i)
+        print("*** exceeded pattern PRE",tmp_pos,num_lines-i)
+        local tmp_travelled = travelled + i - 1
+        xSongPos.normalize(tmp_pos)
+        print("*** exceeded pattern POST",tmp_pos,num_lines-i)
+        self:write_output(tmp_pos,tmp_travelled,num_lines-i)
       end
       return
     else
       -- check if we exceeded block-loop
       local cached_line = tmp_pos.line
       if rns.transport.loop_block_enabled and 
-        (self.xstream.block_mode ~= xSongPos.BLOCK_BOUNDARY.NONE) 
+        (xSongPos.DEFAULT_BLOCK_MODE ~= xSongPos.BLOCK_BOUNDARY.NONE) 
       then
-        tmp_pos.line = tmp_pos:enforce_block_boundary("increase",xpos.line,i)
+        tmp_pos.line = xSongPos.enforce_block_boundary("increase",pos,i)
         if (cached_line ~= tmp_pos.line) then
-          tmp_pos.lines_travelled = xpos.lines_travelled + i
-          --print("*** exceeded block loop",tmp_pos,num_lines-i)
-          self:write_output(tmp_pos,num_lines-i)
+          local tmp_travelled = travelled + i
+          print("*** exceeded block loop",tmp_pos,num_lines-i)
+          self:write_output(tmp_pos,tmp_travelled,num_lines-i)
           return
         end
       end
@@ -535,13 +533,12 @@ function xStreamBuffer:write_output(xpos,num_lines,live_mode)
       if live_mode and (tmp_pos.line+1 == rns.transport.playback_pos.line) then
         -- skip current line when live streaming
       else
-        --print("*** xpos.lines_travelled",xpos.lines_travelled)
         
-        local xinc = xpos.lines_travelled+i
+        local xinc = travelled+i
         local xline = nil
 
         xline = self:get_output(xinc)
-        --print("*** normal output - xinc,tmp_pos",xinc,tmp_pos,xline)
+        print("*** normal output - xinc,tmp_pos",xinc,tmp_pos,xline)
 
         -- check if we can/need to resolve automation
         if type(xline)=="xLine" then
@@ -582,7 +579,6 @@ function xStreamBuffer:write_output(xpos,num_lines,live_mode)
           end
 
         else
-          --LOG("*** xStream: no output defined",tmp_pos,xpos.lines_travelled)
         end
       end
 
@@ -604,7 +600,7 @@ function xStreamBuffer:get_output(xinc)
   elseif self.scheduled[xinc] then
     return xLine.apply_descriptor(self.scheduled[xinc])
   else
-    --print("return from output buffer",xinc,self.output_buffer[xinc])
+    print("return from output buffer",xinc,self.output_buffer[xinc])
     return self.output_buffer[xinc]   
   end
 
@@ -620,6 +616,8 @@ end
 
 function xStreamBuffer:get_input(xinc,pos)
   TRACE("xStreamBuffer:get_input(xinc,pos)",xinc,pos)
+
+  assert(type(xinc)=="number","Expected 'xinc' to be a number")
 
   local xline = nil
   if xinc then
@@ -641,8 +639,7 @@ function xStreamBuffer:get_input(xinc,pos)
   if pos then
     -- read from pattern & add to buffer 
     xline = xLine.do_read(pos.sequence,pos.line,self.xstream.include_hidden,self.xstream.track_index)    
-    self.pattern_buffer[pos.lines_travelled] = table.rcopy(xline) 
-    --print("*** xStreamBuffer:get_input - read from pattern",pos.lines_travelled,pos,xline)
+    self.pattern_buffer[xinc] = table.rcopy(xline) 
   end
 
   if not xline then
