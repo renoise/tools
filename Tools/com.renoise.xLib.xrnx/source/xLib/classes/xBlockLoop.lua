@@ -4,19 +4,36 @@ xBlockLoop
 
 --[[--
 
-Methods for working with the Renoise loop-block
-.
-#
+Methods for working with the Renoise loop-block.
+
+# About
+
+In the Renoise API, the loop-block can be controlled via transport.loop_range(). But the 
+implementation is a both quite strict (as values are restricted to coefficients) and bit fuzzy, 
+as you can apply that does not strictly adhere to those coefficients. As a result, the looped 
+range can 'shift' after it has been set. 
+
+This class tries to overcome those issues by providing a consistent interface and methods.  
 
 If you are planning to use this class for realtime manipulation of the block-loop, create an 
 instance of the class and work with those properties. This is preferred over working directly 
-on the values return from the Renoise API, as those can change during the evaluation of code. 
+on the values returned from the API, as those can change during the evaluation of code. 
 
 ]]
 
 
 
 class 'xBlockLoop'
+
+xBlockLoop.COEFFS_ALL = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}
+xBlockLoop.COEFFS_FOUR = {1,2,4,8,16}
+xBlockLoop.COEFFS_THREE = {1,2,3,6,12}
+
+xBlockLoop.COEFF_MODE = {
+  ALL = 1,
+  FOUR = 2,
+  THREE = 3,
+}
 
 ---------------------------------------------------------------------------------------------------
 -- [Constructor] accepts a single argument for initializing the class  
@@ -81,7 +98,7 @@ end
 function xBlockLoop.get_block_lines(seq_idx)
   TRACE("xBlockLoop.get_block_lines(seq_idx)",seq_idx)
 
-  local patt_num_lines = xSongPos.get_pattern_num_lines(seq_idx)
+  local patt_num_lines = xPatternSequencer.get_number_of_lines(seq_idx)
   return math.max(1,patt_num_lines/rns.transport.loop_block_range_coeff)
 
 end
@@ -111,10 +128,7 @@ function xBlockLoop.get_end()
     return 
   end
 
-  local loop_pos = {
-    sequence = rns.transport.loop_block_start_pos.sequence,
-    line = rns.transport.loop_block_start_pos.line,
-  }
+  local loop_pos = xSongPos.create(rns.transport.loop_block_start_pos)
 
   -- in special cases, the loop_pos might report an invalid sequence index
   -- (such as when the loop is positioned on the last pattern,
@@ -182,5 +196,107 @@ function xBlockLoop.exiting(seq_idx,line_idx,line_delta,end_pos)
   end
 
   return exited
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Obtain the line number of the loop block previous to the current one
+-- @return number or nil 
+
+function xBlockLoop.get_previous_line_index()
+  TRACE("xBlockLoop.get_previous_line_index")
+
+  if rns.transport.loop_block_enabled then
+    local coeff = rns.transport.loop_block_range_coeff
+    local block_start = rns.transport.loop_block_start_pos.line
+    local num_lines = rns.selected_pattern.number_of_lines
+    local shift_lines = math.floor(num_lines/coeff)
+    return block_start-shift_lines
+  end
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Obtain the line number of the loop block previous to the current one
+-- @return number or nil 
+
+function xBlockLoop:get_next_line_index()
+  TRACE("xBlockLoop.get_next_line_index")
+
+  if rns.transport.loop_block_enabled then
+    local coeff = rns.transport.loop_block_range_coeff
+    local block_start = rns.transport.loop_block_start_pos.line
+    local num_lines = rns.selected_pattern.number_of_lines
+    local shift_lines = math.floor(num_lines/coeff)
+    return block_start+shift_lines
+  end
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Enforce range of lines to nearest valid coefficient. Modelled after Renoise, 
+-- in that providing a too small/large range will fit to the nearest 'block-loopable' size. 
+-- <br>Some examples with a 64 line pattern:
+-- <br>• 1 & 4 will enlarge to 1 & 5 (4 lines - 1/16th)
+-- <br>• 1 & 6 is not altered (5 lines - 1/12th, with 4 remaining lines)
+-- <br>• 2 & 7 is not altered (-//-, but shifted*) 
+-- <br>* Shifting is possible through the API but not through the Renoise UI!
+-- @param start_line, number 
+-- @param end_line, number 
+-- @param num_lines, number - number of lines in pattern 
+-- @param [coeffs], table<number> (use COEFFS_ALL if undefined)
+-- @return number,number - the normalized start & end line
+
+function xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+  TRACE("xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)",start_line,end_line,num_lines,coeffs)
+
+  assert(type(start_line)=="number")
+  assert(type(end_line)=="number")
+  assert(type(num_lines)=="number")
+
+  if not coeffs then 
+    coeffs = xBlockLoop.COEFFS_ALL
+  end 
+
+  local line_count = end_line - start_line 
+  local ideal_coeff = num_lines/line_count
+  print(">>> line_count,ideal_coeff",line_count,ideal_coeff)
+
+  -- locate matching or closest coeff.
+  local matched_coeff = false
+  local closest_match = 16 -- highest possible
+  for k,v in ipairs(coeffs) do
+    if (v == ideal_coeff) then
+      matched_coeff = true
+    elseif (v > ideal_coeff) then
+      if (math.ceil(ideal_coeff) == v) then
+        closest_match = coeffs[k]
+      else
+        closest_match = coeffs[k-1]
+      end
+      break
+    end
+  end
+
+  print(">>> matched_coeff",matched_coeff)
+
+  -- if not a valid coefficient, expand the size
+  if not matched_coeff then
+    print(">>> closest_match",closest_match)
+    line_count = math.floor(num_lines/closest_match)
+    end_line = start_line + line_count
+  end
+
+  print(">>> line_count,end_line",line_count,end_line)
+
+  -- if result goes beyond boundary, move back
+  if (end_line > num_lines+1) then
+    print(">>> end_line",end_line)
+    local offset = num_lines-end_line+1
+    start_line   = start_line   + offset
+    end_line = end_line + offset
+  end
+
+  return start_line,end_line
 
 end
