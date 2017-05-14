@@ -16,6 +16,7 @@ fn = function()
   require (_xlibroot.."xValue")
   require (_xlibroot.."xOscValue")
   require (_xlibroot.."xOscMessage")
+  _trace_filters = {"^xOscMessage*"}
 
   print("construct xOscMessage from scratch")
   local msg = xOscMessage{ 

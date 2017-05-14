@@ -19,6 +19,7 @@ fn = function()
   require (_xlibroot.."xMidiInput")
   require (_xlibroot.."xMessage")
   require (_xlibroot.."xMidiMessage")
+  _trace_filters = {"^xMidiInput*"}
 
   print(">>> xMidiInput: starting unit-test...")
 

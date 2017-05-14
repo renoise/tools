@@ -10,6 +10,7 @@ fn = function()
 
   require (_xlibroot.."xLine")
   require (_xlibroot.."xCursorPos")
+  _trace_filters = {"^xCursorPos*"}
 
   print(">>> xCursorPos: starting unit-test...")
 

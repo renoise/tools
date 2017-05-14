@@ -12,6 +12,7 @@ fn = function()
 
   require (_clibroot.."cDocument")
   require (_xlibroot.."xOscDevice")
+  _trace_filters = {"^xOscDevice*"}
 
   -- construct from scratch
   local device = xOscDevice{ 
@@ -44,6 +45,16 @@ fn = function()
 
   device.port_out = 8082
   assert(device.port_out,8082)
+
+  -- should throw errors 
+  local success,err = pcall(function()
+    device.port_in = 800 
+    device.port_in = 80000 
+    device.port_out = 800 
+    device.port_out = 80000 
+  end)
+  assert(not success,err)
+
 
   -- test export (cDocument) --
   --[[

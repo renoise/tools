@@ -4,12 +4,6 @@
 
 --]]
 
-require (_xlibroot.."xVoiceManager")
-require (_xlibroot.."xMessage")
-require (_xlibroot.."xMidiMessage")
-require (_xlibroot.."xTrack")
-
-local voicemgr = xVoiceManager()
 
 _xlib_tests:insert({
 name = "xVoiceManager",
@@ -17,25 +11,33 @@ fn = function()
 
   print(">>> xVoiceManager: starting unit-test...")
 
+  require (_xlibroot.."xVoiceManager")
+  require (_xlibroot.."xMessage")
+  require (_xlibroot.."xMidiMessage")
+  require (_xlibroot.."xTrack")
+  _trace_filters = {"^xVoiceManager*"}
+
+
   local scheduled_fn = nil
   local scheduled_at = nil
 
+  -----------------------------------------------------------------------------
+  -- prepare
   -- make sure we have two instruments and two sequencer tracks
-  if (#rns.instruments < 2) 
-    or (rns.sequencer_track_count < 2)
-  then
-    local str_msg = "The xVoiceManager unit-test will create and remove instruments/tracks during the test - do you want to proceed?"
-    local choice = renoise.app():show_prompt("Unit test",str_msg,{"OK","Cancel"})
-    if (choice == "OK") then
-      rns:insert_instrument_at(2)
-      rns:insert_track_at(2)
-    else
-      return
-    end
+
+  local str_msg = "The xVoiceManager unit-test will create and remove instruments/tracks during the test - do you want to proceed?"
+  local choice = renoise.app():show_prompt("Unit test",str_msg,{"OK","Cancel"})
+  if (choice == "OK") then
+    rns:insert_instrument_at(2)
+    rns:insert_track_at(2)
+  else
+    return
   end
 
-  -- test steps (in reverse order)
+  local voicemgr = xVoiceManager()
+
   -----------------------------------------------------------------------------
+  -- test steps (in reverse order)
 
   --[[
   local test_step_5 = function()
@@ -168,7 +170,8 @@ fn = function()
     voicemgr:release_all()
 
     -- trigger voices until we reach the last column
-    -- (then, we will start 
+    -- (then, we will start dropping voices)
+    voicemgr.voice_limit = 12
     for k = 1,14 do
       local rslt,idx = voicemgr:input_message(xMidiMessage{
         message_type = xMidiMessage.TYPE.NOTE_ON,
@@ -400,8 +403,8 @@ fn = function()
 
   end
 
-  -- execute steps via idle notifier
   -----------------------------------------------------------------------------
+  -- execute steps via idle notifier
 
   scheduled_fn = test_step_1
 

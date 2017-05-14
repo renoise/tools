@@ -19,6 +19,7 @@ fn = function()
   require (_xlibroot.."xOscRouter")
   require (_xlibroot.."xValue")
   require (_xlibroot.."xOscValue")
+  _trace_filters = {"^xOscPattern*"}
 
   local osc_router = xOscRouter{
     patterns = {  

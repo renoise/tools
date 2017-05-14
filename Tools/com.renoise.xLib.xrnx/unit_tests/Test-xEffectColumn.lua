@@ -13,6 +13,7 @@ fn = function()
   require (_xlibroot.."xEffectColumn")
   require (_xlibroot.."xNoteColumn")
   require (_xlibroot.."xLinePattern")
+  _trace_filters = {"^xEffectColumn*"}
 
   assert(xEffectColumn.number_string_to_value("00") == 0)
   assert(xEffectColumn.number_value_to_string(0) == "00")

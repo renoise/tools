@@ -10,6 +10,7 @@ fn = function()
 
   require (_xlibroot.."xNoteColumn")
   require (_xlibroot.."xLinePattern")
+  _trace_filters = {"^xNoteColumn*"}
 
   print(">>> xNoteColumn: starting unit-test...")
 
