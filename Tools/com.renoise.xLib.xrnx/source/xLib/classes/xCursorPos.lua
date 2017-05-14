@@ -24,13 +24,10 @@ function xCursorPos:__init(...)
   if type(args)=="table" 
     and table.is_empty(args) 
   then
-    local highres = (rns.transport.follow_player and rns.transport.playing)
-      and xCursorPos.get_highres_pos() or {fraction = 0}
     args = {
       sequence = rns.selected_sequence_index,
       track = rns.selected_track_index,
       line = rns.selected_line_index,
-      fraction = highres.fraction,
       column = xTrack.get_selected_column_index(),
     }
   end
@@ -43,9 +40,6 @@ function xCursorPos:__init(...)
 
   --- number, line index
   self.line = args.line
-
-  --- number, precise position in line (between 0-1)
-  self.fraction = args.fraction
 
   --- number, note/effect column index (across visible columns)
   self.column = args.column
@@ -128,27 +122,6 @@ function xCursorPos:select()
 
 end
 
---------------------------------------------------------------------------------
--- [Static] Obtain a fraction position (only revelant while playback is active)
--- @return table (like songpos, but with 'fraction', a number between 0-1)
-
-function xCursorPos.get_highres_pos()
-  TRACE("xCursorPos:get_highres_pos()")
-
-  local pos = rns.transport.playback_pos
-  local beats = cLib.fraction(rns.transport.playback_pos_beats)
-  local beats_scaled = beats * rns.transport.lpb
-  local line_in_beat = math.floor(beats_scaled)
-  local fraction = cLib.scale_value(beats_scaled,line_in_beat,line_in_beat+1,0,1)
-
-  return {
-    line = pos.line,
-    sequence = pos.sequence,
-    fraction = fraction,
-  }
-
-end
-
 -------------------------------------------------------------------------------
 
 function xCursorPos:__tostring()
@@ -157,7 +130,6 @@ function xCursorPos:__tostring()
     .. "{sequence=" ..tostring(self.sequence)
     .. ", track="..tostring(self.track)
     .. ", line=" ..tostring(self.line)
-    .. ", fraction=" ..tostring(self.fraction)
     .. ", column=" ..tostring(self.column)
     .. "}"
 

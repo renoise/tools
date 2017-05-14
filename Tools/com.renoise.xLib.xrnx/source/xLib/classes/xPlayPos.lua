@@ -4,28 +4,33 @@ xPlayPos
 
 --[[--
 
-Extended play-position which support fractional time (between lines) 
-.
+Extended play-position which support fractional time (between lines).
+
 #
 
-### When to use
 
-  When running some real-time process that can't rely on querying the normal 
-  renoise playback_pos (as this can change during execution of script)
 
-### How to use
+## How to use
 
     -- create an instance of the class
     local pos = xPlayPos()
 
+    -- set to some position 
+    pos(rns.transport.playback_pos)
+
     -- call update() when idle to track playback
     pos:update()
     
-    -- ask for the position (normal SongPos object)
-    pos:get()
+    -- ask for the expanded position 
+    pos()
 
-    -- ask for the expanded position (table)
-    pos:get_fractional()
+    -- get any specific property
+    print(pos.fraction)
+    print(pos.sequence)
+    print(pos.line)
+
+    -- to return it as a normal SongPos object
+    xSongPos.create(pos)
 
 
 ]]
@@ -104,30 +109,33 @@ function xPlayPos:set(pos)
 end
 
 -------------------------------------------------------------------------------
--- return a valid object for SongPos comparison operators 
--- @return SongPos
-
-function xPlayPos:get()
-  local pos = rns.transport.playback_pos
-  pos.line = self.line
-  pos.sequence = self.sequence
-  return pos
-end
-
--------------------------------------------------------------------------------
--- note: a realtime version of this method exists in xCursorPos
+-- note: a realtime version of this method exists below
 -- @return table (like SongPos but with extra 'fraction' field)
 
-function xPlayPos:get_fractional()
+function xPlayPos:__call()
 
-  local beats = cLib.fraction(self.last_beat)
+  return xPlayPos.get(self,self.last_beat)
+
+end
+
+--------------------------------------------------------------------------------
+-- [Static] Obtain a fraction position (only revelant while playback is active)
+-- @return table (like songpos, but with 'fraction', a number between 0-1)
+
+function xPlayPos.get(pos,beats)
+  TRACE("xPlayPos:get_highres_pos()")
+
+  if not pos then pos = rns.transport.playback_pos end
+  if not beats then beats = rns.transport.playback_pos_beats end
+  
+  local beats = cLib.fraction(beats)
   local beats_scaled = beats * rns.transport.lpb
   local line_in_beat = math.floor(beats_scaled)
   local fraction = cLib.scale_value(beats_scaled,line_in_beat,line_in_beat+1,0,1)
 
   return {
-    line = self._line,
-    sequence = self._sequence,
+    line = pos.line,
+    sequence = pos.sequence,
     fraction = fraction,
   }
 
@@ -162,9 +170,8 @@ function xPlayPos:maintain_position(pos)
     if self.last_beat and
       (self.last_beat > beats)
     then
-      local xpos = xSongPos(pos)
-      xpos:decrease_by_lines(math.floor(line_in_beat))
-      self.last_beat_pos = xpos.pos
+      local travelled = xSongPos.decrease_by_lines(math.floor(line_in_beat),pos)
+      self.last_beat_pos = pos
     end
   end
 
