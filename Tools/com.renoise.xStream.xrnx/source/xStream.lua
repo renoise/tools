@@ -3,13 +3,9 @@ xStream
 ============================================================================]]--
 --[[
 
-The main xStream class - where it all comes together
-.
-#
+The main xStream class - where it all comes together.
 
-TODO refactor the blockloop tracking into the xStreamPos class
-and implement a "refresh_fn" handler for recalculating the read buffer
-(see idle method for a partial implementation of this)
+#
 
 ]]
 
@@ -82,15 +78,6 @@ function xStream:__init(...)
 
   --- xStreamBuffer
   self.buffer = xStreamBuffer(self)
-
-  --- xSongPos.OUT_OF_BOUNDS, handle song boundaries
-  self.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
-
-  --- xSongPos.BLOCK_BOUNDARY, handle block boundaries
-  self.block_mode = xSongPos.BLOCK_BOUNDARY.SOFT
-
-  --- xSongPos.LOOP_BOUNDARY, handle pattern/seq.loop boundaries
-  self.loop_mode = xSongPos.LOOP_BOUNDARY.SOFT
 
   --- enum, one of xStream.OUTPUT_MODE
   -- usually STREAMING, but temporarily set to a different
@@ -210,13 +197,12 @@ function xStream:__init(...)
   self.stream.callback_fn = function()
     if self.active and self.selected_model then
       if self._scheduled_pos then
-        if (xSongPos(self.stream.playpos) == self._scheduled_pos) then
-          --print("apply scheduled model/preset",self.stream.playpos,self._scheduled_pos,self._scheduled_pos.lines_travelled)
+        if xSongPos.equal(self.stream.playpos,self._scheduled_pos) then
           self:apply_schedule()
         end
       end
       local live_mode = true
-      self.buffer:write_output(self.stream.writepos,nil,live_mode)
+      self.buffer:write_output(self.stream.pos,self.stream.travelled,nil,live_mode)
     end
   end
   self.stream.refresh_fn = function()
@@ -769,8 +755,8 @@ function xStream:schedule_item(model_name,preset_index,preset_bank_name)
   -- if scheduled event is going to take place within the
   -- space of already-computed lines, wipe the buffer
   if self._scheduled_pos then
-    local happening_in_lines = self._scheduled_pos.lines_travelled
-      - (self.stream.writepos.lines_travelled)
+    local happening_in_lines = self._scheduled_travelled
+      - (self.stream.travelled)
     --print("happening_in_lines",happening_in_lines)
     if (happening_in_lines <= self.stream.writeahead) then
       --print("wipe the buffer")
@@ -787,34 +773,30 @@ end
 function xStream:compute_scheduling_pos()
   TRACE("xStream:compute_scheduling_pos()")
 
-  self._scheduled_pos = xSongPos(self.stream.playpos)
-  self._scheduled_pos.lines_travelled = self.stream.writepos.lines_travelled
-
-  self._scheduled_pos.bounds_mode = self.bounds_mode
-  self._scheduled_pos.block_boundary = self.block_mode
-  self._scheduled_pos.loop_boundary = self.loop_mode
+  self._scheduled_pos = xSongPos.create(self.stream.playpos)
+  self._scheduled_travelled = self.stream.travelled
 
   --print("*** xStream.SCHEDULE.PATTERN - PRE self._scheduled_pos",self._scheduled_pos)
-  if self._scheduled_pos then
-    --print("*** xStream.SCHEDULE.PATTERN - PRE self._scheduled_pos.lines_travelled",self._scheduled_pos.lines_travelled)
-  end
+  --if self._scheduled_pos then
+  --end
 
+  local travelled = 0
   if (self.scheduling == xStream.SCHEDULE.LINE) then
     error("Scheduling should already have been applied")
   elseif (self.scheduling == xStream.SCHEDULE.BEAT) then
-    self._scheduled_pos:next_beat()
+    travelled = xSongPos.next_beat(self._scheduled_pos)
     --print("*** xStream.SCHEDULE.BEAT - self._scheduled_pos",self._scheduled_pos)
   elseif (self.scheduling == xStream.SCHEDULE.BAR) then
-    self._scheduled_pos:next_bar()
+    travelled = xSongPos.next_bar(self._scheduled_pos)  
     --print("*** xStream.SCHEDULE.BAR - self._scheduled_pos",self._scheduled_pos)
   elseif (self.scheduling == xStream.SCHEDULE.BLOCK) then
-    self._scheduled_pos:next_block()
+    travelled = xSongPos.next_block(self._scheduled_pos)
     --print("*** xStream.SCHEDULE.BLOCK - self._scheduled_pos",self._scheduled_pos)
   elseif (self.scheduling == xStream.SCHEDULE.PATTERN) then
     -- if we are within a blockloop, do not set a schedule position
     -- (once the blockloop is disabled, this function is invoked)
     if not rns.transport.loop_block_enabled then
-      self._scheduled_pos:next_pattern()
+      travelled = xSongPos.next_pattern(self._scheduled_pos)
       --print("*** xStream.SCHEDULE.PATTERN - self._scheduled_pos",self._scheduled_pos)
     else
       self._scheduled_pos = nil
@@ -823,10 +805,15 @@ function xStream:compute_scheduling_pos()
     error("Unknown scheduling mode")
   end
 
-  --print("*** xStream.SCHEDULE.PATTERN - POST self._scheduled_pos",self._scheduled_pos)
   if self._scheduled_pos then
-    --print("*** xStream.SCHEDULE.PATTERN - POST self._scheduled_pos.lines_travelled",self._scheduled_pos.lines_travelled)
+    self._scheduled_travelled = self._scheduled_travelled + travelled
+  else 
+    self._scheduled_travelled = nil
   end
+
+  --print("*** xStream.SCHEDULE.PATTERN - POST self._scheduled_pos",self._scheduled_pos)
+  --if self._scheduled_pos then
+  --end
 
 end
 
@@ -1233,10 +1220,10 @@ function xStream:on_idle()
   end
 
   if self.active then
-    self.stream:track_pos()
+    self.stream:update()
   end
 
-  -- TODO optimize this by exporting only while not playing
+  -- TODO optimize performance by exporting only while not playing
   if self.preset_bank_export_requested then
     self.preset_bank_export_requested = false
     if self.autosave_enabled then
@@ -1361,7 +1348,7 @@ end
 function xStream:fill_track()
   TRACE("xStream:fill_track()")
   
-  local patt_num_lines = xSongPos.get_pattern_num_lines(rns.selected_sequence_index)
+  local patt_num_lines = xPatternSequencer.get_number_of_lines(rns.selected_sequence_index)
   self.output_mode = xStream.OUTPUT_MODE.TRACK
   self:apply_to_range(1,patt_num_lines)
 
@@ -1401,7 +1388,7 @@ function xStream:fill_selection(locally)
     return
   end
 
-  --local num_lines = xSongPos.get_pattern_num_lines(rns.selected_sequence_index)
+  --local num_lines = xSongPos.get_number_of_lines(rns.selected_sequence_index)
   local from_line = rns.selection_in_pattern.start_line
   local to_line = rns.selection_in_pattern.end_line
   local xinc = (not locally) and (from_line-1) or 0 
@@ -1425,22 +1412,19 @@ end
 -- temporarily switching to a different set of buffers
 -- @param from_line (int)
 -- @param to_line (int) 
--- @param xinc (int) where the callback 'started', use from_line if nil
+-- @param [travelled] (int) where the callback 'started'
 
-function xStream:apply_to_range(from_line,to_line,xinc)
-  TRACE("xStream:apply_to_range(from_line,to_line,xinc)",from_line,to_line,xinc)
+function xStream:apply_to_range(from_line,to_line,travelled)
+  TRACE("xStream:apply_to_range(from_line,to_line,travelled)",from_line,to_line,travelled)
 
-  local xpos = xSongPos({
+  local xpos = {
     sequence = rns.transport.edit_pos.sequence,
     line = from_line
-  })
-  if xinc then
-    xpos.lines_travelled = xinc
+  }
+
+  if not travelled then 
+    travelled = 0
   end
-  -- ignore any kind of loop (realtime only)
-  xpos.out_of_bounds = xSongPos.OUT_OF_BOUNDS.CAP
-  xpos.block_boundary = xSongPos.BLOCK_BOUNDARY.NONE
-  xpos.loop_boundary = xSongPos.LOOP_BOUNDARY.NONE
 
   local live_mode = false -- start from first line
   local num_lines = to_line-from_line+1
@@ -1451,27 +1435,27 @@ function xStream:apply_to_range(from_line,to_line,xinc)
   local cached_active = self.active
   local cached_buffer = self.buffer.output_buffer
   local cached_read_buffer = self.buffer.pattern_buffer
-  local cached_readpos = self.stream.readpos
-  local cached_bounds_mode = self.bounds_mode
-  local cached_block_mode = self.block_mode
-  local cached_loop_mode = self.loop_mode
-
+  local cached_pos = self.stream.pos
+  local cached_bounds = xSongPos.DEFAULT_BOUNDS_MODE
+  local cached_loop = xSongPos.DEFAULT_LOOP_MODE
+  local cached_block = xSongPos.DEFAULT_BLOCK_MODE
+  -- ignore any kind of loop (realtime only)
+  xSongPos.DEFAULT_BOUNDS_MODE = xSongPos.OUT_OF_BOUNDS.CAP
+  xSongPos.DEFAULT_LOOP_MODE = xSongPos.LOOP_BOUNDARY.NONE
+  xSongPos.DEFAULT_BLOCK_MODE = xSongPos.BLOCK_BOUNDARY.NONE
   -- write output
   self.active = true
-  self.stream.readpos.line = from_line
-  self.bounds_mode = xpos.out_of_bounds
-  self.block_mode = xpos.block_boundary
-  self.loop_mode = xpos.loop_boundary
-  self.buffer:write_output(xpos,num_lines,live_mode)
+  self.stream.pos.line = from_line
+  self.buffer:write_output(xpos,travelled,num_lines,live_mode)
 
   -- restore settings
   self.active = cached_active
   self.buffer.output_buffer = cached_buffer
   self.buffer.pattern_buffer = cached_read_buffer
-  self.stream.readpos = cached_readpos
-  self.bounds_mode = cached_bounds_mode
-  self.block_mode = cached_block_mode
-  self.loop_mode = cached_loop_mode
+  self.stream.pos = cached_pos
+  xSongPos.DEFAULT_BOUNDS_MODE = cached_bounds
+  xSongPos.DEFAULT_LOOP_MODE = cached_loop
+  xSongPos.DEFAULT_BLOCK_MODE = cached_block
 
 end
 
