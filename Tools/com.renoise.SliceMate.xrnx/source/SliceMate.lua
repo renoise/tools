@@ -62,6 +62,11 @@ function SliceMate:__init(...)
 
   -- initialize ---------------------------------
 
+  -- apply some defaults
+  xSongPos.DEFAULT_BOUNDS_MODE = xSongPos.OUT_OF_BOUNDS.LOOP
+  xSongPos.DEFAULT_LOOP_MODE = xSongPos.LOOP_BOUNDARY.SOFT
+  xSongPos.DEFAULT_BLOCK_MODE = xSongPos.BLOCK_BOUNDARY.SOFT
+
   --- configure user-interface
   self.ui = SliceMate_UI{
     dialog_title = self.app_display_name,
@@ -369,32 +374,29 @@ end
 function SliceMate:get_position()
   TRACE("SliceMate:get_position()")
 
-  local slice_xcursorpos = xCursorPos()
+  local pos = xCursorPos()
   if not self.prefs.quantize_enabled.value then
-    return slice_xcursorpos
+    return pos
   end
 
-  local xsongpos = xSongPos(slice_xcursorpos)
   if not rns.transport.playing  
     or (rns.transport.playing and not rns.transport.follow_player) 
   then 
-    xsongpos:decrease_by_lines(1)
+    xSongPos.decrease_by_lines(1,pos)
   end 
 
   local choices = {
-    [self.prefs.QUANTIZE_AMOUNT.BEAT] = function() xsongpos:next_beat() end,
-    [self.prefs.QUANTIZE_AMOUNT.BAR] = function() xsongpos:next_bar() end,
-    [self.prefs.QUANTIZE_AMOUNT.BLOCK] = function() xsongpos:next_block() end,
-    [self.prefs.QUANTIZE_AMOUNT.PATTERN] = function() xsongpos:next_pattern() end,
-    [self.prefs.QUANTIZE_AMOUNT.LINE] = function() xsongpos:increase_by_lines(1) end,
+    [self.prefs.QUANTIZE_AMOUNT.BEAT] = function() xSongPos.next_beat(pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.BAR] = function() xSongPos.next_bar(pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.BLOCK] = function() xSongPos.next_block(pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.PATTERN] = function() xSongPos.next_pattern(pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.LINE] = function() xSongPos.increase_by_lines(1,pos) end,
   }
 
   if (choices[self.prefs.quantize_amount.value]) then 
     choices[self.prefs.quantize_amount.value]()
-    slice_xcursorpos.line = xsongpos.line
-    slice_xcursorpos.sequence = xsongpos.sequence    
-    slice_xcursorpos.fraction = 0    
-    return slice_xcursorpos
+    pos.fraction = 0    
+    return pos
   else 
     error("Unexpected quantize amount")
   end
