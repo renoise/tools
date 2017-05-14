@@ -205,6 +205,12 @@ end
 
 function xOscDevice:set_port_in(val)
   assert(type(val) == "number","Expected port_in to be a number")
+
+  if (val > xLib.MAX_OSC_PORT) or (val < xLib.MIN_OSC_PORT) then
+    local msg = "Cannot set to a port number outside this range: %d-%d"
+    error(msg:format(xLib.MAX_OSC_PORT,xLib.MIN_OSC_PORT))
+  end    
+  
   local modified = (val ~= self.port_in_observable.value)
   self.port_in_observable.value = val
   if modified then
@@ -222,6 +228,12 @@ end
 
 function xOscDevice:set_port_out(val)
   assert(type(val) == "number","Expected port_out to be a number")
+
+  if (val > xLib.MAX_OSC_PORT) or (val < xLib.MIN_OSC_PORT) then
+    local msg = "Cannot set to a port number outside this range: %d-%d"
+    error(msg:format(xLib.MAX_OSC_PORT,xLib.MIN_OSC_PORT))
+  end    
+  
   local modified = (val ~= self.port_out_observable.value)
   self.port_out_observable.value = val
   if modified then

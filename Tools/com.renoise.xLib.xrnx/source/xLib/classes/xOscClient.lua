@@ -17,9 +17,6 @@ xOscClient wraps a renoise.Socket with some handy methods
 
 class 'xOscClient' 
 
-  xOscClient.MIN_PORT = 1024
-  xOscClient.MAX_PORT = 65535
-
 --------------------------------------------------------------------------------
 -- [Constructor] Accepts a table argument for initializing the class 
 -- @param table{
@@ -245,9 +242,9 @@ end
 function xOscClient:set_osc_port(val)
   TRACE("xOscClient:set_osc_port(val)",val)
 
-  if (val > xOscClient.MAX_PORT) or (val < xOscClient.MIN_PORT) then
+  if (val > xLib.MAX_OSC_PORT) or (val < xLib.MIN_OSC_PORT) then
     local msg = "Cannot set to a port number outside this range: %d-%d"
-    error(msg:format(xOscClient.MAX_PORT,xOscClient.MIN_PORT))
+    error(msg:format(xLib.MAX_OSC_PORT,xLib.MIN_OSC_PORT))
   end    
   self.osc_port_observable.value = val
   local created,err = self:create(self.osc_host_observable.value,val)
