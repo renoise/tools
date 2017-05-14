@@ -504,7 +504,7 @@ function xSample.get_buffer_frame_by_notepos(sample,trigger_pos,end_pos,ignore_s
   end
 
   -- get number of lines to the trigger note
-  local line_diff = xSongPos.get_line_diff(xSongPos(trigger_pos),xSongPos(end_pos))
+  local line_diff = xSongPos.get_line_diff(trigger_pos,end_pos)
 
   -- precise position #1: subtract delay from triggering note
   if track.delay_column_visible then
