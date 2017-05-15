@@ -44,9 +44,6 @@ function xBlockLoop:__init(...)
 
   -- properties --
 
-  --- (number) number of lines to look ahead 
-  self.writeahead = args.writeahead or 1
-
   --- (number) where the loop starts
   self.start_line = args.start_line or nil
 
@@ -74,22 +71,6 @@ end
 
 function xBlockLoop:get_length()
   return self.end_line - self.start_line + 1
-end
-
----------------------------------------------------------------------------------------------------
--- [Class] check if line is near top of loop
-
-function xBlockLoop:pos_near_top(line)
-  return (line <= self.start_line+self.writeahead) 
-end
-
----------------------------------------------------------------------------------------------------
--- [Class] check if line is near end of loop
-
-function xBlockLoop:pos_near_end(line)
-  
-  return (line >= (self.end_line-self.writeahead))
-    
 end
 
 ---------------------------------------------------------------------------------------------------
