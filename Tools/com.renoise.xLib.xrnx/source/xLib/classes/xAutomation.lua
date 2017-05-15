@@ -65,17 +65,11 @@ function xAutomation:__init(...)
   --- boolean, whether to use fractional line-index or not
   self.highres_mode = args.highres_mode or false
 
-  --- number, lines that we should clear 
-  -- (this is automatically computed as tempo changes)
-  self.writeahead = nil
-
   -- internal --
 
   renoise.tool().app_new_document_observable:add_notifier(function()
-    self:_attach_to_song()
+    rns = renoise.song()
   end)
-
-  self:_attach_to_song()
 
 end
 
@@ -120,13 +114,14 @@ function xAutomation:record(track_idx,param,value,value_mode)
     self:clear_range(pos.line,1,ptrack_auto)
     ptrack_auto:add_point_at(pos.line,value)
   else
+    local writeahead = xStreamPos.determine_writeahead()
     if self.highres_mode then
       local highres_pos = xPlayPos.get()
       local line_fract = highres_pos.line + highres_pos.fraction
-      self:clear_range(line_fract,self.writeahead,ptrack_auto)
+      self:clear_range(line_fract,writeahead,ptrack_auto)
       ptrack_auto:add_point_at(line_fract,value)
     else
-      self:clear_range(rns.transport.playback_pos.line,1,ptrack_auto)
+      self:clear_range(rns.transport.playback_pos.line,writeahead,ptrack_auto)
       ptrack_auto:add_point_at(rns.transport.playback_pos.line,value)
     end
   end
@@ -197,32 +192,6 @@ function xAutomation:get_position()
   else
     error("Unexpected follow mode")
   end
-
-end
-
----------------------------------------------------------------------------------------------------
--- [Class] attach to the song and listen for tempo change (always maintain writeahead)
-
-function xAutomation:_attach_to_song()
-
-  rns = renoise.song()
-
-  rns.transport.bpm_observable:add_notifier(function()
-    self:_compute_writeahead()
-  end)
-  rns.transport.lpb_observable:add_notifier(function()
-    self:_compute_writeahead()
-  end)
-  self:_compute_writeahead()
-
-end
-
----------------------------------------------------------------------------------------------------
-
-function xAutomation:_compute_writeahead()
-  --TRACE("xAutomation:_compute_writeahead()")
-
-  self.writeahead = (rns.transport.bpm * rns.transport.lpb / 200)
 
 end
 
