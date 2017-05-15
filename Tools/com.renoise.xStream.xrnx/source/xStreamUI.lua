@@ -22,7 +22,6 @@ xStreamUI.MODEL_CONTROLS = {
   "xStreamApplySelectionButton",
   "xStreamApplyTrackButton",
   "xStreamApplyTrackButton",
-  --"xStreamCallbackCompile",
   "xStreamFavoriteModel",
   "xStreamModelColorPreview",
   "xStreamModelRefresh",
@@ -34,7 +33,6 @@ xStreamUI.MODEL_CONTROLS = {
   "xStreamRevealLocation",
   "xStreamStartPlayButton",
   "xStreamToggleStreaming",
-  --"xStreamCallbackType",
   "xStreamCallbackCreate",
   "xStreamCallbackRename",
   "xStreamCallbackRemove",
@@ -563,14 +561,6 @@ function xStreamUI:build()
     local color = self.xstream.active 
       and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
     view.color = color
-  end)
-
-  self.xstream.stream.just_started_playback_observable:add_notifier(function()    
-    TRACE("*** xStreamUI - xstream.stream.just_started_playback_observable fired...")
-    -- briefly flash play button when playback was triggered programatically
-    local view = vb.views["xStreamStartPlayButton"]
-    view.color = (self.xstream.stream.just_started_playback > 0)
-      and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
   end)
 
   -- handle models ----------------------------------------
