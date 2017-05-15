@@ -63,6 +63,13 @@ function xStreamUIOptions:__init(xstream)
     self.update_model_requested = true
   end)
 
+  self.prefs.writeahead_factor:add_notifier(function()
+    local ctrl = self.vb.views["writeahead"]
+    if ctrl then 
+      ctrl.text = ("%d lines"):format(xStreamPos.determine_writeahead())
+    end 
+  end)
+
   self.xstream.models_observable:add_notifier(function()
     self.update_model_requested = true
   end)
@@ -127,12 +134,6 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamUIOptions:create_dialog()
-
-  self.xstream.stream.writeahead_factor_observable:add_notifier(function()
-    TRACE("*** xStreamUI - self.xstream.stream.writeahead_factor_observable fired...",self.xstream.stream.writeahead_factor)
-    local view = self.vb.views["xStreamImplWriteAheadFactor"]
-    view.value = self.xstream.stream.writeahead_factor
-  end)
 
   local STREAMING_TXT_W = 120
   local STREAMING_CTRL_W = 100
@@ -312,14 +313,15 @@ function xStreamUIOptions:create_dialog()
           },
           vb:valuebox{
             id = "xStreamImplWriteAheadFactor",
-            min = 125,
+            min = 25,
             max = 400,
             width = STREAMING_CTRL_W,
-            value = self.xstream.stream.writeahead_factor,
-            notifier = function(val)
-              self.xstream.stream.writeahead_factor = val
-            end
+            bind = self.prefs.writeahead_factor,
           },
+          vb:text{
+            id = "writeahead",
+            text = "-",
+          }
         },
 
 
@@ -640,10 +642,9 @@ function xStreamUIOptions:on_idle()
   local view = self.vb.views["xStreamImplStats"]
   if view then
     local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
-      ..("\nLines Travelled: %d"):format(xs.stream.travelled)
+      ..("\nLines Travelled: %d"):format(xs.stream.xinc)
       ..("\nStream Position: %d,%d"):format(xs.stream.pos.sequence,xs.stream.pos.line)
-      --..("\nWritePosition: %d,%d"):format(xs.stream.writepos.sequence,xs.stream.writepos.line)
-      ..("\nWriteahead: %d lines"):format(xs.stream.writeahead)
+      ..("\nWriteahead: %d lines"):format(xStreamPos.determine_writeahead())
       ..("\nSelected model: %s"):format(xs.selected_model and xs.selected_model.name or "N/A") 
       ..("\nStream active: %s"):format(xs.active and "true" or "false") 
       ..("\nStream muted: %s"):format(xs.muted and "true" or "false") 
