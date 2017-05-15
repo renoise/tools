@@ -156,10 +156,7 @@ function xStream:__init(...)
   self._scheduled_model = nil
 
   --- xSongPos, tells us when/if a scheduled event will occur
-  -- updated as external conditions change: for example, if we had 
-  -- scheduled something to happen at the 'next pattern' and in 
-  -- the meantime, pattern loop was enabled 
-  self._scheduled_pos = nil
+  self._scheduled_xinc = nil
 
   --- int, read-only - set via schedule_item()
   self.scheduled_preset_index = property(self.get_scheduled_preset_index)
@@ -196,11 +193,13 @@ function xStream:__init(...)
   self.stream = xStreamPos()
   self.stream.callback_fn = function()
     if self.active and self.selected_model then
+      --[[
       if self._scheduled_pos then
         if xSongPos.equal(self.stream.playpos,self._scheduled_pos) then
           self:apply_schedule()
         end
       end
+      ]]
       local live_mode = true
       self.buffer:write_output(self.stream.pos,self.stream.xinc,nil,live_mode)
     end
@@ -284,7 +283,6 @@ function xStream:__init(...)
   self.scheduling = self.prefs.scheduling.value
   self.mute_mode = self.prefs.mute_mode.value
   self.suspend_when_hidden = self.prefs.suspend_when_hidden.value
-  self.stream.writeahead_factor = self.prefs.writeahead_factor.value
 
   -- output outputs
   self.automation_playmode = self.prefs.automation_playmode.value
@@ -309,17 +307,15 @@ function xStream:__init(...)
   self.prefs.scheduling:add_notifier(function()
     self.scheduling_observable.value = self.prefs.scheduling.value
   end)
+  self.prefs.writeahead_factor:add_notifier(function()
+    xStreamPos.WRITEAHEAD_FACTOR = self.prefs.writeahead_factor.value
+  end)
 
   -- xStream app --
 
   self.automation_playmode_observable:add_notifier(function()
     TRACE("*** main.lua - self.automation_playmode_observable fired...")
     self.prefs.automation_playmode.value = self.automation_playmode_observable.value
-  end)
-
-  self.stream.writeahead_factor_observable:add_notifier(function()
-    TRACE("*** main.lua - self.stream.writeahead_factor_observable fired...")
-    self.prefs.writeahead_factor.value = self.stream.writeahead_factor_observable.value
   end)
 
   self.include_hidden_observable:add_notifier(function()
@@ -741,24 +737,19 @@ function xStream:schedule_item(model_name,preset_index,preset_bank_name)
   end
 
   -- now figure out the time
-  self._scheduled_pos = nil
-
   if (self.scheduling == xStream.SCHEDULE.LINE) then
     if self._scheduled_model then
       self:apply_schedule() -- set immediately 
     end
-    --print("*** xStream.SCHEDULE.LINE - applied preset,model...")
   else
     self:compute_scheduling_pos()
   end
 
   -- if scheduled event is going to take place within the
   -- space of already-computed lines, wipe the buffer
-  if self._scheduled_pos then
-    local happening_in_lines = self._scheduled_travelled
-      - (self.stream.xinc)
-    --print("happening_in_lines",happening_in_lines)
-    if (happening_in_lines <= self.stream.writeahead) then
+  if self._scheduled_xinc then
+    local happening_in_lines = self._scheduled_xinc-self.stream.xinc
+    if (happening_in_lines <= xStreamPos.determine_writeahead()) then
       --print("wipe the buffer")
       self.buffer:wipe_futures()
     end
@@ -773,47 +764,35 @@ end
 function xStream:compute_scheduling_pos()
   TRACE("xStream:compute_scheduling_pos()")
 
-  self._scheduled_pos = xSongPos.create(self.stream.playpos)
-  self._scheduled_travelled = self.stream.xinc
-
-  --print("*** xStream.SCHEDULE.PATTERN - PRE self._scheduled_pos",self._scheduled_pos)
-  --if self._scheduled_pos then
-  --end
+  local pos = xSongPos.create(self.stream.playpos)
+  self._scheduled_xinc = self.stream.xinc
 
   local xinc = 0
   if (self.scheduling == xStream.SCHEDULE.LINE) then
     error("Scheduling should already have been applied")
   elseif (self.scheduling == xStream.SCHEDULE.BEAT) then
-    xinc = xSongPos.next_beat(self._scheduled_pos)
-    --print("*** xStream.SCHEDULE.BEAT - self._scheduled_pos",self._scheduled_pos)
+    xinc = xSongPos.next_beat(pos)
   elseif (self.scheduling == xStream.SCHEDULE.BAR) then
-    xinc = xSongPos.next_bar(self._scheduled_pos)  
-    --print("*** xStream.SCHEDULE.BAR - self._scheduled_pos",self._scheduled_pos)
+    xinc = xSongPos.next_bar(pos)  
   elseif (self.scheduling == xStream.SCHEDULE.BLOCK) then
-    xinc = xSongPos.next_block(self._scheduled_pos)
-    --print("*** xStream.SCHEDULE.BLOCK - self._scheduled_pos",self._scheduled_pos)
+    xinc = xSongPos.next_block(pos)
   elseif (self.scheduling == xStream.SCHEDULE.PATTERN) then
     -- if we are within a blockloop, do not set a schedule position
     -- (once the blockloop is disabled, this function is invoked)
     if not rns.transport.loop_block_enabled then
-      xinc = xSongPos.next_pattern(self._scheduled_pos)
-      --print("*** xStream.SCHEDULE.PATTERN - self._scheduled_pos",self._scheduled_pos)
+      xinc = xSongPos.next_pattern(pos)
     else
-      self._scheduled_pos = nil
+      pos = nil
     end
   else
     error("Unknown scheduling mode")
   end
 
-  if self._scheduled_pos then
-    self._scheduled_travelled = self._scheduled_travelled + xinc
+  if pos then
+    self._scheduled_xinc = self._scheduled_xinc + xinc
   else 
-    self._scheduled_travelled = nil
+    self._scheduled_xinc = nil
   end
-
-  --print("*** xStream.SCHEDULE.PATTERN - POST self._scheduled_pos",self._scheduled_pos)
-  --if self._scheduled_pos then
-  --end
 
 end
 
@@ -825,7 +804,7 @@ function xStream:clear_schedule()
   TRACE("xStream:clear_schedule()")
 
   self._scheduled_model = nil
-  self._scheduled_pos = nil
+  self._scheduled_xinc = nil
   self.scheduled_model_index_observable.value = 0
   self.scheduled_preset_index_observable.value = 0
   self.scheduled_preset_bank_index_observable.value = 0
@@ -1149,10 +1128,6 @@ function xStream:reset()
   self.buffer:clear()
   self.stream:reset()
 
-  --if self.selected_model then
-    --self.selected_model:reset()
-  --end
-
   self:clear_schedule()
 
 end
@@ -1160,12 +1135,12 @@ end
 -------------------------------------------------------------------------------
 -- [process] activate live streaming 
 
-function xStream:start()
-  TRACE("xStream:start()")
+function xStream:start(playmode)
+  TRACE("xStream:start(playmode)",playmode)
 
   self:reset()
   self.active = true
-  self.stream:start()
+  self.stream:start(playmode)
 
 end
 
@@ -1181,8 +1156,7 @@ function xStream:start_and_play()
     rns.transport.playback_pos = rns.transport.edit_pos
   end
 
-  self:start()
-  self.stream:play()
+  self:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
 
 end
 
@@ -1219,9 +1193,11 @@ function xStream:on_idle()
     self.selected_model:on_idle()
   end
 
+  --[[
   if self.active then
     self.stream:update()
   end
+  ]]
 
   -- TODO optimize performance by exporting only while not playing
   if self.preset_bank_export_requested then
@@ -1256,11 +1232,6 @@ function xStream:attach_to_song()
   TRACE("xStream:attach_to_song()")
 
   self:stop()
-
-  local tempo_notifier = function()
-    TRACE("*** tempo_notifier fired...")
-    self.stream:determine_writeahead()
-  end
 
   local selected_track_index_notifier = function()
     TRACE("*** selected_track_index_notifier fired...")
@@ -1322,8 +1293,6 @@ function xStream:attach_to_song()
 
   end
 
-  rns.transport.bpm_observable:add_notifier(tempo_notifier)
-  rns.transport.lpb_observable:add_notifier(tempo_notifier)
   cObservable.attach(rns.transport.playing_observable,playing_notifier)
   cObservable.attach(rns.transport.edit_mode_observable,edit_notifier)
   cObservable.attach(rns.selected_track_index_observable,selected_track_index_notifier)
@@ -1334,7 +1303,7 @@ function xStream:attach_to_song()
   selected_track_index_notifier()
   device_param_notifier()
 
-  self.stream:attach_to_song()
+  --self.stream:attach_to_song()
 
   if self.selected_model then
     self.selected_model:attach_to_song()
