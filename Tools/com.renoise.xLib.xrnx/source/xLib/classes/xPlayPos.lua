@@ -44,7 +44,7 @@ function xPlayPos:__init()
   -- internal --
 
   --- int, SongPos, last position where a beat started
-  self.last_beat_pos = nil
+  --self.last_beat_pos = nil
 
   -- number, last_beat_pos as beats
   self.last_beat = nil
@@ -157,6 +157,7 @@ function xPlayPos:maintain_position(pos)
 
   -- within the first line of a "song beat"?
   local beats = cLib.fraction(rns.transport.playback_pos_beats)
+  --[[
   local line_in_beat = beats * rns.transport.lpb
   local beat_pos_set = false
   if (line_in_beat < 1) then
@@ -170,11 +171,11 @@ function xPlayPos:maintain_position(pos)
     if self.last_beat and
       (self.last_beat > beats)
     then
-      local travelled = xSongPos.decrease_by_lines(math.floor(line_in_beat),pos)
+      local xinc = xSongPos.decrease_by_lines(math.floor(line_in_beat),pos)
       self.last_beat_pos = pos
     end
   end
-
+  ]]
   self.last_beat = beats
 
 end
