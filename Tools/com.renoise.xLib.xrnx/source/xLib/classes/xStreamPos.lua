@@ -24,6 +24,16 @@ class 'xStreamPos'
 
 xStreamPos.WRITEAHEAD_FACTOR = 300
 
+-- scheduling 
+xStreamPos.SCHEDULES = {"Line","Beat","Bar","Block","Pattern"}
+xStreamPos.SCHEDULE = {
+  LINE = 1,
+  BEAT = 2,
+  BAR = 3,
+  BLOCK = 4,
+  PATTERN = 5,
+}
+
 ---------------------------------------------------------------------------------------------------
 -- [Constructor] does not accept any arguments
 
@@ -81,6 +91,11 @@ function xStreamPos:start(playmode)
   print("xStreamPos:start(playmode)",playmode)
 
   self:reset()
+
+  if self.callback_fn then
+    self.callback_fn()
+  end
+
   rns.transport:start(playmode)
 
 end
@@ -130,7 +145,9 @@ end
 function xStreamPos:_set_pos(pos)
   TRACE("xStreamPos:_set_pos(pos)",pos)
 
-  --print(">>> set pos PRE",pos)
+  --assert(type(pos)=="table" or type(pos)=="SongPos")
+  --print(">>> set pos - seq/line:",pos.sequence,pos.line)
+
   local writeahead = xStreamPos.determine_writeahead()
 
   local near_patt_top = function(line)
@@ -356,6 +373,46 @@ function xStreamPos:update()
 
 
 end
+
+-------------------------------------------------------------------------------
+-- return a buffer position which correspond to the desired schedule
+-- @param schedule, xStreamPos.SCHEDULE
+-- @return SongPos,int (lines travelled)  
+--[[
+function xStreamPos:get_scheduled_pos(schedule)
+  TRACE("xStreamPos:get_scheduled_pos(schedule)",schedule)
+
+  local live_mode = rns.transport.playing
+  local pos = xSongPos.create(self.playpos)
+
+  local schedules = {
+    [xStreamPos.SCHEDULE.LINE] = function()
+      local travelled = 0
+      if live_mode then
+        travelled = xSongPos.increase_by_lines(1,pos)
+      end
+      return travelled
+    end,
+    [xStreamPos.SCHEDULE.BEAT] = function()
+      local travelled = xSongPos.decrease_by_lines(1,pos) -- too cautious when on next line?
+      travelled = travelled + xSongPos.next_beat(pos)
+      return travelled
+    end,
+    [xStreamPos.SCHEDULE.BAR] = function()
+      local travelled = xSongPos.next_bar(pos)
+      return travelled
+    end,
+  }
+
+  if schedules[schedule] then
+    local travelled = schedules[schedule]()
+    return pos, self.xinc + travelled
+  else
+    error("Unsupported schedule type, please use NONE/BEAT/BAR")
+  end
+
+end
+]]
 
 ---------------------------------------------------------------------------------------------------
 -- [Class] Call when a new document becomes available
