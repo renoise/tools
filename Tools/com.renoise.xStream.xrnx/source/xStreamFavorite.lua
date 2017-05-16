@@ -26,7 +26,7 @@ function xStreamFavorite:__init(args)
 	self.preset_bank_name_observable = renoise.Document.ObservableString(args.preset_bank_name or "Default")
 
 	self.schedule_mode = property(self.get_schedule_mode,self.set_schedule_mode)
-	self.schedule_mode_observable = renoise.Document.ObservableNumber(args.schedule_mode or xStream.SCHEDULE.BEAT)
+	self.schedule_mode_observable = renoise.Document.ObservableNumber(args.schedule_mode or xStreamPos.SCHEDULE.BEAT)
 
 	self.launch_mode = property(self.get_launch_mode,self.set_launch_mode)
 	self.launch_mode_observable = renoise.Document.ObservableNumber(args.launch_mode or xStreamFavorites.LAUNCH_MODE.AUTOMATIC)
@@ -78,7 +78,7 @@ function xStreamFavorite:get_schedule_mode()
 end
 
 function xStreamFavorite:set_schedule_mode(val)
-  assert(val >= 1 and val <= #xStream.SCHEDULES)
+  assert(val >= 1 and val <= #xStreamPos.SCHEDULES)
   self.schedule_mode_observable.value = val
 end
 

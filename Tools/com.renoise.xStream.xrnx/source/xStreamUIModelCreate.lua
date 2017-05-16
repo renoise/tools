@@ -37,29 +37,6 @@ function xStreamUIModelCreate:show()
 
 end
 
---------------------------------------------------------------------------------
--- create new model - create/re-use existing dialog 
---[[
-function xStreamUIModelCreate:create_model()
-  TRACE("xStreamUIModelCreate:create_model()")
-
-  self.dialog_page = 1
-  self.dialog_option = 1
-
-  if not self.dialog or not self.dialog.visible then
-    if not self.model_dialog_content then
-      self.model_dialog_content = self:create_model_dialog()
-    end
-    self:update_dialog()
-    self.dialog = renoise.app():show_custom_dialog(
-        "Create model", self.model_dialog_content)
-  else
-    self.dialog:show()
-  end
-
-end
-]]
-
 -------------------------------------------------------------------------------
 -- (overridden method)
 -- @return renoise.Views.Rack
@@ -270,7 +247,7 @@ function xStreamUIModelCreate:show_next_page()
         return
       else
         -- we are done - 
-        local passed,err = self.xstream:create_model(view_name.text)
+        local passed,err = self.xstream.process.models:create(view_name.text)
         if not passed and err then
           renoise.app():show_warning(err)
           return
@@ -331,12 +308,12 @@ end
 
 function xStreamUIModelCreate:add_save_and_close(model)
 
-  self.xstream:add_model(model)
+  self.xstream.process.models:add(model)
   local got_saved,err = model:save()
   if not got_saved and err then
     renoise.app():show_warning(err)
   end
-  self.xstream.selected_model_index = #self.xstream.models
+  self.xstream.selected_model_index = #self.xstream.process.models
   self.dialog:close()
   self.dialog = nil
 

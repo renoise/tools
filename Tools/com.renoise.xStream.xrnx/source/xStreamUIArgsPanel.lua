@@ -29,10 +29,10 @@ xStreamUIArgsPanel.ARGS_SLIDER_W = 90
 
 function xStreamUIArgsPanel:__init(xstream,midi_prefix,vb,ui)
 
-  self.xstream = xstream
   self.midi_prefix = midi_prefix
   self.vb = vb
   self.ui = ui
+  self.xstream = xstream
 
   -- View, tabbed/untabbed argument-containers
   self.vb_untabbed = nil
@@ -118,7 +118,6 @@ function xStreamUIArgsPanel:set_editor_visible(val)
   self.ui.args_editor.visible = val
   self.ui.update_args_requested = true
 end
-
 
 --------------------------------------------------------------------------------
 -- Class methods
@@ -631,9 +630,7 @@ function xStreamUIArgsPanel:build()
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
             local idx = self.xstream.selected_model.args.selected_index+1
-            --print("self.xstream.selected_model.args.selected_index",self.xstream.selected_model.args.selected_index)
             local added,err = self.xstream.selected_model.args:add(nil,idx)
-            --print(">>> args added,err",added,err)
             if not added then
               if err then
                 renoise.app():show_warning(err)

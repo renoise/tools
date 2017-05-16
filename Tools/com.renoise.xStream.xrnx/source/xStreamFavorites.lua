@@ -490,7 +490,7 @@ function xStreamFavorites:launch(idx)
     return
   end
 
-  local _,model = self.xstream:get_model_by_name(favorite.model_name)
+  local _,model = self.xstream.process.models:get_by_name(favorite.model_name)
   if not model then
     status_msg = ("*** xStream #%.2d [Trigger] - could not launch, model not found"):format(idx)
     --print("status_msg",status_msg)

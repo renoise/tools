@@ -24,13 +24,16 @@ xStreamModel.CB_TYPE = {
 -- constructor
 -- @param xstream (xStream)
 
-function xStreamModel:__init(xstream)
-  TRACE("xStreamModel:__init(xstream)",xstream,type(xstream))
+function xStreamModel:__init(process)
+  TRACE("xStreamModel:__init(process)",process)
 
-  assert(type(xstream) == "xStream", "Wrong type of parameter")
+  assert(type(process) == "xStreamProcess", "Wrong type of parameter")
 
-  -- xStream, required
-  self.xstream = xstream
+  -- xStreamProcess
+  self.process = process
+
+  --- xStreamPrefs, current settings
+  self.prefs = renoise.tool().preferences
 
   -- string, file location (if saved to, loaded from disk...)
   self.file_path = nil
@@ -128,10 +131,10 @@ function xStreamModel:__init(xstream)
         return renoise 
       end,
     },
-
-    ["xstream"] = {
-      access = function(env) return self.xstream end,
-    },
+    
+    -- ["xstream"] = {
+    --   access = function(env) return self.xstream end,
+    -- },
 
     -- Constants
 
@@ -188,29 +191,29 @@ function xStreamModel:__init(xstream)
     -- xStream properties
 
     ["clear_undefined"] = {
-      access = function(env) return self.xstream.clear_undefined end,
-      assign = function(env,v) self.xstream.clear_undefined = v end,
+      access = function(env) return self.process.buffer.clear_undefined end,
+      assign = function(env,v) self.process.buffer.clear_undefined = v end,
     },
     ["expand_columns"] = {
-      access = function(env) return self.xstream.expand_columns end,
-      assign = function(env,v) self.xstream.expand_columns = v end,
+      access = function(env) return self.process.buffer.expand_columns end,
+      assign = function(env,v) self.process.buffer.expand_columns = v end,
     },
     ["include_hidden"] = {
-      access = function(env) return self.xstream.include_hidden end,
-      assign = function(env,v) self.xstream.include_hidden = v end,
+      access = function(env) return self.process.buffer.include_hidden end,
+      assign = function(env,v) self.process.buffer.include_hidden = v end,
     },
     ["automation_playmode"] = {
-      access = function(env) return self.xstream.automation_playmode end,
-      assign = function(env,v) self.xstream.automation_playmode = v end,
+      access = function(env) return self.process.buffer.automation_playmode end,
+      assign = function(env,v) self.process.buffer.automation_playmode = v end,
     },
     ["track_index"] = {
-      access = function(env) return self.xstream.track_index end,
+      access = function(env) return self.process.buffer.track_index end,
     },
     ["mute_mode"] = {
-      access = function(env) return self.xstream.mute_mode end,
+      access = function(env) return self.process.buffer.mute_mode end,
     },
     ["output_mode"] = {
-      access = function(env) return self.xstream.output_mode end,
+      access = function(env) return self.process.output_mode end,
     },
 
     -- xStream objects
@@ -219,19 +222,16 @@ function xStreamModel:__init(xstream)
       access = function(env) return self end,
     },
     ["xplaypos"] = {
-      access = function(env) return self.xstream.stream.playpos end,
-    },
-    ["xwritepos"] = {
-      access = function(env) return self.xstream.stream.writepos end,
+      access = function(env) return self.process.xpos.playpos end,
     },
     ["xbuffer"] = {
-      access = function(env) return self.xstream.buffer end,
+      access = function(env) return self.process.buffer end,
     },
     ["xvoices"] = {
-      access = function(env) return self.xstream.voicemgr.voices end,
+      access = function(env) return self.process.xstream.voicemgr.voices end,
     },
     ["xvoicemgr"] = {
-      access = function(env) return self.xstream.voicemgr end,
+      access = function(env) return self.process.xstream.voicemgr end,
     },
 
     -- Static classes 
@@ -244,6 +244,9 @@ function xStreamModel:__init(xstream)
     },
     ["xStream"] = {
       access = function(env) return xStream end,
+    },
+    ["xStreamPos"] = {
+      access = function(env) return xStreamPos end,
     },
     ["xTrack"] = {
       access = function(env) return xTrack end,
@@ -350,8 +353,9 @@ function xStreamModel:set_callback_str(str_fn)
   --print("self.callback_contains_code",self.callback_contains_code,self.name)
 
   -- live syntax check
+  -- (a bit 'funny'' to set the buffer status from here, but...)
   local passed,err = self.sandbox:test_syntax(str_fn)
-  self.xstream.callback_status_observable.value = passed and "" or err
+  self.process.buffer.callback_status_observable.value = passed and "" or err
   
   if not err then
 
@@ -361,7 +365,7 @@ function xStreamModel:set_callback_str(str_fn)
     self:extract_tokens(xStreamModel.CB_TYPE.MAIN)
 
     -- compile right away? 
-    if self.xstream.prefs.live_coding.value then
+    if self.prefs.live_coding.value then
       local passed,err = self.sandbox:compile()
       if not passed then -- should not happen! 
         LOG("*** "..tostring(err))
@@ -438,8 +442,6 @@ end
 
 function xStreamModel:load_definition(file_path)
   TRACE("xStreamModel:load_definition(file_path)",file_path)
-
-  assert(self.xstream,"No .xstream property was defined")
 
   if not file_path then
     file_path = renoise.app():prompt_for_filename_to_read({"*.lua"},"Load model definition")
@@ -1148,8 +1150,6 @@ end
 function xStreamModel:rename()
   TRACE("xStreamModel:rename()")
 
-  --local model = self.xstream.selected_model
-
   local str_name,_ = vPrompt.prompt_for_string(self.name,
     "Enter a new name","Rename Model")
   if not str_name then
@@ -1178,7 +1178,7 @@ function xStreamModel:rename()
   end
 
   -- update favorites to reflect new name
-  self.xstream.favorites:rename_model(self.name,str_name)
+  self.process.xstream.favorites:rename_model(self.name,str_name)
 
   self.name = str_name
   self.file_path = str_to
@@ -1276,8 +1276,7 @@ end
 function xStreamModel:load_preset_banks()
   TRACE("xStreamModel:load_preset_banks()")
 
-  local prefs = renoise.tool().preferences
-  local preset_bank_folder = prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
+  local preset_bank_folder = self.prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
   local str_folder = preset_bank_folder..self.name.."/"
   --print("str_folder",str_folder)
   if io.exists(str_folder) then
@@ -1335,8 +1334,7 @@ function xStreamModel:add_preset_bank(str_name)
   if not str_name then
 
     -- supply a unique preset bank name (filename)
-    local prefs = renoise.tool().preferences
-    local preset_bank_folder = prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
+    local preset_bank_folder = self.prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
     local preset_folder = ("%s%s/Untitled.xml"):format(preset_bank_folder,self.name)
     local str_path = cFilesystem.ensure_unique_filename(preset_folder)
     str_name = cFilesystem.get_raw_filename(str_path)
@@ -1387,9 +1385,9 @@ function xStreamModel:remove_preset_bank(idx)
   self.preset_banks_observable:remove(idx)
 
   -- favorites might be affected
-  local favorites = self.xstream.favorites:get_by_preset_bank(old_name)
+  local favorites = self.process.xstream.favorites:get_by_preset_bank(old_name)
   if (#favorites > 0) then
-    self.xstream.favorites.update_requested = true
+    self.process.xstream.favorites.update_requested = true
   end
 
 
@@ -1516,8 +1514,7 @@ end
 -- @param str_name (string)
 
 function xStreamModel.get_normalized_file_path(str_name)
-  local prefs = renoise.tool().preferences
-  local models_folder = prefs.user_folder.value .. xStream.MODELS_FOLDER
+  local models_folder = self.prefs.user_folder.value .. xStream.MODELS_FOLDER
   return ("%s%s.lua"):format(models_folder,str_name)
 end
 

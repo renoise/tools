@@ -16,8 +16,8 @@ function xStreamUIArgsEditor:__init(xstream,vb)
   assert(type(xstream)=="xStream","Expected 'xstream' as argument")
   assert(type(vb)=="ViewBuilder","Expected 'ViewBuilder' as argument")
 
-  self.xstream = xstream
   self.vb = vb
+  self.xstream = xstream
 
   self.visible = property(self.get_visible,self.set_visible)
   self.visible_observable = renoise.Document.ObservableBoolean(false)

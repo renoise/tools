@@ -43,8 +43,9 @@ function xStreamUIFavorites:__init(xstream,midi_prefix)
   assert(type(xstream)=="xStream","Expected 'xstream' as argument")
   assert(type(midi_prefix)=="string","Expected 'midi_prefix' to be a string")
 
-  self.xstream = xstream
   self.midi_prefix = midi_prefix
+  self.xstream = xstream
+
 
   vDialog.__init(self)
 
@@ -212,13 +213,13 @@ function xStreamUIFavorites:build()
 
   ---------------------------------------------------------
 
-  self.xstream.scheduled_favorite_index_observable:add_notifier(function()    
+  self.xstream.process.scheduled_favorite_index_observable:add_notifier(function()    
     TRACE("*** xStreamUI - scheduled_favorite_index_observable fired...",self.xstream.scheduled_favorite_index)
-    if (self.xstream.scheduled_favorite_index == 0) then
+    if (self.xstream.process.scheduled_favorite_index == 0) then
       self:update_button(self.scheduled_favorite_index)
       self.scheduled_favorite_index = nil
     else
-      self.scheduled_favorite_index = self.xstream.scheduled_favorite_index
+      self.scheduled_favorite_index = self.xstream.process.scheduled_favorite_index
     end
   end)
 
@@ -554,8 +555,8 @@ function xStreamUIFavorites:create_dialog()
                 text = "scheduling",
               },
               vb:popup{
-                items = xStream.SCHEDULES,
-                value = xStream.SCHEDULE.BEAT,
+                items = xStreamPos.SCHEDULES,
+                value = xStreamPos.SCHEDULE.BEAT,
                 id = "xStreamFavoritesSchedulePopup",
                 width = 64,
                 height = xStreamUI.BITMAP_BUTTON_H,
@@ -645,7 +646,7 @@ function xStreamUIFavorites:update_button(idx,brightness)
     str_txt = xStreamUIFavorites.EMPTY_FAVORITE_TXT
   else
     --print("favorite",rprint(favorite))
-    local model_idx,model = self.xstream:get_model_by_name(favorite.model_name)
+    local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
     if not model then
       -- Display as 
       -- N/A: Model Name (soft wrapped)
@@ -824,7 +825,7 @@ function xStreamUIFavorites:update_edit_model_selector()
 
   --print(">>> model_selector.items",rprint(model_selector.items))
 
-  local model_idx,model = self.xstream:get_model_by_name(favorite.model_name)
+  local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
   --print("model_idx,model",model_idx,model)
   if not model then
     model_status.text = xStreamUIFavorites.EDIT_RACK_WARNING
@@ -861,7 +862,7 @@ function xStreamUIFavorites:update_bank_selector()
     bank_selector.active = true
   end
 
-  local model_idx,model = self.xstream:get_model_by_name(favorite.model_name)
+  local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
   --print("model_idx,model",model_idx,model)
 
   if not model then
@@ -903,7 +904,7 @@ function xStreamUIFavorites:update_preset_selector()
 
     preset_selector.active = true
 
-    local model_idx,model = self.xstream:get_model_by_name(favorite.model_name)
+    local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
 
     if model then
       --print("favorite.preset_bank_name",favorite.preset_bank_name)

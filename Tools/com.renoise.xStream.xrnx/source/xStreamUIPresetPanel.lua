@@ -32,9 +32,9 @@ xStreamUIPresetPanel.PRESET_SELECTOR_W = 110
 
 function xStreamUIPresetPanel:__init(xstream,vb,ui)
 
-  self.xstream = xstream
   self.vb = vb
   self.ui = ui
+  self.xstream = xstream  
 
   self.preset_views = {}
 
@@ -122,8 +122,7 @@ function xStreamUIPresetPanel:build_panel()
         width = xStreamUIPresetPanel.PRESET_SELECTOR_W, -- xStreamUI.BITMAP_BUTTON_W,
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function(idx)
-          local model = self.xstream.selected_model
-          model.selected_preset_bank_index = idx
+          self.xstream.selected_model.selected_preset_bank_index = idx
         end
       },
       vb:row{
@@ -249,7 +248,7 @@ function xStreamUIPresetPanel:build_panel()
           if not added then
             renoise.app():show_warning(err)
           else
-            self.xstream.selected_model.selected_preset_bank.selected_preset_index = #model.selected_preset_bank.presets
+            model.selected_preset_bank.selected_preset_index = #model.selected_preset_bank.presets
           end
         end,
       },
@@ -315,12 +314,12 @@ end
 function xStreamUIPresetPanel:build_list()
   TRACE("xStreamUIPresetPanel:build_list()")
 
-  if not self.xstream.selected_model then
+  local model = self.xstream.selected_model
+  if not model then
     return
   end
   
   local vb = self.vb
-  local model = self.xstream.selected_model
 
   local vb_container = vb.views["xStreamArgPresetContainer"]
 
@@ -517,13 +516,12 @@ end
 function xStreamUIPresetPanel:update_preset_list_row(idx)
   TRACE("xStreamUIPresetPanel:update_preset_list_row(idx)",idx)
 
-  local model = self.xstream.selected_model
-  if not model then
+  if not self.xstream.selected_model then
     return
   end
 
-  local preset_bank_name = model.selected_preset_bank.name
-  local selected = (model.selected_preset_bank.selected_preset_index == idx)
+  local preset_bank_name = self.xstream.selected_model.selected_preset_bank.name
+  local selected = (self.xstream.selected_model.selected_preset_bank.selected_preset_index == idx)
   local base_color = selected and self.base_color_highlight or xLib.COLOR_DISABLED
 
   local view_bt
@@ -536,14 +534,14 @@ function xStreamUIPresetPanel:update_preset_list_row(idx)
 
   view_bt = self.vb.views["xStreamModelPresetRecall"..idx]
   local preset_color = base_color
-  if (model.color > 0) then
-    preset_color = cColor.value_to_color_table(model.color)
+  if (self.xstream.selected_model.color > 0) then
+    preset_color = cColor.value_to_color_table(self.xstream.selected_model.color)
     if selected then
       preset_color = cColor.adjust_brightness(preset_color,xStreamUI.BRIGHTEN_AMOUNT)
     end
   end
   view_bt.color = preset_color
-  view_bt.text = model.selected_preset_bank:get_preset_display_name(idx)
+  view_bt.text = self.xstream.selected_model.selected_preset_bank:get_preset_display_name(idx)
   view_bt.width = xStreamUIPresetPanel.PRESET_SELECTOR_W
 
   view_bt = self.vb.views["xStreamPresetListMoveUpButton"..idx]
@@ -558,7 +556,7 @@ function xStreamUIPresetPanel:update_preset_list_row(idx)
   view_bt = self.vb.views["xStreamModelPresetFavorite"..idx]
   if view_bt then
     view_bt.color = base_color
-    view_bt.text = self.xstream.favorites:get(model.name,idx,preset_bank_name) and 
+    view_bt.text = self.xstream.favorites:get(self.xstream.selected_model.name,idx,preset_bank_name) and 
       xStreamUI.FAVORITE_TEXT.ON or xStreamUI.FAVORITE_TEXT.OFF
   end
 

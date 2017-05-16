@@ -1,5 +1,5 @@
 --[[============================================================================
--- xStreamPrefs
+xStreamPrefs
 ============================================================================]]--
 
 --[[
@@ -65,12 +65,12 @@ function xStreamPrefs:__init()
   -- streaming
   self:add_property("suspend_when_hidden", renoise.Document.ObservableBoolean(true))
   self:add_property("start_option", renoise.Document.ObservableNumber(xStreamPrefs.START_OPTION.ON_PLAY_EDIT))
-  self:add_property("scheduling", renoise.Document.ObservableNumber(xStream.SCHEDULE.BEAT))
-  self:add_property("mute_mode", renoise.Document.ObservableNumber(xStream.MUTE_MODE.OFF))
+  self:add_property("scheduling", renoise.Document.ObservableNumber(xStreamPos.SCHEDULE.BEAT))
+  self:add_property("mute_mode", renoise.Document.ObservableNumber(xStreamBuffer.MUTE_MODE.OFF))
   self:add_property("writeahead_factor", renoise.Document.ObservableNumber(xStreamPrefs.WRITEAHEAD))
 
   -- output
-  self:add_property("automation_playmode", renoise.Document.ObservableNumber(xStream.PLAYMODE.POINTS))
+  self:add_property("automation_playmode", renoise.Document.ObservableNumber(xStreamBuffer.PLAYMODE.POINTS))
   self:add_property("include_hidden", renoise.Document.ObservableBoolean(false))
   self:add_property("clear_undefined", renoise.Document.ObservableBoolean(true))
   self:add_property("expand_columns", renoise.Document.ObservableBoolean(true))

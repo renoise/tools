@@ -251,8 +251,7 @@ function xStreamUICallbackCreate:update_dialog()
   TRACE("xStreamUICallbackCreate:update_dialog()")
 
   local vb = self.vb
-  local model = self.xstream.selected_model
-  local vb_argument_items = model.args:get_names()
+  local vb_argument_items = self.xstream.xstream.selected_model.args:get_names()
 
   -- update page
 
@@ -295,7 +294,7 @@ function xStreamUICallbackCreate:update_dialog()
       
       view_page_2_opt1.visible = true
       
-      local str_name = model:get_suggested_callback_name("my_userdata",self.cb_type)
+      local str_name = self.xstream.selected_model:get_suggested_callback_name("my_userdata",self.cb_type)
       local view_name = vb.views["xStreamDialogName"]
       view_name.text = str_name
 
@@ -344,7 +343,6 @@ function xStreamUICallbackCreate:show_next_page()
   TRACE("xStreamUICallbackCreate:show_next_page()")
 
   local vb = self.vb
-  local model = self.xstream.selected_model
 
   --[[
   if (self.dialog_option == 1) then 
@@ -376,7 +374,7 @@ function xStreamUICallbackCreate:show_next_page()
         local arg_type = vb_arg_types.items[vb_arg_types.value]
         local str_fn = self:get_userdata_template(arg_type)
 
-        model:add_userdata(view_name.text,str_fn)
+        self.xstream.selected_model:add_userdata(view_name.text,str_fn)
         self.ui.editor_view = ("data.%s"):format(view_name.text)
         self.ui:update_editor()
         self.dialog:close()
@@ -406,7 +404,7 @@ function xStreamUICallbackCreate:show_next_page()
         return
       else
 
-        model:add_event(str_name)
+        self.xstream.selected_model:add_event(str_name)
         self.ui.editor_view = ("events.%s"):format(str_name)
         self.ui:update_editor()
         self.dialog:close()
@@ -428,8 +426,7 @@ end
 function xStreamUICallbackCreate:validate_callback_name(str_name)
   TRACE("xStreamUICallbackCreate:validate_callback_name(str_name)",str_name)
 
-  local model = self.xstream.selected_model
-  local str_name_validate = model:get_suggested_callback_name(str_name,self.cb_type)
+  local str_name_validate = self.xstream.selected_model:get_suggested_callback_name(str_name,self.cb_type)
   --print("str_name,str_name_validate",str_name,str_name_validate)
   return (str_name == str_name_validate) 
 
@@ -453,8 +450,7 @@ function xStreamUICallbackCreate:get_available_event_names()
     rslt[k] = v 
   end
 
-  local model = self.xstream.selected_model
-  for k,v in pairs(model.events) do 
+  for k,v in pairs(self.xstream.selected_model.events) do 
     local cb_type,cb_key,cb_subtype = xStream.parse_callback_type("events."..k)
     --print(">>> get_available_event_names - cb_type,cb_key,cb_subtype",cb_type,cb_key,cb_subtype)
     local event_key = cb_subtype and cb_key.."."..cb_subtype or cb_key

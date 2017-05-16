@@ -640,7 +640,6 @@ end
 function xStreamArgs:toggle_link(arg)
 
   arg.linked = not arg.linked
-  --local args = self.model.xstream.selected_model.args
   if not arg.linked then
     self:unset_link(arg.name)
   else

@@ -99,8 +99,6 @@ function xStreamArg:__init(arg)
 
   -- TODO more validation
 
-
-
   -- serializable properties  -----------------------------
 
   -- string, name of argument (required)
@@ -211,11 +209,11 @@ function xStreamArg:notifier()
     self:bind_notifier(self.observable.value)
   end
   if self.properties.impacts_buffer then
-    self.model.xstream.buffer:wipe_futures()
+    self.model.process.buffer:wipe_futures()
   end
 
   -- invoke event callbacks (if any)
-  self.model.xstream:handle_arg_events(self.full_name,self.value)
+  self.model.process:handle_arg_events(self.full_name,self.value)
 
 end
 

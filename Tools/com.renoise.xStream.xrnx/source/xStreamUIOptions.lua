@@ -47,13 +47,12 @@ function xStreamUIOptions:__init(xstream)
     self:on_idle()
   end)
 
-  self.xstream.selected_model_index_observable:add_notifier(function()    
+  self.xstream.process.models.selected_model_index_observable:add_notifier(function()    
     if self.prefs.launch_selected_model.value then
-      --print(">>> self.xstream.selected_model_index",self.xstream.selected_model_index)
       if (self.xstream.selected_model_index > 0) then
-        local model = self.xstream.models[self.xstream.selected_model_index]
+        --local model = self.xstream.models[self.xstream.selected_model_index]
+        local model = self.xstream.selected_model
         self.prefs.launch_model.value = model.file_path
-        --print("model.file_path",model,model.file_path)
       end
       self.update_model_requested = true
     end
@@ -70,19 +69,19 @@ function xStreamUIOptions:__init(xstream)
     end 
   end)
 
-  self.xstream.models_observable:add_notifier(function()
+  self.xstream.process.models.models_observable:add_notifier(function()
     self.update_model_requested = true
   end)
 
   self:show_tab(self.selected_tab_index)
 
   -- prevent device editing while inactive
-  self.xstream.active_observable:add_notifier(function()
+  self.xstream.process.active_observable:add_notifier(function()
     if self.vtable_midi_inputs then
-      self.vtable_midi_inputs.active = self.xstream.active
+      self.vtable_midi_inputs.active = self.xstream.process.active
     end
     if self.vtable_midi_outputs then
-      self.vtable_midi_outputs.active = self.xstream.active
+      self.vtable_midi_outputs.active = self.xstream.process.active
     end
   end)
 
@@ -189,7 +188,7 @@ function xStreamUIOptions:create_dialog()
             items = {xStreamUI.NO_MODEL_SELECTED},
             id = "xStreamImplLaunchModel",
             notifier = function(idx)
-              local model = self.xstream.models[idx-1]
+              local model = self.xstream.process.models[idx-1]
               if model then
                 self.prefs.launch_model.value = model.file_path
               end
@@ -287,7 +286,7 @@ function xStreamUIOptions:create_dialog()
             width = STREAMING_TXT_W,
           },
           vb:popup{
-            items = xStream.SCHEDULES,
+            items = xStreamPos.SCHEDULES,
             bind = self.prefs.scheduling,
             width = STREAMING_CTRL_W,
           },
@@ -299,8 +298,8 @@ function xStreamUIOptions:create_dialog()
             width = STREAMING_TXT_W,
           },
           vb:popup{
-            items = xStream.MUTE_MODES,
-            bind = self.xstream.mute_mode_observable,
+            items = xStreamBuffer.MUTE_MODES,
+            bind = self.xstream.process.mute_mode_observable,
             width = STREAMING_CTRL_W,
           },
         },
@@ -496,15 +495,15 @@ function xStreamUIOptions:create_dialog()
             text = "Automation playmode",
           },
           vb:popup{
-            items = xStream.PLAYMODES,
-            bind = self.xstream.automation_playmode_observable,
+            items = xStreamBuffer.PLAYMODES,
+            bind = self.xstream.process.buffer.automation_playmode_observable,
           },
         },
 
         vb:row{
           tooltip = "Whether to include hidden columns when writing output",
           vb:checkbox{
-            bind = self.xstream.include_hidden_observable,
+            bind = self.xstream.process.buffer.include_hidden_observable,
           },
           vb:text{
             text = "include_hidden",
@@ -513,7 +512,7 @@ function xStreamUIOptions:create_dialog()
         vb:row{
           tooltip = "Whether to clear undefined values, columns",
           vb:checkbox{
-            bind = self.xstream.clear_undefined_observable,
+            bind = self.xstream.process.buffer.clear_undefined_observable,
           },
           vb:text{
             text = "clear_undefined",
@@ -522,7 +521,7 @@ function xStreamUIOptions:create_dialog()
         vb:row{
           tooltip = "Automatically reveal (sub-)columns with output",
           vb:checkbox{
-            bind = self.xstream.expand_columns_observable,
+            bind = self.xstream.process.buffer.expand_columns_observable,
           },
           vb:text{
             text = "expand_columns",
@@ -611,7 +610,7 @@ function xStreamUIOptions:update_model_selector(model_names)
 
   local model_popup = self.vb.views["xStreamImplLaunchModel"]
   if model_popup then
-    local model_names = self.xstream:get_model_names(true)
+    local model_names = self.xstream.process.models:get_names(true)
     table.insert(model_names,1,xStreamUI.NO_MODEL_SELECTED)
     model_popup.items = model_names
     model_popup.active = not self.prefs.launch_selected_model.value
@@ -619,7 +618,7 @@ function xStreamUIOptions:update_model_selector(model_names)
       model_popup.value = (self.xstream.selected_model_index == 0) 
         and 1 or self.xstream.selected_model_index+1
     else
-      for k,v in ipairs(self.xstream.models) do
+      for k,v in ipairs(self.xstream.process.models) do
         if (v.file_path == self.xstream.launch_model) then
           model_popup.value = k
         end
@@ -642,12 +641,12 @@ function xStreamUIOptions:on_idle()
   local view = self.vb.views["xStreamImplStats"]
   if view then
     local str_stat = ("Memory usage: %.2f Mb"):format(collectgarbage("count")/1024)
-      ..("\nLines Travelled: %d"):format(xs.stream.xinc)
-      ..("\nStream Position: %d,%d"):format(xs.stream.pos.sequence,xs.stream.pos.line)
+      ..("\nStream Position: %d,%d"):format(xs.xpos.pos.sequence,xs.xpos.pos.line)
+      ..("\nLines Travelled: %d"):format(xs.xpos.xinc)
       ..("\nWriteahead: %d lines"):format(xStreamPos.determine_writeahead())
       ..("\nSelected model: %s"):format(xs.selected_model and xs.selected_model.name or "N/A") 
-      ..("\nStream active: %s"):format(xs.active and "true" or "false") 
-      ..("\nStream muted: %s"):format(xs.muted and "true" or "false") 
+      ..("\nStream active: %s"):format(cLib.serialize_object(xs.process.active))
+      ..("\nStream muted: %s"):format(cLib.serialize_object(xs.process.muted)) 
     view.text = str_stat
   end
 
