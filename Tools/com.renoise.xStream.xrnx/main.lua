@@ -57,6 +57,7 @@ require (_xlibroot..'xPlayPos')
 require (_xlibroot..'xScale')
 require (_xlibroot..'xSongPos')
 require (_xlibroot..'xStreamPos')
+require (_xlibroot..'xStreamBuffer')
 require (_xlibroot..'xTransport')
 require (_xlibroot..'xVoiceManager')
 
@@ -64,10 +65,11 @@ require ('source/xStream')
 require ('source/xStreamArg')
 require ('source/xStreamArgs')
 require ('source/xStreamArgsTab')
-require ('source/xStreamBuffer')
 require ('source/xStreamFavorite')
 require ('source/xStreamFavorites')
 require ('source/xStreamModel')
+require ('source/xStreamModels')
+require ('source/xStreamProcess')
 require ('source/xStreamPresets')
 require ('source/xStreamPrefs')
 require ('source/xStreamUI')
@@ -95,33 +97,6 @@ local MIDI_PREFIX = "Tools:"..TOOL_NAME..":"
 -- force all dialogs to have this name
 vDialog.DEFAULT_DIALOG_TITLE = "xStream"
 
---------------------------------------------------------------------------------
--- tool menu entry
-
-function register_tool_menu()
-
-  local str_name = "Main Menu:Tools:"..TOOL_NAME
-  local str_name_active = "Main Menu:Tools:"..TOOL_NAME.." (active)"
-
-  if renoise.tool():has_menu_entry(str_name) then
-    renoise.tool():remove_menu_entry(str_name)
-  elseif renoise.tool():has_menu_entry(str_name_active) then
-    renoise.tool():remove_menu_entry(str_name_active)
-  end
-
-  if xstream then
-    str_name = (xstream.active) and str_name_active or str_name
-  end
-
-  renoise.tool():add_menu_entry{
-    name = str_name,
-    invoke = function() 
-      show() 
-    end
-  }
-end
-
-register_tool_menu()
 
 -------------------------------------------------------------------------------
 -- invoked by menu entries, autostart - 
@@ -136,12 +111,8 @@ function show()
   if not xstream then
     xstream = xStream{
       midi_prefix = MIDI_PREFIX,
+      tool_name = TOOL_NAME,
     }
-    xstream.active_observable:add_notifier(function()
-      TRACE("*** main.lua - self.active_observable fired...")
-      register_tool_menu()
-    end)
-
   end
 
   xstream.ui:show()
@@ -154,11 +125,9 @@ end
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   TRACE("*** app_new_document_observable fired...")
-
   if prefs.autostart.value then
     show()
   end
-
 end)
 
 --------------------------------------------------------------------------------
