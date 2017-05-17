@@ -351,11 +351,15 @@ function xStreamUI:update_model_selector()
   local model_names = self.xstream.process.models:get_names()
   table.insert(model_names,1,xStreamUI.NO_MODEL_SELECTED)
   local view_popup = self.vb.views["xStreamModelSelector"]
+  local view_compact_popup = self.vb.views["xStreamCompactModelSelector"]
 
   local selector_value = (self.xstream.selected_model_index == 0) 
       and 1 or self.xstream.selected_model_index+1
+
   view_popup.items = model_names
   view_popup.value = selector_value
+  view_compact_popup.items = model_names
+  view_compact_popup.value = selector_value
 
   self.favorites:update_model_selector(model_names)
   self.options:update_model_selector(model_names)
@@ -462,6 +466,7 @@ function xStreamUI:build()
 
   -- construct the main view ------------------------------
 
+  local model_names = self.xstream.process.models:get_names()
   local view_callback_panel = self:build_callback_panel()
   --local view_models_panel = self:build_models_panel()
   local view_presets_panel = self.presets:build_panel()
@@ -483,6 +488,7 @@ function xStreamUI:build()
             id = "xStreamTransportRow",
             vb:row{
               vb:column{
+                id = "xStreamLogo",
                 margin = 2,
                 vb:bitmap{
                   bitmap = "./source/icons/logo.png",
@@ -494,6 +500,16 @@ function xStreamUI:build()
                   end,
                 },
               },
+              vb:popup{ -- compact mode only: model selector
+                items = model_names,
+                id = "xStreamCompactModelSelector",
+                width = xStreamUI.MODEL_SELECTOR_W,
+                height = xStreamUI.BITMAP_BUTTON_H,
+                visible = false,
+                notifier = function(val)
+                  self.xstream.selected_model_index = val-1
+                end
+              },              
               vb:space{
                 width = 6,
               },
@@ -814,7 +830,7 @@ end
 
 function xStreamUI:build_callback_panel()
 
-  -- misc. helper functions -------------------------------
+  local model_names = self.xstream.process.models:get_names()
 
   local color_callback = function(t)
     self.xstream.selected_model.color = t
@@ -868,12 +884,11 @@ function xStreamUI:build_callback_panel()
         },
 
         vb:popup{ -- selector
-          items = self.xstream.process.models:get_names(),
+          items = model_names,
           id = "xStreamModelSelector",
           width = xStreamUI.MODEL_SELECTOR_W,
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function(val)
-            TRACE("xStreamUI: ModelSelector set index ",val)
             self.xstream.selected_model_index = val-1
           end
         },
@@ -1282,9 +1297,17 @@ function xStreamUI:set_compact_mode(val)
     panel.visible = not val
   end 
   local toggle_bt = self.vb.views["xStreamToggleCompactMode"]
-  if toggle_bt then 
-    toggle_bt.text = val and "+" or "-"
-  end 
+  local selector = self.vb.views["xStreamCompactModelSelector"]
+  local logo = self.vb.views["xStreamLogo"]
+
+  selector.visible = false
+  logo.visible = false
+
+  toggle_bt.text = val and "+" or "-"
+  selector.visible = val
+  logo.visible = not val
+
+
 end
 
 --------------------------------------------------------------------------------
