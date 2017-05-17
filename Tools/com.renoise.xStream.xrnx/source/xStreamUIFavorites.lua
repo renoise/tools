@@ -80,7 +80,7 @@ function xStreamUIFavorites:__init(xstream,midi_prefix)
   -- initialize 
 
   self.selected_index_observable:add_notifier(function()
-    TRACE("*** xStreamUIFavorites - selected_index_observable fired...",self.selected_index)
+    TRACE("xStreamUIFavorites - selected_index_observable fired...",self.selected_index)
     self.update_requested = true
   end)
 
@@ -214,7 +214,7 @@ function xStreamUIFavorites:build()
   ---------------------------------------------------------
 
   self.xstream.process.scheduled_favorite_index_observable:add_notifier(function()    
-    TRACE("*** xStreamUI - scheduled_favorite_index_observable fired...",self.xstream.scheduled_favorite_index)
+    TRACE("xStreamUIFavorites - scheduled_favorite_index_observable fired...",self.xstream.scheduled_favorite_index)
     if (self.xstream.process.scheduled_favorite_index == 0) then
       self:update_button(self.scheduled_favorite_index)
       self.scheduled_favorite_index = nil
@@ -224,7 +224,7 @@ function xStreamUIFavorites:build()
   end)
 
   local build_handler = function()
-    TRACE("*** xStreamUI - favorites/grid_rows/grid_columns_observable fired...")
+    TRACE("xStreamUIFavorites - favorites/grid_rows/grid_columns_observable fired...")
     self.build_requested = true
   end
 
@@ -233,7 +233,7 @@ function xStreamUIFavorites:build()
   self.xstream.favorites.grid_columns_observable:add_notifier(build_handler)
 
   self.xstream.favorites.modified_observable:add_notifier(function()
-    TRACE("*** xStreamUI - favorites.modified_observable fired...")
+    TRACE("xStreamUIFavorites - favorites.modified_observable fired...")
     self.update_requested = true
     self.update_models_requested = true
     self.update_presets_requested = true
@@ -241,7 +241,7 @@ function xStreamUIFavorites:build()
   end)
 
   self.xstream.favorites.got_triggered_observable:add_notifier(function()
-    TRACE("*** xStreamUI - favorites.got_triggered_observable fired...")
+    TRACE("xStreamUIFavorites - favorites.got_triggered_observable fired...")
     if self.xstream.favorites.got_triggered_observable.value then
       local idx = self.xstream.favorites.last_triggered_index
       self:update_edit_rack()
@@ -250,7 +250,7 @@ function xStreamUIFavorites:build()
   end)
 
   self.xstream.favorites.last_selected_index_observable:add_notifier(function()
-    TRACE("*** xStreamUI - favorites.last_selected_index_observable fired...")
+    TRACE("xStreamUIFavorites - favorites.last_selected_index_observable fired...")
     local idx = self.xstream.favorites.last_selected_index
     self:update_edit_rack()
 
@@ -264,7 +264,7 @@ function xStreamUIFavorites:build()
   end)
 
   self.xstream.favorites.edit_mode_observable:add_notifier(function()
-    TRACE("*** xStreamUI - favorites.edit_mode_observable fired...")
+    TRACE("xStreamUIFavorites - favorites.edit_mode_observable fired...")
     self:update_edit_rack()
     if not self.xstream.favorites.edit_mode then
       self.xstream.favorites.last_selected_index = 0
@@ -272,7 +272,7 @@ function xStreamUIFavorites:build()
   end)
 
   self.xstream.favorites.update_buttons_requested_observable:add_notifier(function()
-    TRACE("*** xStreamUI - favorites.update_buttons_requested_observable fired...")
+    TRACE("xStreamUIFavorites - favorites.update_buttons_requested_observable fired...")
     self:update_buttons()
   end)
 
