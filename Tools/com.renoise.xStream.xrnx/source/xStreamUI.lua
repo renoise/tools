@@ -166,6 +166,9 @@ function xStreamUI:__init(...)
   self.tool_options_visible = property(self.get_tool_options_visible,self.set_tool_options_visible)
   self.tool_options_visible_observable = renoise.Document.ObservableBoolean(false)
 
+  self.compact_mode = property(self.get_compact_mode,self.set_compact_mode)
+  self.compact_mode_observable = renoise.Document.ObservableBoolean(false)
+
   self.model_browser_visible = property(self.get_model_browser_visible,self.set_model_browser_visible)
   self.model_browser_visible_observable = renoise.Document.ObservableBoolean(false)
 
@@ -188,40 +191,51 @@ function xStreamUI:__init(...)
   --== notifiers ==--
 
   self.show_editor_observable:add_notifier(function()
-    TRACE("*** selfUI - self.show_editor_observable fired...")
+    TRACE("xStreamUI - self.show_editor_observable fired...")
     self.prefs.show_editor.value = self.show_editor_observable.value
   end)
 
   self.tool_options_visible_observable:add_notifier(function()
-    TRACE("*** selfUI - self.tool_options_visible_observable fired...")
+    TRACE("xStreamUI - self.tool_options_visible_observable fired...")
     self.prefs.tool_options_visible.value = self.tool_options_visible_observable.value
   end)
 
   self.model_browser_visible_observable:add_notifier(function()
-    TRACE("*** selfUI - self.model_browser_visible_observable fired...")
+    TRACE("xStreamUI - self.model_browser_visible_observable fired...")
     self.prefs.model_browser_visible.value = self.model_browser_visible
   end)
 
   self.args_panel.visible_observable:add_notifier(function()
-    TRACE("*** selfUI - self.args_panel.visible_observable fired...")
+    TRACE("xStreamUI - self.args_panel.visible_observable fired...")
     self.prefs.model_args_visible.value = self.args_panel.visible
   end)
 
   self.presets.visible_observable:add_notifier(function()
-    TRACE("*** selfUI - self.presets.visible_observable fired...")
+    TRACE("xStreamUI - self.presets.visible_observable fired...")
     self.prefs.presets_visible.value = self.presets.visible
   end)
 
   self.favorites.pinned_observable:add_notifier(function()
-    TRACE("*** selfUI - self.favorites.pinned_observable fired...")
+    TRACE("xStreamUI - self.favorites.pinned_observable fired...")
     self.prefs.favorites_pinned.value = self.favorites.pinned
   end)
 
   self.editor_visible_lines_observable:add_notifier(function()
-    TRACE("*** selfUI - self.editor_visible_lines_observable fired...")
+    TRACE("xStreamUI - self.editor_visible_lines_observable fired...")
     self.prefs.editor_visible_lines.value = self.editor_visible_lines
   end)
   
+  self.compact_mode_observable:add_notifier(function()
+    TRACE("xStreamUI - compact_mode_observable fired...")
+    self.prefs.compact_mode.value = self.compact_mode_observable.value
+  end)
+  
+  --== tool notifications ==--
+
+  renoise.tool().app_new_document_observable:add_notifier(function()
+    TRACE("xStreamUI - app_new_document_observable fired...")
+    self:attach_to_song()    
+  end)
 
   --== initialize ==--
 
@@ -233,6 +247,7 @@ function xStreamUI:__init(...)
     TRACE(">>> xStreamUI.dialog_visible_observable fired...")
   end)
 
+  self.compact_mode = self.prefs.compact_mode.value
 
 end
 
@@ -277,7 +292,31 @@ function xStreamUI:update()
   self.build_presets_requested = true
 
   self:update_color()
+  self:update_play_button()
+  self:update_active_button()
 
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:update_play_button()
+  print(">>> xStreamUI:update_play_button()")
+  local vb = self.vb
+  local view = vb.views["xStreamStartPlayButton"]
+  local color = rns.transport.playing
+    and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
+  view.color = color
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:update_active_button()
+  TRACE("xStreamUI:update_active_button()")
+  local vb = self.vb
+  local view = vb.views["xStreamToggleStreaming"]
+  local color = self.xstream.process.active 
+    and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
+  view.color = color
 end
 
 --------------------------------------------------------------------------------
@@ -373,10 +412,10 @@ function xStreamUI:update_editor()
   TRACE("xStreamUI:update_editor()")
 
   local model = self.xstream.selected_model
-  local view_lines = self.vb.views["xStreamModelEditorNumLines"]
+  --local view_lines = self.vb.views["xStreamModelEditorNumLines"]
   local view = self.vb.views["xStreamCallbackEditor"]
 
-  view_lines.value = self.editor_visible_lines
+  --view_lines.value = self.editor_visible_lines
   view.height = self.editor_visible_lines * xStreamUI.LINE_HEIGHT - 6
 
   -- type popup: include defined userdata + events 
@@ -434,7 +473,7 @@ function xStreamUI:build()
       id = "xStreamPanel",
       vb:row{ -- xStreamUpperPanel
         id = "xStreamUpperPanel",
-        style = "panel",
+        --style = "body",
         margin = 4,
         vb:horizontal_aligner{
           id = "xStreamTransportAligner",
@@ -460,26 +499,39 @@ function xStreamUI:build()
               },
               vb:button{
                 bitmap = "./source/icons/transport_play.bmp",
-                tooltip = "Activate streaming and (re-)start playback [Space]",
+                tooltip = "Activate streaming and (re-)start playback",
                 id = "xStreamStartPlayButton",
                 width = xStreamUI.TRANSPORT_BUTTON_W,
                 height = xStreamUI.BITMAP_BUTTON_H,
-                notifier = function(val)
+                notifier = function()
                   self.xstream:start_and_play()
                 end,
               },
               vb:button{
-                text = "≣↴",
+                bitmap = "./source/icons/transport_stop.bmp",
+                tooltip = "Stop streaming and playback",
+                id = "xStreamStopButton",
+                width = xStreamUI.TRANSPORT_BUTTON_W,
+                height = xStreamUI.BITMAP_BUTTON_H,
+                notifier = function()
+                  rns.transport:stop()
+                end,
+              },
+              vb:button{
+                bitmap = "./source/icons/transport_record.bmp",
                 tooltip = "Toggle whether streaming is active",
                 id = "xStreamToggleStreaming",
                 width = xStreamUI.TRANSPORT_BUTTON_W,
                 height = xStreamUI.BITMAP_BUTTON_H,
-                notifier = function(val)
+                notifier = function()
+                  self.xstream.active = not self.xstream.active
+                  --[[
                   if self.xstream.active then
                     self.xstream:stop()
                   else
                     self.xstream:start()
                   end
+                  ]]
                 end,
               },
               vb:button{
@@ -488,7 +540,7 @@ function xStreamUI:build()
                 id = "xStreamMuteButton",
                 width = xStreamUI.TRANSPORT_BUTTON_W,
                 height = xStreamUI.BITMAP_BUTTON_H,
-                notifier = function(val)
+                notifier = function()
                   self.xstream.process.muted = not self.xstream.process.muted
                 end,
               },
@@ -502,7 +554,7 @@ function xStreamUI:build()
                 tooltip = "Apply to the selected track",
                 id = "xStreamApplyTrackButton",
                 height = xStreamUI.BITMAP_BUTTON_H,
-                notifier = function(val)
+                notifier = function()
                   self.xstream.process:fill_track()
                 end,
               },
@@ -526,11 +578,21 @@ function xStreamUI:build()
               },
             },
           },
-          vb:row{
+          vb:row{       
+            vb:button{
+              tooltip = "Show processes",
+              --bitmap = "./source/icons/favorites_grid.bmp",
+              text = "☶ ▾",
+              height = xStreamUI.BITMAP_BUTTON_H,
+              width = xStreamUI.BITMAP_BUTTON_W,
+              notifier = function()
+              end
+            },
             vb:button{
               tooltip = "Show favorites",
-              text = "Favorites",
+              text = "★",
               height = xStreamUI.BITMAP_BUTTON_H,
+              width = xStreamUI.BITMAP_BUTTON_W,
               notifier = function()
                 self.favorites:show()
               end
@@ -538,9 +600,20 @@ function xStreamUI:build()
             vb:button{
               tooltip = "Show options",
               text = "Options",
+              --text = "⚙",
               height = xStreamUI.BITMAP_BUTTON_H,
               notifier = function()
                 self.tool_options_visible = not self.tool_options_visible
+              end
+            },
+            vb:button{
+              id = "xStreamToggleCompactMode",
+              tooltip = "Toggle between compact and full display",
+              text = "-",
+              height = xStreamUI.BITMAP_BUTTON_H,
+              width = xStreamUI.BITMAP_BUTTON_W,
+              notifier = function()
+                self.compact_mode = not self.compact_mode
               end
             },
           },
@@ -573,7 +646,7 @@ function xStreamUI:build()
   -- add notifier methods ---------------------------------
 
   self.xstream.process.buffer.callback_status_observable:add_notifier(function()    
-    TRACE("*** xStreamUI - callback_status_observable fired...")
+    TRACE("xStreamUI - callback_status_observable fired...")
     local str_err = self.xstream.process.buffer.callback_status_observable.value
     local view = self.vb.views["xStreamCallbackStatus"]
     if (str_err == "") then
@@ -587,38 +660,34 @@ function xStreamUI:build()
   end)
 
   self.xstream.process.muted_observable:add_notifier(function()    
-    TRACE("*** xStreamUI - xstream.muted_observable fired...")
+    TRACE("xStreamUI - xstream.muted_observable fired...")
     local view = vb.views["xStreamMuteButton"]
     local color = self.xstream.process.muted 
       and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
     view.color = color
   end)
 
-  self.xstream.process.active_observable:add_notifier(function()    
-    TRACE("*** xStreamUI - xstream.process.active_observable fired...")
-    local view = vb.views["xStreamToggleStreaming"]
-    local color = self.xstream.process.active 
-      and xLib.COLOR_ENABLED or xLib.COLOR_DISABLED
-    view.color = color
-  end)
+  self.xstream.process.active_observable:add_notifier(self,xStreamUI.update_active_button)
+
+
 
   -- handle models ----------------------------------------
 
   self.xstream.process.models.models_observable:add_notifier(function()
-    TRACE("*** xStreamUI - models_observable fired...")
+    TRACE("xStreamUI - models_observable fired...")
     self.build_models_requested = true
   end)
 
   local preset_bank_notifier = function()
-    TRACE("*** xStreamUI - preset_bank_notifier fired...")
+    TRACE("xStreamUI - preset_bank_notifier fired...")
     self.presets:update_controls()
     self.favorites:update_bank_selector()
   end
 
   local preset_bank_index_notifier = function()
-    TRACE("*** xStreamUI - model.selected_preset_bank_index_observable fired...")
+    TRACE("xStreamUI - model.selected_preset_bank_index_observable fired...")
     local presets_modified_notifier = function()
-      TRACE("*** xStreamUI - presets_modified_notifier fired...")
+      TRACE("xStreamUI - presets_modified_notifier fired...")
       self.build_presets_requested = true
       self.favorites:update_preset_selector()
     end
@@ -628,14 +697,14 @@ function xStreamUI:build()
     cObservable.attach(preset_bank.presets_observable,presets_modified_notifier)
     cObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
     cObservable.attach(preset_bank.selected_preset_index_observable,function()    
-      TRACE("*** xStreamUI - preset_bank.selected_preset_index_observable fired...")
+      TRACE("xStreamUI - preset_bank.selected_preset_index_observable fired...")
       self.update_presets_requested = true
     end)
     cObservable.attach(preset_bank.name_observable,preset_bank_notifier)
   end
 
   local selected_model_index_notifier = function()
-    TRACE("*** xStreamUI - selected_model_index_notifier fired...",self.xstream.selected_model_index)
+    TRACE("xStreamUI - selected_model_index_notifier fired...",self.xstream.selected_model_index)
     local model = self.xstream.selected_model
     if model then
       --print(">>> #model.args.args",#model.args.args)
@@ -643,42 +712,42 @@ function xStreamUI:build()
       --print(">>> model.events_observable",model.events_observable)
 
       cObservable.attach(model.name_observable,function()
-        TRACE("*** xStreamUI - model.name_observable fired...")
+        TRACE("xStreamUI - model.name_observable fired...")
         self.build_models_requested = true
       end)
       cObservable.attach(model.modified_observable,function()
-        TRACE("*** xStreamUI - model.modified_observable fired...")
+        TRACE("xStreamUI - model.modified_observable fired...")
         self.update_models_requested = true
       end)
       cObservable.attach(model.color_observable,function()    
-        TRACE("*** xStreamUI - model.color_observable fired...")
+        TRACE("xStreamUI - model.color_observable fired...")
         self.update_color_requested = true
       end)
       cObservable.attach(model.args.selected_index_observable,function()
-        TRACE("*** xStreamUI - selected_arg_notifier fired...")
+        TRACE("xStreamUI - selected_arg_notifier fired...")
         self.update_args_requested = true
       end)
       cObservable.attach(model.args.args_observable,function(arg)
-        TRACE("*** xStreamUI - args_observable_notifier fired...",rprint(arg))
+        TRACE("xStreamUI - args_observable_notifier fired...",rprint(arg))
         if (arg.type == "remove") then
           self.args_panel:purge_arg_views()
         end
         self.build_args_requested = true
       end)
       cObservable.attach(model.args.modified_observable,function()
-        TRACE("*** xStreamUI - args_modified_notifier fired...")
+        TRACE("xStreamUI - args_modified_notifier fired...")
         self.xstream.selected_model.modified = true
       end)
       cObservable.attach(model.data_observable,function()
-        TRACE("*** xStreamUI - data_observable fired...")
+        TRACE("xStreamUI - data_observable fired...")
         self.update_editor_requested = true
       end)
       cObservable.attach(model.events_observable,function()
-        TRACE("*** xStreamUI - events_observable fired...")
+        TRACE("xStreamUI - events_observable fired...")
         self.update_editor_requested = true
       end)
       cObservable.attach(model.sandbox.callback_str_observable,function()
-        TRACE("*** xStreamUI - sandbox.callback_notifier fired...")
+        TRACE("xStreamUI - sandbox.callback_notifier fired...")
         if not self.user_modified_callback then
           self.update_editor_requested = true
         end
@@ -709,7 +778,7 @@ function xStreamUI:build()
   -- handle scheduled items -------------------------------
 
   self.xstream.process.scheduled_model_index_observable:add_notifier(function()    
-    TRACE("*** xStreamUI - scheduled_model_index_observable fired...",self.xstream.scheduled_model_index)
+    TRACE("xStreamUI - scheduled_model_index_observable fired...",self.xstream.scheduled_model_index)
     if self.scheduled_model_index then
       self:update_scheduled_model(self.scheduled_model_index,xStreamUI.SCHEDULE_TEXT.OFF)
     end
@@ -722,7 +791,7 @@ function xStreamUI:build()
   end)
 
   self.xstream.process.scheduled_preset_index_observable:add_notifier(function()    
-    TRACE("*** xStreamUI - scheduled_preset_index_observable fired...",self.xstream.scheduled_preset_index)
+    TRACE("xStreamUI - scheduled_preset_index_observable fired...",self.xstream.scheduled_preset_index)
     if self.scheduled_preset_index then
       self:update_scheduled_preset(self.scheduled_preset_index,xStreamUI.SCHEDULE_TEXT.OFF)
     end
@@ -803,7 +872,7 @@ function xStreamUI:build_callback_panel()
           width = xStreamUI.MODEL_SELECTOR_W,
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function(val)
-            print(">>> xStreamModelSelector set index ",val)
+            TRACE("xStreamUI: ModelSelector set index ",val)
             self.xstream.selected_model_index = val-1
           end
         },
@@ -896,25 +965,19 @@ function xStreamUI:build_callback_panel()
 
           end,
         },  
-      },        
+      },  
       vb:row{
-        vb:row{
-          id = "xStreamModelEditorNumLinesContainer",
-          tooltip = "Number of lines",
-          vb:text{
-            id = "xStreamEditorNumLinesTitle",
-            text = "Lines",
-          },
-          vb:valuebox{
-            min = 12,
-            max = 51,
-            id = "xStreamModelEditorNumLines",
-            notifier = function(val)
-              self.editor_visible_lines = val
-            end,
-          }
-        }
-      }
+        --[[
+        vb:text{
+          text = "Stack",
+          font = "bold",
+        },        
+        vb:popup{
+          items = {"A","B","C","D","E","F"},
+          width = 50,
+        },  
+        ]]      
+      }      
     },
     vb:multiline_textfield{
       text = "",
@@ -991,7 +1054,24 @@ function xStreamUI:build_callback_panel()
             self:remove_callback()
           end,
         },
-
+        --[[
+        vb:row{
+          id = "xStreamModelEditorNumLinesContainer",
+          tooltip = "Number of lines",
+          vb:text{
+            id = "xStreamEditorNumLinesTitle",
+            text = "Lines",
+          },
+          vb:valuebox{
+            min = 12,
+            max = 51,
+            id = "xStreamModelEditorNumLines",
+            notifier = function(val)
+              self.editor_visible_lines = val
+            end,
+          }
+        }
+        ]]
       },
     },
   }
@@ -1052,11 +1132,11 @@ function xStreamUI:apply_editor_content()
 
   local model = self.xstream.selected_model
   if model then
-    --print("*** xStreamUI:on_idle - callback modified")
+    --print("xStreamUI:on_idle - callback modified")
     local view = self.vb.views["xStreamCallbackEditor"]
     local cb_type,cb_key,cb_subtype_or_tab,cb_arg_name = xStream.parse_callback_type(self.editor_view)
     local trimmed_text = cString.trim(view.text)
-
+    local status_obs = self.xstream.process.buffer.callback_status_observable
     if (cb_type == "main") then
       model.callback_str = trimmed_text
     elseif (cb_type == "data") then
@@ -1064,26 +1144,19 @@ function xStreamUI:apply_editor_content()
       def[cb_key] = trimmed_text
       local str_status = model:parse_userdata(def)
       --print("str_status",str_status)
-      self.xstream.callback_status_observable.value = str_status
+      status_obs.value = str_status
     elseif (cb_type == "events") then
       local def = table.rcopy(model.events)
       local cb_name = cb_arg_name and cb_subtype_or_tab.."."..cb_arg_name or cb_subtype_or_tab
       def[cb_key.."."..cb_name] = trimmed_text
       --print("apply content",cb_key.."."..cb_name)
       local str_status = model:parse_events(def)
-      self.xstream.callback_status_observable.value = str_status
+      status_obs.value = str_status
     end
     model.modified = true
 
   end
 
-end
-
---------------------------------------------------------------------------------
-
-function xStreamUI:get_expanded_height()
-  return self.vb.views["xStreamUpperPanel"].height
-    + self.vb.views["xStreamLowerPanels"].height
 end
 
 --------------------------------------------------------------------------------
@@ -1160,7 +1233,9 @@ function xStreamUI:set_show_editor(val)
   assert(type(val) == "boolean", "Wrong argument type")
   self.show_editor_observable.value = val
 
+  --[[
   self.vb.views["xStreamModelEditorNumLinesContainer"].visible = val
+  ]]
   local view_expand = self.vb.views["xStreamToggleExpand"]
   view_expand.text = val and xStreamUI.ARROW_UP or xStreamUI.ARROW_DOWN
   self.vb.views["xStreamCallbackEditor"].visible = val
@@ -1191,6 +1266,24 @@ function xStreamUI:set_tool_options_visible(val)
   else
     self.options:close()
   end
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:get_compact_mode()
+  return self.compact_mode_observable.value
+end
+
+function xStreamUI:set_compact_mode(val)
+  self.compact_mode_observable.value = val
+  local panel = self.vb.views["xStreamLowerPanels"]
+  if panel then 
+    panel.visible = not val
+  end 
+  local toggle_bt = self.vb.views["xStreamToggleCompactMode"]
+  if toggle_bt then 
+    toggle_bt.text = val and "+" or "-"
+  end 
 end
 
 --------------------------------------------------------------------------------
@@ -1283,6 +1376,14 @@ function xStreamUI:remove_callback()
     model:remove_callback(cb_type,cb_subtype and cb_key.."."..cb_subtype or cb_key)
     self.update_editor_requested = true
   end
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUI:attach_to_song()
+
+  cObservable.attach(rns.transport.playing_observable,self,xStreamUI.update_play_button)
 
 end
 
