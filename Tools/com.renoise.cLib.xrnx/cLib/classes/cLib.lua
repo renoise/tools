@@ -519,10 +519,13 @@ function cLib.serialize_table(t,max_depth,longstring)
     local result = ""--"\n"
     indent = indent or string.rep(' ', 2)
     depth = depth or 1 
-    local too_deep = (depth > max_depth) and true or false
-    
+    local too_deep = (depth > max_depth) and true or false    
     local next_indent
-    for key, value in pairs(t) do
+    -- list keys in alphabetic order
+    local keys = table.keys(t)
+    table.sort(keys)
+    for _, key in ipairs(keys) do
+      local value = t[key]
       local str_key = (type(key) == 'number') and '' or '["'..cLib.serialize_object(key) .. '"] = ' 
       if (type(value) == 'table') then
         if table.is_empty(value) then
