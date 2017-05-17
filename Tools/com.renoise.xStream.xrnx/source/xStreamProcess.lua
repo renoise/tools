@@ -80,13 +80,6 @@ function xStreamProcess:__init(xstream)
   self.scheduled_preset_bank_index = property(self.get_scheduled_preset_bank_index)
   self.scheduled_preset_bank_index_observable = renoise.Document.ObservableNumber(0)
 
-  --- renoise.DeviceParameter, selected automation parameter (can be nil)
-  self.device_param = property(self.get_device_param,self.set_device_param)
-  self._device_param = nil
-
-  --- int, derived from device_param (0 = none)
-  self.device_param_index_observable = renoise.Document.ObservableNumber(0)
-
   --- xStreamModels
   self.models = xStreamModels(self)
 
@@ -98,23 +91,23 @@ function xStreamProcess:__init(xstream)
   self.buffer.clear_undefined = self.prefs.clear_undefined.value
   self.buffer.automation_playmode = self.prefs.automation_playmode.value
   self.buffer.automation_playmode_observable:add_notifier(function()
-    TRACE("*** main.lua - self.automation_playmode_observable fired...")
+    TRACE("xStreamProcess - self.automation_playmode_observable fired...")
     self.prefs.automation_playmode.value = self.buffer.automation_playmode_observable.value
   end)
   self.buffer.include_hidden_observable:add_notifier(function()
-    TRACE("*** main.lua - self.include_hidden_observable fired...")
+    TRACE("xStreamProcess - self.include_hidden_observable fired...")
     self.prefs.include_hidden.value = self.buffer.include_hidden_observable.value
   end)
   self.buffer.clear_undefined_observable:add_notifier(function()
-    TRACE("*** main.lua - self.clear_undefined_observable fired...")
+    TRACE("xStreamProcess - self.clear_undefined_observable fired...")
     self.prefs.clear_undefined.value = self.buffer.clear_undefined_observable.value
   end)
   self.buffer.expand_columns_observable:add_notifier(function()
-    TRACE("*** main.lua - self.expand_columns_observable fired...")
+    TRACE("xStreamProcess - self.expand_columns_observable fired...")
     self.prefs.expand_columns.value = self.buffer.expand_columns_observable.value
   end)
   self.buffer.mute_mode_observable:add_notifier(function()
-    TRACE("*** selfUI - self.mute_mode_observable fired...")
+    TRACE("xStreamProcess - self.mute_mode_observable fired...")
     self.prefs.mute_mode.value = self.buffer.mute_mode_observable.value
   end)
 
@@ -138,6 +131,7 @@ function xStreamProcess:get_active()
 end
 
 function xStreamProcess:set_active(val)
+  print("xStreamProcess:set_active(val)",val)
   self.active_observable.value = val
 end
 
@@ -213,23 +207,6 @@ function xStreamProcess:get_scheduled_preset_bank_index()
 end
 
 -------------------------------------------------------------------------------
-
-function xStreamProcess:get_device_param()
-  return self._device_param
-end
-
-function xStreamProcess:set_device_param(val)
-  self._device_param = val
-
-  local param_idx
-  if val then
-    param_idx = xAudioDevice.resolve_parameter(val,self.buffer.track_index)
-  end
-  self.device_param_index_observable.value = param_idx or 0
-
-end
-
--------------------------------------------------------------------------------
 -- Class methods
 -------------------------------------------------------------------------------
 
@@ -241,6 +218,7 @@ function xStreamProcess:reset()
 end
 
 -------------------------------------------------------------------------------
+-- Stop live streaming
 
 function xStreamProcess:stop()
   self.active = false
@@ -248,17 +226,17 @@ function xStreamProcess:stop()
 end
 
 -------------------------------------------------------------------------------
+-- Activate live streaming 
 -- @param playmode, renoise.Transport.PLAYMODE
 
 function xStreamProcess:start(playmode)
-  print("xStreamProcess:start(playmode)",playmode)
+  TRACE("xStreamProcess:start(playmode)",playmode)
 
   if self.active then 
     return 
   end
   self:reset()
   self.active = true
-  self.xpos:start(playmode)
 
 end
 
@@ -332,7 +310,7 @@ function xStreamProcess:schedule_item(model_name,preset_index,preset_bank_name)
     --print("xStreamProcess:schedule_item - self.scheduled_preset_bank_index",preset_bank_index)
   end
 
-  local favorite_idx = self.favorites:get(model_name,preset_index,preset_bank_name)
+  local favorite_idx = self.xstream.favorites:get(model_name,preset_index,preset_bank_name)
   --print("favorite_idx",favorite_idx)
   if favorite_idx then
     self.scheduled_favorite_index_observable.value = favorite_idx
@@ -481,6 +459,7 @@ function xStreamProcess:fill_selection(locally)
 
   local passed,err = self.validate_selection()
   if not passed then
+    err = "Could not apply model to selection:\n"..err
     renoise.app():show_warning(err)
     return
   end
@@ -556,33 +535,6 @@ function xStreamProcess:apply_to_range(from_line,to_line,xinc)
 
 end
 
-
--------------------------------------------------------------------------------
--- Resolve or create automation for parameter in the provided seq-index
--- can return nil if trying to create automation on non-automateable param.
--- @param seq_idx (int)
--- @return renoise.PatternTrackAutomation or nil
-
-function xStreamProcess:resolve_automation(seq_idx)
-  TRACE("xStreamProcess:resolve_automation(seq_idx)",seq_idx)
- 
-  local patt_idx = rns.sequencer:pattern(seq_idx)
-  local patt = rns.patterns[patt_idx]
-  assert(patt,"Could not find pattern")
-  --local param = self.device.parameters[self.param_index]
-  --assert(param,"Could not find device parameter")
-  assert(self.device_param,"Could not find device parameter")
-
-  if not self.device_param.is_automatable then
-    return
-  end
-
-  local ptrack = patt.tracks[self.buffer.track_index]
-  assert(ptrack,"Could not find pattern-track")
-
-  return xAutomation.get_or_create_automation(ptrack,self.device_param)
-
-end
 
 -------------------------------------------------------------------------------
 -- @param arg_name (string), e.g. "tab.my_arg" or "my_arg"
