@@ -24,10 +24,10 @@ Extended play-position which support fractional time (between lines).
     -- ask for the expanded position 
     pos()
 
-    -- get any specific property
-    print(pos.fraction)
-    print(pos.sequence)
-    print(pos.line)
+    -- get any specific property:
+    -- pos.fraction
+    -- pos.sequence)
+    -- pos.line
 
     -- to return it as a normal SongPos object
     xSongPos.create(pos)
