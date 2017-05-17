@@ -4,8 +4,8 @@ xLineAutomation
 
 --[[--
 
-A representation of automation data within a single line
-.
+A representation of automation data within a single line.
+
 #
 
 See also:
@@ -38,13 +38,12 @@ end
 
 -------------------------------------------------------------------------------
 -- [Class] Write to the provided automation lane
--- @param sequence (int)
 -- @param line (int)
 -- @param ptrack_auto (renoise.PatternTrackAutomation)
 -- @param patt_num_lines (int), length of the playpos pattern
 
-function xLineAutomation:do_write(sequence,line,ptrack_auto,patt_num_lines)
-  TRACE("xLineAutomation:do_write(sequence,line,ptrack_auto,patt_num_lines)",sequence,line,ptrack_auto,patt_num_lines)
+function xLineAutomation:do_write(line,ptrack_auto,patt_num_lines)
+  TRACE("xLineAutomation:do_write(line,ptrack_auto,patt_num_lines)",line,ptrack_auto,patt_num_lines)
   
   assert(ptrack_auto,"Required argument 'ptrack_auto' not defined")
 
