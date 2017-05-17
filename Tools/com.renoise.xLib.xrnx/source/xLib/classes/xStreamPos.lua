@@ -72,7 +72,7 @@ function xStreamPos:__init()
   --== notifiers ==--
 
   renoise.tool().app_new_document_observable:add_notifier(function()
-    TRACE("*** xStream - app_new_document_observable fired...")
+    TRACE("xStreamPos - app_new_document_observable fired...")
     self:attach_to_song()
   end)
 
@@ -88,7 +88,7 @@ end
 -- @param playmode, renoise.Transport.PLAYMODE
 
 function xStreamPos:start(playmode)
-  print("xStreamPos:start(playmode)",playmode)
+  TRACE("xStreamPos:start(playmode)",playmode)
 
   self:reset()
 
@@ -137,9 +137,8 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- [Class] Update the stream-position as a result of a changed playback position.
--- Most of the time we want the stream to continue smoothly forward - this is
--- true for any kind of pattern, sequence or block loop. However, when we
--- detect 'user events', the position can also jump backwards
+-- Most of the time the stream progresses smoothly forward - however, we also look for 
+-- 'user events', changes which can cause the position to jump anywhere... 
 -- @param pos (renoise.SongPos), the current playback position
 
 function xStreamPos:_set_pos(pos)
@@ -147,6 +146,11 @@ function xStreamPos:_set_pos(pos)
 
   --assert(type(pos)=="table" or type(pos)=="SongPos")
   --print(">>> set pos - seq/line:",pos.sequence,pos.line)
+  --print(">>> rns.transport.loop_block_enabled :",rns.transport.loop_block_enabled )
+
+  if not self.playpos then
+    self.playpos:set(pos)
+  end
 
   local writeahead = xStreamPos.determine_writeahead()
 
@@ -176,22 +180,22 @@ function xStreamPos:_set_pos(pos)
       if near_patt_top(pos.line) 
         and near_patt_end(self.playpos.line,patt_num_lines) 
       then
-        print(">>> conclusion: pattern loop")
+        --print(">>> conclusion: pattern loop")
         local num_lines = (patt_num_lines-self.playpos.line) + pos.line
         self:_increase_by(num_lines)
       elseif rns.transport.loop_block_enabled 
         and near_block_top(pos.line)  
         and near_block_end(self.playpos.line) 
       then 
-        print(">>> conclusion: block loop (enabled)")
+        --print(">>> conclusion: block loop (enabled)")
         local num_lines = (self.xblock.end_line-self.playpos.line) + (pos.line-self.xblock.start_line) + 1
         self:_increase_by(num_lines)
-      elseif not rns.transport.loop_block_enabled 
-        and near_block_end(self.playpos.line)  
-      then 
-        print(">>> conclusion: block loop (disabled)")
+      --elseif not rns.transport.loop_block_enabled 
+      --  and near_block_end(self.playpos.line)  
+      --then 
+      --  print(">>> conclusion: block loop (disabled)")
       else
-        print(">>> conclusion: crazy navigation")
+        --print(">>> conclusion: crazy navigation")
         self:reset()
         if self.refresh_fn then
           self.refresh_fn()
@@ -230,13 +234,13 @@ function xStreamPos:_set_pos(pos)
     -- the old position is near the end of the pattern
     -- use the writeahead as the basis for this calculation
     if (self.playpos.line >= (patt_num_lines-writeahead)) then
-      print(">>> conclusion: we've reached the end of the former pattern ")
+      --print(">>> conclusion: we've reached the end of the former pattern ")
       -- difference is the remaning lines in old position plus the current line 
       local num_lines = (patt_num_lines-self.playpos.line)+pos.line
       self:_increase_by(num_lines)
       self.pos.sequence = pos.sequence
     else
-      print(">>> conclusion: we've changed the position manually, somehow")
+      --print(">>> conclusion: we've changed the position manually, somehow")
       -- disregard the sequence and just use the lines
       local num_lines = pos.line-self.playpos.line
       self:_increase_by(num_lines)
