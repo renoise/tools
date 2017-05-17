@@ -43,7 +43,7 @@ xstream:output_message(xmsg,'internal_auto')]],
 -- @param val (number/boolean/string)}
 ------------------------------------------------------------------------------
 
-xstream.voicemgr.voice_limit = val]],
+xvoicemgr.voice_limit = val]],
   ["voice.released"] = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}

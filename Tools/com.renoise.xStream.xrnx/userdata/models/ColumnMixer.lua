@@ -398,7 +398,7 @@ return function(col_idx,target)
     -- (without this, values ahead of playback pos would be erased 
     -- and as a result, changes would not be audible in realtime)
     local ahead_by = xpos.line - rns.transport.playback_pos.line
-    if (ahead_by == math.min(1,xstream.stream.writeahead-1)) then
+    if (ahead_by == math.min(1,xStreamPos.determine_writeahead()-1)) then
       data.recent[target][col_idx] = val
     end
     

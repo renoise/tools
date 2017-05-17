@@ -10,6 +10,9 @@ arguments = {
       ["linked"] = false,
       ["value"] = 2,
       ["properties"] = {
+          ["min"] = 1,
+          ["impacts_buffer"] = false,
+          ["max"] = 5,
           ["items"] = {
               "up",
               "down",
@@ -17,11 +20,8 @@ arguments = {
               "ordered",
               "random",
           },
-          ["fire_on_start"] = false,
-          ["max"] = 5,
-          ["impacts_buffer"] = false,
           ["display_as"] = "popup",
-          ["min"] = 1,
+          ["fire_on_start"] = false,
       },
       ["description"] = "",
   },
@@ -31,16 +31,16 @@ arguments = {
       ["linked"] = false,
       ["value"] = 1,
       ["properties"] = {
-          ["min"] = 1,
-          ["impacts_buffer"] = false,
-          ["max"] = 3,
           ["items"] = {
               "pattern",
               "keystroke",
               "stream",
           },
-          ["display_as"] = "popup",
           ["fire_on_start"] = false,
+          ["max"] = 3,
+          ["impacts_buffer"] = false,
+          ["display_as"] = "popup",
+          ["min"] = 1,
       },
       ["description"] = "",
   },
@@ -64,12 +64,12 @@ arguments = {
       ["linked"] = false,
       ["value"] = 2,
       ["properties"] = {
-          ["zero_based"] = false,
-          ["fire_on_start"] = false,
-          ["max"] = 4,
-          ["impacts_buffer"] = false,
-          ["display_as"] = "integer",
           ["min"] = 0,
+          ["impacts_buffer"] = false,
+          ["max"] = 4,
+          ["zero_based"] = false,
+          ["display_as"] = "integer",
+          ["fire_on_start"] = false,
       },
       ["description"] = "",
   },
@@ -78,8 +78,8 @@ presets = {
   {
       ["stepsize"] = 1,
       ["name"] = "",
-      ["oct_range"] = 1,
       ["mode"] = 1,
+      ["oct_range"] = 1,
       ["lock_to"] = 1,
   },
 },
@@ -237,6 +237,10 @@ options = {
 callback = [[
 -------------------------------------------------------------------------------
 -- Arpeggiator model
+-- * traditional up/down/ordered/random modes
+-- * accepts input via MIDI (enable in Options) 
+-- * 'lock' defines if generated pattern is locked to pattern start,
+--   streaming progress or time since first keystroke
 -------------------------------------------------------------------------------
 
 local note_col_idx = rns.selected_note_column_index
@@ -270,6 +274,5 @@ if (#xvoices > 0) then
 else
   xline.note_columns[note_col_idx] = {}
 end
-
 ]],
 }

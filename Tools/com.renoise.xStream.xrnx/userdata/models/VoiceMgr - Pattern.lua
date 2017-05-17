@@ -92,9 +92,9 @@ return function(trigger_type)
   then
     return 0
   else
-    local fract_playpos = xplaypos:get_fractional()  
-    return (args.schedule == xStream.SCHEDULE.LINE)
-      and math.floor(fract_playpos.fraction * 255) or 0
+    local xplaypos = xplaypos()  
+    return (args.schedule == xStreamPos.SCHEDULE.LINE)
+      and math.floor(xplaypos.fraction * 255) or 0
   end
 end]],
 },
@@ -103,36 +103,36 @@ events = {
 -- respond to voice-manager events
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
 ------------------------------------------------------------------------------
-print(">>> events.voice.triggered",xstream.voicemgr.triggered_index)
+print(">>> events.voice.triggered",xvoicemgr.triggered_index)
 local voice = xvoices[arg.index]
-local pos = xbuffer:get_scheduled_pos(args.schedule)
+local pos,scheduled_xinc = xpos:get_scheduled_pos(args.schedule)
 xbuffer:schedule_note_column({
   note_value = voice.values[1],
   volume_value = voice.values[2],
   instrument_value = rns.selected_instrument_index-1,
   delay_value = data.get_delay_value("trigger"),
-},voice.note_column_index,pos.lines_travelled)]],
+},voice.note_column_index,scheduled_xinc)]],
   ["args.voice_limit"] = [[------------------------------------------------------------------------------
 -- respond to argument 'voice_limit' changes
 -- @param val (number/boolean/string)}
 ------------------------------------------------------------------------------
 
-xstream.voicemgr.voice_limit = args.voice_limit]],
+xvoicemgr.voice_limit = args.voice_limit]],
   ["voice.released"] = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
 ------------------------------------------------------------------------------
-print(">>> events.voice.released",xstream.voicemgr.released_index)
+print(">>> events.voice.released",xvoicemgr.released_index)
 local voice = xvoices[arg.index]
-local pos = xbuffer:get_scheduled_pos(args.schedule)
-local xline = xbuffer:get_input(nil,pos)
+local pos,scheduled_xinc = xpos:get_scheduled_pos(args.schedule)
+local xline = xbuffer:get_input(scheduled_xinc)
 local note_col = xline.note_columns[voice.note_column_index]
 -- output note-off only when not occupied by note
 if (note_col.note_value >= EMPTY_NOTE_VALUE) then
   xbuffer:schedule_note_column({
     note_string = "OFF",
     delay_value = data.get_delay_value("release"),
-  },voice.note_column_index,pos.lines_travelled)
+  },voice.note_column_index,travelled)
 end]],
   ["midi.pitch_bend"] = [[------------------------------------------------------------------------------
 -- respond to MIDI 'pitch_bend' messages
