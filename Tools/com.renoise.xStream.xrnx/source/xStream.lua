@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xStream
-============================================================================]]--
+===============================================================================================]]--
 --[[
 
 The main xStream class - where it all comes together.
@@ -9,7 +9,7 @@ The main xStream class - where it all comes together.
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xStream'
 
@@ -17,13 +17,6 @@ class 'xStream'
 xStream.FAVORITES_FILE_PATH = "favorites.xml"
 xStream.MODELS_FOLDER       = "models/"
 xStream.PRESET_BANK_FOLDER  = "presets/"
-
--- accessible to callback
-xStream.OUTPUT_MODE = {
-  STREAMING = 1,
-  TRACK = 2,
-  SELECTION = 3,
-}
 
 -- options for internal/external MIDI output
 xStream.OUTPUT_OPTIONS = {
@@ -33,7 +26,7 @@ xStream.OUTPUT_OPTIONS = {
   --EXTERNAL_OSC  = "external_osc",   -- using OSC_DEVICE_NAME
 }
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- constructor
 
 function xStream:__init(...)
@@ -48,10 +41,9 @@ function xStream:__init(...)
   --- xStreamPrefs, current settings
   self.prefs = renoise.tool().preferences
 
-  --- enum, one of xStream.OUTPUT_MODE
-  -- usually STREAMING, but temporarily set to a different
-  -- value while applying output to TRACK/SELECTION
-  self.output_mode = xStream.OUTPUT_MODE.STREAMING
+  --- boolean, evaluate callbacks while playing
+  self.active = property(self.get_active,self.set_active)
+  self.active_observable = renoise.Document.ObservableBoolean(false)
 
   --- (bool) keep track of loop block state
   self.block_enabled = rns.transport.loop_block_enabled
@@ -77,14 +69,9 @@ function xStream:__init(...)
     self.process:refresh()
   end
   self.process.models:load_all(self.prefs.user_folder.value..xStream.MODELS_FOLDER)
-  self.process.active_observable:add_notifier(function()
-    TRACE("*** main.lua - self.active_observable fired...")
-    self:register_tool_menu()
-  end)
-  self:register_tool_menu()
 
   self.prefs.scheduling:add_notifier(function()
-    self.process.scheduling.value = self.prefs.scheduling.value
+    self.process.scheduling = self.prefs.scheduling.value
   end)
 
   self.selected_model = property(
@@ -221,11 +208,13 @@ function xStream:__init(...)
 
   self:attach_to_song()
 
+  self.ui:update()
+
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- class methods
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [app] 
 -- bring focus to the relevant model/preset/bank, 
 -- following a selection/trigger in the favorites grid
@@ -266,36 +255,39 @@ function xStream:focus_to_favorite(idx)
 
 end
 
--------------------------------------------------------------------------------
--- Class methods
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [process] clear buffer, prepare for new output
-
+--[[
 function xStream:reset()
   TRACE("xStream:reset()")
   self.process:reset()
 end
-
--------------------------------------------------------------------------------
--- [process] stop live streaming
+]]
+---------------------------------------------------------------------------------------------------
+-- Stop live streaming
 
 function xStream:stop()
   TRACE("xStream:stop()")
   self.process:stop()
 end
 
--------------------------------------------------------------------------------
--- [process] activate live streaming 
+---------------------------------------------------------------------------------------------------
+-- Activate live streaming 
+-- @param [playmode], renoise.Transport.PLAYMODE - use CONTINUE_PATTERN if not defined
 
 function xStream:start(playmode)
   TRACE("xStream:start(playmode)",playmode)
+
+  if not playmode then 
+    playmode = renoise.Transport.PLAYMODE_CONTINUE_PATTERN
+  end 
+
   self.process:start(playmode)
+  self.xpos:start(playmode)
 end
 
--------------------------------------------------------------------------------
--- [process] activate live streaming and begin playback
--- (use this method instead of the native Renoise functionality in order 
--- to make the first line play back - otherwise it's too late...)
+---------------------------------------------------------------------------------------------------
+-- Begin live streaming from pattern start 
 
 function xStream:start_and_play()
   TRACE("xStream:start_and_play()")
@@ -305,7 +297,20 @@ function xStream:start_and_play()
   self:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- Set active state of processes
+
+function xStream:set_active(val)
+  print("xStream:set_active(val)",val)
+  self.process.active = val
+end
+
+function xStream:get_active()
+  TRACE("xStream:get_active()")
+  return self.process.active
+end
+
+---------------------------------------------------------------------------------------------------
 -- [app] perform periodic updates
 
 function xStream:on_idle()
@@ -353,7 +358,7 @@ function xStream:on_idle()
 end
 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [app] call when a new document becomes available
 
 function xStream:attach_to_song()
@@ -364,11 +369,6 @@ function xStream:attach_to_song()
   local selected_track_index_notifier = function()
     TRACE("*** selected_track_index_notifier fired...")
     self.process:set_track_index(rns.selected_track_index)
-  end
-
-  local device_param_notifier = function()
-    -- 
-    self.process.device_param = rns.selected_parameter  
   end
 
   local playing_notifier = function()
@@ -422,12 +422,10 @@ function xStream:attach_to_song()
   cObservable.attach(rns.transport.playing_observable,playing_notifier)
   cObservable.attach(rns.transport.edit_mode_observable,edit_notifier)
   cObservable.attach(rns.selected_track_index_observable,selected_track_index_notifier)
-  cObservable.attach(rns.selected_parameter_observable,device_param_notifier) 
 
   playing_notifier()
   edit_notifier()
   selected_track_index_notifier()
-  device_param_notifier()
 
   if self.selected_model then
     self.selected_model:attach_to_song()
@@ -435,7 +433,7 @@ function xStream:attach_to_song()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 --- [app+process]
 -- @param xmsg (xMidiMessage)
 
@@ -462,11 +460,11 @@ function xStream:handle_midi_input(xmsg)
 
   -- pass to event handlers (if any)
   local event_key = "midi."..tostring(xmsg.message_type)
-  self:handle_event(event_key,xmsg)
+  self.process:handle_event(event_key,xmsg)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [process]
 -- @param evt (xVoiceManager.EVENT)
 
@@ -497,14 +495,14 @@ function xStream:handle_voice_events(evt)
 
   -- pass to event handlers (if any)
   local event_key = "voice."..evt
-  self:handle_event(event_key,{
+  self.process:handle_event(event_key,{
     index = index,
     type = evt
   })
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- this method is meant to be accessible from callbacks
 
 function xStream:output_message(xmsg,mode)
@@ -520,32 +518,9 @@ function xStream:output_message(xmsg,mode)
 
 end
 
---------------------------------------------------------------------------------
--- tool menu entry
-
-function xStream:register_tool_menu()
-
-  local str_name = "Main Menu:Tools:"..self.tool_name
-  local str_name_active = "Main Menu:Tools:"..self.tool_name.." (active)"
-
-  if renoise.tool():has_menu_entry(str_name) then
-    renoise.tool():remove_menu_entry(str_name)
-  elseif renoise.tool():has_menu_entry(str_name_active) then
-    renoise.tool():remove_menu_entry(str_name_active)
-  end
-
-  renoise.tool():add_menu_entry{
-    name = (self.active) and str_name_active or str_name,
-    invoke = function() 
-      show() 
-    end
-  }
-
-end
-
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Static methods
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param str_name (string), e.g. "events.midi.note_on" or "main"
 -- @return string, type - "main","data" or "events"
 -- @return string, depends on context 
