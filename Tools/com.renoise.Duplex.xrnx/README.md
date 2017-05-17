@@ -16,7 +16,7 @@ What makes Duplex special is the strong focus on bi-directional communication. I
 
 ## [Custom Configurations](Docs/Configurations.md)
 
-## [Control-map reference](Docs/Controlmaps.md)
+## [Control-Map Reference](Docs/Controlmaps.md)
 
 ## [Frequently Asked Questions](Docs/FAQ.md)
 
