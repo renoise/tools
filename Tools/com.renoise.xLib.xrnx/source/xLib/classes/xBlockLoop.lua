@@ -241,7 +241,6 @@ function xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
 
   local line_count = end_line - start_line 
   local ideal_coeff = num_lines/line_count
-  print(">>> line_count,ideal_coeff",line_count,ideal_coeff)
 
   -- locate matching or closest coeff.
   local matched_coeff = false
@@ -259,20 +258,15 @@ function xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
     end
   end
 
-  print(">>> matched_coeff",matched_coeff)
-
   -- if not a valid coefficient, expand the size
   if not matched_coeff then
-    print(">>> closest_match",closest_match)
     line_count = math.floor(num_lines/closest_match)
     end_line = start_line + line_count
   end
 
-  print(">>> line_count,end_line",line_count,end_line)
 
   -- if result goes beyond boundary, move back
   if (end_line > num_lines+1) then
-    print(">>> end_line",end_line)
     local offset = num_lines-end_line+1
     start_line   = start_line   + offset
     end_line = end_line + offset
