@@ -61,6 +61,7 @@ function xStreamPrefs:__init()
   self:add_property("presets_visible", renoise.Document.ObservableBoolean(false))
   self:add_property("show_editor", renoise.Document.ObservableBoolean(true))
   self:add_property("tool_options_visible", renoise.Document.ObservableBoolean(false))
+  self:add_property("compact_mode", renoise.Document.ObservableBoolean(false))
 
   -- streaming
   self:add_property("suspend_when_hidden", renoise.Document.ObservableBoolean(true))
