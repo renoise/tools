@@ -36,7 +36,7 @@ end
 -- (same as pressing F9 in the pattern editor)
 
 function xPatternPos.jump_to_line(line_idx)
-  print("xPatternPos.jump_to_line(idx)",idx)
+  TRACE("xPatternPos.jump_to_line(idx)",idx)
 
   -- make the line safe
   line_idx = xSongPos.restrict_line_index(rns.selected_pattern,line_idx)

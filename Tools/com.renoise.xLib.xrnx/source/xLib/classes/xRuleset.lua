@@ -145,7 +145,7 @@ function xRuleset:get_manage_voices()
 end
 
 function xRuleset:set_manage_voices(val)
-  --TRACE("*** xRuleset:set_manage_voices(val)",val)
+  TRACE("xRuleset:set_manage_voices(val)",val)
   local modified = (val~=self.manage_voices_observable.value)
   self.manage_voices_observable.value = val
   if modified then

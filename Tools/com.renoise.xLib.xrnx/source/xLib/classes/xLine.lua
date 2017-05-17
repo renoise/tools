@@ -115,7 +115,6 @@ function xLine:do_write(
   -- track automation
   if self.automation and ptrack_auto then
     self.automation:do_write(
-      sequence,
       line,
       ptrack_auto,
       patt_num_lines)
@@ -209,6 +208,7 @@ end
 -- @return table
 
 function xLine.do_read(sequence,line,include_hidden,track_idx,phrase)
+  TRACE("xLine.do_read(sequence,line,include_hidden,track_idx,phrase)",sequence,line,include_hidden,track_idx,phrase)
 
   local rns_line,patt_idx,rns_patt,rns_track,rns_ptrack
   if track_idx then
