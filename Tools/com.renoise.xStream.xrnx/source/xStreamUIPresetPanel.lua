@@ -387,7 +387,7 @@ function xStreamUIPresetPanel:build_list()
         width = xStreamUI.BITMAP_BUTTON_W,
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function()
-          self.xstream:schedule_item(model.name,k)
+          self.xstream.process:schedule_item(model.name,k)
         end,
       },
       vb:button{
