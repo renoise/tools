@@ -501,7 +501,7 @@ function xStreamFavorites:launch(idx)
 
   if (favorite.launch_mode == xStreamFavorites.LAUNCH_MODE.AUTOMATIC) then
     if rns.transport.playing then
-      self.xstream:schedule_item(favorite.model_name,favorite.preset_index,favorite.preset_bank_name)
+      self.xstream.process:schedule_item(favorite.model_name,favorite.preset_index,favorite.preset_bank_name)
       status_msg = "*** xStream #%.2d [Trigger] - %s %.2d:%s - Automatic → STREAMING"
     else
       if not rns.selection_in_pattern then
@@ -514,8 +514,8 @@ function xStreamFavorites:launch(idx)
     end
   elseif (favorite.launch_mode == xStreamFavorites.LAUNCH_MODE.STREAMING) then
     if rns.transport.playing then
-      self.xstream.scheduling = (favorite.schedule_mode) and favorite.schedule_mode or self.xstream.scheduling
-      self.xstream:schedule_item(favorite.model_name,favorite.preset_index,favorite.preset_bank_name)
+      self.xstream.process.scheduling = (favorite.schedule_mode) and favorite.schedule_mode or self.xstream.process.scheduling
+      self.xstream.process:schedule_item(favorite.model_name,favorite.preset_index,favorite.preset_bank_name)
       status_msg = "*** xStream #%.2d [Trigger] - %s %.2d:%s → STREAMING"
     else
       self.xstream:focus_to_favorite(idx)
@@ -694,7 +694,7 @@ function xStreamFavorites:get_modified()
 end
 
 function xStreamFavorites:set_modified()
-  --TRACE("*** xStreamFavorites:set_modified()")
+  TRACE("xStreamFavorites:set_modified()")
   self.modified_observable.value = self.modified_observable.value + 1
 end
 
