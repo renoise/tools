@@ -579,15 +579,16 @@ function xStreamUI:build()
             },
           },
           vb:row{       
+            --[[
             vb:button{
               tooltip = "Show processes",
-              --bitmap = "./source/icons/favorites_grid.bmp",
               text = "☶ ▾",
               height = xStreamUI.BITMAP_BUTTON_H,
               width = xStreamUI.BITMAP_BUTTON_W,
               notifier = function()
               end
             },
+            ]]
             vb:button{
               tooltip = "Show favorites",
               text = "★",
