@@ -146,9 +146,7 @@ function xSongPos.increase_by_lines(num_lines,pos,bounds_mode,loop_boundary,bloc
     local lines_remaining = num_lines - (patt_num_lines - line_idx)
     while(lines_remaining > 0) do
       seq_idx = seq_idx + 1
-      print(">>> seq_idx #1",seq_idx)
       seq_idx,line_idx,done = xSongPos.enforce_boundary("increase",{sequence=seq_idx,line=lines_remaining},bounds_mode,loop_boundary)
-      print(">>> seq_idx #2",seq_idx)
       if done then
         if (bounds_mode == xSongPos.OUT_OF_BOUNDS.CAP) then
           -- reduce num_lines, or travelled will no longer be correct
@@ -389,7 +387,6 @@ function xSongPos.enforce_boundary(direction,pos,bounds_mode,loop_boundary,block
   local seq_idx = pos.sequence
   local line_idx = pos.line 
 
-  print(">>> pattern loop...")
   -- pattern loop -----------------------------------------
   -- if current pattern is looped, stay within it
   -- (pattern loop takes precedence, just like in Renoise -
@@ -400,7 +397,6 @@ function xSongPos.enforce_boundary(direction,pos,bounds_mode,loop_boundary,block
     return seq_idx,line_idx,done
   end
 
-  print(">>> sequence loop...")
   -- sequence loop ----------------------------------------
   -- consider if we have moved into a pattern, 
   -- perhaps we need to revise the sequence index?
@@ -426,7 +422,6 @@ function xSongPos.enforce_boundary(direction,pos,bounds_mode,loop_boundary,block
     end
   end
 
-  print(">>> entire song...")
   -- sequence (entire song) -------------------------------
   if not xPatternSequencer.within_bounds(seq_idx) then 
     if (direction == "increase") then
