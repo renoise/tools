@@ -5,14 +5,14 @@ Arpeggiator.lua
 return {
 arguments = {
   {
+      ["description"] = "",
+      ["linked"] = false,
       ["locked"] = false,
       ["name"] = "mode",
-      ["linked"] = false,
-      ["value"] = 2,
       ["properties"] = {
-          ["min"] = 1,
+          ["display_as"] = "popup",
+          ["fire_on_start"] = false,
           ["impacts_buffer"] = false,
-          ["max"] = 5,
           ["items"] = {
               "up",
               "down",
@@ -20,70 +20,74 @@ arguments = {
               "ordered",
               "random",
           },
-          ["display_as"] = "popup",
-          ["fire_on_start"] = false,
+          ["max"] = 5,
+          ["min"] = 1,
       },
-      ["description"] = "",
+      ["value"] = 2,
   },
   {
+      ["description"] = "",
+      ["linked"] = false,
       ["locked"] = false,
       ["name"] = "lock_to",
-      ["linked"] = false,
-      ["value"] = 1,
       ["properties"] = {
+          ["display_as"] = "popup",
+          ["fire_on_start"] = false,
+          ["impacts_buffer"] = false,
           ["items"] = {
               "pattern",
               "keystroke",
               "stream",
           },
-          ["fire_on_start"] = false,
           ["max"] = 3,
-          ["impacts_buffer"] = false,
-          ["display_as"] = "popup",
           ["min"] = 1,
       },
-      ["description"] = "",
+      ["value"] = 1,
   },
   {
+      ["description"] = "",
+      ["linked"] = false,
       ["locked"] = false,
       ["name"] = "stepsize",
-      ["linked"] = false,
-      ["value"] = 2,
       ["properties"] = {
-          ["zero_based"] = false,
+          ["display_as"] = "integer",
           ["fire_on_start"] = false,
           ["max"] = 16,
-          ["display_as"] = "integer",
           ["min"] = 1,
+          ["zero_based"] = false,
       },
-      ["description"] = "",
+      ["value"] = 2,
   },
   {
+      ["description"] = "",
+      ["linked"] = false,
       ["locked"] = false,
       ["name"] = "oct_range",
-      ["linked"] = false,
-      ["value"] = 2,
       ["properties"] = {
-          ["min"] = 0,
-          ["impacts_buffer"] = false,
-          ["max"] = 4,
-          ["zero_based"] = false,
           ["display_as"] = "integer",
           ["fire_on_start"] = false,
+          ["impacts_buffer"] = false,
+          ["max"] = 4,
+          ["min"] = 0,
+          ["zero_based"] = false,
       },
-      ["description"] = "",
+      ["value"] = 2,
   },
 },
 presets = {
   {
-      ["stepsize"] = 1,
-      ["name"] = "",
-      ["mode"] = 1,
-      ["oct_range"] = 1,
       ["lock_to"] = 1,
+      ["mode"] = 1,
+      ["name"] = "",
+      ["oct_range"] = 1,
+      ["stepsize"] = 1,
   },
 },
 data = {
+  ["curr_oct"] = [[-- return a value of some kind 
+return 0]],
+  ["direction"] = [[-- "up" or "down" (when up_down)
+return "up"]],
   ["get_voice_index"] = [[-------------------------------------------------------------------------------
 -- return the active voice index and maintain the position/octave
 -------------------------------------------------------------------------------
@@ -171,10 +175,8 @@ return function(arg)
   end
   return voice_idx
 end]],
-  ["direction"] = [[-- "up" or "down" (when up_down)
-return "up"]],
-  ["curr_oct"] = [[-- return a value of some kind 
-return 0]],
+  ["keystroke_xinc"] = [[-- remember the position at which the key was first struck
+return nil]],
   ["position"] = [[-- return a value of some kind 
 return 1]],
   ["rotate_oct"] = [[-- return a value of some kind
@@ -194,10 +196,26 @@ return function(direction)
   end
   return 
 end]],
-  ["keystroke_xinc"] = [[-- remember the position at which the key was first struck
-return nil]],
 },
 events = {
+  ["args.oct_range"] = [[------------------------------------------------------------------------------
+-- respond to argument 'oct_range' changes
+-- @param val (number/boolean/string)}
+------------------------------------------------------------------------------
+
+-- ensure octave is always valid
+if (data.curr_oct > args.oct_range) then
+  data.curr_oct = args.oct_range
+end]],
+  ["voice.released"] = [[------------------------------------------------------------------------------
+-- respond to voice-manager events
+-- ('xvoicemgr.triggered/released/stolen_index' contains the value)
+------------------------------------------------------------------------------
+
+-- make sure position is always valid
+if (data.position == #xvoices) then
+  data.position = data.position-1
+end]],
   ["voice.triggered"] = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
 -- ('xvoicemgr.triggered/released/stolen_index' contains the value)
@@ -212,24 +230,6 @@ if (#xvoices == 1) then
 end
 
 xbuffer:wipe_futures()]],
-  ["voice.released"] = [[------------------------------------------------------------------------------
--- respond to voice-manager events
--- ('xvoicemgr.triggered/released/stolen_index' contains the value)
-------------------------------------------------------------------------------
-
--- make sure position is always valid
-if (data.position == #xvoices) then
-  data.position = data.position-1
-end]],
-  ["args.oct_range"] = [[------------------------------------------------------------------------------
--- respond to argument 'oct_range' changes
--- @param val (number/boolean/string)}
-------------------------------------------------------------------------------
-
--- ensure octave is always valid
-if (data.curr_oct > args.oct_range) then
-  data.curr_oct = args.oct_range
-end]],
 },
 options = {
  color = 0x935875,
@@ -237,8 +237,8 @@ options = {
 callback = [[
 -------------------------------------------------------------------------------
 -- Arpeggiator model
--- * traditional up/down/ordered/random modes
 -- * accepts input via MIDI (enable in Options) 
+-- * traditional arpeggiator modes: up/down/ordered/random
 -- * 'lock' defines if generated pattern is locked to pattern start,
 --   streaming progress or time since first keystroke
 -------------------------------------------------------------------------------
