@@ -19,7 +19,7 @@ class 'xStreamModels'
 -- constructor
 
 function xStreamModels:__init(process)
-  print("xStreamModels:__init(process)",process)
+  TRACE("xStreamModels:__init(process)",process)
 
   assert(type(process) == "xStreamProcess", "Wrong type of parameter")
 
@@ -65,8 +65,6 @@ function xStreamModels:set_selected_model_index(idx)
   if (#self.models == 0) then
     error("there are no available models")
   end
-  print(">>> idx,",idx)
-  print(">>> self.models,",self.models)
   if (idx > #self.models) then
     error(("selected_model_index needs to be less than %d"):format(#self.models))
   end
@@ -95,32 +93,32 @@ function xStreamModels:set_selected_model_index(idx)
   -- attach notifiers -------------------------------------
 
   local args_observable_notifier = function()
-    TRACE("*** xStream - args.args_observable_notifier fired...")
+    TRACE("xStreamModels - args.args_observable_notifier fired...")
     self.selected_model.modified = true
   end
 
   local preset_index_notifier = function()
-    TRACE("*** xStream - preset_bank.selected_preset_index_observable fired...")
+    TRACE("xStreamModels - preset_bank.selected_preset_index_observable fired...")
     local preset_idx = self.selected_model.selected_preset_bank.selected_preset_index
     self.selected_model.selected_preset_bank:recall_preset(preset_idx)
   end
 
   local preset_observable_notifier = function()
-    TRACE("*** xStream - preset_bank.presets_observable fired...")
+    TRACE("xStreamModels - preset_bank.presets_observable fired...")
     if self.selected_model:is_default_bank() then
       self.selected_model.modified = true
     end
   end
 
   local presets_modified_notifier = function()
-    TRACE("*** xStream - selected_preset_bank.modified_observable fired...")
+    TRACE("xStreamModels - selected_preset_bank.modified_observable fired...")
     if self.selected_model.selected_preset_bank.modified then
       self.preset_bank_export_requested = true
     end
   end
 
   local preset_bank_notifier = function()
-    TRACE("*** xStream - selected_preset_bank_index_observable fired..")
+    TRACE("xStreamModels - selected_preset_bank_index_observable fired..")
     local preset_bank = self.selected_model.selected_preset_bank
     cObservable.attach(preset_bank.presets_observable,preset_observable_notifier)
     cObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
@@ -308,7 +306,6 @@ function xStreamModels:load_all(str_path)
 
   local log_msg = ""
   for _, filename in pairs(os.filenames(str_path, "*.lua")) do
-    print("...",filename)
     local model = xStreamModel(self.process)
     local model_file_path = str_path..filename
     local passed,err = model:load_definition(model_file_path)
