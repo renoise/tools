@@ -8,12 +8,17 @@ com.renoise.xStream.xrnx (main.lua)
 ]]
 
 --------------------------------------------------------------------------------
--- required files
+-- global variables
 --------------------------------------------------------------------------------
 
-_trace_filters = nil
+rns = nil -- reference to renoise.song() 
+_trace_filters = nil -- don't show traces in console
 --_trace_filters = {".*"}
 --_trace_filters = {"^vDialog"}
+
+--------------------------------------------------------------------------------
+-- required files
+--------------------------------------------------------------------------------
 
 _clibroot = 'source/cLib/classes/'
 _vlibroot = 'source/vLib/classes/'
@@ -84,15 +89,14 @@ require ('source/xStreamUIArgsEditor')
 require ('source/LFO')
 
 --------------------------------------------------------------------------------
+-- local variables & initialization
+--------------------------------------------------------------------------------
 
 local xstream
-local prefs = xStreamPrefs()
-renoise.tool().preferences = prefs
-
-rns = nil 
-
 local TOOL_NAME = "xStream"
 local MIDI_PREFIX = "Tools:"..TOOL_NAME..":"
+
+renoise.tool().preferences = xStreamPrefs()
 
 -- force all dialogs to have this name
 vDialog.DEFAULT_DIALOG_TITLE = "xStream"
@@ -103,29 +107,49 @@ vDialog.DEFAULT_DIALOG_TITLE = "xStream"
 -- first time around, the UI/class instances are created 
 
 function show()
-
   rns = renoise.song()
-
   -- initialize classes (once)
-
   if not xstream then
     xstream = xStream{
       midi_prefix = MIDI_PREFIX,
       tool_name = TOOL_NAME,
     }
+    xstream.active_observable:add_notifier(function()
+      TRACE("xStream main.lua - self.active_observable fired...")
+      register_tool_menu()
+    end)
   end
-
   xstream.ui:show()
-
 end
+
+--------------------------------------------------------------------------------
+-- tool menu entry
+
+function register_tool_menu()
+  local str_name = "Main Menu:Tools:"..TOOL_NAME
+  local str_name_active = "Main Menu:Tools:"..TOOL_NAME.." (active)"
+  if renoise.tool():has_menu_entry(str_name) then
+    renoise.tool():remove_menu_entry(str_name)
+  elseif renoise.tool():has_menu_entry(str_name_active) then
+    renoise.tool():remove_menu_entry(str_name_active)
+  end
+  renoise.tool():add_menu_entry{
+    name = (xstream and xstream.active) and str_name_active or str_name,
+    invoke = function() 
+      show() 
+    end
+  }
+end
+
+register_tool_menu()    
 
 --------------------------------------------------------------------------------
 -- notifications
 --------------------------------------------------------------------------------
 
 renoise.tool().app_new_document_observable:add_notifier(function()
-  TRACE("*** app_new_document_observable fired...")
-  if prefs.autostart.value then
+  TRACE("xStream main app_new_document_observable fired...")
+  if renoise.tool().preferences.autostart.value then
     show()
   end
 end)
