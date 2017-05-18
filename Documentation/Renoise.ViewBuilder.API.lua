@@ -351,12 +351,6 @@ multiline_text.font
 multiline_text.style
   -> [string]
 
--- True when the text field is focused. setting the edit_mode programatically
--- will focus the text field or remove the focus (focus the dialog) accordingly.
--- By default false.
-multiline_text.edit_mode
-  -> [boolean]
-
 
 --------------------------------------------------------------------------------
 -- renoise.Views.TextField (inherits from View, 'textfield' in the builder)
