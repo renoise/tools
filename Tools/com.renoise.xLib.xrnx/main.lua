@@ -32,8 +32,7 @@ require (_vlibroot..'vDialog')
 require (_vlibroot..'vTable')
 require (_xlibroot.."xLib")
 
-require ('source/xLibTool')
-require ('source/xLibPrefs')
+require ('source/TestRunner')
 
 --------------------------------------------------------------------------------
 -- test runner
@@ -42,12 +41,12 @@ require ('source/xLibPrefs')
 -- this string is assigned as the dialog title
 APP_DISPLAY_NAME = "xLib"
 
--- reference to the vDialog that contains the application UI
-local vdialog
+-- TestRunner, the dialog containing the app 
+local runner
 
 -- implementing preferences as a class only has benefits
 -- (you can still use renoise.tool().preferences from anywhere...)   
-local prefs = xLibPrefs()
+local prefs = TestRunnerPrefs()
 renoise.tool().preferences = prefs
 
 rns = nil 
@@ -63,14 +62,16 @@ function show()
   rns = renoise.song()
 
   -- create dialog if it doesn't exist
-  if not vdialog then
-    vdialog = xLibTool{
+  if not runner then
+    runner = TestRunner{
       dialog_title = APP_DISPLAY_NAME,
       waiting_to_show_dialog = prefs.autostart.value,
+      tests = _xlib_tests,
+      test_path = "unit_tests",
     }
   end
 
-  vdialog:show()
+  runner:show()
   
 end
 

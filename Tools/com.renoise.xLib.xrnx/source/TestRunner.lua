@@ -1,5 +1,21 @@
+--[[============================================================================
+TestRunnerPrefs
+============================================================================]]--
 
-class 'xLibTool' (vDialog)
+class 'TestRunnerPrefs'(renoise.Document.DocumentNode)
+
+function TestRunnerPrefs:__init()
+
+  renoise.Document.DocumentNode.__init(self)
+  self:add_property("autostart", renoise.Document.ObservableBoolean(true))
+
+end
+
+--[[============================================================================
+TestRunnerPrefs
+============================================================================]]--
+
+class 'TestRunner' (vDialog)
 
 TEST_STATUS = {
   RUNNING = "Running...",
@@ -9,26 +25,32 @@ TEST_STATUS = {
 
 --------------------------------------------------------------------------------
 
-function xLibTool:__init(...)
+function TestRunner:__init(...)
 
   -- when extending a class, it's constructor needs to be called
   -- we also pass the arguments (...) along to the vDialog constructor 
   vDialog.__init(self,...)
+  
+  local args = cLib.unpack_args(...)
+
+  self.test_path = args.test_path
+
+  self.tests = args.tests
 
   self.vb = renoise.ViewBuilder()
 
   -- include all lua files in unit test
-  local include_path = renoise.tool().bundle_path.."unit_tests" 
+  local include_path = renoise.tool().bundle_path..self.test_path 
   print(">>> include_path",include_path)
   for __, filename in pairs(os.filenames(include_path)) do
     local folder,fname,extension = cFilesystem.get_path_parts(filename)
     if (extension == "lua") then
       local fname = cFilesystem.file_strip_extension(fname,extension)
-      require ("unit_tests/"..fname)
+      require (self.test_path.."/"..fname)
     end
   end
 
-  print(">>> included xlib_tests...",rprint(_xlib_tests))
+  print(">>> included _tests...",rprint(self.tests))
 
   self:build()
 
@@ -39,8 +61,8 @@ end
 -------------------------------------------------------------------------------
 -- return the UI which was previously created with build()
 
-function xLibTool:create_dialog()
-  TRACE("xLibTool:create_dialog()")
+function TestRunner:create_dialog()
+  TRACE("TestRunner:create_dialog()")
 
   return self.vb:column{
     self.vb_content,
@@ -52,7 +74,7 @@ end
 -- Test runner 
 --------------------------------------------------------------------------------
 
-function xLibTool:execute_test(idx,test)
+function TestRunner:execute_test(idx,test)
 
   local vb = self.vb
 
@@ -83,7 +105,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function xLibTool:build()
+function TestRunner:build()
 
   local vb = self.vb
   local view = nil
@@ -101,7 +123,7 @@ function xLibTool:build()
         width = CB_W,
         value = true,
         notifier = function(val)
-          for k = 1,#_xlib_tests do
+          for k = 1,#self.tests do
             local cb_elm = vb.views["test_cb_"..k]
             cb_elm.value = val
           end
@@ -124,7 +146,7 @@ function xLibTool:build()
       }
     }
   }
-  for k,v in ipairs(_xlib_tests) do
+  for k,v in ipairs(self.tests) do
     view:add_child(vb:row{
       vb:checkbox{
         id = "test_cb_"..k,
@@ -175,10 +197,10 @@ function xLibTool:build()
       width = 100,
       height = 24,
       notifier = function()
-        for k = 1,#_xlib_tests do
+        for k = 1,#self.tests do
           local cb_elm = vb.views["test_cb_"..k]
           if cb_elm.value then
-            self:execute_test(k,_xlib_tests[k])
+            self:execute_test(k,self.tests[k])
           end
         end
       end
