@@ -35,8 +35,12 @@ end
 
 function cParseXML.parse(str_xml)
   TRACE('cParseXML.parse(str_xml)',str_xml)
+  TRACE('cParseXML.parse - SLAXML',SLAXML)
 
-  return SLAXML:dom(str_xml,{ simple=true,stripWhitespace=true })
+  local doc = SLAXML:dom(str_xml,{ simple=true,stripWhitespace=true })
+  print("doc",doc)
+
+  return doc
 
 end
 
