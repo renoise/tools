@@ -4,28 +4,30 @@
 
 --]]
 
-__tests:insert({
+_tests:insert({
 name = "cParseXML",
 fn = function()
 
   print (">>> cParseXML: starting unit-test...")
 
   require (_clibroot.."cParseXML")
+  _trace_filters = {"^cParseXML*"}
 
   -- First try with some broken XML
 
-  local success,rslt = cParseXML.parse[[
-    <RootNode foo="foo" under_score="foo">
-      <A1>some_text.node</A2>
-    </RootNode>
-  ]]    
-
+  local success,rslt = pcall(function()
+    cParseXML.parse[[
+      <RootNode foo="foo" under_score="__">
+        <A1>some_text.node</A2>
+      </RootNode>
+    ]]    
+  end)
   assert(not success)
 
   -- Now parse some well-formed XML
 
-  local success,x = cParseXML.parse[[
-    <RootNode foo="foo" under_score="foo">
+  local x,err = cParseXML.parse[[
+    <RootNode foo="foo" under_score="__">
       <A1>some_text.node</A1>
       <A2>
         <B1>
@@ -35,22 +37,34 @@ fn = function()
       </A2>
     </RootNode>
   ]]    
-  --print("x...",rprint(x))
 
   assert(type(x)=="table")
-  assert(x[1].label == "RootNode")
-  assert(x[1].xarg.under_score == "foo")
-  assert(x[1][1].label == "A1")
-  assert(x[1][2].label == "A2")
-  assert(x[1][2][1].label == "B1")
-  assert(x[1][2][1].label == "B1")
-  assert(x[1][2][1][1].label == "C1")
-  assert(x[1][2][1][1][1].label == "D1")
-  assert(x[1][2][1][1][1].xarg.bar_arg == "bar")
+  rprint(x.kids[1])
+  assert(x.kids[1].name == "RootNode")
+
+   -- simple = false
+  --assert(x.kids[1].attr.under_score == "foo")
+
+  -- simple = true
+  rprint(x.kids[1].attr[1].name == "foo")
+  rprint(x.kids[1].attr[1].value == "foo")
+  assert(x.kids[1].attr[2].name == "under_score") 
+  assert(x.kids[1].attr[2].value == "__") 
+  assert(x.kids[1].kids[1].name == "A1")
+  assert(x.kids[1].kids[2].name == "A2")
+  assert(x.kids[1].kids[2].kids[1].name == "B1")
+  assert(x.kids[1].kids[2].kids[1].name == "B1")
+  assert(x.kids[1].kids[2].kids[1].kids[1].name == "C1")
+  assert(x.kids[1].kids[2].kids[1].kids[1].kids[1].name == "D1")
+  
+   -- simple = false  
+  --assert(x.kids[1].kids[2].kids[1].kids[1].kids[1].attr.bar_arg == "bar")
+  rprint(x.kids[1].kids[2].kids[1].kids[1].kids[1].attr[1].name == "bar_arg")
+  rprint(x.kids[1].kids[2].kids[1].kids[1].kids[1].attr[1].value == "bar")
 
   -- A more realistic example
 
-  local success,x = cParseXML.parse[[
+  local x,err = cParseXML.parse[[
     <?xml version="1.0" encoding="UTF-8"?>
     <xStreamArgDocument doc_version="0">
       <Presets>
@@ -88,7 +102,8 @@ fn = function()
 
   -- import XML from a file --
 
-  local file_path = _clibroot .. "/unit_tests/example_preferences.xml"
+  local file_path = renoise.tool().bundle_path .. _test_path .. "/example_preferences.xml"
+  print("file_path",file_path)
   local fhandle = io.open(file_path,"r")
   if not fhandle then
     fhandle:close()
@@ -98,12 +113,10 @@ fn = function()
   local str_xml = fhandle:read("*a")
   fhandle:close()
 
-  local success,rslt = cParseXML.parse(str_xml)
-  if not success then
-    error(rslt)
+  local x,err = cParseXML.parse(str_xml)
+  if not x then
+    error(err)
   end
-
-  print ("rslt",rprint(rslt))
 
   -- convert to document
   --[[

@@ -4,11 +4,12 @@
 
 --]]
 
-__tests:insert({
+_tests:insert({
 name = "cFilesystem",
 fn = function()
 
   require (_clibroot.."cFilesystem")
+  _trace_filters = {"^cFilesystem*"}
 
   local absolute_path = renoise.tool().bundle_path .. "/cFilesystem_test/"
   local relative_path = "./cFilesystem_test/"
@@ -105,7 +106,7 @@ fn = function()
 
   -- define a 'tricky' string 
   local str_test = [[This is a long string with linebreaks
-And some special characters: ÆØÅ!"#¤%&/(
+And some special characters: ï¿½ï¿½ï¿½!"#ï¿½%&/(
 Will it be the same once loaded from disk?]]
 
   -- save to disk

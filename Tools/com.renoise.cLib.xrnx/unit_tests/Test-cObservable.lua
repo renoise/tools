@@ -5,6 +5,7 @@
 --]]
 
 require (_clibroot.."cObservable")
+_trace_filters = {"^cObservable*"}
 
 local base_obj = {}
 
@@ -23,7 +24,7 @@ local prefx_handler = function(val)
   prefx_value = val
 end
 
-__tests:insert({
+_tests:insert({
 name = "cObservable",
 fn = function()
 
