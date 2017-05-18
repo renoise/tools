@@ -4,10 +4,7 @@ main.lua
 
 --[[--
 
-Provide a visual demo for the various vlib components, with the ability to test (set/get) all properties and call methods...
-
-#
-.
+Provide a visual demo for the various vlib components, with the ability to test (set/get) all properties and call methods.
 
 --]]
 
@@ -16,8 +13,8 @@ Provide a visual demo for the various vlib components, with the ability to test 
 _trace_filters = nil
 --_trace_filters = {".*"}
 
-_clibroot = "cLib/classes/"
-_vlibroot = "vLib/classes/"
+_clibroot = "source/cLib/classes/"
+_vlibroot = "source/vLib/classes/"
 _vlib_img = _vlibroot.."images/"
 
 require (_clibroot.."cLib")
