@@ -521,6 +521,12 @@ multiline_textfield.notifier
 multiline_textfield.bind
   -> [ObservableStringList Object]
 
+-- True when the text field is focused. setting the edit_mode programatically
+-- will focus the text field or remove the focus (focus the dialog) accordingly.
+-- By default false.
+multiline_textfield.edit_mode
+  -> [boolean]
+
 
 --------------------------------------------------------------------------------
 -- renoise.Views.Bitmap (inherits from Control, 'bitmap' in the builder)
