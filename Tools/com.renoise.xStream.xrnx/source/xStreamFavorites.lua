@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xStreamFavorites
-============================================================================]]--
+===============================================================================================]]--
 --[[
 
   Favorites are an indexed array, displayed as a two-dimensional grid. 
@@ -13,7 +13,7 @@ xStreamFavorites
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xStreamFavorites'
 
@@ -32,7 +32,7 @@ xStreamFavorites.APPLY_MODE = {
   SELECTION = 2,
 }
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:__init(xstream)
   TRACE("xStreamFavorites:__init(xstream)",xstream)
@@ -91,7 +91,7 @@ function xStreamFavorites:__init(xstream)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param model_name (string), unique name of model
 -- @param preset_index (int),  preset to dial in - optional
 -- @param preset_bank_name (string), preset bank - optional
@@ -121,7 +121,7 @@ function xStreamFavorites:toggle_item(model_name,preset_index,preset_bank_name)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- return the index offset of the current page
 -- e.g. "16" for page 2 of a a grid with size 4x4
 
@@ -131,7 +131,7 @@ function xStreamFavorites:get_page_offset()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- create empty slots that fill the current page 
 
 function xStreamFavorites:fill_page()
@@ -152,7 +152,7 @@ function xStreamFavorites:fill_page()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- add favorite with a bit of 'grid intelligence'
 -- @param favorite (xStreamFavorite)
 
@@ -186,7 +186,7 @@ function xStreamFavorites:smart_insert(favorite)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- add favorite at given index (pad with empty slots if needed)
 -- @param index (int)
 -- @param favorite (xStreamFavorite), leave out for empty table
@@ -222,7 +222,7 @@ function xStreamFavorites:add(index,favorite)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- remove favorite by index
 -- @param index (int)
 
@@ -244,7 +244,7 @@ function xStreamFavorites:remove_by_index(index)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param index (int)
 
 function xStreamFavorites:clear(index)
@@ -260,7 +260,7 @@ function xStreamFavorites:clear(index)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- assign favorite or empty slot to given index
 -- @param index (int)
 -- @param favorite (xStreamFavorite or empty table)
@@ -278,7 +278,7 @@ function xStreamFavorites:assign(index,favorite)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- remove favorite after having deleted a preset - will also 
 -- update other favorites which share this model/preset bank 
 
@@ -321,7 +321,7 @@ function xStreamFavorites:remove_by_name_index(model_name,preset_index,preset_ba
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- friendly names - e.g. for display in popup list
 -- return table<string>
 
@@ -344,7 +344,7 @@ function xStreamFavorites:get_names()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- retrieve (unique) model+preset combination among favorites
 -- @param model_name (string), unique name of model
 -- @param preset_index (int),  preset to dial in - optional
@@ -378,7 +378,7 @@ function xStreamFavorites:get(model_name,preset_index,preset_bank_name)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- retrieve any model matching the name, regardless of preset
 -- @param model_name (string)
 -- @return int or nil if not found 
@@ -398,7 +398,7 @@ function xStreamFavorites:get_by_model(model_name)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- retrieve models matching the preset_bank_name
 -- @param preset_bank_name (string)
 -- @return table<int> 
@@ -422,7 +422,7 @@ function xStreamFavorites:get_by_preset_bank(preset_bank_name)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param str_old (string)
 -- @param str_new (string)
 -- @return bool, true when one or more items were renamed
@@ -444,7 +444,7 @@ function xStreamFavorites:rename_model(str_old,str_new)
 end
 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param idx (int)
 -- @return table or nil if not found
 
@@ -455,7 +455,7 @@ function xStreamFavorites:get_by_index(idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- when triggered via UI - launch if not in edit mode
 -- @param idx (int)
 
@@ -474,7 +474,7 @@ function xStreamFavorites:trigger(idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- launch favorite 
 -- @param idx (int)
 
@@ -539,29 +539,33 @@ function xStreamFavorites:launch(idx)
   if apply_to_track then
     apply_to_track = true
     self.xstream:focus_to_favorite(idx)
-    self.xstream:fill_track()
+    self.xstream.process:fill_track()
   elseif apply_to_selection then
     self.xstream:focus_to_favorite(idx)
     local locally = (favorite.apply_mode == xStreamFavorites.APPLY_MODE.SELECTION)
-    self.xstream:fill_selection(locally)
+    self.xstream.process:fill_selection(locally)
   end
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- auto-saving of favorites to a predefined location
 
 function xStreamFavorites:save()
   TRACE("xStreamFavorites:save()")
-
-  local prefs = renoise.tool().preferences
-  local fpath = prefs.user_folder.value .. xStream.FAVORITES_FILE_PATH
-
-  self:export(fpath)
-
+  self:export(self:get_path())
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- Get complete path to favorites.xml 
+-- @return string 
+
+function xStreamFavorites:get_path()
+  TRACE("xStreamFavorites:get_path()")
+  return renoise.tool().preferences.user_folder.value .. xStream.FAVORITES_FILE_PATH
+end
+
+---------------------------------------------------------------------------------------------------
 -- @param file_path (string) TODO make option (prompt for file)
 
 function xStreamFavorites:export(file_path)
@@ -593,7 +597,7 @@ function xStreamFavorites:export(file_path)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param file_path (string) TODO make option (prompt for file)
 -- @return bool, true when succeeded
 -- @return string, error message when failed
@@ -608,9 +612,10 @@ function xStreamFavorites:import(file_path)
 
   local str_xml = fhandle:read("*a")
   fhandle:close()
-  local success,rslt = cParseXML.parse(str_xml)
-  if not success then
-    return false, rslt
+  
+  local rslt,err = cParseXML.parse(str_xml)
+  if not rslt then
+    return false, err
   end
 
   -- clear existing
@@ -623,32 +628,33 @@ function xStreamFavorites:import(file_path)
   local grid_columns = self.grid_columns
   local grid_rows = self.grid_rows
 
-  for _,v in ipairs(rslt) do
-    if (v.label == "xStreamFavorites") then
-      for __,v2 in ipairs(v) do
-        --print("v2",v2,v2.label)
-        if (v2.label == "grid_columns") then
-          grid_columns = tonumber(v2[1])
-        elseif (v2.label == "grid_rows") then
-          grid_rows = tonumber(v2[1])
-        elseif (v2.label == "Favorites") then
-          for __,v3 in ipairs(v2) do
-            --print("v3",v3,v3.label)
+
+  for _,v in ipairs(rslt.kids) do
+    if (v.name == "xStreamFavorites") then
+      for __,v2 in ipairs(v.kids) do
+        --print("v2",v2,v2.name)
+        if (v2.name == "grid_columns") then
+          grid_columns = tonumber(v2.kids[1].value)
+        elseif (v2.name == "grid_rows") then
+          grid_rows = tonumber(v2.kids[1].value)
+        elseif (v2.name == "Favorites") then
+          for __,v3 in ipairs(v2.kids) do
+            --print("v3",v3,v3.name)
             local model_name,preset_index,preset_bank_name,schedule_mode,launch_mode,apply_mode
-            for __,v4 in ipairs(v3) do
-              if (v4.label == "model_name") then
-                model_name = v4[1]
-              elseif (v4.label == "preset_index") then
-                preset_index = tonumber(v4[1])
+            for __,v4 in ipairs(v3.kids) do
+              if (v4.name == "model_name") then
+                model_name = v4.kids[1] and v4.kids[1].value
+              elseif (v4.name == "preset_index") then
+                preset_index = v4.kids[1] and tonumber(v4.kids[1].value)
                 --preset_index = (preset_index > 0) and preset_index or nil
-              elseif (v4.label == "preset_bank_name") then
-                preset_bank_name = v4[1] 
-              elseif (v4.label == "schedule_mode") then
-                schedule_mode = tonumber(v4[1])
-              elseif (v4.label == "launch_mode") then
-                launch_mode = tonumber(v4[1])
-              elseif (v4.label == "apply_mode") then
-                apply_mode = tonumber(v4[1])
+              elseif (v4.name == "preset_bank_name") then
+                preset_bank_name = v4.kids[1] and v4.kids[1].value
+              elseif (v4.name == "schedule_mode") then
+                schedule_mode = v4.kids[1] and tonumber(v4.kids[1].value)
+              elseif (v4.name == "launch_mode") then
+                launch_mode = v4.kids[1] and tonumber(v4.kids[1].value)
+              elseif (v4.name == "apply_mode") then
+                apply_mode = v4.kids[1] and tonumber(v4.kids[1].value)
               end
             end
             if model_name then
@@ -675,9 +681,9 @@ function xStreamFavorites:import(file_path)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Get/setter interface
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_update_buttons_requested()
   return self.update_buttons_requested_observable.value
@@ -687,7 +693,7 @@ function xStreamFavorites:set_update_buttons_requested()
   self.update_buttons_requested_observable.value = self.update_buttons_requested_observable.value + 1
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_modified()
   return self.modified_observable.value
@@ -698,14 +704,14 @@ function xStreamFavorites:set_modified()
   self.modified_observable.value = self.modified_observable.value + 1
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_triggered()
   local item_idx = self.last_triggered_index_observable.value
   return self.items[item_idx]
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_last_triggered_index()
   return self.last_triggered_index_observable.value
@@ -715,7 +721,7 @@ function xStreamFavorites:set_last_triggered_index(val)
   self.last_triggered_index_observable.value = val
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_got_triggered()
   return self.last_triggered_index_observable.value
@@ -725,14 +731,14 @@ function xStreamFavorites:set_got_triggered()
   self.last_triggered_index_observable.value = self.last_triggered_index_observable.value + 1
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_last_selected()
   local item_idx = self.last_selected_index_observable.value
   return self.items[item_idx]
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_last_selected_index()
   return self.last_selected_index_observable.value
@@ -742,7 +748,7 @@ function xStreamFavorites:set_last_selected_index(val)
   self.last_selected_index_observable.value = val
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_edit_mode()
   return self.edit_mode_observable.value
@@ -752,7 +758,7 @@ function xStreamFavorites:set_edit_mode(val)
   self.edit_mode_observable.value = val
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_grid_columns()
   return self.grid_columns_observable.value
@@ -766,7 +772,7 @@ function xStreamFavorites:set_grid_columns(cols)
   self.grid_columns_observable.value = cols
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_grid_rows()
   return self.grid_rows_observable.value

@@ -89,7 +89,7 @@ function xStream:__init(...)
   --- xStreamFavorites, favorited model+preset combinations
   self.favorites = xStreamFavorites(self)
   local favorites_notifier = function()    
-    TRACE("*** xStream - favorites.favorites/grid_columns/grid_rows/modified_observable fired..")
+    TRACE("xStream - favorites.favorites/grid_columns/grid_rows/modified_observable fired..")
     self.favorite_export_requested = true
   end
   self.favorites.favorites_observable:add_notifier(favorites_notifier)
@@ -180,9 +180,13 @@ function xStream:__init(...)
   self.ui.favorites.pinned = self.prefs.favorites_pinned.value
   self.ui.editor_visible_lines = self.prefs.editor_visible_lines.value
   self.ui.dialog_visible_observable:add_notifier(function()
-    TRACE("*** xStream - ui.dialog_visible_observable fired...")
+    TRACE("xStream  - ui.dialog_visible_observable fired...")
     self.process.models:select_launch_model()
-    self.favorites:import("./favorites.xml")
+    local file_path = self.favorites:get_path()
+    local success,err = self.favorites:import(file_path)
+    if not success and err then 
+      LOG("*** Failed to import favorites",err)
+    end 
     self.autosave_enabled = true
   end)
 
@@ -190,12 +194,12 @@ function xStream:__init(...)
   --== tool notifications ==--
 
   renoise.tool().app_new_document_observable:add_notifier(function()
-    TRACE("*** xStream - app_new_document_observable fired...")
+    TRACE("xStream - app_new_document_observable fired...")
     self:attach_to_song()
   end)
 
   renoise.tool().app_release_document_observable:add_notifier(function()
-    TRACE("*** xStream - app_release_document_observable fired...")
+    TRACE("xStream - app_release_document_observable fired...")
     self:stop()
   end)
 
@@ -348,7 +352,7 @@ function xStream:on_idle()
 
   -- track when blockloop changes (update scheduling)
   if (self.block_enabled ~= rns.transport.loop_block_enabled) then
-    --print("*** xStream - block_enabled changed...")
+    --print("xStream - block_enabled changed...")
     self.block_enabled = rns.transport.loop_block_enabled
     if rns.transport.playing then
       self.process:compute_scheduling_pos()
