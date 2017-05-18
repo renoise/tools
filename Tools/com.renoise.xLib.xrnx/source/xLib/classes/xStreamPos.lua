@@ -73,6 +73,7 @@ function xStreamPos:__init()
 
   renoise.tool().app_new_document_observable:add_notifier(function()
     TRACE("xStreamPos - app_new_document_observable fired...")
+    rns = renoise.song()
     self:attach_to_song()
   end)
 
