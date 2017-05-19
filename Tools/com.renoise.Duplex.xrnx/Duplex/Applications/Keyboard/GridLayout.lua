@@ -39,12 +39,46 @@ function GridLayout:__init(kb)
     "expected an instance of Keyboard as argument")
 
   self.kb = kb
-  self.highlighting = GridLayout.HIGHLIGHT_BASEKEY
-  self.show_note_info = GridLayout.SHOW_INFO_MIDI_PITCH
+  
+  self.highlighting = property(self.get_highlighting,self.set_highlighting)
+  self._highlighting = renoise.Document.ObservableNumber(GridLayout.HIGHLIGHT_BASEKEY)
+
+  self.show_note_info = property(self.get_show_note_info,self.set_show_note_info)
+  self._show_note_info = renoise.Document.ObservableNumber(GridLayout.SHOW_INFO_NOTE_NAME)
 
   self._cached_indexes = nil
   self:cache()
 
+end
+
+--------------------------------------------------------------------------------
+-- Get/Set
+--------------------------------------------------------------------------------
+
+function GridLayout:set_highlighting(val)
+  local changed = self._highlighting.value ~= val
+  self._highlighting.value = val 
+  if changed then
+    self:update_grid()
+  end
+end
+
+function GridLayout:get_highlighting()
+  return self._highlighting.value 
+end
+
+--------------------------------------------------------------------------------
+
+function GridLayout:set_show_note_info(val)
+  local changed = self._show_note_info.value ~= val
+  self._show_note_info.value = val 
+  if changed then
+    self:update_grid()
+  end
+end
+
+function GridLayout:get_show_note_info()
+  return self._show_note_info.value 
 end
 
 --------------------------------------------------------------------------------
@@ -104,6 +138,16 @@ function GridLayout:update_grid()
     end
   end
 
+  local get_display_text = function(pitch)
+    if (self.show_note_info == GridLayout.SHOW_INFO_NONE) then
+      return ""
+    elseif (self.show_note_info == GridLayout.SHOW_INFO_NOTE_NAME) then
+      return note_pitch_to_value(pitch)
+    elseif (self.show_note_info == GridLayout.SHOW_INFO_MIDI_PITCH) then
+      return tostring(pitch+12)
+    end
+  end  
+
   --print("*** GridLayout:update_grid - playing voices",#self.kb.voice_mgr.playing)
 
   for idx = 1,#self.kb._controls.grid do
@@ -126,14 +170,7 @@ function GridLayout:update_grid()
         else
           palette = self.kb.palette.key_released
         end
-        --print("ui_obj",ui_obj)
-        if (self.show_note_info == GridLayout.SHOW_INFO_NONE) then
-          palette.text = ""
-        elseif (self.show_note_info == GridLayout.SHOW_INFO_NOTE_NAME) then
-          palette.text = note_pitch_to_value(pitch)
-        elseif (self.show_note_info == GridLayout.SHOW_INFO_MIDI_PITCH) then
-          palette.text = tostring(pitch+12)
-        end
+        palette.text = get_display_text(pitch)
       else
         palette = self.kb.palette.key_out_of_bounds
       end
@@ -162,6 +199,7 @@ function GridLayout:update_grid()
             else
               palette = self.kb.palette.key_released_content
             end
+            palette.text = get_display_text(pitch)
             ui_obj:set(palette)
           end
         end
