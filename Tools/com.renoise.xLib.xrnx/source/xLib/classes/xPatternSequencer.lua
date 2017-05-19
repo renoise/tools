@@ -31,6 +31,86 @@ function xPatternSequencer.within_bounds(seq_idx)
 end
 
 ---------------------------------------------------------------------------------------------------
+-- [Static] Switch to the specified position, while attempting to keep the beat 
+-- Intended for realtime usage, where jumping between differently-sized patterns can be tricky. 
+-- @param pos (renoise.SongPos)
+
+function xPatternSequencer.switch_to_sequence(pos)
+  TRACE("xPatternSequencer.switch_to_sequence(pos)",pos)
+
+  assert(type(pos)=="SongPos","Expected renoise.SongPos as argument")
+
+  local curr_pos = rns.transport.playing and 
+    rns.transport.playback_pos or rns.transport.edit_pos
+
+  -- same pattern? then we have nothing to do...
+  if (curr_pos.sequence == pos.sequence) then 
+    return
+  end 
+
+  local new_num_lines,new_patt = xPatternSequencer.get_number_of_lines(pos.sequence)
+  if not new_num_lines then 
+    LOG("*** Could not switch to sequence, no pattern at this sequence index",pos.sequence)
+    return 
+  end 
+
+  -- not playing? then simply switch in the same way as Renoise
+  -- (clamping the line to fit the target)
+  if not rns.transport.playing then 
+    pos.line = cLib.clamp_value(curr_pos.line,1,new_num_lines) 
+    rns.transport.edit_pos = pos
+    return
+  end 
+
+  -- another quick solution: when we are able to switch into the
+  -- pattern without modifying the line 
+  if (curr_pos.line < new_num_lines) then
+    pos.line = curr_pos.line
+    rns.transport.playback_pos = pos
+    return
+  end
+
+  --== keep the beat ==-- 
+  -- approach: jump back by the same amount of lines as we are currently away
+  -- from the end of the pattern end. The goal is to arrive at the first line 
+  -- in the same amount of time. 
+
+  local meter = 4
+
+  local curr_num_lines,curr_patt = xPatternSequencer.get_number_of_lines(curr_pos.sequence)
+  local new_line = new_num_lines - (curr_num_lines - pos.line)
+  -- if we are not inside the pattern boundaries
+  if (new_line > new_num_lines) or (new_line < 0) then
+    local lpb = rns.transport.lpb
+    new_line = (pos.line - curr_num_lines) + new_num_lines
+    if (new_line < 0) then
+      while (new_line < 0) do
+        new_line = new_line + lpb
+      end
+    else
+      new_line = new_line % lpb
+    end
+    local num_beats = math.floor((curr_num_lines) / lpb) % meter
+    local num_beats_reached = math.floor((pos.line) / lpb) % meter
+    new_line = new_line + (num_beats_reached * lpb)
+    -- ensure that the new line fit within new pattern
+    -- (will happen when lpb is larger than pattern length)
+    if (new_line > new_num_lines) then
+      new_line = new_line % new_num_lines
+    end
+  end
+
+  if (new_line == 0) then
+    new_line = new_num_lines
+  end
+  pos.line = new_line
+
+  --print("*** keep the beat - set playback position",pos)
+  rns.transport.playback_pos = pos
+
+end
+
+---------------------------------------------------------------------------------------------------
 -- [Static] Enable loop for the section that playback is currently located in
 
 function xPatternSequencer.loop_current_section()
@@ -158,6 +238,7 @@ end
 -- OPTIMIZE how to implement a caching mechanism? 
 -- @param seq_idx, sequence index 
 -- @return int or nil 
+-- @return renoise.Pattern or nil
 
 function xPatternSequencer.get_number_of_lines(seq_idx)
   TRACE("xPatternSequencer.get_number_of_lines(seq_idx)",seq_idx)
@@ -166,7 +247,7 @@ function xPatternSequencer.get_number_of_lines(seq_idx)
 
   local patt_idx = rns.sequencer:pattern(seq_idx)
   if patt_idx then
-    return rns:pattern(patt_idx).number_of_lines
+    return rns:pattern(patt_idx).number_of_lines,rns:pattern(patt_idx)
   end
 
 end
