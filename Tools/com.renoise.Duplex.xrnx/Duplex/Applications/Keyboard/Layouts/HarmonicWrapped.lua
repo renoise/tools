@@ -14,13 +14,9 @@ See also: @{Duplex.Applications.Keyboard.GridLayout}
 
 class 'HarmonicWrapped' (GridLayout)
 
-HarmonicWrapped.ALIGN_NONE = 1
-HarmonicWrapped.ALIGN_OCTAVES = 2
-
 function HarmonicWrapped:__init(...)
   TRACE("HarmonicWrapped:__init()")
 
-  self.alignment = HarmonicWrapped.ALIGN_OCTAVES
   self.flip_octaves = true 
 
   GridLayout.__init(self,...)
@@ -39,24 +35,16 @@ function HarmonicWrapped:get_pitches_from_index(idx)
     return self._cached_indexes[idx]
   end
 
-  local unit_count = self.kb.grid_w*self.kb.grid_h
-  local row = math.ceil((idx/unit_count) * self.kb.grid_w)
-  local col = idx%self.kb.grid_h
-  col = (col == 0) and self.kb.grid_h or col
-  if self.flip_octaves then
-    row = (self.kb.grid_w - row) + 1
-  end
-
+  if self.flip_octaves then 
+    local row = self.kb.grid_h - math.ceil(idx / self.kb.grid_w)
+    idx = ((idx-1) % self.kb.grid_w+1) + (row * self.kb.grid_w)
+  end 
+  
   local scale = xScale.get_scale_by_name(self.kb.scale_mode)
-  col = col - (self.kb.scale_key-1)
-  if (col <= 0) then
-    row = row + math.ceil(col/scale.count) - 1
-    col = col%scale.count
-    col = (col == 0) and scale.count or col
-  end
-
-  local pitch = (col-1) + ((row-1)*self.kb.grid_h)
-  pitch = pitch + (self.kb.scale_key-1) + (self.kb.curr_octave-1)*12
+  local oct = math.ceil(idx/scale.count)+self.kb.curr_octave - 2
+  local nth_note = (idx-1)%scale.count+1
+  local semitones = self.kb:get_nth_note(nth_note) - 1
+  local pitch = (oct*12) + semitones
   return {self.kb:restrict_pitch_to_scale(pitch)}
 
 end
