@@ -21,7 +21,7 @@ on the values returned from the API, as those can change during the evaluation o
 
 ]]
 
-
+--=================================================================================================
 
 class 'xBlockLoop'
 
@@ -74,15 +74,37 @@ function xBlockLoop:get_length()
 end
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Retrive number of lines in a block for a given pattern 
+-- [Static] Retrieve number of lines in a block using the current coefficient  
+-- (e.g. a pattern with 64 lines and 4 as coeff would return 16)
+-- @return number (number of lines in block) or nil
+-- @return number (number of lines in pattern) or nil 
 
 function xBlockLoop.get_block_lines(seq_idx)
   TRACE("xBlockLoop.get_block_lines(seq_idx)",seq_idx)
 
-  local patt_num_lines = xPatternSequencer.get_number_of_lines(seq_idx)
-  return math.max(1,patt_num_lines/rns.transport.loop_block_range_coeff)
+  local num_lines = xPatternSequencer.get_number_of_lines(seq_idx)
+  if num_lines then
+    return math.max(1,num_lines/rns.transport.loop_block_range_coeff),num_lines
+  end
 
 end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Return the block index of a given line in a pattern 
+-- @return number (the block index) or nil
+-- @return number (number of lines in pattern) or nil 
+
+function xBlockLoop.get_block_index(seq_idx,line_idx)
+  TRACE("xBlockLoop.get_block_index(seq_idx,line_idx)",seq_idx,line_idx)
+
+  local block_lines,num_lines = xBlockLoop.get_block_lines(seq_idx)
+  print(">>> block_lines,num_lines",block_lines,num_lines)
+  if block_lines then 
+    local total_blocks = math.floor(num_lines/block_lines)
+    return math.ceil((line_idx/num_lines)*total_blocks),num_lines
+  end
+
+end 
 
 ---------------------------------------------------------------------------------------------------
 -- [Static] Return start line of the currently set block loop 
@@ -101,7 +123,8 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- [Static] Calculates end line of the currently set block loop 
--- @return int, line index or nil
+-- @return number (line index) or nil
+-- @return number (number of lines in pattern) or nil 
 
 function xBlockLoop.get_end()
 
@@ -109,7 +132,7 @@ function xBlockLoop.get_end()
     return 
   end
 
-  local loop_pos = xSongPos.create(rns.transport.loop_block_start_pos)
+  local loop_pos = rns.transport.loop_block_start_pos
 
   -- in special cases, the loop_pos might report an invalid sequence index
   -- (such as when the loop is positioned on the last pattern,
@@ -119,8 +142,8 @@ function xBlockLoop.get_end()
     loop_pos.sequence = #rns.sequencer.pattern_sequence
   end
 
-  local block_lines = xBlockLoop.get_block_lines(loop_pos.sequence)
-  return math.floor(loop_pos.line + block_lines - 1)
+  local block_lines, num_lines = xBlockLoop.get_block_lines(loop_pos.sequence)
+  return math.floor(loop_pos.line + block_lines - 1),num_lines
 
 end
 
