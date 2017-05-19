@@ -155,14 +155,17 @@ Keyboard.default_options = {
   release_type = {
     label = "Key-release",
     description = "Determine how to respond when the same key is triggered"
-                .."\nmultiple times without being released inbetween hits: "
-                .."\n'wait' means to wait until all pressed keys are released, "
-                .."\n'release when possible' will use the first opportunity to "
-                .."\n release the note (enable if you experience stuck notes)",
+                .."\nmultiple times without being released inbetween hits",
     items = {
       "Wait for all keys",
       "Release when possible",
     },
+    --[[
+    item_descriptions = {
+      "Wait until all pressed keys are released",
+      "Use the first opportunity to release the note (enable this if you experience stuck notes)",
+    },
+    ]]
     value = 1,
   },
   button_width = {
@@ -254,8 +257,8 @@ Keyboard.default_options = {
     end,
     items = {
       "No highlighting",
-      "Highlight Base-key",
-      "Highlight Sample Mappings",
+      "Highlight base-key",
+      "Highlight sample mappings",
     },
     value = 1,
   },

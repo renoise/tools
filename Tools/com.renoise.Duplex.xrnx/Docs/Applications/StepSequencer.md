@@ -114,6 +114,13 @@ The mode is activated immediately after you enable Playback Follow in Renoise (u
 
 ## Changelog
 
+1.04
+- Added: allow transposing while playing / holding down button
+- Added: cycle layout mapping (implemented in Launchpad config)
+- Added: more finegrained control of track/line follow behavior
+- Fixed: could throw error when navigating to non-selected pattern
+- Fixed: force-remove all observables, some performance tweaks 
+
 1.03
 - Fixed: error when pressing button in out-of-bounds area
 

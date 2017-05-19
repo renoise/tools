@@ -57,6 +57,9 @@ Duplex Matrix takes control of the pattern matrix in Renoise. See this [video de
 
 ## Changelog
 
+1.04
+- Added: on-the-fly switching between patterns tries to 'keeps the beat'
+
 1.01
 - Tool-dev: use cLib/xLib libraries
 

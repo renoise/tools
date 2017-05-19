@@ -4,12 +4,15 @@
 - Added: StepSequencer - allow transposing while playing / holding down button
 - Added: StepSequencer - cycle layout mapping (implemented in Launchpad config)
 - Added: StepSequencer - more finegrained control of track/line follow behavior
+- Added: Keyboard - grid display options : key/sample highlighting + note labelling
+- Added: Launchpad configuration - "Drumpads" (four instances of Keyboard app.)
+- Added: Matrix - on-the-fly pattern switching tries to 'keeps the beat'
 - Fixed: StepSequencer - could throw error when navigating to non-selected pattern
 - Fixed: StepSequencer - force-remove all observables, some performance tweaks 
+- Fixed: Keyboard - HarmonicWrapped layout + scales no longer shows duplicate notes
 - Changed: don't run OSC server test by default. Can still be run from options
 - Updated Mlrx configuration for Launchpad (now includes all mappings)
-- Deprecated UIKeyPressure, UIPitchBend (use UISlider instead)
-- Various internal tweaks
+- Deprecated UIKeyPressure, UIPitchBend (using UISlider instead)
 
 ## 1.03
 - Core: Improve performance by using table-based lookups where possible

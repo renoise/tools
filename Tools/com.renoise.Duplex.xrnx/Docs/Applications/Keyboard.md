@@ -115,6 +115,8 @@ Tool discussion is located on the [Renoise forum](http://forum.renoise.com/index
 |`button_height`|Specify the button height (when in grid mode)|  
 |`instr_index`|Choose which instrument to control|  
 |`grid_layout`|Specify a keyboard layout for the grid|  
+|`grid_labelling`|Choose how notes are displayed in the grid|  
+|`grid_highlight`|Choose what to highlight in the grid<br>1: `"No highlighting"`<br>2: `"Highlight base-key"`<br>3: `"Highlight sample mappings"`|  
 |`upper_note`|Specify a note as upper boundary|  
 |`track_index`|Choose which track to use |  
 
@@ -150,6 +152,10 @@ Tool discussion is located on the [Renoise forum](http://forum.renoise.com/index
 |`instr_sync_off`|<div style="padding-left:0.5em;padding-right:0.5em; background-color:#000000; color: white">0x00,0x00,0x00</div>|·|false|  
 
 ## Changelog
+
+1.04
+- Added: grid display options : key/sample highlighting + note labelling
+- Fixed: HarmonicWrapped layout + scales no longer shows duplicate notes
 
 1.01
 - Tool-dev: use cLib/xLib libraries
