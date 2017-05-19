@@ -66,8 +66,6 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- overridden method
 -- @see GridLayout.get_pitches_from_index
 
 function IsomorphicLayout:get_pitches_from_index(idx)

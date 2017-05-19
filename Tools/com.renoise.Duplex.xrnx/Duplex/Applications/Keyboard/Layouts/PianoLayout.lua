@@ -50,12 +50,10 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- overridden method
 -- @see GridLayout.get_pitches_from_index
 
 function PianoLayout:get_pitches_from_index(idx)
-  --print("PianoLayout:get_pitches_from_index(idx)",idx)
+  TRACE("PianoLayout:get_pitches_from_index(idx)",idx)
 
   if not table.is_empty(self._cached_indexes) and
     self._cached_indexes[idx]

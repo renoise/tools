@@ -28,7 +28,6 @@ function HarmonicWrapped:__init(...)
 end
 
 --------------------------------------------------------------------------------
---- overridden method
 -- @see GridLayout.get_pitches_from_index
 
 function HarmonicWrapped:get_pitches_from_index(idx)

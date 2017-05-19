@@ -50,8 +50,6 @@ end
 
 
 --------------------------------------------------------------------------------
-
---- overridden method
 -- @see GridLayout.get_pitches_from_index
 
 function HarmonicLayout:get_pitches_from_index(idx)
@@ -82,6 +80,5 @@ function HarmonicLayout:get_pitches_from_index(idx)
   local pitch = ((row-2)*12) + self.kb:get_nth_note(col) - 1 
   pitch = pitch + (self.kb.scale_key-1) + self.kb.curr_octave*12
   return {self.kb:restrict_pitch_to_scale(pitch)}
-  --return {pitch}
 
 end
