@@ -230,10 +230,33 @@ Keyboard.default_options = {
       local val = app.options.grid_layout.value
       app:set_grid_layout(val)
     end,
-    custom_dialog = function(app)
-
-    end,
     items = layout_class_names,
+    value = 1,
+  },
+  grid_labelling = {
+    label = "Grid Labelling",
+    description = "Choose how notes are displayed in the grid",
+    on_change = function(app)
+      app:apply_grid_options()
+    end,
+    items = {
+      "None",
+      "Show Note Name",
+      "Show MIDI pitch"
+    },
+    value = 1,
+  },
+  grid_highlight = {
+    label = "Grid Highlight",
+    description = "Choose what to highlight in the grid",
+    on_change = function(app)
+      app:apply_grid_options()
+    end,
+    items = {
+      "No highlighting",
+      "Highlight Base-key",
+      "Highlight Sample Mappings",
+    },
     value = 1,
   },
 
@@ -566,9 +589,9 @@ end
 -- @param pitch (int) note pitch
 
 function Keyboard:inside_note_range(pitch)
-  --TRACE("Keyboard:inside_note_range()",pitch)
+  TRACE("Keyboard:inside_note_range()",pitch)
 
-  if (pitch>self.upper_note) or (pitch<self.lower_note) then
+  if (pitch > self.upper_note) or (pitch < self.lower_note) then
     return false
   end
   return true
@@ -583,6 +606,9 @@ function Keyboard:get_nth_note(idx)
   TRACE("Keyboard:get_nth_note()",idx)
 
   local scale = xScale.get_scale_by_name(self.scale_mode)
+  assert(scale,"Internal Error. Please report: " ..
+    "unexpected instrument scale")
+  
   local oct = 0
   if (idx > scale.count) then
     oct = math.floor(idx/scale.count)
@@ -701,7 +727,7 @@ function Keyboard:on_scale_change()
 
   local held_notes = table.rcopy(self.held_notes)
 
-  if (self.scale_mode == 0) then
+  if (self.scale_mode == "None") then
     self.scale_key = 1
   end
 
@@ -1502,11 +1528,11 @@ function Keyboard:set_grid_layout(val)
 
     return false      
   end
-
   
   self._layout = _G[class_name](self)
-  self._update_grid_requested = true
 
+  self._update_grid_requested = true
+  self:apply_grid_options()
   self:update_cycle_controls()
 
   -- momentarily flash button
@@ -1848,6 +1874,41 @@ function Keyboard:cache_grid()
   end
 
 end
+
+--------------------------------------------------------------------------------
+
+function Keyboard:apply_grid_options()
+  TRACE("Keyboard:apply_grid_options()")
+
+  if self._layout then
+
+    -- not yet ready for updates 
+    if not self.upper_note or not self.lower_note then 
+      return
+    end
+
+    local grid_highlight = {
+      [1] = function() return GridLayout.HIGHLIGHT_NONE end,
+      [2] = function() return GridLayout.HIGHLIGHT_BASEKEY end,
+      [3] = function() return GridLayout.HIGHLIGHT_SAMPLE end,
+    }
+    if grid_highlight[self.options.grid_highlight.value] then
+      self._layout.highlighting = grid_highlight[self.options.grid_highlight.value]()
+    end
+
+    local grid_labelling = {
+      [1] = function() return GridLayout.SHOW_INFO_NONE end,
+      [2] = function() return GridLayout.SHOW_INFO_NOTE_NAME end,
+      [3] = function() return GridLayout.SHOW_INFO_MIDI_PITCH end,
+    }
+    if grid_labelling[self.options.grid_labelling.value] then
+      self._layout.show_note_info = grid_labelling[self.options.grid_labelling.value]()
+    end
+
+  end
+
+end
+
 
 --------------------------------------------------------------------------------
 
