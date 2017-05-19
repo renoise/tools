@@ -6,14 +6,13 @@
 
 Navigator can manipulate the playback position and block-loop of a pattern in realtime. You can do this, even playback is happening in a different pattern than the currently selected one. 
 
-The application has three mappings, and is suitable for almost any controller (see [requirements](#requirements)). 
 
 ## Basic operation
 
   * Tap a button to move to a new position in the pattern.
-  * When playback is stopped, moves the edit-position instead.
+  * When playback is stopped, moves the edit-position. Otherwise, the playhead.
   * Press+hold a single button to loop and/or select this range. 
-  * Pressing two buttons will create a loop range between the buttons.
+  * Press two buttons to create a looped range.
 
 ### Controlling looped ranges
 
@@ -23,7 +22,6 @@ If you have looped a range, you can move this around as well. The following rule
 * If you press _outside_ the loop, the loop is moved to this position *
 * If you press and hold _inside_ the loop, the loop is collapsed/cleared
 
-> *&nbsp;Use [@loop_carry](...) to decide if the playback position should be updated as well.
 
 ### Measures: 4/4 and beyond
 
@@ -88,11 +86,15 @@ Some of Navigators functionality is only available for devices that are capable 
 
 ## Changelog
 
+1.05
+- Added: Improved handling of non-4/4 measures
+- Added: Option to auto-detect measure (is now the default choice)
+
 1.01
 - Tool-dev: use cLib/xLib libraries
 
 0.98.32
-- FIXME When jumping back in pattern, and briefly going to the previous pattern,
+- Fixed: When jumping back in pattern, and briefly going to the previous pattern,
   the navigator would break if the previous pattern hadn’t same number of lines
 
 0.98.27

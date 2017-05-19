@@ -1,5 +1,16 @@
 # Duplex Changelog
 
+## 1.04
+- Added: StepSequencer - allow transposing while playing / holding down button
+- Added: StepSequencer - cycle layout mapping (implemented in Launchpad config)
+- Added: StepSequencer - more finegrained control of track/line follow behavior
+- Fixed: StepSequencer - could throw error when navigating to non-selected pattern
+- Fixed: StepSequencer - force-remove all observables, some performance tweaks 
+- Changed: don't run OSC server test by default. Can still be run from options
+- Updated Mlrx configuration for Launchpad (now includes all mappings)
+- Deprecated UIKeyPressure, UIPitchBend (use UISlider instead)
+- Various internal tweaks
+
 ## 1.03
 - Core: Improve performance by using table-based lookups where possible
 - Added: MMC transport control is now optional, can be enabled/disabled via options
@@ -22,14 +33,13 @@
 - Documentation: switched to a new format, github-flavored markdown. 
 - Added: Eran Dax Lonkers StepSequencer contributions + other features  
 - Added: Keyboard - HarmonicWrapped layout, tweaked configurations
-- Added: High-res automation recording for Mixer, Effect, XYPad and Repeater apps.
+- Added: High-res automation recording for Mixer, Effect, XYPad, Mlrx and Repeater apps.
 - Fixed: Issue w/N.O.W.: Allow unmapped phrases (API5)
 - Fixed: Issue w/N.O.W. (https://github.com/renoise/xrnx/issues/66)
 - Fixed: Issue w/N.O.W. (https://github.com/renoise/xrnx/issues/56)
 - Fixed: Issue w/TrackSelector (https://github.com/renoise/xrnx/issues/83)
 - Fixed: Issue w/XYPad (https://github.com/renoise/xrnx/issues/55)
 
----
 ## 0.99.5
 
 Core/MidiDevice
