@@ -1002,13 +1002,7 @@ function Matrix:_build_app()
             -- instantly switch position:
             local new_pos = rns.transport.playback_pos
             new_pos.sequence = seq_index
-            -- if the desired pattern-line does not exist,start from 0
-            local patt_idx = rns.sequencer.pattern_sequence[seq_index]
-            local num_lines = rns.patterns[patt_idx].number_of_lines
-            if(new_pos.line>num_lines)then
-              new_pos.line = 1
-            end
-            rns.transport.playback_pos = new_pos
+            xPatternSequencer.switch_to_sequence(new_pos)
           elseif(self.options.switch_mode.value == SWITCH_MODE_STOP) then
             rns.transport:stop()
           elseif(self.options.switch_mode.value == SWITCH_MODE_TRIG) then
