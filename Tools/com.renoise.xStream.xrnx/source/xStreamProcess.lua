@@ -10,6 +10,9 @@ A single streaming process
 This class represents a 'streaming process' - basically a streaming buffer
 with additional scheduling & automation-recording features on top. 
 
+The class works with a single track only. If you need multiple tracks, 
+use multiple instances of this class. 
+
 ]]
 
 --==============================================================================
@@ -82,33 +85,45 @@ function xStreamProcess:__init(xstream)
 
   --- xStreamModels
   self.models = xStreamModels(self)
+  
+  -- handle changes to the selected model 
+  self.models.selected_model_index_observable:add_notifier(function()
+    self:reset()
+    if (self.models.selected_model_index == 0) then
+      if self.active then
+        self:stop()
+      end 
+    end
+    self:attach_to_model()
+  end)
 
   --- xStreamBuffer, track position and handle streaming ...
   self.buffer = xStreamBuffer(self.xpos)
-  self.buffer.mute_mode = self.prefs.mute_mode.value
-  self.buffer.expand_columns = self.prefs.expand_columns.value
-  self.buffer.include_hidden = self.prefs.include_hidden.value
-  self.buffer.clear_undefined = self.prefs.clear_undefined.value
+  -- synchronize with preferences
   self.buffer.automation_playmode = self.prefs.automation_playmode.value
-  self.buffer.automation_playmode_observable:add_notifier(function()
+  self.prefs.automation_playmode:add_notifier(function()
     TRACE("xStreamProcess - self.automation_playmode_observable fired...")
-    self.prefs.automation_playmode.value = self.buffer.automation_playmode_observable.value
+    self.buffer.automation_playmode = self.prefs.automation_playmode.value
   end)
-  self.buffer.include_hidden_observable:add_notifier(function()
+  self.buffer.include_hidden = self.prefs.include_hidden.value
+  self.prefs.include_hidden:add_notifier(function()
     TRACE("xStreamProcess - self.include_hidden_observable fired...")
-    self.prefs.include_hidden.value = self.buffer.include_hidden_observable.value
+    self.buffer.include_hidden = self.prefs.include_hidden.value
   end)
-  self.buffer.clear_undefined_observable:add_notifier(function()
+  self.buffer.clear_undefined = self.prefs.clear_undefined.value
+  self.prefs.clear_undefined:add_notifier(function()
     TRACE("xStreamProcess - self.clear_undefined_observable fired...")
-    self.prefs.clear_undefined.value = self.buffer.clear_undefined_observable.value
+    self.buffer.clear_undefined = self.prefs.clear_undefined.value
   end)
-  self.buffer.expand_columns_observable:add_notifier(function()
+  self.buffer.expand_columns = self.prefs.expand_columns.value
+  self.prefs.expand_columns:add_notifier(function()
     TRACE("xStreamProcess - self.expand_columns_observable fired...")
-    self.prefs.expand_columns.value = self.buffer.expand_columns_observable.value
+    self.buffer.expand_columns = self.prefs.expand_columns.value
   end)
-  self.buffer.mute_mode_observable:add_notifier(function()
+  self.buffer.mute_mode = self.prefs.mute_mode.value
+  self.prefs.mute_mode:add_notifier(function()
     TRACE("xStreamProcess - self.mute_mode_observable fired...")
-    self.prefs.mute_mode.value = self.buffer.mute_mode_observable.value
+    self.buffer.mute_mode = self.prefs.mute_mode.value
   end)
 
   -- preferences -> app --
@@ -133,6 +148,7 @@ end
 function xStreamProcess:set_active(val)
   print("xStreamProcess:set_active(val)",val)
   self.active_observable.value = val
+  self:maintain_buffer_mute_state()
 end
 
 -------------------------------------------------------------------------------
@@ -144,11 +160,7 @@ end
 function xStreamProcess:set_muted(val)
   TRACE("xStreamProcess:set_muted(val)",val)
   self.muted_observable.value = val
-  if val then
-    self.buffer:mute()
-  else
-    self.buffer:unmute()
-  end
+  self:maintain_buffer_mute_state()
 
 end
 
@@ -209,9 +221,12 @@ end
 -------------------------------------------------------------------------------
 -- Class methods
 -------------------------------------------------------------------------------
+-- Reset is invoked when starting or switching model 
 
 function xStreamProcess:reset()
+  print("xStreamProcess:reset()")
 
+  --self.buffer:wipe_futures()
   self.buffer:clear()
   self:clear_schedule()
 
@@ -221,6 +236,7 @@ end
 -- Stop live streaming
 
 function xStreamProcess:stop()
+  print("xStreamProcess:stop()")
   self.active = false
   self:clear_schedule()
 end
@@ -241,20 +257,32 @@ function xStreamProcess:start(playmode)
 end
 
 -------------------------------------------------------------------------------
--- Called on abrupt position change
+-- Called on abrupt position changes - refresh pattern buffer, output 
 
 function xStreamProcess:refresh()
   TRACE("xStreamProcess:refresh()")
   if self.active then
     self.buffer:update_read_buffer()
+    self:recompute()
   end
 end
 
 -------------------------------------------------------------------------------
--- Called on periodic updates
+-- Called when we need to recompute the immediate output buffer
+-- (for example when some condition that affects the output has changed) 
 
-function xStreamProcess:callback()
-  TRACE("xStreamProcess:callback()")
+function xStreamProcess:recompute()
+  TRACE("xStreamProcess:recompute()")
+  self.buffer:wipe_futures()
+  self:output()
+
+end 
+
+-------------------------------------------------------------------------------
+-- Produce output - can be called periodically
+
+function xStreamProcess:output()
+  TRACE("xStreamProcess:output()")
 
   if self.active and self.models.selected_model then
     if self._scheduled_xinc then
@@ -264,6 +292,20 @@ function xStreamProcess:callback()
     end
     local live_mode = true
     self.buffer:write_output(self.xpos.pos,self.xpos.xinc,nil,live_mode)
+  end
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamProcess:maintain_buffer_mute_state()
+
+  if self.active then 
+    if self.muted and not self.buffer.mute_xinc then
+      self.buffer:mute()
+    elseif not self.muted and self.buffer.mute_xinc then
+      self.buffer:unmute()
+    end
   end
 
 end
@@ -484,7 +526,7 @@ function xStreamProcess:fill_selection(locally)
 end
 
 -------------------------------------------------------------------------------
--- Apply the callback to a range in the selected pattern,  
+-- Write output to a range in the selected pattern,  
 -- temporarily switching to a different set of buffers
 -- @param from_line (int)
 -- @param to_line (int) 
@@ -502,7 +544,7 @@ function xStreamProcess:apply_to_range(from_line,to_line,xinc)
     xinc = 0
   end
 
-  local live_mode = false -- start from first line
+  local live_mode = false
   local num_lines = to_line-from_line+1
 
   self:reset()
@@ -512,13 +554,13 @@ function xStreamProcess:apply_to_range(from_line,to_line,xinc)
   local cached_buffer = self.buffer.output_buffer
   local cached_read_buffer = self.buffer.pattern_buffer
   local cached_pos = self.xpos.pos
-  local cached_bounds = xSongPos.DEFAULT_BOUNDS_MODE
-  local cached_loop = xSongPos.DEFAULT_LOOP_MODE
-  local cached_block = xSongPos.DEFAULT_BLOCK_MODE
-  -- ignore any kind of loop (realtime only)
-  xSongPos.DEFAULT_BOUNDS_MODE = xSongPos.OUT_OF_BOUNDS.CAP
-  xSongPos.DEFAULT_LOOP_MODE = xSongPos.LOOP_BOUNDARY.NONE
-  xSongPos.DEFAULT_BLOCK_MODE = xSongPos.BLOCK_BOUNDARY.NONE
+  local cached_xsongpos = xSongPos.get_defaults()
+  -- ignore any kind of loop (those are for realtime only)
+  xSongPos.set_defaults({
+    bounds = xSongPos.OUT_OF_BOUNDS.CAP,
+    loop = xSongPos.LOOP_BOUNDARY.NONE,
+    block = xSongPos.BLOCK_BOUNDARY.NONE,
+  })
   -- write output
   self.active = true
   self.xpos.pos.line = from_line
@@ -529,9 +571,7 @@ function xStreamProcess:apply_to_range(from_line,to_line,xinc)
   self.buffer.output_buffer = cached_buffer
   self.buffer.pattern_buffer = cached_read_buffer
   self.xpos.pos = cached_pos
-  xSongPos.DEFAULT_BOUNDS_MODE = cached_bounds
-  xSongPos.DEFAULT_LOOP_MODE = cached_loop
-  xSongPos.DEFAULT_BLOCK_MODE = cached_block
+  xSongPos.set_defaults(cached_xsongpos)
 
 end
 
@@ -573,6 +613,29 @@ function xStreamProcess:handle_event(event_key,arg)
   --else
   --  LOG("*** could not locate handler for event",event_key)
   end
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamProcess:attach_to_model()
+  TRACE("xStreamProcess:attach_to_model()")
+
+  if not self.models.selected_model then 
+    return 
+  end 
+
+  local compiled_notifier = function()
+    print(">>> xStreamProcess:attach_to_model - compiled_notifier fired...")
+    local model = self.models.selected_model
+    self.buffer.callback = model.sandbox.callback
+    self.buffer.output_tokens = model.output_tokens
+    self:recompute()
+  end 
+
+  cObservable.attach(self.models.selected_model.compiled_observable,compiled_notifier)
+  
+  compiled_notifier()
 
 end
 
