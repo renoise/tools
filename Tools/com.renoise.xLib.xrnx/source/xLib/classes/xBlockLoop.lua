@@ -238,18 +238,15 @@ function xBlockLoop:get_next_line_index()
 end
 
 ---------------------------------------------------------------------------------------------------
--- Enforce range of lines to nearest valid coefficient. Modelled after Renoise, 
--- in that providing a too small/large range will fit to the nearest 'block-loopable' size. 
--- <br>Some examples with a 64 line pattern:
--- <br>• 1 & 4 will enlarge to 1 & 5 (4 lines - 1/16th)
--- <br>• 1 & 6 is not altered (5 lines - 1/12th, with 4 remaining lines)
--- <br>• 2 & 7 is not altered (-//-, but shifted*) 
--- <br>* Shifting is possible through the API but not through the Renoise UI!
+-- Enforce range of lines to nearest valid coefficient. Supports 'shifted' ranges.
 -- @param start_line, number 
 -- @param end_line, number 
 -- @param num_lines, number - number of lines in pattern 
--- @param [coeffs], table<number> (use COEFFS_ALL if undefined)
--- @return number,number - the normalized start & end line
+-- @param [coeffs], table<number>, valid coefficients (defaults to COEFFS_ALL)
+-- @return number, start line
+-- @return number, end line
+-- @return number, coefficient
+-- @return boolean, when whole pattern should be looped 
 
 function xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
   TRACE("xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)",start_line,end_line,num_lines,coeffs)
@@ -258,16 +255,28 @@ function xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
   assert(type(end_line)=="number")
   assert(type(num_lines)=="number")
 
+  assert(start_line~=end_line,"start_line and end_line needs to be different")
+
+  -- swap start/end if needed
+  if (start_line > end_line) then 
+    start_line,end_line = end_line,start_line
+  end 
+
+  assert(start_line >= 1,"start_line should be 1 or higher")
+  assert(end_line <= num_lines,"end_line should be equal to, or less than num_lines")
+
   if not coeffs then 
     coeffs = xBlockLoop.COEFFS_ALL
   end 
 
   local line_count = end_line - start_line 
-  local ideal_coeff = num_lines/line_count
+  local ideal_coeff = math.floor(num_lines/line_count)
+  print(">>> normalize_line_range - ideal_coeff",ideal_coeff)
 
   -- locate matching or closest coeff.
+  local effective_coeff = nil  
   local matched_coeff = false
-  local closest_match = 16 -- highest possible
+  local closest_match = coeffs[#coeffs]
   for k,v in ipairs(coeffs) do
     if (v == ideal_coeff) then
       matched_coeff = true
@@ -281,20 +290,28 @@ function xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
     end
   end
 
-  -- if not a valid coefficient, expand the size
+  print(">>> normalize_line_range - matched_coeff",matched_coeff)
+  print(">>> normalize_line_range - closest_match",closest_match)
+
+  -- if not a valid coefficient, expand to nearest 
   if not matched_coeff then
-    line_count = math.floor(num_lines/closest_match)
-    end_line = start_line + line_count
+    effective_coeff = closest_match
+  else
+    effective_coeff = ideal_coeff
   end
 
+  line_count = math.floor(num_lines/effective_coeff)
+  end_line = start_line + line_count
 
-  -- if result goes beyond boundary, move back
+  local pattern_loop = (line_count == num_lines)
+
+  -- if range goes beyond boundary, push it back
   if (end_line > num_lines+1) then
     local offset = num_lines-end_line+1
-    start_line   = start_line   + offset
+    start_line = start_line + offset
     end_line = end_line + offset
   end
 
-  return start_line,end_line
+  return start_line,end_line,effective_coeff,pattern_loop
 
 end

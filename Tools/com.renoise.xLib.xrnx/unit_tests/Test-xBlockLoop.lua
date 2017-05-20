@@ -13,70 +13,471 @@ _xlib_tests:insert({
 
     print(">>> xBlockLoop: starting unit-test...")
 
+    local num_lines,coeffs,start_line,end_line,_start,_end,_coeff
+
     --== normalize ==--
 
-    local num_lines = 64
-    local coeffs = xBlockLoop.COEFFS_ALL 
+    num_lines = 64
+    coeffs = xBlockLoop.COEFFS_ALL 
 
-    -- 1 & 4 will enlarge to 1 & 5 (4 lines - 1/16th)
-    local start_line = 1
-    local end_line = 4
-    local _start,_end = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    start_line = 1
+    end_line = 3
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
     assert(_start==1,"Expected 1, got ".._start)
     assert(_end==5,"Expected 5, got ".._end)
+    assert(_coeff==16,"Expected 16, got ".._coeff)
 
-    -- 1 & 6 is not altered (5 lines - 1/12th, with 4 remaining lines)
-    local start_line = 1
-    local end_line = 6
-    local _start,_end = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    start_line = 1
+    end_line = 4
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==5,"Expected 5, got ".._end)
+    assert(_coeff==16,"Expected 16, got ".._coeff)
+
+    start_line = 1
+    end_line = 6
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
     assert(_start==1,"Expected 1, got ".._start)
     assert(_end==6,"Expected 6, got ".._end)
-    
-    -- 2 & 7 is not altered (-//-, but shifted*) 
-    local start_line = 2
-    local end_line = 7
-    local _start,_end = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
-    assert(_start==1,"Expected 2, got ".._start)
-    assert(_end==6,"Expected 7, got ".._end)
+    assert(_coeff==12,"Expected 12, got ".._coeff)
 
-    -- 1 & 7 is not altered (6 lines - 1/10th, with 4 remaining lines)
-    local start_line = 1
-    local end_line = 7
-    local _start,_end = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    start_line = 2
+    end_line = 7
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==2,"Expected 2, got ".._start)
+    assert(_end==7,"Expected 7, got ".._end)
+    assert(_coeff==12,"Expected 12, got ".._coeff)
+
+    start_line = 3
+    end_line = 8
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==3,"Expected 3, got ".._start)
+    assert(_end==8,"Expected 8, got ".._end)
+    assert(_coeff==12,"Expected 12, got ".._coeff)
+
+    start_line = 1
+    end_line = 7
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
     assert(_start==1,"Expected 1, got ".._start)
     assert(_end==7,"Expected 7, got ".._end)
+    assert(_coeff==10,"Expected 10, got ".._coeff)
 
-    
-    -- 1 & 8 is not altered (7 lines - 1/9th, with 1 remaining line)
-    -- 1 & 8 is not altered (7 lines - 1/9th, with 1 remaining line)
-    -- 1 & 9 is not altered (8 lines - 1/8th)
-    -- 1 & 10 is not altered (9 lines - 1/7th, with 1 remaining line)
-    -- 1 & 11 is not altered (10 lines - 1/6th, with 4 remaining lines)
-    -- 1 & 12 is not altered (11 lines - 1/5th, with 9 remaining lines)
-
-    local start_line = 1
-    local end_line = 16
-    local _start,_end = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    start_line = 1
+    end_line = 8
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
     assert(_start==1,"Expected 1, got ".._start)
-    assert(_end==16,"Expected 16, got ".._end)
+    assert(_end==8,"Expected 8, got ".._end)
+    assert(_coeff==9,"Expected 9, got ".._coeff)
 
-    local start_line = 1
-    local end_line = 16
-    local _start,_end = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
-    assert(_start==1,"Expected 1, got ".._start)
-    assert(_end==16,"Expected 16, got ".._end)
+    start_line = 11
+    end_line = 18
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==11,"Expected 11, got ".._start)
+    assert(_end==18,"Expected 18, got ".._end)
+    assert(_coeff==9,"Expected 9, got ".._coeff)
 
-    local start_line = 1
-    local end_line = 4
-    local _start,_end = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    start_line = 1
+    end_line = 9
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
     assert(_start==1,"Expected 1, got ".._start)
-    assert(_end==4,"Expected 4, got ".._end)
+    assert(_end==9,"Expected 9, got ".._end)
+    assert(_coeff==8,"Expected 8, got ".._coeff)
 
-    local start_line = 1
-    local end_line = 3
-    local _start,_end = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    start_line = 21
+    end_line = 29
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==21,"Expected 21, got ".._start)
+    assert(_end==29,"Expected 29, got ".._end)
+    assert(_coeff==8,"Expected 8, got ".._coeff)
+
+    start_line = 1
+    end_line = 10
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
     assert(_start==1,"Expected 1, got ".._start)
-    assert(_end==4,"Expected 4, got ".._end)
+    assert(_end==10,"Expected 10, got ".._end)
+    assert(_coeff==7,"Expected 7, got ".._coeff)
+
+    start_line = 31
+    end_line = 40
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==31,"Expected 31, got ".._start)
+    assert(_end==40,"Expected 40, got ".._end)
+    assert(_coeff==7,"Expected 7, got ".._coeff)
+
+    start_line = 1
+    end_line = 11
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==11,"Expected 11, got ".._end)
+    assert(_coeff==6,"Expected 6, got ".._coeff)
+  
+
+    start_line = 1
+    end_line = 12
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==13,"Expected 13, got ".._end)
+    assert(_coeff==5,"Expected 5, got ".._coeff)
+
+    start_line = 1
+    end_line = 13
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==13,"Expected 13, got ".._end)
+    assert(_coeff==5,"Expected 5, got ".._coeff)
+
+    start_line = 1
+    end_line = 14
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==17,"Expected 17, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 1
+    end_line = 15
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==17,"Expected 17, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 1
+    end_line = 16
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==17,"Expected 17, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 3
+    end_line = 18
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==3,"Expected 3, got ".._start)
+    assert(_end==19,"Expected 19, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 13
+    end_line = 28
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==13,"Expected 13, got ".._start)
+    assert(_end==29,"Expected 29, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 1
+    end_line = 18
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==22,"Expected 22, got ".._end)
+    assert(_coeff==3,"Expected 3, got ".._coeff)
+
+    start_line = 1
+    end_line = 23
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==33,"Expected 33, got ".._end)
+    assert(_coeff==2,"Expected 2, got ".._coeff)
+
+    start_line = 1
+    end_line = 43
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==65,"Expected 65, got ".._end)
+    assert(_coeff==1,"Expected 1, got ".._coeff)
+
+    --== now with fours ==--
+
+    --num_lines = 64
+    coeffs = xBlockLoop.COEFFS_FOUR 
+
+    start_line = 1
+    end_line = 3
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==5,"Expected 5, got ".._end)
+    assert(_coeff==16,"Expected 16, got ".._coeff)
+
+    start_line = 1
+    end_line = 4
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==5,"Expected 5, got ".._end)
+    assert(_coeff==16,"Expected 16, got ".._coeff)
+
+    start_line = 1
+    end_line = 6
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==9,"Expected 9, got ".._end)
+    assert(_coeff==8,"Expected 8, got ".._coeff)
+
+    start_line = 2
+    end_line = 7
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==2,"Expected 2, got ".._start)
+    assert(_end==10,"Expected 10, got ".._end)
+    assert(_coeff==8,"Expected 8, got ".._coeff)
+
+    start_line = 1
+    end_line = 7
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==9,"Expected 9, got ".._end)
+    assert(_coeff==8,"Expected 8, got ".._coeff)
+
+    start_line = 1
+    end_line = 8
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==9,"Expected 9, got ".._end)
+    assert(_coeff==8,"Expected 8, got ".._coeff)
+
+    start_line = 1
+    end_line = 9
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==9,"Expected 9, got ".._end)
+    assert(_coeff==8,"Expected 8, got ".._coeff)
+
+    start_line = 21
+    end_line = 29
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==21,"Expected 21, got ".._start)
+    assert(_end==29,"Expected 29, got ".._end)
+    assert(_coeff==8,"Expected 8, got ".._coeff)
+
+    start_line = 1
+    end_line = 10
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==17,"Expected 17, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 1
+    end_line = 11
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==17,"Expected 17, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+  
+
+    start_line = 1
+    end_line = 12
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==17,"Expected 17, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 1
+    end_line = 13
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==17,"Expected 17, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 1
+    end_line = 14
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==17,"Expected 17, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 1
+    end_line = 15
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==17,"Expected 17, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 1
+    end_line = 16
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==17,"Expected 17, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 3
+    end_line = 18
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==3,"Expected 3, got ".._start)
+    assert(_end==19,"Expected 19, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 13
+    end_line = 28
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==13,"Expected 13, got ".._start)
+    assert(_end==29,"Expected 29, got ".._end)
+    assert(_coeff==4,"Expected 4, got ".._coeff)
+
+    start_line = 1
+    end_line = 18
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==33,"Expected 33, got ".._end)
+    assert(_coeff==2,"Expected 2, got ".._coeff)
+
+    start_line = 1
+    end_line = 23
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==33,"Expected 33, got ".._end)
+    assert(_coeff==2,"Expected 2, got ".._coeff)
+
+    start_line = 1
+    end_line = 43 
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==65,"Expected 65, got ".._end)
+    assert(_coeff==1,"Expected 1, got ".._coeff)
+
+    --== now with threes ==--
+
+    --num_lines = 64
+    coeffs = xBlockLoop.COEFFS_THREE
+
+    start_line = 1
+    end_line = 3
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==6,"Expected 6, got ".._end)
+    assert(_coeff==12,"Expected 12, got ".._coeff)
+
+    start_line = 1
+    end_line = 4
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==6,"Expected 6, got ".._end)
+    assert(_coeff==12,"Expected 12, got ".._coeff)
+
+    start_line = 1
+    end_line = 6
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==6,"Expected 6, got ".._end)
+    assert(_coeff==12,"Expected 12, got ".._coeff)
+
+    start_line = 2
+    end_line = 7
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==2,"Expected 2, got ".._start)
+    assert(_end==7,"Expected 7, got ".._end)
+    assert(_coeff==12,"Expected 12, got ".._coeff)
+
+    start_line = 3
+    end_line = 8
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==3,"Expected 3, got ".._start)
+    assert(_end==8,"Expected 8, got ".._end)
+    assert(_coeff==12,"Expected 12, got ".._coeff)
+
+    start_line = 1
+    end_line = 7
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==11,"Expected 11, got ".._end)
+    assert(_coeff==6,"Expected 6, got ".._coeff)
+
+    start_line = 1
+    end_line = 8
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==11,"Expected 11, got ".._end)
+    assert(_coeff==6,"Expected 6, got ".._coeff)
+
+    start_line = 1
+    end_line = 9
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==11,"Expected 11, got ".._end)
+    assert(_coeff==6,"Expected 6, got ".._coeff)
+
+    start_line = 1
+    end_line = 10
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==11,"Expected 11, got ".._end)
+    assert(_coeff==6,"Expected 6, got ".._coeff)
+
+    start_line = 1
+    end_line = 11
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==11,"Expected 11, got ".._end)
+    assert(_coeff==6,"Expected 6, got ".._coeff)
+
+    start_line = 1
+    end_line = 12
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==22,"Expected 22, got ".._end)
+    assert(_coeff==3,"Expected 3, got ".._coeff)
+
+    start_line = 1
+    end_line = 13
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==22,"Expected 22, got ".._end)
+    assert(_coeff==3,"Expected 3, got ".._coeff)
+
+    start_line = 1
+    end_line = 14
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==22,"Expected 22, got ".._end)
+    assert(_coeff==3,"Expected 3, got ".._coeff)
+
+    start_line = 1
+    end_line = 15
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==22,"Expected 22, got ".._end)
+    assert(_coeff==3,"Expected 3, got ".._coeff)
+
+    start_line = 1
+    end_line = 16
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==22,"Expected 22, got ".._end)
+    assert(_coeff==3,"Expected 3, got ".._coeff)
+
+    start_line = 3
+    end_line = 18
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==3,"Expected 3, got ".._start)
+    assert(_end==24,"Expected 24, got ".._end)
+    assert(_coeff==3,"Expected 3, got ".._coeff)
+
+    start_line = 1
+    end_line = 18
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==22,"Expected 22, got ".._end)
+    assert(_coeff==3,"Expected 3, got ".._coeff)
+
+    start_line = 1
+    end_line = 23
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==33,"Expected 33, got ".._end)
+    assert(_coeff==2,"Expected 2, got ".._coeff)
+
+    start_line = 1
+    end_line = 43 
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==65,"Expected 65, got ".._end)
+    assert(_coeff==1,"Expected 1, got ".._coeff)
+
+    --== now with threes and various pattern lengths ==--
+
+    num_lines = 15
+    coeffs = xBlockLoop.COEFFS_THREE
+
+    start_line = 1
+    end_line = 2
+    _start,_end,_coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
+    assert(_start==1,"Expected 1, got ".._start)
+    assert(_end==2,"Expected 2, got ".._end)
+    assert(_coeff==12,"Expected 12, got ".._coeff)
+
 
     print(">>> xBlockLoop: OK - passed all tests")
 
