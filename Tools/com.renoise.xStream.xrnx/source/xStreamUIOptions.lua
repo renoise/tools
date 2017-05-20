@@ -299,7 +299,7 @@ function xStreamUIOptions:create_dialog()
           },
           vb:popup{
             items = xStreamBuffer.MUTE_MODES,
-            bind = self.xstream.process.mute_mode_observable,
+            bind = self.prefs.mute_mode,
             width = STREAMING_CTRL_W,
           },
         },
@@ -496,14 +496,14 @@ function xStreamUIOptions:create_dialog()
           },
           vb:popup{
             items = xStreamBuffer.PLAYMODES,
-            bind = self.xstream.process.buffer.automation_playmode_observable,
+            bind = self.prefs.automation_playmode,
           },
         },
 
         vb:row{
           tooltip = "Whether to include hidden columns when writing output",
           vb:checkbox{
-            bind = self.xstream.process.buffer.include_hidden_observable,
+            bind = self.prefs.include_hidden,
           },
           vb:text{
             text = "include_hidden",
@@ -512,7 +512,7 @@ function xStreamUIOptions:create_dialog()
         vb:row{
           tooltip = "Whether to clear undefined values, columns",
           vb:checkbox{
-            bind = self.xstream.process.buffer.clear_undefined_observable,
+            bind = self.prefs.clear_undefined,
           },
           vb:text{
             text = "clear_undefined",
@@ -521,7 +521,7 @@ function xStreamUIOptions:create_dialog()
         vb:row{
           tooltip = "Automatically reveal (sub-)columns with output",
           vb:checkbox{
-            bind = self.xstream.process.buffer.expand_columns_observable,
+            bind = self.prefs.expand_columns,
           },
           vb:text{
             text = "expand_columns",
