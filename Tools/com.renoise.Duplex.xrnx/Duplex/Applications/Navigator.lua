@@ -201,7 +201,6 @@ function Navigator:on_new_document()
 
 end
 
-
 ---------------------------------------------------------------------------------------------------
 -- @see Duplex.Application._build_app
 -- @return bool
@@ -239,10 +238,12 @@ function Navigator:_build_app()
         self:_jump_to_index(idx)
       elseif (self.options.operation.value == MODE_POSITION_RANGE) then
         if not self._first_idx then
+          --print("initial button press")
           self._first_idx = idx
           self._loop_start_idx = idx
           self._held_event_fired = false
-        else -- additional button presses
+        else 
+          --print("additional button presses")
           self._loop_end_idx = idx
           self:_set_looped_range()
           self._held_event_fired = true
@@ -429,6 +430,7 @@ function Navigator:_update_blockpos_range()
         end_index = self._blockpos_size
       else
         end_index = self:_get_index_from_line(self._loop_end.line-1,self._loop_end.sequence)
+        --print(">>> self._loop_end.line,end_index",self._loop_end.line,end_index)
       end
       self._blockpos:set_range(start_index,end_index,true)
     else
@@ -560,7 +562,7 @@ function Navigator:_get_index_from_line(line_idx,seq_idx)
   --TRACE("Navigator:_get_index_from_line(line_idx,seq_idx)",line_idx,seq_idx)
 
   local lines_per_unit = self:_get_lines_per_unit(seq_idx)
-  local active_index = math.floor((line_idx-1)/lines_per_unit)+1
+  local active_index = math.ceil((line_idx)/lines_per_unit)
   return active_index
 
 end
@@ -568,29 +570,32 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Return the line number for the provided index
 -- @param idx (int), 0-blockpos_size
--- @return int (0-number of lines)
+-- @return int
+-- @return int, lines per unit 
+-- @return int, number of lines in pattern
 
 function Navigator:_get_line_from_index(idx,seq_idx)
   TRACE("Navigator:_get_line_from_index(idx,seq_idx)",idx,seq_idx)
 
-  local lines_per_unit = self:_get_lines_per_unit(seq_idx)
-  local active_line = (idx * lines_per_unit)+1
-  return active_line,lines_per_unit
+  local lines_per_unit, num_lines = self:_get_lines_per_unit(seq_idx)
+  local active_line = math.floor(idx * lines_per_unit)+1
+  return active_line,lines_per_unit,num_lines
 
 end
 
 ---------------------------------------------------------------------------------------------------
--- Obtain the number of lines per "unit" (blockpos size)
+-- Obtain the number of lines per "unit" (blockpos size) 
 -- @param seq_idx (int)
--- @return int (lines per unit), number of lines in pattern
+-- @return number, with/out fractional part 
+-- @return number, number of lines in pattern
 
 function Navigator:_get_lines_per_unit(seq_idx)
-  --TRACE("Navigator:_get_lines_per_unit(seq_idx)",seq_idx)
+  TRACE("Navigator:_get_lines_per_unit(seq_idx)",seq_idx)
 
   assert(type(seq_idx)=="number")
 
   local num_lines = xPatternSequencer.get_number_of_lines(seq_idx)
-  local lines_per_unit = math.floor(num_lines/self._blockpos_size)
+  local lines_per_unit = num_lines/self._blockpos_size
   return lines_per_unit,num_lines
   
 end
@@ -659,25 +664,24 @@ function Navigator:_jump_to_index(ctrl_idx)
     local block_enabled = rns.transport.loop_block_enabled
     local block_lines = block_enabled and xBlockLoop.get_block_lines(new_pos.sequence)
     
-    -- distinguish between jumps "inside" or "outside" of the looped range:
-    if block_lines and not inside_range then -- 
+    -- distinguish between "inside" or "outside"
+    if block_lines and not inside_range then 
+      -- shift by block-loop size 
       local coeff = rns.transport.loop_block_range_coeff
       local line_offset = (new_pos.line%block_lines)
       local section_line = math.floor(((ctrl_idx-1)/self._blockpos_size)*coeff)*block_lines
       playback_line = section_line+line_offset
-    else -- no block loop or outside range
+    else 
+      -- no block loop or outside range
       local line_offset = (new_pos.line%lines_per_unit)-1
       playback_line = active_line+line_offset
     end    
     if (playback_line < 1) then
-      -- at boundary - "wrap" position 
       new_pos.line = 1
       xSongPos.decrease_by_lines(1,new_pos)
     else
       new_pos.line = playback_line
-      --new_pos.sequence = rns.selected_sequence_index
     end
-    --print("jump from/to",rns.transport.playback_pos,new_pos)
     rns.transport.playback_pos = new_pos
   end
 
@@ -688,26 +692,40 @@ function Navigator:_jump_to_index(ctrl_idx)
     and not inside_range 
     and not self._apply_when_in_seq
   then
-    self:_carry_over_loop(new_pos)
+    self:_carry_over_loop(ctrl_idx,new_pos.sequence)
   end
 
 end
 
 ---------------------------------------------------------------------------------------------------
--- Carry over: change the looped range to contain our new position 
+-- Carry over: shift the looped range to contain our new position 
+-- (will apply the range immediately when in the same pattern)
 
-function Navigator:_carry_over_loop(new_pos)
-  TRACE("Navigator:_carry_over_loop(new_pos)",new_pos)
+function Navigator:_carry_over_loop(ctrl_idx,seq_idx)
+  TRACE("Navigator:_carry_over_loop(ctrl_idx,seq_idx)",ctrl_idx,seq_idx)
     
   local coeff = rns.transport.loop_block_range_coeff
-  local start_idx = self:_get_index_from_line(new_pos.line,new_pos.sequence)
-  local block_indices = math.floor(self._blockpos_size/coeff)
-  local mul = self._blockpos_size/coeff
-  local div = coeff/self._blockpos_size
-  self._loop_start_idx =  -mul+1+(math.ceil(start_idx*div)*mul)
-  self._loop_end_idx = self._loop_start_idx+block_indices-1
-  -- don't apply range immediately - avoid side-effects
-  self._apply_when_in_seq = new_pos.sequence
+  local block_indices = math.floor(self._blockpos_size/coeff)-1
+  local new_line,lines_per_unit,num_lines = self:_get_line_from_index(ctrl_idx-1,seq_idx)
+  local block_lines = math.max(1,num_lines/coeff)
+  local total_blocks = math.floor(num_lines/block_lines)
+  local block_idx = math.ceil((new_line/num_lines)*total_blocks)
+  local block_line = (block_idx-1)*block_lines+1
+
+  self._loop_start_idx = self:_get_index_from_line(block_line,seq_idx)
+  self._loop_end_idx = self._loop_start_idx+block_indices
+  --print(">>> carry over - loop_start/end_idx",self._loop_start_idx,self._loop_end_idx)
+
+  local curr_pos = (self._playing) and 
+    rns.transport.playback_pos or rns.transport.edit_pos
+  if (seq_idx ~= curr_pos.sequence) then
+    -- switching pattern, don't apply immediately
+    self._apply_when_in_seq = seq_idx
+    rns.transport.loop_block_enabled = false
+  else 
+    -- in the same pattern
+    self:_set_looped_range()
+  end
 
 end
 
@@ -724,25 +742,26 @@ function Navigator:_set_looped_range()
   end
 
   -- swap start/end if needed
-  if (self._loop_start_idx > self._loop_end_idx) then
-    self._loop_start_idx,self._loop_end_idx = self._loop_end_idx,self._loop_start_idx
+  local start_idx = self._loop_start_idx
+  local end_idx = self._loop_end_idx
+  if (start_idx > end_idx) then
+    start_idx,end_idx = end_idx,start_idx
   end
 
   local lines_per_unit = nil
   self._loop_start = rns.transport.edit_pos
   self._loop_end = rns.transport.edit_pos
   local seq_idx = rns.transport.edit_pos.sequence
-  self._loop_start.line,lines_per_unit = self:_get_line_from_index(self._loop_start_idx-1,seq_idx)
-  self._loop_end.line = self:_get_line_from_index(self._loop_end_idx-1,seq_idx) + lines_per_unit
+  self._loop_start.line,lines_per_unit = self:_get_line_from_index(start_idx-1,seq_idx)
+  self._loop_end.line = self:_get_line_from_index(end_idx-1,seq_idx) + lines_per_unit
 
   self:normalize_range()
 
   -- should be safe to apply the loop by now... 
   rns.transport.loop_range = {self._loop_start,self._loop_end}
+
   self._loop_mode = LOOP_CUSTOM
-
   self._range_update_requested = true
-
   self:maintain_selection()
 
 end
@@ -755,9 +774,11 @@ function Navigator:normalize_range()
   local coeffs = self:get_coeffs()
   
   --print(">>> pre-normalized range",self._loop_start,self._loop_end)
+  local coeff = nil
   local num_lines = xPatternSequencer.get_number_of_lines(self._loop_end.sequence)
-  local start_line,end_line = 
-    xBlockLoop.normalize_line_range(self._loop_start.line,self._loop_end.line,num_lines,coeffs)
+  local start_line = cLib.clamp_value(self._loop_start.line,1,num_lines)
+  local end_line = cLib.clamp_value(self._loop_end.line,1,num_lines)
+  start_line,end_line,coeff = xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
   --print(">>> post-normalized range",self._loop_start,self._loop_end)
     
   self._loop_start.line = start_line
@@ -824,7 +845,7 @@ end
 -- note: clearing a block loop should not affect the sequence loop 
 
 function Navigator:_clear_looped_range()
-  --TRACE("Navigator:_clear_looped_range")
+  TRACE("Navigator:_clear_looped_range")
 
   local has_sequence_range,cached_seq = false,nil
   if (rns.transport.loop_sequence_range[1] ~= 0) and
