@@ -14,11 +14,11 @@ The Duplex Keyboard is a flexible keyboard replacement for Renoise. It offers th
 
 ## Prerequisites
 
-The Keyboard application will not work unless you have enabled the internal OSC server in Renoise (Renoise prefereces -> OSC settings). It should be set to "UPD" protocol, and use the same port as specified in Duplex/Globals.lua (by default, this is set to the same value as Renoise, "8000").
+> The Keyboard application will not work as expected unless you have enabled the OSC server in Renoise. Please [look here](../Installation.md#enable-the-renoise-osc-server) for instructions. 
 
-## How it works 
+## How it works
 
-The Keyboard application can be used as a standard keyboard (visulized as black & white keys in the virtual control surface), or as individually-mapped keys/pads, suitable for grid and pad controllers.
+The Keyboard application can be used as a standard piano keyboard, or with grid/pad controllers.
 
 ![Keyboard_devices](../Images/Keyboard_devices.png)
 

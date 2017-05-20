@@ -19,13 +19,9 @@ This doesn't necessarily mean that you will loose your existing MIDI mappings - 
 
 ### Enable the Renoise OSC Server 
 
-When you first start Duplex, it will attempt to detect if the server is running and show you a message if the server could not be found. The internal OSC server in Renoise will allow Duplex to send MIDI messages to Renoise. Therefore, it needs to be enabled before applications such as Keyboard will work as expected.
+The internal OSC server in Renoise will allow Duplex to trigger notes and send MIDI messages to Renoise. Therefore, it needs to be enabled before applications such as Keyboard will work as expected.  
 
-Enabling the server is done through `Renoise > Preferences > OSC`. You will need to set Duplex to the exact same configuration as Renoise, which by default is the following:
-
-    Protocol: Udp
-    Host: 127.0.0.1
-    Port: 8000
+Enabling the server is done through `Renoise > Preferences > OSC`. You will need to set Duplex to the exact same configuration as Renoise, which can be done through the [options dialog](GettingStarted.md#the-options-dialog). From this dialog, you are also conveniently able to test whether Duplex was able to connect.
 
 #
 
