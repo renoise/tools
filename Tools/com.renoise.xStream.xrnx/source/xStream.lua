@@ -63,7 +63,7 @@ function xStream:__init(...)
   -- xStreamProcess
   self.process = xStreamProcess(self)
   self.xpos.callback_fn = function()
-    self.process:callback()
+    self.process:output()
   end
   self.xpos.refresh_fn = function()
     self.process:refresh()
@@ -99,6 +99,7 @@ function xStream:__init(...)
 
   -- streaming options
   self.suspend_when_hidden = self.prefs.suspend_when_hidden.value
+  xStreamPos.WRITEAHEAD_FACTOR = self.prefs.writeahead_factor
 
   --- xMidiIO, generic MIDI input/output handler
   self.midi_io = xMidiIO{
@@ -532,6 +533,7 @@ end
 -- @return string, -//-
 
 function xStream.parse_callback_type(str_name)
+  TRACE("xStream:parse_callback_type(str_name)",str_name)
 
   if (str_name == "main") then
     return xStreamModel.CB_TYPE.MAIN
