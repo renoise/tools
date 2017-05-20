@@ -69,7 +69,6 @@ function xStreamModels:set_selected_model_index(idx)
     error(("selected_model_index needs to be less than %d"):format(#self.models))
   end
 
-  self.process:clear_schedule()
 
   if (idx == self.selected_model_index_observable.value) then
     return
@@ -87,8 +86,6 @@ function xStreamModels:set_selected_model_index(idx)
   end
   --print("set_selected_model_index - selected_model_index =",idx)
   self.selected_model_index_observable.value = idx
-  self.process.buffer:wipe_futures()
-  self.process:reset()
 
   -- attach notifiers -------------------------------------
 
@@ -130,9 +127,6 @@ function xStreamModels:set_selected_model_index(idx)
     cObservable.attach(self.selected_model.selected_preset_bank_index_observable,preset_bank_notifier)
     preset_bank_notifier()
     self.selected_model.args:fire_startup_arguments()
-    --== update buffer ==--
-    self.process.buffer.callback = self.selected_model.sandbox.callback
-    self.process.buffer.output_tokens = self.selected_model.output_tokens
   end
 
 
@@ -251,12 +245,6 @@ end
 
 function xStreamModels:remove_model(model_idx)
   TRACE("xStreamModels:remove_model(model_idx)",model_idx)
-
-  if (model_idx == self.selected_model_index) then
-    if self.process.active then
-      self.process:stop()
-    end 
-  end
 
   table.remove(self.models,model_idx)
   self.models_observable:remove(model_idx)
