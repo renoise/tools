@@ -48,11 +48,14 @@ function xStreamModel:__init(process)
 
   -- string, text representation of the function 
   self.callback_str = property(self.get_callback_str,self.set_callback_str)
-  self.callback_str_observable = renoise.Document.ObservableString("")
+  --self.callback_str_observable = renoise.Document.ObservableString("")
 
   -- bool, true when the callback is not blank space / comments
   -- (use this to skip processing when not needed...)
   self.callback_contains_code = false
+
+  -- signal when code was succesfully compiled 
+  self.compiled_observable = renoise.Document.ObservableBang()
 
   -- boolean, true when the model definition has been changed
   self.modified = property(self.get_modified,self.set_modified)
@@ -350,7 +353,7 @@ function xStreamModel:set_callback_str(str_fn)
 
   -- check if the callback contain any code at all? 
   self.callback_contains_code = cSandbox.contains_code(str_fn)
-  --print("self.callback_contains_code",self.callback_contains_code,self.name)
+  print("self.callback_contains_code",self.callback_contains_code,self.name)
 
   -- live syntax check
   -- (a bit 'funny'' to set the buffer status from here, but...)
@@ -365,12 +368,12 @@ function xStreamModel:set_callback_str(str_fn)
     self:extract_tokens(xStreamModel.CB_TYPE.MAIN)
 
     -- compile right away? 
-    if self.prefs.live_coding.value then
-      local passed,err = self.sandbox:compile()
-      if not passed then -- should not happen! 
-        LOG("*** "..tostring(err))
-      end
+    local passed,err = self.sandbox:compile()
+    if not passed then -- should not happen! 
+      error("*** "..tostring(err))
     end
+    
+    self.compiled_observable:bang()
 
   else
     LOG(err)

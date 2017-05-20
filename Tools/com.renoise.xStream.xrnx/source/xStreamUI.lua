@@ -1006,9 +1006,7 @@ function xStreamUI:build_callback_panel()
           return
         end
         if self.xstream.selected_model then
-          if self.prefs.live_coding.value then
-            self.user_modified_callback = true
-          end
+          self.user_modified_callback = true
         end
       end,
     },
