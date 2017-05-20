@@ -567,8 +567,6 @@ function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
   end
 
   local tmp_pos -- temp line-by-line position
-
-  -- TODO decide this elsewhere (optimize)
   local patt_num_lines = xPatternSequencer.get_number_of_lines(pos.sequence)
 
   for i = 0,num_lines-1 do
@@ -606,55 +604,63 @@ function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
         
         local phrase = nil
         local xline = self:get_output(xinc+i)
-        local ptrack_auto = nil
-        local last_auto_seq_idx = nil
+        self:write_line(xline,tmp_pos,phrase,patt_num_lines)
 
-        -- check if we can/need to resolve automation        
-        -- TODO re-implement 
-        if type(xline)=="xLine" then
-          local device_param = rns.selected_automation_parameter        
-          if device_param and xline.automation then
-            if (tmp_pos.sequence ~= last_auto_seq_idx) then
-              last_auto_seq_idx = tmp_pos.sequence
-              ptrack_auto = self:resolve_automation(tmp_pos.sequence)
-            end
-            --print("*** ptrack_auto",ptrack_auto)
-            if ptrack_auto then
-              if (device_param.value_quantum == 0) then
-                ptrack_auto.playmode = self.automation_playmode
-              end
-            end
-          end
-        end
-
-        if type(xline)=="xLine" then
-          local success,err = pcall(function()
-            xline:do_write(
-              tmp_pos.sequence,
-              tmp_pos.line,
-              self.track_index,
-              phrase,
-              ptrack_auto,
-              patt_num_lines,
-              self.output_tokens,
-              self.include_hidden,
-              self.expand_columns,
-              self.clear_undefined)
-          end)
-
-          if not success then
-            LOG("*** WARNING: an error occurred while writing pattern-line - "..err)
-          end
-
-        else
-          LOG("*** Expected an instance of xline for output")
-        end
       end
 
     end    
   end
 
 end
+
+-------------------------------------------------------------------------------
+
+function xStreamBuffer:write_line(xline,pos,phrase,patt_num_lines)
+  
+  if (type(xline)~="xLine") then
+    LOG("*** Expected an instance of xline for output")
+    return
+  end
+
+  local ptrack_auto = nil
+  local last_auto_seq_idx = nil
+
+  -- check if we can/need to resolve automation        
+  if type(xline)=="xLine" then
+    local device_param = rns.selected_automation_parameter        
+    if device_param and xline.automation then
+      if (pos.sequence ~= last_auto_seq_idx) then
+        last_auto_seq_idx = pos.sequence
+        ptrack_auto = self:resolve_automation(pos.sequence)
+      end
+      --print("*** ptrack_auto",ptrack_auto)
+      if ptrack_auto then
+        if (device_param.value_quantum == 0) then
+          ptrack_auto.playmode = self.automation_playmode
+        end
+      end
+    end
+  end
+
+  local success,err = pcall(function()
+    xline:do_write(
+      pos.sequence,
+      pos.line,
+      self.track_index,
+      phrase,
+      ptrack_auto,
+      patt_num_lines,
+      self.output_tokens,
+      self.include_hidden,
+      self.expand_columns,
+      self.clear_undefined)
+  end)
+
+  if not success then
+    LOG("*** WARNING: an error occurred while writing pattern-line - "..err)
+  end
+
+end        
 
 -------------------------------------------------------------------------------
 -- Resolve or create automation for parameter in the provided seq-index
