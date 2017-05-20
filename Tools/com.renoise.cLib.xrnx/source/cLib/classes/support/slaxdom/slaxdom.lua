@@ -1,7 +1,6 @@
 -- Optional parser that creates a flat DOM from parsing
 --local SLAXML = require 'slaxml'
 function SLAXML:dom(xml,opts)
-  print(">>> got here...",xml,opts)
 	if not opts then opts={} end
 	local rich = not opts.simple
 	local push, pop = table.insert, table.remove
