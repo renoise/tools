@@ -56,16 +56,39 @@ xSongPos.DEFAULT_LOOP_MODE = xSongPos.LOOP_BOUNDARY.SOFT
 xSongPos.DEFAULT_BLOCK_MODE = xSongPos.BLOCK_BOUNDARY.SOFT
 
 ---------------------------------------------------------------------------------------------------
--- [Static] convenience method for creating a native SongPos object
+-- [Static] Create a native SongPos object 
 -- @param pos, renoise.SongPos or alike
 -- @return table, renoise.SongPos 
 
 function xSongPos.create(pos)
+  TRACE("xSongPos.create(pos)",pos)
   local rslt = rns.transport.playback_pos
   rslt.sequence = pos.sequence
   rslt.line = pos.line
   return rslt
 end
+
+---------------------------------------------------------------------------------------------------
+-- For convenience, return default settings 
+
+function xSongPos.get_defaults()
+  TRACE("xSongPos.get_defaults()")
+  return {
+    bounds = xSongPos.DEFAULT_BOUNDS_MODE,
+    loop = xSongPos.DEFAULT_LOOP_MODE,
+    block = xSongPos.DEFAULT_BLOCK_MODE,
+  }
+end 
+
+---------------------------------------------------------------------------------------------------
+-- For convenience, apply default settings 
+
+function xSongPos.set_defaults(val)
+  TRACE("xSongPos.set_defaults(val)",val)
+  xSongPos.DEFAULT_BOUNDS_MODE = val.bounds
+  xSongPos.DEFAULT_LOOP_MODE = val.loop
+  xSongPos.DEFAULT_BLOCK_MODE = val.block
+end 
 
 ---------------------------------------------------------------------------------------------------
 -- [Class] Normalize the position, takes us from an 'imaginary' position to one  
