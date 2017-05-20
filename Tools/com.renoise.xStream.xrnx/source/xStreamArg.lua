@@ -209,7 +209,7 @@ function xStreamArg:notifier()
     self:bind_notifier(self.observable.value)
   end
   if self.properties.impacts_buffer then
-    self.model.process.buffer:wipe_futures()
+    self.model.process:recompute()
   end
 
   -- invoke event callbacks (if any)
