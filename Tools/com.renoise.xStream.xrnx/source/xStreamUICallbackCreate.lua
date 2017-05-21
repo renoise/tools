@@ -251,7 +251,7 @@ function xStreamUICallbackCreate:update_dialog()
   TRACE("xStreamUICallbackCreate:update_dialog()")
 
   local vb = self.vb
-  local vb_argument_items = self.xstream.xstream.selected_model.args:get_names()
+  local vb_argument_items = self.xstream.selected_model.args:get_names()
 
   -- update page
 
