@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xStreamProcess
-============================================================================]]--
+===============================================================================================]]--
 --[[
 
 A single streaming process 
@@ -15,7 +15,7 @@ use multiple instances of this class.
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xStreamProcess' 
 
@@ -26,7 +26,7 @@ xStreamProcess.OUTPUT_MODE = {
   SELECTION = 3,
 }
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Constructor
 
 function xStreamProcess:__init(xstream)
@@ -137,9 +137,9 @@ function xStreamProcess:__init(xstream)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Getters/setters
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:get_active()
   return self.active_observable.value
@@ -151,7 +151,7 @@ function xStreamProcess:set_active(val)
   self:maintain_buffer_mute_state()
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:get_muted()
   return self.muted_observable.value
@@ -164,7 +164,7 @@ function xStreamProcess:set_muted(val)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:get_track_index()
   return self.buffer.track_index 
@@ -177,7 +177,7 @@ function xStreamProcess:set_track_index(idx)
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:get_scheduling()
   return self.scheduling_observable.value
@@ -188,39 +188,39 @@ function xStreamProcess:set_scheduling(val)
   self.scheduling_observable.value = val
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:get_scheduled_favorite_index()
   return self.scheduled_favorite_index_observable.value
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:get_scheduled_model_index()
   return self.scheduled_model_index_observable.value
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:get_scheduled_model()
   return self._scheduled_model
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:get_scheduled_preset_index()
   return self.scheduled_preset_index_observable.value
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:get_scheduled_preset_bank_index()
   return self.scheduled_preset_bank_index_observable.value
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Class methods
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Reset is invoked when starting or switching model 
 
 function xStreamProcess:reset()
@@ -232,7 +232,7 @@ function xStreamProcess:reset()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Stop live streaming
 
 function xStreamProcess:stop()
@@ -241,7 +241,7 @@ function xStreamProcess:stop()
   self:clear_schedule()
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Activate live streaming 
 -- @param playmode, renoise.Transport.PLAYMODE
 
@@ -256,7 +256,7 @@ function xStreamProcess:start(playmode)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Called on abrupt position changes - refresh pattern buffer, output 
 
 function xStreamProcess:refresh()
@@ -267,7 +267,7 @@ function xStreamProcess:refresh()
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Called when we need to recompute the immediate output buffer
 -- (for example when some condition that affects the output has changed) 
 
@@ -278,7 +278,7 @@ function xStreamProcess:recompute()
 
 end 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Produce output - can be called periodically
 
 function xStreamProcess:output()
@@ -296,7 +296,7 @@ function xStreamProcess:output()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:maintain_buffer_mute_state()
 
@@ -310,7 +310,7 @@ function xStreamProcess:maintain_buffer_mute_state()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Schedule model or model+preset
 -- @param model_name (string), unique name of model
 -- @param preset_index (int),  preset to dial in - optional
@@ -379,7 +379,7 @@ function xStreamProcess:schedule_item(model_name,preset_index,preset_bank_name)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Schedule, or re-schedule (when external conditions change)
 
 function xStreamProcess:compute_scheduling_pos()
@@ -417,7 +417,7 @@ function xStreamProcess:compute_scheduling_pos()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Invoked when cancelling schedule, or scheduled event has happened
 
 function xStreamProcess:clear_schedule()
@@ -432,7 +432,7 @@ function xStreamProcess:clear_schedule()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Switch to scheduled model/preset
 
 function xStreamProcess:apply_schedule()
@@ -459,7 +459,7 @@ function xStreamProcess:apply_schedule()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Fill pattern-track in selected pattern
  
 function xStreamProcess:fill_track()
@@ -473,7 +473,7 @@ function xStreamProcess:fill_track()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Ensure that selection is valid (not spanning multiple tracks)
 -- @return bool
  
@@ -492,7 +492,7 @@ function xStreamProcess:validate_selection()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Fill pattern-track in selected pattern
 -- @param locally (bool) relative to the top of the pattern
  
@@ -525,7 +525,7 @@ function xStreamProcess:fill_selection(locally)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Write output to a range in the selected pattern,  
 -- temporarily switching to a different set of buffers
 -- @param from_line (int)
@@ -576,7 +576,7 @@ function xStreamProcess:apply_to_range(from_line,to_line,xinc)
 end
 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param arg_name (string), e.g. "tab.my_arg" or "my_arg"
 -- @param val (number/boolean/string)
 
@@ -589,7 +589,7 @@ function xStreamProcess:handle_arg_events(arg_name,val)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param event_key (string), e.g. "midi.note_on"
 -- @param arg (number/boolean/string/table) value to pass 
 
@@ -616,7 +616,7 @@ function xStreamProcess:handle_event(event_key,arg)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:attach_to_model()
   TRACE("xStreamProcess:attach_to_model()")
