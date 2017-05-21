@@ -125,7 +125,7 @@ xvoicemgr.voice_limit = args.voice_limit]],
 print(">>> events.voice.released",xvoicemgr.released_index)
 local voice = xvoices[arg.index]
 local pos,scheduled_xinc = xpos:get_scheduled_pos(args.schedule)
-local xline = xbuffer:get_input(scheduled_xinc)
+local xline = xbuffer:read_from_pattern(scheduled_xinc)
 local note_col = xline.note_columns[voice.note_column_index]
 -- output note-off only when not occupied by note
 if (note_col.note_value >= EMPTY_NOTE_VALUE) then
