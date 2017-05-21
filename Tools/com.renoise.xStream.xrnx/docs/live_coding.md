@@ -3,8 +3,6 @@
 In xStream, it's easy to experiment with code, as it is compiled when entered. This means that you'll get isntant feedback on potential errors. 
 In addition, the code is also running in a 'sandbox', a protected environment which should prevent it from executing potentially harmful instructions such as accessing the file system.   
 
-So, let's dive straight into the exciting stuff! 
-You're encouraged to copy/paste some of this code into xStream, to experience it first-hand.  
 
 ### Creating a model from scratch
 
@@ -17,7 +15,7 @@ That's it - you now have a default, empty model to work with.
 
 We can write pattern data by defining a method as simple as this one:
 
-	-- produce an endless stream of C-4 notes...
+	-- produce an endless stream of C-4 notes..
 	xline.note_columns[1].note_string = "C-4"
 
 The variable `xline` refers to the current line in the track, and `xline.note_columns[1]` provides access to the first note column in that line.   

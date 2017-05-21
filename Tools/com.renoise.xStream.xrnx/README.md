@@ -1,15 +1,23 @@
 # xStream
 
-xStream is a Renoise tool that allows you to generate and transform musical data by using a subset of the lua language.
 
-## [Introduction](...)
+    ██╗  ██╗███████╗████████╗██████╗ ███████╗ █████╗ ███╗   ███╗
+    ╚██╗██╔╝██╔════╝╚══██╔══╝██╔══██╗██╔════╝██╔══██╗████╗ ████║
+     ╚███╔╝ ███████╗   ██║   ██████╔╝█████╗  ███████║██╔████╔██║
+     ██╔██╗ ╚════██║   ██║   ██╔══██╗██╔══╝  ██╔══██║██║╚██╔╝██║
+    ██╔╝ ██╗███████║   ██║   ██║  ██║███████╗██║  ██║██║ ╚═╝ ██║
+    ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝
 
-## [The User-Interface](...)
+xStream is a Renoise tool that allows you to generate and transform musical data in real-time, by using a subset of the lua language.
 
-## [Example Models](...)
+## [Introduction](docs/introduction.md)
 
-## [Known Limitations](...)
+## [User-Interface](docs/user_interface.md)
 
-## [Live Coding with xStream](...)
+## [About Models](docs/about_models.md)
 
-## [xStream Lua Reference](...)
+## [Example Models](docs/example_models.md)
+
+## [Live Coding with xStream](docs/live_coding.md)
+
+## [xStream Lua Reference](docs/lua_reference.md)

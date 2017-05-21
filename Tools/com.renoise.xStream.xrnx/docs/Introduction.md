@@ -12,7 +12,7 @@ If this all sounds rather nerdy - well, it is! But don't worry: the tool comes w
 
 Once you learn what can be achieved with just a few lines of code, you'll probably want to create new scripts (models) from scratch. This is what the later chapter, [Live Coding with xStream](), is all about. 
 
-## Features at a glance...
+## Features at a glance
 
 * **Safe syntax**: the code is running in a sandboxed environment (errors are reported, exploits not possible)
 * **Works online and offline**: the tool is designed for real-time streaming, but works offline too. 
