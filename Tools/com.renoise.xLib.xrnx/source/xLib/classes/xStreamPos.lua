@@ -194,9 +194,9 @@ function xStreamPos:_set_pos(pos)
       --elseif not rns.transport.loop_block_enabled 
       --  and near_block_end(self.playpos.line)  
       --then 
-      --  print(">>> conclusion: block loop (disabled)")
+      --print(">>> conclusion: block loop (disabled)")
       else
-        print(">>> conclusion: crazy navigation")
+        --print(">>> conclusion: crazy navigation")
         local xinc = self.xinc
         --local line_diff = self.playpos.line - pos.line
         self:reset()
@@ -219,7 +219,7 @@ function xStreamPos:_set_pos(pos)
       -- more than writeahead indicates gaps or forward navigation 
       -- (such as when pressing page down...)
       if (line_diff >= writeahead) then
-        print(">>> conclusion: forward navigation - line_diff",line_diff)
+        --print(">>> conclusion: forward navigation - line_diff",line_diff)
         --self:_increase_by(line_diff)
         if self.refresh_fn then
           self.refresh_fn()

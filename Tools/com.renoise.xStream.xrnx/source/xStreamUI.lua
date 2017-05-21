@@ -300,7 +300,7 @@ end
 --------------------------------------------------------------------------------
 
 function xStreamUI:update_play_button()
-  print(">>> xStreamUI:update_play_button()")
+  TRACE(">>> xStreamUI:update_play_button()")
   local vb = self.vb
   local view = vb.views["xStreamStartPlayButton"]
   local color = rns.transport.playing

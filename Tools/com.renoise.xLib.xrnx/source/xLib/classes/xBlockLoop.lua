@@ -98,7 +98,7 @@ function xBlockLoop.get_block_index(seq_idx,line_idx)
   TRACE("xBlockLoop.get_block_index(seq_idx,line_idx)",seq_idx,line_idx)
 
   local block_lines,num_lines = xBlockLoop.get_block_lines(seq_idx)
-  print(">>> block_lines,num_lines",block_lines,num_lines)
+  --print(">>> block_lines,num_lines",block_lines,num_lines)
   if block_lines then 
     local total_blocks = math.floor(num_lines/block_lines)
     return math.ceil((line_idx/num_lines)*total_blocks),num_lines
@@ -271,7 +271,7 @@ function xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
 
   local line_count = end_line - start_line 
   local ideal_coeff = math.floor(num_lines/line_count)
-  print(">>> normalize_line_range - ideal_coeff",ideal_coeff)
+  --print(">>> normalize_line_range - ideal_coeff",ideal_coeff)
 
   -- locate matching or closest coeff.
   local effective_coeff = nil  
@@ -290,8 +290,8 @@ function xBlockLoop.normalize_line_range(start_line,end_line,num_lines,coeffs)
     end
   end
 
-  print(">>> normalize_line_range - matched_coeff",matched_coeff)
-  print(">>> normalize_line_range - closest_match",closest_match)
+  --print(">>> normalize_line_range - matched_coeff",matched_coeff)
+  --print(">>> normalize_line_range - closest_match",closest_match)
 
   -- if not a valid coefficient, expand to nearest 
   if not matched_coeff then

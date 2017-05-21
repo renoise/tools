@@ -306,7 +306,7 @@ end
 -- Set active state of processes
 
 function xStream:set_active(val)
-  print("xStream:set_active(val)",val)
+  TRACE("xStream:set_active(val)",val)
   self.process.active = val
 end
 

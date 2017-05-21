@@ -353,7 +353,7 @@ function xStreamModel:set_callback_str(str_fn)
 
   -- check if the callback contain any code at all? 
   self.callback_contains_code = cSandbox.contains_code(str_fn)
-  print("self.callback_contains_code",self.callback_contains_code,self.name)
+  --print("self.callback_contains_code",self.callback_contains_code,self.name)
 
   -- live syntax check
   -- (a bit 'funny'' to set the buffer status from here, but...)
