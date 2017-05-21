@@ -5,41 +5,41 @@ Demo-Increment.lua
 return {
 arguments = {
   {
+      ["description"] = "",
+      ["linked"] = false,
       ["locked"] = false,
       ["name"] = "volume",
-      ["linked"] = false,
-      ["value"] = 0,
       ["properties"] = {
-          ["zero_based"] = false,
-          ["max"] = 100,
           ["display_as"] = "hex",
+          ["max"] = 100,
           ["min"] = 0,
+          ["zero_based"] = false,
       },
-      ["description"] = "",
+      ["value"] = 93,
   },
   {
+      ["description"] = "",
+      ["linked"] = false,
       ["locked"] = false,
       ["name"] = "basenote",
-      ["linked"] = false,
-      ["value"] = 38.2,
       ["properties"] = {
-          ["min"] = 0,
-          ["fire_on_start"] = false,
           ["display_as"] = "note",
+          ["fire_on_start"] = false,
           ["max"] = 120,
+          ["min"] = 0,
       },
-      ["description"] = "",
+      ["value"] = 58.2,
   },
 },
 presets = {
   {
-      ["name"] = "C-4",
       ["basenote"] = 48.2,
+      ["name"] = "C-4",
       ["volume"] = 37,
   },
   {
-      ["name"] = "D-3",
       ["basenote"] = 38.2,
+      ["name"] = "D-3",
       ["volume"] = 0,
   },
 },
@@ -59,7 +59,7 @@ callback = [[
 -- here we use xinc to loop through 8 notes, using the 'modulo' operator
 xline.note_columns[1] = {
   note_value = args.basenote + xinc%8,
-  volume_value = args.volume
+  volume_value = (args.volume+xinc)%0x40
 }
 ]],
 }
