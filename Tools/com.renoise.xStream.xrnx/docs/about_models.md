@@ -1,63 +1,38 @@
 # About Models
 
-Models are small piece of code, able to respond to events and transform/generate streaming pattern data. Essentially, xStream is nothing more than a platform for launching these models. 
+Models are small piece of code that xStream use for transforming and generating pattern data. 
 
-### A model is able to do the following:
+And obviously, the focus in xStream is very much on the 'coding' aspect - creating some logic and getting interesting results from it. But a model can be put together by more than a single lua function. 
 
-* Respond to user events (e.g. MIDI Input).
-* Poll/observe properties in Renoise (e.g. 'which note column is selected?').
-* Transform/generate pattern data. 
+To learn how models are structured, read on. Each of these chapters deal with their most important aspects:
 
-## Arguments
+## [Live coding](live_coding_intro.md)
 
-Add arguments to a model to change any given value while the model is running. For example, the base-note or velocity would be something you'd typically want to adjust on the fly - and arguments are shown in the user-interface as sliders, checkboxes etc. 
+* Getting comfortable with the `main` method
+* Sub-methods and data
 
-From the code, you can reference arguments by their name, e.g. "args.my_volume". 
+## [Model arguments](model_arguments.md)
 
-> Note that it is possible to both specify (set) and retrieve (get) the value of an argument through code. The user-interface will update to reflect a value which has been set through code.
+* Control a model using visual components (knob,slider,etc.)
+* Organize arguments in tabbed panels
+* Can be bound to the Renoise API
 
-An argument can be one of the following basic types: 
+## [Model events](model_events.md)
 
-    number 
-    boolean
-    string
+* Track changes in model (arguments)
+* Track changes in Renoise API
+* Respond to MIDI Input 
 
-Additionally, you can choose how to _display_ the argument. 
 
-    float
-    hex
-    integer
-    percent
-    note
-    popup
-    chooser
-    switch
-    minislider
-    rotary
-    checkbox
-    textfield
-    value
+## [File formats](...)
 
-### Tabbed arguments
+* Easily exchangable, plain-text based
+* Lua or XML 
 
-When there are too many arguments to fit on the screen, you can organize them in a tabbed interface, simply by prefixing the name with the tab name. 
 
-For example, "voice1.volume" and "voice2.volume" will create two tabs, labelled `voice1` and `voice2`, and add a volume inside each one. 
 
-From your code, you simply reference them with their full name, e.g. "voice1.volume".
 
-## User Data 
 
-Data are values that the model can use while it is running. Data can be added through the UI, and is especially useful for initializing a value to some initial state.
 
-Data can be specified as one of the following types:
 
-    number
-    table
-    boolean
-    string
-    function
 
-## Events
-
-Events allow you to 

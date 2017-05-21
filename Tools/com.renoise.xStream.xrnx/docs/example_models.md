@@ -15,5 +15,5 @@ Here are a few examples to give you a taste of what xStream can be used for:
 ## Further reading
 
 See [About Models](about_models.md) to learn how models work, what they can do.  
-See [Live Coding in xStream](live_coding.md) to write your first model.  
+See [Live Coding in xStream](live_coding_intro.md) to write your first model.  
 See [xStream Lua Reference](lua_reference.md) to learn about properties and methods.  
