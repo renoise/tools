@@ -146,7 +146,7 @@ function xStreamProcess:get_active()
 end
 
 function xStreamProcess:set_active(val)
-  print("xStreamProcess:set_active(val)",val)
+  TRACE("xStreamProcess:set_active(val)",val)
   self.active_observable.value = val
   self:maintain_buffer_mute_state()
 end
@@ -224,7 +224,7 @@ end
 -- Reset is invoked when starting or switching model 
 
 function xStreamProcess:reset()
-  print("xStreamProcess:reset()")
+  TRACE("xStreamProcess:reset()")
 
   --self.buffer:wipe_futures()
   self.buffer:clear()
@@ -236,7 +236,7 @@ end
 -- Stop live streaming
 
 function xStreamProcess:stop()
-  print("xStreamProcess:stop()")
+  TRACE("xStreamProcess:stop()")
   self.active = false
   self:clear_schedule()
 end
@@ -626,7 +626,7 @@ function xStreamProcess:attach_to_model()
   end 
 
   local compiled_notifier = function()
-    print(">>> xStreamProcess:attach_to_model - compiled_notifier fired...")
+    TRACE("xStreamProcess:attach_to_model - compiled_notifier fired...")
     local model = self.models.selected_model
     self.buffer.callback = model.sandbox.callback
     self.buffer.output_tokens = model.output_tokens
