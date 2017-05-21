@@ -22,6 +22,7 @@ cFilesystem.FILETYPE = {
 --------------------------------------------------------------------------------
 
 function cFilesystem.get_userdata_folder()
+  TRACE("cFilesystem.get_userdata_folder()")
 
   local search_path = (os.platform() == "WINDOWS")
     and "\\Scripts\\Libraries\\?.lua"
@@ -44,6 +45,7 @@ end
 --------------------------------------------------------------------------------
 
 function cFilesystem.get_resource_folder()
+  TRACE("cFilesystem.get_resource_folder()")
 
   local search_path = (os.platform() == "WINDOWS")
     and "\\Scripts\\Libraries\\?.lua"
@@ -72,6 +74,7 @@ end
 -- @return string, extension
 
 function cFilesystem.get_path_parts(file_path)
+  TRACE("cFilesystem.get_path_parts()")
 
   cFilesystem.assert_string(file_path,"file_path")
 
@@ -97,6 +100,7 @@ end
 -- @return string or nil
 
 function cFilesystem.get_raw_filename(file_path)
+  TRACE("cFilesystem.get_raw_filename(file_path)",file_path)
 
   cFilesystem.assert_string(file_path,"file_path")
 
@@ -120,6 +124,7 @@ end
 -- note: this is a virtual function which doesn't require I/O access 
 
 function cFilesystem.is_root_folder(str)
+  TRACE("cFilesystem.is_root_folder(str)",str)
 
   cFilesystem.assert_string(str,"str")
 
@@ -143,6 +148,7 @@ end
 -- @return int, error code
 
 function cFilesystem.get_parent_directory(file_path)
+  TRACE("cFilesystem.get_parent_directory(file_path)",file_path)
 
   cFilesystem.assert_string(file_path,"file_path")
 
@@ -164,6 +170,7 @@ end
 -- @return boolean,string
 
 function cFilesystem.copy_file(file_in,file_out)
+  TRACE("cFilesystem.copy_file(file_in,file_out)",file_in,file_out)
 
   local infile = io.open(file_in, "r")
   local instr = infile:read("*a")
@@ -180,6 +187,7 @@ end
 -- @param file_path (string)
 
 function cFilesystem.ensure_unique_filename(file_path)
+  TRACE("cFilesystem.ensure_unique_filename(file_path)",file_path)
 
   cFilesystem.assert_string(file_path,"file_path")
 
@@ -211,6 +219,7 @@ end
 -- @return table<string>
 
 function cFilesystem.get_directories(file_path)
+  TRACE("cFilesystem.get_directories(file_path)",file_path)
 
   cFilesystem.assert_string(file_path,"file_path")
 
@@ -239,6 +248,7 @@ end
 -- @return string, error message when failed
 
 function cFilesystem.makedir(file_path)
+  TRACE("cFilesystem.makedir(file_path)",file_path)
 
   cFilesystem.assert_string(file_path,"file_path")
 
@@ -277,6 +287,7 @@ end
 --    "merge" - for existing folders
 
 function cFilesystem.rename(old_f,new_f)
+  TRACE("cFilesystem.rename(old_f,new_f)",old_f,new_f)
 
   cFilesystem.assert_string(old_f,"old_f")
   cFilesystem.assert_string(new_f,"new_f")
@@ -294,6 +305,7 @@ end
 -- @return string, error message when failed
 
 function cFilesystem.rmdir(folder_path)
+  TRACE("cFilesystem.rmdir(folder_path)",folder_path)
 
   cFilesystem.assert_string(folder_path,"folder_path")
 
@@ -326,6 +338,7 @@ end
 -- @return bool,string
 
 function cFilesystem.validate_filename(file_path)
+  TRACE("cFilesystem.validate_filename(file_path)",file_path)
 
   cFilesystem.assert_string(file_path,"file_path")
 
@@ -348,6 +361,7 @@ end
 -- @return string
 
 function cFilesystem.unixslashes(file_path)
+  TRACE("cFilesystem.unixslashes(file_path)",file_path)
 
   local str = file_path:gsub("\\","/")
   return str:gsub("/+","/")
@@ -360,6 +374,7 @@ end
 -- @return string
 
 function cFilesystem.sanitize_filename(file_path)
+  TRACE("cFilesystem.sanitize_filename(file_path)",file_path)
 
   cFilesystem.assert_string(file_path,"file_path")
 
@@ -375,6 +390,7 @@ end
 -- @return string
 
 function cFilesystem.file_add_extension(file_path,extension)
+  TRACE("cFilesystem.file_add_extension(file_path,extension)",file_path,extension)
 
   cFilesystem.assert_string(file_path,"file_path")
   cFilesystem.assert_string(extension,"extension")
@@ -396,6 +412,7 @@ end
 -- @return string
 
 function cFilesystem.file_strip_extension(file_path,extension)
+  TRACE("cFilesystem.file_strip_extension(file_path,extension)",file_path,extension)
 
   cFilesystem.assert_string(file_path,"file_path")
   cFilesystem.assert_string(extension,"extension")
@@ -416,6 +433,7 @@ end
 -- so widely used it got it's own function
 
 function cFilesystem.assert_string(str,str_name)
+  TRACE("cFilesystem.assert_string(str,str_name)",str,str_name)
 
   assert(str,"No "..str_name.." specified")
   assert(type(str)=="string",str_name..": expected string, got"..type(str))
@@ -426,6 +444,7 @@ end
 -- load string from disk
 
 function cFilesystem.load_string(file_path)
+  TRACE("cFilesystem.load_string(file_path)",file_path)
 
   local handle,err = io.open(file_path,"r")
   if not handle then
@@ -457,6 +476,7 @@ end
 -- @return table<string> 
 
 function cFilesystem.list_files(str_path,file_ext,include_path)
+  TRACE("cFilesystem.list_files(str_path,file_ext,include_path)",str_path,file_ext,include_path)
 
   cFilesystem.assert_string(str_path,"str_path")
 
@@ -490,6 +510,7 @@ end
 -- @return string, error message when failed
 
 function cFilesystem.write_string_to_file(file_path,str)
+  TRACE("cFilesystem.write_string_to_file(file_path,str)",file_path,str)
 
   cFilesystem.assert_string(file_path,"file_path")
 
@@ -523,6 +544,7 @@ end
 -- @param level (int) 
 
 function cFilesystem.recurse(str_path,callback_fn,file_ext,level)
+  TRACE("cFilesystem.recurse(str_path,callback_fn,file_ext,level)",str_path,callback_fn,file_ext,level)
 
   if not file_ext then
     file_ext = {"*.*"}
