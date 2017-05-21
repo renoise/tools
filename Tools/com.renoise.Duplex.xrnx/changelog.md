@@ -10,6 +10,7 @@
 - Fixed: StepSequencer - could throw error when navigating to non-selected pattern
 - Fixed: StepSequencer - force-remove all observables, some performance tweaks 
 - Fixed: Keyboard - HarmonicWrapped layout + scales no longer shows duplicate notes
+- Fixed: Navigator - more stable when switching between non-/selected patterns
 - Changed: don't run OSC server test by default. Can still be run from options
 - Updated Mlrx configuration for Launchpad (now includes all mappings)
 - Deprecated UIKeyPressure, UIPitchBend (using UISlider instead)
