@@ -103,7 +103,7 @@ function xStreamBuffer:__init(xpos)
   --- table<xLine/descriptor>, buffer containing the output
   self.output_buffer = nil
   --- table<xLine/descriptor>, buffer containing scheduled events
-  self.scheduled = nil
+  --self.scheduled = nil
 
   --- int, keep track of the highest/lowest line in our output buffer
   -- (content that is up to date and ready for output)
@@ -216,7 +216,7 @@ function xStreamBuffer:_wipe_past()
   for i = from_idx,self.lowest_xinc,-1 do
     self.output_buffer[i] = nil
     self.pattern_buffer[i] = nil
-    self.scheduled[i] = nil    
+    --self.scheduled[i] = nil    
     --print("*** _wipe_past - cleared buffers at ",i)
   end
   self.lowest_xinc = from_idx
@@ -237,7 +237,7 @@ function xStreamBuffer:wipe_futures()
   --print("*** xStreamBuffer:wipe_futures - wiping from",from_idx,"to",self.highest_xinc)
   for i = from_idx,self.highest_xinc do
     self.output_buffer[i] = nil
-    self.scheduled[i] = nil    
+    --self.scheduled[i] = nil    
   end
   self.highest_xinc = self.xpos.xinc
   --print("*** xStreamBuffer:wipe_futures - self.highest_xinc",self.highest_xinc)
@@ -258,7 +258,7 @@ function xStreamBuffer:clear()
 
   self.pattern_buffer = {}
   self.output_buffer = {}
-  self.scheduled = {}
+  --self.scheduled = {}
   self.output_tokens = {}
 
   self.xpos:reset()
@@ -291,17 +291,21 @@ function xStreamBuffer:schedule_line(xline,xinc)
   local delta = xinc - xinc
   local writeahead = xStreamPos.determine_writeahead()
 
-  self.scheduled[xinc] = xline
+  --self.scheduled[xinc] = xline
+  self:set_buffer(xinc,xline)
 
   if (delta <= writeahead) then
     if (delta == 1) then
       --print("*** immediate output")
       self:immediate_output()
+    end
+      --[[
     else
       -- within output range - insert into output_buffer
       self.output_buffer[xinc] = xLine.apply_descriptor(xline)
       self.highest_xinc = math.max(xinc,self.highest_xinc)
     end
+    ]]
   end
 
 end
@@ -452,13 +456,15 @@ function xStreamBuffer:_create_content(num_lines)
       -- we might have redefined the xline in the callback - 
       -- convert into class instances in order to validate 
       local success,err = pcall(function()
-        self.output_buffer[xinc] = xLine.apply_descriptor(xline)
+        --self.output_buffer[xinc] = xLine.apply_descriptor(xline)
+        self:set_buffer(xinc,xline)
       end)
       if not success and err then
         LOG("*** Error: could not convert xline - "..err)
-        self.output_buffer[xinc] = self.empty_xline
+        --self.output_buffer[xinc] = self.empty_xline
+        self:set_buffer(xinc,self.empty_xline)
       end
-      self.highest_xinc = math.max(xinc,self.highest_xinc)
+      --self.highest_xinc = math.max(xinc,self.highest_xinc)
     end
 
     local travelled = xSongPos.increase_by_lines(1,pos)
@@ -467,6 +473,75 @@ function xStreamBuffer:_create_content(num_lines)
   end
 
 end
+
+---------------------------------------------------------------------------------------------------
+-- Retrieve content (scheduled or regular output) 
+-- @return table, xLine/descriptor
+
+function xStreamBuffer:get_output(xinc)
+  TRACE("xStreamBuffer:get_output(xinc)",xinc)
+
+  local xline = nil
+  if self.mute_xinc and (xinc > self.mute_xinc) then
+    --print(">>> get_output - silence following mute",xinc)
+    xline = self.empty_xline
+    --[[
+  elseif self.scheduled[xinc] then
+    --print(">>> get_output - scheduled output",xinc)
+    xline = self.scheduled[xinc]
+    ]]
+  else
+    --print(">>> get_output - regular output",xinc)
+    xline = self.output_buffer[xinc]   
+  end
+
+  if (type(xline)=="table") then
+    xline = xLine.apply_descriptor(xline)
+  end
+
+  return xline
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Set output for a given position
+-- @param xinc (int)
+-- @param xline (xLine or table) the content to insert 
+
+function xStreamBuffer:set_buffer(xinc,xline)
+  TRACE("xStreamBuffer:set_buffer(xinc,xline)")
+
+  self.output_buffer[xinc] = xline
+  self.highest_xinc = math.max(xinc,self.highest_xinc)
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Read a line from the pattern (or pattern buffer)
+-- @param xinc (int), the buffer position
+-- @param [pos] (SongPos), where to read from song
+-- @return xLine, xline descriptor (never nil)
+
+function xStreamBuffer:read_from_pattern(xinc,pos)
+  TRACE("xStreamBuffer:read_from_pattern(xinc,pos)",xinc,pos)
+
+  assert(type(xinc)=="number","Expected 'xinc' to be a number")
+
+  local xline = nil
+  if pos then
+    xline = xLine.do_read(pos.sequence,pos.line,self.include_hidden,self.track_index)    
+    self.pattern_buffer[xinc] = table.rcopy(xline) 
+  else 
+    xline = self.pattern_buffer[xinc]
+  end
+  if not xline then
+    xline = self.empty_xline
+  end
+
+  return xline
+
+end
+
 
 ---------------------------------------------------------------------------------------------------
 -- For time-critical situations, perform immediate output for the upcoming line
@@ -511,7 +586,7 @@ function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
   -- generate new content as needed
   for i = 0,num_lines do
     if not self.output_buffer[i+xinc] 
-      and not self.scheduled[i+xinc]
+      --and not self.scheduled[i+xinc]
     then
       self:_create_content(i+xinc)
     end
@@ -636,57 +711,4 @@ function xStreamBuffer:resolve_automation(seq_idx)
 
 end
 
-
----------------------------------------------------------------------------------------------------
--- Retrieve content (scheduled or regular output) 
--- @return table, xLine/descriptor
-
-function xStreamBuffer:get_output(xinc)
-  TRACE("xStreamBuffer:get_output(xinc)",xinc)
-
-  local xline = nil
-  if self.mute_xinc and (xinc > self.mute_xinc) then
-    --print(">>> get_output - silence following mute",xinc)
-    xline = self.empty_xline
-  elseif self.scheduled[xinc] then
-    --print(">>> get_output - scheduled output",xinc)
-    xline = self.scheduled[xinc]
-  else
-    --print(">>> get_output - regular output",xinc)
-    xline = self.output_buffer[xinc]   
-  end
-
-  if (type(xline)=="table") then
-    xline = xLine.apply_descriptor(xline)
-  end
-
-  return xline
-
-end
-
----------------------------------------------------------------------------------------------------
--- Read a line from the pattern (or pattern buffer)
--- @param xinc (int), the buffer position
--- @param [pos] (SongPos), where to read from song
--- @return xLine, xline descriptor (never nil)
-
-function xStreamBuffer:read_from_pattern(xinc,pos)
-  TRACE("xStreamBuffer:read_from_pattern(xinc,pos)",xinc,pos)
-
-  assert(type(xinc)=="number","Expected 'xinc' to be a number")
-
-  local xline = nil
-  if pos then
-    xline = xLine.do_read(pos.sequence,pos.line,self.include_hidden,self.track_index)    
-    self.pattern_buffer[xinc] = table.rcopy(xline) 
-  else 
-    xline = self.pattern_buffer[xinc]
-  end
-  if not xline then
-    xline = self.empty_xline
-  end
-
-  return xline
-
-end
 
