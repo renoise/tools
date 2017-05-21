@@ -44,7 +44,6 @@ function SLAXML:dom(xml,opts)
 		end
 	}
 	builder:parse(xml,opts)
-  print(">>> got here...doc",doc)
 	return doc
 end
 return SLAXML
