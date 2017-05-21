@@ -2,13 +2,13 @@
 
 xStream is deep, but once you get familiar with the interface it will seem a lot less intimidating. Also, the state is saved between sessions, to make it easy to pick up where you left off. 
  
-<img src="./manual/screenshot.png"> 
+<img src="./images/screenshot.png"> 
 
 Each major part of the user interface (code editor, presets, arguments) contain a small arrow in the top-left corner. This allows you to expand or contract that particular part of the interface, making the tool take up much less space on your screen. 
 
 ### Global toolbar 
 
-<img src="./manual/global_toolbar.png"> 
+<img src="./images/global_toolbar.png"> 
 
 1. **Play** 	  - Activate streaming and (re-)start playback [Space]
 * **Status** 	  - Toggle whether streaming is active
@@ -23,7 +23,7 @@ Each major part of the user interface (code editor, presets, arguments) contain 
 
 The model toolbar is located just beneath the global toolbar, and provides access to all loaded models. 
 
-<img src="./manual/model_toolbar.png"> 
+<img src="./images/model_toolbar.png"> 
 
 1. **Color** - color makes it easier to recognize the model among favorites (click for color picker)
 2. **Favorite** - add (or remove) the selected model to the [Favorites](#favorites-dialog)
@@ -39,7 +39,7 @@ The model toolbar is located just beneath the global toolbar, and provides acces
 
 The favorites grid provides a visual overview of the models and presets that you want quick access to.
 
-<img src="./manual/favorites_grid.png"> 
+<img src="./images/favorites_grid.png"> 
 
 Note that the grid is fully MIDI mappable (CMD/CTRL+M) and can be triggered via keyboard shortcuts (Renoise Preferences > Keys, search for 'xstream'). 
 
@@ -61,7 +61,7 @@ Click the 'Edit' checkbox to enter editing mode, with a number of options for ea
 
 The code editor is where it all comes together. By default, the editor will show the _main loop_ of the currently active model.  
 
-<img src="./manual/code_editor.png"> 
+<img src="./images/code_editor.png"> 
 
 |Name|Description|
 |----|-----------|
@@ -76,13 +76,13 @@ The code editor is where it all comes together. By default, the editor will show
 
 Clicking the '+' button in the code editor will bring up the Events & Userdata dialog. Here you can add predefined data or set up event handlers for your model:
 
-<img src="./manual/callback_dialog.png">
+<img src="./images/callback_dialog.png">
 
 ##### Event dialog
 
 This page contains every type of event which is accessible to you. 
 
-<img src="./manual/callback_dialog_events.png">  
+<img src="./images/callback_dialog_events.png">  
 _Event dialog showing the model events selector_ 
 
 
@@ -92,7 +92,7 @@ _Event dialog showing the model events selector_
 
 ##### Userdata dialog
 
-<img src="./manual/callback_dialog_userdata.png">
+<img src="./images/callback_dialog_userdata.png">
 
 This page simply asks you to specify a name for your userdata. The name has to be unique (not already in use) and a valid Lua identifier (normal latin characters, and not beginning with a number). You can choose a type too, such as `number` or `string`. 
 
@@ -103,7 +103,7 @@ When you press 'Done', a small code template is generated, according to the type
 
 #### Preset banks
 
-<img src="./manual/preset_bank.png"> 
+<img src="./images/preset_bank.png"> 
 
 1. **Bank select** - as a minimum, any model always contain a 'default' (internal) preset bank
 * **Remove bank** - click to remove the bank (note that you can't remove the default bank)
@@ -114,7 +114,7 @@ When you press 'Done', a small code template is generated, according to the type
 
 #### Presets
 
-<img src="./manual/presets.png"> 
+<img src="./images/presets.png"> 
 
 1. **Preset select** - click to choose among the available presets
 * **Remove preset** - click to remove the preset 
@@ -127,12 +127,12 @@ When you press 'Done', a small code template is generated, according to the type
 
 In addition to the presets (see above), you can click the arrow in the corner to show the preset list. This list will allow you to **schedule** a preset by clicking the small 'play' button, or **rearrange** items by clicking the up/down arrows. 
 
-<img src="./manual/preset_list.png"> 
+<img src="./images/preset_list.png"> 
 
 
 ### Arguments
 
-<img src="./manual/arguments.png"> 
+<img src="./images/arguments.png"> 
 
 1. **Add argument** - Click to add a new argument to the selected model. 
 * **Move up** - Push the selected argument up in the list
@@ -144,7 +144,7 @@ In addition to the presets (see above), you can click the arrow in the corner to
 
 The argument-list is visible when you have expanded the arguments panel using the arrow in the corner. The list contains the following features: 
 
-<img src="./manual/argument_list.png"> 
+<img src="./images/argument_list.png"> 
 
 1. **Lock** - Click the small checkbox to lock the argument. This will prevent it from changing as you apply random values to arguments, load presets or when the argument is set to poll/bind values from Renoise 
 * **Name** - The name that has been assigned to the argument. This is also the name used for identifying the argument within the code editor. Click the name to select the argument.
@@ -157,7 +157,7 @@ The argument-list is visible when you have expanded the arguments panel using th
 
 When your model has a lot of arguments, it can be practical to organize things in tabs. To do this, xStream supports the use of dot.syntax. Simply prepend the name of the tab to your argument like this: `args.my_tab_name.my_arg_name` - and the tab will be created automatically. 
 
-<img src="./manual/argument_tabbed.png">  
+<img src="./images/argument_tabbed.png">  
 _Example of two tabs_
 
 Note that dot syntax is limited to one dot in a argument name. Oh, and each part (tab and argument) both need to be valid Lua identifiers - so, no special characters or names starting with numbers.
@@ -166,7 +166,7 @@ Note that dot syntax is limited to one dot in a argument name. Oh, and each part
 
 Arguments can be edited by pressing the 'Edit' button in the Arguments panel. Each argument can contain a combination of these fields:
 
-<img src="./manual/argument_editor.png"> 
+<img src="./images/argument_editor.png"> 
 
 
 1. **name** - Provide a name for the argument. The name you assign is used as an identifier in the output method - for example, `args.my_argument_name`   
@@ -186,7 +186,7 @@ Arguments can be edited by pressing the 'Edit' button in the Arguments panel. Ea
 
 #### General Options
 
-<img src="./manual/options_general.png"> 
+<img src="./images/options_general.png"> 
 
 **Autostart tool:** enable this option to automatically launch xStream when Renoise starts  
 
@@ -198,7 +198,7 @@ Arguments can be edited by pressing the 'Edit' button in the Arguments panel. Ea
 
 #### Streaming Options
 
-<img src="./manual/options_streaming.png"> 
+<img src="./images/options_streaming.png"> 
 
 **Suspend streaming while hidden:** if you are not planning to use the streaming feature while the main GUI is hidden, enable this checkbox. Triggering favorites will still work, but only while playback is stopped (offline mode, apply to track/selection). 
 
@@ -221,7 +221,7 @@ Arguments can be edited by pressing the 'Edit' button in the Arguments panel. Ea
 
 #### MIDI Options
 
-<img src="./manual/options_midi.png"> 
+<img src="./images/options_midi.png"> 
 
 Here you can select which MIDI input and output devices to use, configure the internal MIDI routing and finetune how MIDI messages are interpreted by xStream.
 
@@ -230,7 +230,7 @@ Once you have enabled some devices, all your models will be able to respond to i
 
 #### Output Options
 
-<img src="./manual/options_output.png"> 
+<img src="./images/options_output.png"> 
 
 These settings decide how output is written to the pattern editor/automation lane. Note that each model can override these values - they are only provided as sensible defaults. 
 
