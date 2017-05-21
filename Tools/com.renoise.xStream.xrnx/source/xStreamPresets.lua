@@ -431,26 +431,19 @@ function xStreamPresets:import(file_path,clear_existing)
   local last_inserted_preset_index = 0
 
   local arg_names = self.model.args:get_names()
-  --[[
-  local arg_names = {}
-  for _,arg in ipairs(self.model.args.args) do
-    table.insert(arg_names,arg.name)
-  end
-  ]]
-  print(">>> arg_names",rprint(arg_names))
 
   for _,v in ipairs(rslt.kids) do
     if (v.name == "xStreamPresets") then
       for __,v2 in ipairs(v.kids) do
-        print(">>> v2",v2)
+        --print(">>> v2",v2)
         if (v2.name == "Presets") then
           for k3,v3 in ipairs(v2.kids) do
-            print(">>> v3",v3)
+            --print(">>> v3",v3)
             if (v3.name == "Preset") then
               local preset = {}
               local preset_name = ""
               for ___,v4 in ipairs(v3.kids) do
-                print(">>> v4",v4)
+                --print(">>> v4",v4)
                 if (v4.name == "name") then
                   -- name is a special entry
                   preset_name = v4.kids[1] and v4.kids[1].value
@@ -458,7 +451,7 @@ function xStreamPresets:import(file_path,clear_existing)
                 else
                   local arg_name = xStreamPresets.parse_xml_arg_name(v4.name)
                   local arg_index = table.find(arg_names,arg_name)
-                  print(">>> arg_name,arg_index",arg_name,arg_index)
+                  --print(">>> arg_name,arg_index",arg_name,arg_index)
                   if arg_index then
                     -- make sure we cast to right type, 
                     -- as XML are always defined as strings
@@ -556,12 +549,12 @@ function xStreamPresets:export(file_path)
   for k,v in ipairs(self.presets) do
     local node = renoise.Document.create("xStreamPreset"){}
     for k2,v2 in pairs(v) do
-      print("add_property",k2,v2)
+      --print("add_property",k2,v2)
       local safe_name = xStreamPresets.store_xml_arg_name(k2)
-      print(">>> safe_name",safe_name)
+      --print(">>> safe_name",safe_name)
       node:add_property(safe_name,v2)
     end
-    print("add name property",self.preset_names[k])
+    --print("add name property",self.preset_names[k])
     node:add_property("name",self.preset_names[k] or "")
     doc_list:insert(#doc_list+1,node)
   end
