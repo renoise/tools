@@ -1517,7 +1517,8 @@ end
 -- @param str_name (string)
 
 function xStreamModel.get_normalized_file_path(str_name)
-  local models_folder = self.prefs.user_folder.value .. xStream.MODELS_FOLDER
+  local prefs = renoise.tool().preferences
+  local models_folder = prefs.user_folder.value .. xStream.MODELS_FOLDER
   return ("%s%s.lua"):format(models_folder,str_name)
 end
 
