@@ -12,7 +12,7 @@ local base_obj = {}
 local name_value = nil
 local name_handler = function()
   local obs,err = cObservable.retrieve_observable('rns.name_observable')
-  print("rns.name_observable",obs,err)
+  LOG("rns.name_observable",obs,err)
   name_value = obs.value
 end
 
@@ -20,7 +20,7 @@ local prefx_value = nil
 local prefx_handler = function(val)
   --local obs,err = cObservable.retrieve_observable('rns.tracks[1].prefx_volume.value_observable')
   local val,err = cLib.parse_str('rns.tracks[1].prefx_volume.value')
-  print("rns.tracks[1].prefx_volume.value",val,err)
+  LOG("rns.tracks[1].prefx_volume.value",val,err)
   prefx_value = val
 end
 
@@ -28,7 +28,7 @@ _tests:insert({
 name = "cObservable",
 fn = function()
 
-  print(">>> cObservable: starting unit-test...")
+  LOG(">>> cObservable: starting unit-test...")
 
   -- TODO automatically attach/renew registered observables
   cObservable.set_mode(cObservable.MODE.AUTOMATIC)
@@ -76,7 +76,7 @@ fn = function()
 
   -- TODO
 
-  print(">>> cObservable: OK - passed all tests")
+  LOG(">>> cObservable: OK - passed all tests")
 
 end
 })

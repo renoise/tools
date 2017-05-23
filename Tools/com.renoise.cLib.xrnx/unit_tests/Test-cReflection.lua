@@ -8,7 +8,7 @@ _tests:insert({
 name = "cReflection",
 fn = function()
 
-  print(">>> cReflection: starting unit-test...")
+  LOG(">>> cReflection: starting unit-test...")
 
   require (_clibroot.."cReflection")
   _trace_filters = {"^cReflection*"}
@@ -51,7 +51,7 @@ fn = function()
   assert(cReflection.cast_value("1","boolean") == true)
   assert(cReflection.cast_value("0","boolean") == false)
 
-  print(">>> cReflection: OK - passed all tests")
+  LOG(">>> cReflection: OK - passed all tests")
 
 end
 })

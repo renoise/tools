@@ -39,15 +39,15 @@ fn = function()
   ]]    
 
   assert(type(x)=="table")
-  rprint(x.kids[1])
+  LOG(x.kids[1])
   assert(x.kids[1].name == "RootNode")
 
    -- simple = false
   --assert(x.kids[1].attr.under_score == "foo")
 
   -- simple = true
-  rprint(x.kids[1].attr[1].name == "foo")
-  rprint(x.kids[1].attr[1].value == "foo")
+  LOG(x.kids[1].attr[1].name == "foo")
+  LOG(x.kids[1].attr[1].value == "foo")
   assert(x.kids[1].attr[2].name == "under_score") 
   assert(x.kids[1].attr[2].value == "__") 
   assert(x.kids[1].kids[1].name == "A1")
@@ -59,8 +59,8 @@ fn = function()
   
    -- simple = false  
   --assert(x.kids[1].kids[2].kids[1].kids[1].kids[1].attr.bar_arg == "bar")
-  rprint(x.kids[1].kids[2].kids[1].kids[1].kids[1].attr[1].name == "bar_arg")
-  rprint(x.kids[1].kids[2].kids[1].kids[1].kids[1].attr[1].value == "bar")
+  LOG(x.kids[1].kids[2].kids[1].kids[1].kids[1].attr[1].name == "bar_arg")
+  LOG(x.kids[1].kids[2].kids[1].kids[1].kids[1].attr[1].value == "bar")
 
   -- A more realistic example
 
@@ -103,7 +103,7 @@ fn = function()
   -- import XML from a file --
 
   local file_path = renoise.tool().bundle_path .. _test_path .. "/example_preferences.xml"
-  print("file_path",file_path)
+  LOG("file_path",file_path)
   local fhandle = io.open(file_path,"r")
   if not fhandle then
     fhandle:close()

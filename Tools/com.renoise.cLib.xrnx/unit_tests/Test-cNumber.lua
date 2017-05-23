@@ -8,7 +8,7 @@ _tests:insert({
 name = "cNumber",
 fn = function()
 
-  print(">>> cNumber: starting unit-test...")
+  LOG(">>> cNumber: starting unit-test...")
 
   require (_clibroot.."cNumber")
   _trace_filters = {"^cNumber*"}
@@ -22,14 +22,14 @@ fn = function()
     value = 50,
   }
 
-  print("cnum",cnum)
-  print("cnum.value",cnum.value)
-  print("type(cnum)",type(cnum))
-  print("type(cnum.value)",type(cnum.value))
-  print("cnum()",cnum()) -- __call
-  print("cnum('value')",cnum('value')) -- __call
-  print("cnum.newvalue",cnum.newvalue) -- __newindex (N/A)
-  print("#cnum",#cnum) -- __len 
+  LOG("cnum",cnum)
+  LOG("cnum.value",cnum.value)
+  LOG("type(cnum)",type(cnum))
+  LOG("type(cnum.value)",type(cnum.value))
+  LOG("cnum()",cnum()) -- __call
+  LOG("cnum('value')",cnum('value')) -- __call
+  LOG("cnum.newvalue",cnum.newvalue) -- __newindex (N/A)
+  LOG("#cnum",#cnum) -- __len 
 
   cnum = cnum+20
   assert(cnum()==70)
@@ -43,16 +43,16 @@ fn = function()
   cnum = cnum/4
   assert(cnum()==10)
 
-  print("cnum.value",cnum.value)
+  LOG("cnum.value",cnum.value)
 
   -- construct based on existing instance
 
   local cnum2 = cNumber(cnum)
 
-  print("cnum2",cnum)
-  print("cnum2.value",cnum2.value)
+  LOG("cnum2",cnum)
+  LOG("cnum2.value",cnum2.value)
 
-  print(">>> cNumber: OK - passed all tests")
+  LOG(">>> cNumber: OK - passed all tests")
 
 end
 })

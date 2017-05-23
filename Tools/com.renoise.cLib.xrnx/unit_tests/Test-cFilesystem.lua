@@ -12,10 +12,10 @@ fn = function()
   _trace_filters = {"^cFilesystem*"}
 
   local absolute_path = renoise.tool().bundle_path .. "/cFilesystem_test/"
-  local relative_path = "./cFilesystem_test/"
+  local relative_path = "./../cFilesystem_test/"
 
   local function clean_temp_files()
-    print (cFilesystem.rmdir("./cFilesystem_test/"))
+    print (cFilesystem.rmdir(relative_path))
   end
 
   -- initialize
@@ -201,7 +201,7 @@ Will it be the same once loaded from disk?]]
 
   -- finish -----------------------------------------------
 
-  clean_temp_files()
+  --clean_temp_files()
 
 
   print (">>> cFilesystem: OK - passed all tests")
