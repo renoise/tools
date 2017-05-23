@@ -562,7 +562,7 @@ end
 
 function xStreamFavorites:get_path()
   TRACE("xStreamFavorites:get_path()")
-  return renoise.tool().preferences.user_folder.value .. xStream.FAVORITES_FILE_PATH
+  return xStreamUserData.USERDATA_ROOT .. xStreamUserData.FAVORITES_FILE_PATH
 end
 
 ---------------------------------------------------------------------------------------------------

@@ -174,7 +174,7 @@ function xStreamPresets:remove_preset(idx)
   self.presets_observable:remove(idx)
 
   -- remove from favorites
-  self.model.xstream.favorites:remove_by_name_index(self.model.name,idx,self.name)
+  self.model.process.xstream.favorites:remove_by_name_index(self.model.name,idx,self.name)
 
   if (idx == self.selected_preset_index) then
     self.selected_preset_index = 0
@@ -330,13 +330,13 @@ function xStreamPresets:rename(str_name)
 
   -- favorites might be affected
   local preset_bank_name = self.model.selected_preset_bank.name
-  local favorites = self.model.xstream.favorites:get_by_preset_bank(old_name)
+  local favorites = self.model.process.xstream.favorites:get_by_preset_bank(old_name)
   if (#favorites > 0) then
     for k,v in ipairs(favorites) do
-      self.model.xstream.favorites.items[v].preset_bank_name = self.name
+      self.model.process.xstream.favorites.items[v].preset_bank_name = self.name
     end
-    self.model.xstream.favorites.update_buttons_requested = true
-    self.model.xstream.favorites.modified = true
+    self.model.process.xstream.favorites.update_buttons_requested = true
+    self.model.process.xstream.favorites.modified = true
   end
 
   return true
@@ -495,8 +495,7 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamPresets:path_to_xml_folder()
-  local prefs = renoise.tool().preferences
-  local preset_bank_folder = prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
+  local preset_bank_folder = xStreamPresets.get_preset_bank_path()
   return ("%s%s"):format(preset_bank_folder,self.model.name)
 end
 
@@ -511,8 +510,6 @@ function xStreamPresets:save()
     return
   end
 
-  --local model_name = self.model.name
-  --local file_path = ("%s%s/%s.xml"):format(xStream.PRESET_BANK_FOLDER,model_name,self.name)
   local file_path = self:path_to_xml(self.name)
 
   local success,err = cFilesystem.makedir(file_path)
@@ -602,4 +599,10 @@ function xStreamPresets.parse_xml_arg_name(val)
   return val:gsub("_dot_",".")
 end
 
+-------------------------------------------------------------------------------
+-- [Static] Retrieve root path for preset banks 
+
+function xStreamPresets.get_preset_bank_path()
+  return xStreamUserData.USERDATA_ROOT..xStreamUserData.PRESET_BANK_FOLDER
+end
 

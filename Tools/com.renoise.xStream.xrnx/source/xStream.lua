@@ -13,10 +13,6 @@ The main xStream class - where it all comes together.
 
 class 'xStream'
 
--- all userdata
-xStream.FAVORITES_FILE_PATH = "favorites.xml"
-xStream.MODELS_FOLDER       = "models/"
-xStream.PRESET_BANK_FOLDER  = "presets/"
 
 -- options for internal/external MIDI output
 xStream.OUTPUT_OPTIONS = {
@@ -39,7 +35,15 @@ function xStream:__init(...)
   self.tool_name = args.tool_name
 
   --- xStreamPrefs, current settings
+  -- (this needs to be set in advance, in main.lua)
   self.prefs = renoise.tool().preferences
+
+  --- make sure userdata paths are up to date 
+  xStreamUserData.USERDATA_ROOT = self.prefs.user_folder.value
+  self.prefs.user_folder:add_notifier(function()
+    xStreamUserData.USERDATA_ROOT = self.prefs.user_folder.value
+    self:load_all_models()
+  end)
 
   --- boolean, evaluate callbacks while playing
   self.active = property(self.get_active,self.set_active)
@@ -68,23 +72,13 @@ function xStream:__init(...)
   self.xpos.refresh_fn = function()
     self.process:refresh()
   end
-  self.process.models:load_all(self.prefs.user_folder.value..xStream.MODELS_FOLDER)
 
   self.prefs.scheduling:add_notifier(function()
     self.process.scheduling = self.prefs.scheduling.value
   end)
 
-  self.selected_model = property(
-    function()
-      return self.process.models.selected_model
-    end)
-  self.selected_model_index = property(
-    function()
-      return self.process.models.selected_model_index
-    end,
-    function(_,val)
-      self.process.models.selected_model_index = val
-    end)
+  self.selected_model = property(self.get_selected_model)
+  self.selected_model_index = property(self.get_selected_model_index,self.set_selected_model_index)
 
   --- xStreamFavorites, favorited model+preset combinations
   self.favorites = xStreamFavorites(self)
@@ -213,15 +207,96 @@ function xStream:__init(...)
 
   self:attach_to_song()
 
+  self:load_all_models()
+
   self.ui:update()
 
 end
 
+
 ---------------------------------------------------------------------------------------------------
--- class methods
+-- Getters/Setters
 ---------------------------------------------------------------------------------------------------
--- [app] 
--- bring focus to the relevant model/preset/bank, 
+-- Set active state of processes
+
+function xStream:set_active(val)
+  TRACE("xStream:set_active(val)",val)
+  self.process.active = val
+end
+
+function xStream:get_active()
+  TRACE("xStream:get_active()")
+  return self.process.active
+end
+
+---------------------------------------------------------------------------------------------------
+
+function xStream:get_selected_model()
+  return self.process.models.selected_model
+end
+
+---------------------------------------------------------------------------------------------------
+
+function xStream:get_selected_model_index()
+  return self.process.models.selected_model_index
+end
+
+function xStream:set_selected_model_index(val)
+  self.process.models.selected_model_index = val
+end
+
+---------------------------------------------------------------------------------------------------
+-- Class methods
+---------------------------------------------------------------------------------------------------
+-- Stop live streaming
+
+function xStream:stop()
+  TRACE("xStream:stop()")
+  self.process:stop()
+end
+
+---------------------------------------------------------------------------------------------------
+-- Activate live streaming 
+-- @param [playmode], renoise.Transport.PLAYMODE - use CONTINUE_PATTERN if not defined
+
+function xStream:start(playmode)
+  TRACE("xStream:start(playmode)",playmode)
+
+  if not playmode then 
+    playmode = renoise.Transport.PLAYMODE_CONTINUE_PATTERN
+  end 
+
+  self.process:start(playmode)
+  self.xpos:start(playmode)
+end
+
+---------------------------------------------------------------------------------------------------
+-- Begin live streaming from pattern start 
+
+function xStream:start_and_play()
+  TRACE("xStream:start_and_play()")
+  if not rns.transport.playing then
+    rns.transport.playback_pos = rns.transport.edit_pos
+  end
+  self:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
+end
+
+---------------------------------------------------------------------------------------------------
+-- (Re)load all models - triggered on startup and when userdata folder has changed
+
+function xStream:load_all_models()
+  TRACE("xStream:load_all_models()")
+
+  local models_path = xStreamModels.get_models_path()
+  
+  self.process:reset()
+  self.process.models:remove_all()
+  self.process.models:load_all(models_path)
+
+end 
+
+---------------------------------------------------------------------------------------------------
+-- Bring focus to the relevant model/preset/bank, 
 -- following a selection/trigger in the favorites grid
 
 function xStream:focus_to_favorite(idx)
@@ -261,62 +336,7 @@ function xStream:focus_to_favorite(idx)
 end
 
 ---------------------------------------------------------------------------------------------------
--- [process] clear buffer, prepare for new output
---[[
-function xStream:reset()
-  TRACE("xStream:reset()")
-  self.process:reset()
-end
-]]
----------------------------------------------------------------------------------------------------
--- Stop live streaming
-
-function xStream:stop()
-  TRACE("xStream:stop()")
-  self.process:stop()
-end
-
----------------------------------------------------------------------------------------------------
--- Activate live streaming 
--- @param [playmode], renoise.Transport.PLAYMODE - use CONTINUE_PATTERN if not defined
-
-function xStream:start(playmode)
-  TRACE("xStream:start(playmode)",playmode)
-
-  if not playmode then 
-    playmode = renoise.Transport.PLAYMODE_CONTINUE_PATTERN
-  end 
-
-  self.process:start(playmode)
-  self.xpos:start(playmode)
-end
-
----------------------------------------------------------------------------------------------------
--- Begin live streaming from pattern start 
-
-function xStream:start_and_play()
-  TRACE("xStream:start_and_play()")
-  if not rns.transport.playing then
-    rns.transport.playback_pos = rns.transport.edit_pos
-  end
-  self:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
-end
-
----------------------------------------------------------------------------------------------------
--- Set active state of processes
-
-function xStream:set_active(val)
-  TRACE("xStream:set_active(val)",val)
-  self.process.active = val
-end
-
-function xStream:get_active()
-  TRACE("xStream:get_active()")
-  return self.process.active
-end
-
----------------------------------------------------------------------------------------------------
--- [app] perform periodic updates
+-- Perform periodic updates
 
 function xStream:on_idle()
   --TRACE("xStream:on_idle()")

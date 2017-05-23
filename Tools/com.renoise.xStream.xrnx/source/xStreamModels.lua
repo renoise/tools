@@ -47,7 +47,7 @@ function xStreamModels:__init(process)
   self.selected_model = nil
 
   --- string, last file path from where we imported models ('load_models')
-  self.last_models_path = nil
+  self.last_models_path = ""
 
 end
 
@@ -62,13 +62,15 @@ end
 function xStreamModels:set_selected_model_index(idx)
   TRACE("xStreamModels:set_selected_model_index(idx)",idx)
 
+  --[[
   if (#self.models == 0) then
     error("there are no available models")
   end
+  ]]
+
   if (idx > #self.models) then
     error(("selected_model_index needs to be less than %d"):format(#self.models))
   end
-
 
   if (idx == self.selected_model_index_observable.value) then
     return
@@ -221,7 +223,6 @@ end
 function xStreamModels:add(model)
   TRACE("xStreamModels:add(model)")
 
-  --model.xstream = self.xstream
   table.insert(self.models,model)
   self.models_observable:insert(#self.models)
 
@@ -230,12 +231,14 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Remove all models
 
-function xStreamModels:remove_models()
-  TRACE("xStreamModels:remove_models()")
+function xStreamModels:remove_all()
+  TRACE("xStreamModels:remove_all()")
 
   for k,_ in ripairs(self.models) do
     self:remove_model(k)
   end 
+
+  self.selected_model_index = 0
 
 end
 
@@ -335,3 +338,9 @@ function xStreamModels:get_names(no_asterisk)
 
 end
 
+---------------------------------------------------------------------------------------------------
+-- [Static] Get path to models root 
+
+function xStreamModels.get_models_path()
+  return xStreamUserData.USERDATA_ROOT .. xStreamUserData.MODELS_FOLDER
+end

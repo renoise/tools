@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xStreamPrefs
-============================================================================]]--
+===============================================================================================]]--
 
 --[[
 
@@ -9,11 +9,10 @@ This is a supporting class for xStream
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xStreamPrefs'(renoise.Document.DocumentNode)
 
-xStreamPrefs.USER_FOLDER = renoise.tool().bundle_path .. "/userdata/"
 xStreamPrefs.VISIBLE_CODE_LINES = 16
 xStreamPrefs.WRITEAHEAD = 175
 
@@ -27,7 +26,7 @@ xStreamPrefs.START_OPTION = {
 xStreamPrefs.OSC_CLIENT_HOST = "127.0.0.1"
 xStreamPrefs.OSC_CLIENT_PORT = 8000
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- constructor, initialize with default values
 
 function xStreamPrefs:__init()
@@ -38,7 +37,7 @@ function xStreamPrefs:__init()
   self:add_property("autostart", renoise.Document.ObservableBoolean(false))
   self:add_property("launch_model", renoise.Document.ObservableString(""))
   self:add_property("launch_selected_model", renoise.Document.ObservableBoolean(true))
-  self:add_property("user_folder", renoise.Document.ObservableString(xStreamPrefs.USER_FOLDER))
+  self:add_property("user_folder", renoise.Document.ObservableString(xStreamUserData.USERDATA_ROOT))
 
   -- input
   self:add_property("midi_multibyte_enabled", renoise.Document.ObservableBoolean(false))

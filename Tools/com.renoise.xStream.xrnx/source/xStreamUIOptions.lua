@@ -1,13 +1,13 @@
---[[============================================================================
+--[[===============================================================================================
 xStreamUIOptions
-============================================================================]]--
+===============================================================================================]]--
 --[[
 
 	Supporting class for xStream 
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xStreamUIOptions' (vDialog)
 
@@ -18,7 +18,7 @@ local TABLE_W = 145
 local TABLE_ROW_H = 19
 local MIDI_ROWS = 5
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:__init(xstream)
   TRACE("xStreamUIOptions:__init(xstream)",xstream)
@@ -87,9 +87,9 @@ function xStreamUIOptions:__init(xstream)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Overridden methods
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:show()
 
@@ -100,9 +100,9 @@ function xStreamUIOptions:show()
 
 end
 
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- Class methods
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:show_tab(idx)
   TRACE("xStreamUIOptions:show_tab(idx)",idx)
@@ -130,7 +130,7 @@ function xStreamUIOptions:show_tab(idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:create_dialog()
 
@@ -188,7 +188,7 @@ function xStreamUIOptions:create_dialog()
             items = {xStreamUI.NO_MODEL_SELECTED},
             id = "xStreamImplLaunchModel",
             notifier = function(idx)
-              local model = self.xstream.process.models[idx-1]
+              local model = self.xstream.process.models.models[idx-1]
               if model then
                 self.prefs.launch_model.value = model.file_path
               end
@@ -208,14 +208,15 @@ function xStreamUIOptions:create_dialog()
             notifier = function()
               local new_path = renoise.app():prompt_for_path("Specify folder for models, preset and favorites")
               if (new_path ~= "") then
-                self.prefs.user_folder.value = new_path
+                local old_path = self.prefs.user_folder.value
+                self:do_userfolder_migration(old_path,new_path)
               end
             end,
           },
           vb:button{
             text = "Reset",
             notifier = function()
-              self.prefs.user_folder.value = xStreamPrefs.USER_FOLDER
+              self:do_userfolder_reset()              
             end,
           }        
         },
@@ -603,7 +604,57 @@ function xStreamUIOptions:create_dialog()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+
+function xStreamUIOptions:is_same_userfolder(old_path,new_path)
+
+  if (old_path == new_path) then 
+    local msg = "This is already the active userdata folder. "
+              .."\nNo further action will be taken."
+    renoise.app():show_warning(msg)
+    return true
+  end 
+
+  return false
+
+end
+
+---------------------------------------------------------------------------------------------------
+
+function xStreamUIOptions:do_userfolder_migration(old_path,new_path)
+
+  if not self:is_same_userfolder(old_path,new_path) then
+    local msg = "Do you want to migrate/copy existing userdata to the selected folder?"
+              .."\nThis will copy all models and presets to that folder - "
+              .."\nexisting files with the same names will be overwritten."
+    local choice = renoise.app():show_prompt("Change userfolder",msg,{"OK","Cancel"})
+    if (choice == "OK") then 
+      xStreamUserData.migrate_to_folder(old_path,new_path)
+    end 
+    self.prefs.user_folder.value = new_path
+  end 
+end
+
+---------------------------------------------------------------------------------------------------
+
+function xStreamUIOptions:do_userfolder_reset()
+
+  local old_path = self.prefs.user_folder.value
+  local new_path = xStreamUserData.DEFAULT_ROOT
+  if not self:is_same_userfolder(old_path,new_path) then
+    local msg = "This will reset the userdata folder to the default value."
+              .."\n"
+              .."\nAny models and/or presets you've made will still be available"
+              .."\nfrom the previous userdata location, located here:"
+              .."\n"
+              .."\n"..old_path
+    renoise.app():show_warning(msg)
+    self.prefs.user_folder.value = new_path
+  end
+
+end
+
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:update_model_selector(model_names)
   TRACE("xStreamUIOptions:update_model_selector(model_names)",model_names)
@@ -618,7 +669,7 @@ function xStreamUIOptions:update_model_selector(model_names)
       model_popup.value = (self.xstream.selected_model_index == 0) 
         and 1 or self.xstream.selected_model_index+1
     else
-      for k,v in ipairs(self.xstream.process.models) do
+      for k,v in ipairs(self.xstream.process.models.models) do
         if (v.file_path == self.xstream.launch_model) then
           model_popup.value = k
         end
@@ -627,7 +678,7 @@ function xStreamUIOptions:update_model_selector(model_names)
   end
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:on_idle()
   
@@ -652,7 +703,7 @@ function xStreamUIOptions:on_idle()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:update_input_tab()
 
@@ -691,8 +742,7 @@ function xStreamUIOptions:update_input_tab()
 
 end
 
-
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- find among midi inputs/outputs
 -- @param list (table)
 -- @param value (string)
