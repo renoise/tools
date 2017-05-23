@@ -493,6 +493,9 @@ function xStreamUIArgsEditor:create_arg_descriptor(arg_index,arg_value)
           end
           table.insert(arg_items,cString.trim(v))
         end
+        if (#arg_items == 1) then
+          return false, "Error: 'items' needs at least two lines/items"
+        end
         arg_props.min = 1
         arg_props.max = #arg_items
         arg_props.items = arg_items
