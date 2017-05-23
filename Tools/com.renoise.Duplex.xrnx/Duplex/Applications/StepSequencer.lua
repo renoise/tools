@@ -939,7 +939,7 @@ end
 -- Build layout cycler 
 
 function StepSequencer:_build_layout_cycler()
-  print("StepSequencer:_build_layout_cycler()")
+  TRACE("StepSequencer:_build_layout_cycler()")
 
   if self.mappings.cycle_layout.group_name then 
     local c = UIButton(self)
@@ -956,7 +956,7 @@ function StepSequencer:_build_layout_cycler()
     end
     
     self._cycle_layout = c
-    print(">>> self._cycle_layout",self._cycle_layout)
+    --print(">>> self._cycle_layout",self._cycle_layout)
     
   end 
 end
@@ -982,7 +982,7 @@ end
 -- Update grid mode when it changes 
 
 function StepSequencer:_update_grid_mode()
-  print("StepSequencer:_update_grid_mode()")
+  TRACE("StepSequencer:_update_grid_mode()")
 
   local obj = self._cycle_layout
   if obj then 
