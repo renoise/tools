@@ -4,17 +4,17 @@ xSongPos
 
 --[[--
 
-Static methods for working with song-positions 
+Static methods for working with renoise.SongPos (or alike).
 
-#
+##
 
-Three options are designed to deal with song boundaries, pattern-loop and 
-block-loop boundaries. By default, they are set to settings which mimic
-the behavior in Renoise when playing/manipulating the playback position:
+Three options are designed to deal with song boundaries, pattern-loop and block-loop boundaries. 
+By default, they are set to settings which mimic the behavior in Renoise when playing/manipulating 
+the playback position. Please see xSongPos.OUT_OF_BOUNDS/LOOP_BOUNDARY/BLOCK_BOUNDARY for more 
+information. 
 
-self.bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP
-self.loop_boundary = xSongPos.LOOP_BOUNDARY.SOFT
-self.block_boundary = xSongPos.BLOCK_BOUNDARY.SOFT
+Note: throughout, the class accepts not only an instance of `renoise.SongPos` as argument, 
+but also "SongPos-alike" objects - tables that contain a line and sequence property. 
 
 ]]
 

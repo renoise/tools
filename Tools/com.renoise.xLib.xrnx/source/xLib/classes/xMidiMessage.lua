@@ -4,9 +4,9 @@ xMidiMessage
 
 --[[--
 
-A higher-level MIDI message, as employed by various xLib classes
-.
-#
+An extended MIDI message.
+
+##
 
 The syntax expands upon the standard 3 bytes of a MIDI message, 
 making it possible to pass around data with higher resolution 
