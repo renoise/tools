@@ -87,7 +87,7 @@ function xStreamUIPresetPanel:build_panel()
   
   local vb = self.vb
   return vb:column{
-    style = "panel",
+    --style = "panel",
     margin = 4,
     vb:space{
       width = xStreamUI.LEFT_PANEL_W,
