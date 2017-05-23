@@ -12,7 +12,7 @@ fn = function()
   require (_xlibroot.."xLinePattern")
   _trace_filters = {"^xNoteColumn*"}
 
-  print(">>> xNoteColumn: starting unit-test...")
+  LOG(">>> xNoteColumn: starting unit-test...")
 
   -- note string/value converter
 
@@ -128,7 +128,7 @@ fn = function()
   assert(xnotecol.panning_value == 4612)
   assert(xnotecol.delay_value == 255)
 
-  print(">>> xNoteColumn: OK - passed all tests")
+  LOG(">>> xNoteColumn: OK - passed all tests")
 
 end
 })

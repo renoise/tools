@@ -8,7 +8,7 @@ _xlib_tests:insert({
 name = "xOscDevice",
 fn = function()
 
-  print(">>> xOscDevice: starting unit-test...")
+  LOG(">>> xOscDevice: starting unit-test...")
 
   require (_clibroot.."cDocument")
   require (_xlibroot.."xOscDevice")
@@ -23,7 +23,7 @@ fn = function()
     port_out = 8080,
   }
 
-  print(device)
+  LOG(device)
 
   assert(device.name,"My TestDevice")
   assert(device.prefix,"/test")
@@ -70,7 +70,7 @@ fn = function()
   ]]
 
 
-  print(">>> xOscDevice: OK - passed all tests")
+  LOG(">>> xOscDevice: OK - passed all tests")
 
 end
 })

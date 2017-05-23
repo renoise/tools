@@ -8,7 +8,7 @@ _xlib_tests:insert({
 name = "xOscPattern",
 fn = function()
 
-  print(">>> xOscPattern: starting unit-test...")
+  LOG(">>> xOscPattern: starting unit-test...")
 
   -----------------------------------------------------------
 
@@ -68,7 +68,7 @@ fn = function()
     {tag = "i", value = 1234}
   })
   local rslt = osc_router:input(osc_msg) 
-  print("rslt...",rprint(rslt))
+  LOG("rslt...",rprint(rslt))
   assert(#rslt == 1)
   assert(rslt[1].pattern_in,"/renoise/trigger/midi %i")
 
@@ -81,7 +81,7 @@ fn = function()
 
   local osc_msg = create_note_message(1,1,64,127)
   local rslt = osc_router:input(osc_msg) 
-  print("rslt...",rprint(rslt))
+  LOG("rslt...",rprint(rslt))
   assert(#rslt == 1)
   assert(rslt[1].pattern_in,"/renoise/trigger/note_on %i %i %i %i")
 
@@ -185,7 +185,7 @@ fn = function()
     if osc_msg then
       table.insert(rslt,osc_msg)
     elseif err then 
-      print("*** ",err)
+      LOG("*** ",err)
     end
   end
 
@@ -301,7 +301,7 @@ fn = function()
   assert(cLib.float_compare(rslt[13].arguments[2].value,2.34,10000),rslt[13].arguments[2].value)
 
 
-  print(">>> xOscPattern: OK - passed all tests")
+  LOG(">>> xOscPattern: OK - passed all tests")
 
 
 

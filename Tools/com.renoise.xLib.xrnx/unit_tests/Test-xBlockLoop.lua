@@ -11,7 +11,7 @@ _xlib_tests:insert({
     require (_xlibroot.."xBlockLoop")
     _trace_filters = {"^xBlockLoop*"}
 
-    print(">>> xBlockLoop: starting unit-test...")
+    LOG(">>> xBlockLoop: starting unit-test...")
 
     local num_lines,coeffs,start_line,end_line,_start,_end,_coeff
 
@@ -479,7 +479,7 @@ _xlib_tests:insert({
     assert(_coeff==12,"Expected 12, got ".._coeff)
 
 
-    print(">>> xBlockLoop: OK - passed all tests")
+    LOG(">>> xBlockLoop: OK - passed all tests")
 
   end
 })

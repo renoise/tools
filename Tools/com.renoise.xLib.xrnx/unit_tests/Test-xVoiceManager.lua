@@ -9,7 +9,7 @@ _xlib_tests:insert({
 name = "xVoiceManager",
 fn = function()
 
-  print(">>> xVoiceManager: starting unit-test...")
+  LOG(">>> xVoiceManager: starting unit-test...")
 
   require (_xlibroot.."xVoiceManager")
   require (_xlibroot.."xMessage")
@@ -41,7 +41,7 @@ fn = function()
 
   --[[
   local test_step_5 = function()
-    print("test_step_5 - voices...",rprint(voicemgr.voices))
+    LOG("test_step_5 - voices...",rprint(voicemgr.voices))
     assert(#voicemgr.voices==0,"Expected #voices to be 0")
 
     -- TODO test polyphonic limits
@@ -99,14 +99,14 @@ fn = function()
 
 
     scheduled_fn = nil
-    print(">>> xVoiceManager: OK - passed all tests")
+    LOG(">>> xVoiceManager: OK - passed all tests")
 
   end
   ]]
 
   -- test column allocation
   local test_step_4 = function()
-    print("test_step_4 - voices...",rprint(voicemgr.voices))
+    LOG("test_step_4 - voices...",rprint(voicemgr.voices))
 
     -- release leftover voices
     voicemgr:release_all()
@@ -187,12 +187,12 @@ fn = function()
     voicemgr:release_all()
 
     scheduled_fn = nil
-    print(">>> xVoiceManager: OK - passed all tests")
+    LOG(">>> xVoiceManager: OK - passed all tests")
 
   end
 
   local test_step_3 = function()
-    print("test_step_3 - voices...",rprint(voicemgr.voices))
+    LOG("test_step_3 - voices...",rprint(voicemgr.voices))
     assert(#voicemgr.voices==1,"Expected #voices to be 1")
 
     -- release leftover voices
@@ -236,7 +236,7 @@ fn = function()
   end
 
   local test_step_2 = function()
-    print("test_step_2 - voices...",rprint(voicemgr.voices))
+    LOG("test_step_2 - voices...",rprint(voicemgr.voices))
     assert(#voicemgr.voices==2,"Expected #voices to be 2")
 
     -- TODO delete instr #2 while voice is playing
@@ -248,7 +248,7 @@ fn = function()
   end
 
   local test_step_1 = function()
-    print("test_step_1 - voices...",rprint(voicemgr.voices))
+    LOG("test_step_1 - voices...",rprint(voicemgr.voices))
 
     -- release leftover voices from previous tests (if any)
     voicemgr:release_all()

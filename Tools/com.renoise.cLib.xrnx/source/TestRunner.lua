@@ -41,7 +41,7 @@ function TestRunner:__init(...)
 
   -- include all lua files in unit test
   local include_path = renoise.tool().bundle_path..self.test_path 
-  print(">>> include_path",include_path)
+  LOG(">>> include_path",include_path)
   for __, filename in pairs(os.filenames(include_path)) do
     local folder,fname,extension = cFilesystem.get_path_parts(filename)
     if (extension == "lua") then
@@ -50,7 +50,7 @@ function TestRunner:__init(...)
     end
   end
 
-  print(">>> included _tests...",rprint(self.tests))
+  LOG(">>> included _tests...",rprint(self.tests))
 
   self:build()
 
@@ -93,7 +93,7 @@ function TestRunner:execute_test(idx,test)
   else
     test.status = TEST_STATUS.FAILED
     test.error = err
-    print("*** "..err)
+    LOG("*** "..err)
   end
 
   status_elm.text = test.status

@@ -21,7 +21,7 @@ fn = function()
   require (_xlibroot.."xMidiMessage")
   _trace_filters = {"^xMidiInput*"}
 
-  print(">>> xMidiInput: starting unit-test...")
+  LOG(">>> xMidiInput: starting unit-test...")
 
   local port_name = "Fictional Port Name"
 
@@ -38,7 +38,7 @@ fn = function()
 
   -- NOTE_ON (channel 1) ------------------------------------------------------
   x_input.callback_fn = function(x_msg)
-    print("got here NOTE_ON:1")
+    LOG("got here NOTE_ON:1")
     assert(x_msg.message_type == xMidiMessage.TYPE.NOTE_ON)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 0x3C)
@@ -52,7 +52,7 @@ fn = function()
 
   -- NOTE_ON (channel 16) -----------------------------------------------------
   x_input.callback_fn = function(x_msg)
-    print("got here NOTE_ON:16")
+    LOG("got here NOTE_ON:16")
     assert(x_msg.message_type == xMidiMessage.TYPE.NOTE_ON)
     assert(x_msg.channel == 16)
     assert(x_msg.values[1] == 0x3C)
@@ -66,7 +66,7 @@ fn = function()
 
   -- NOTE_ON with zero velocity (translates to NOTE_OFF) ----------------------
   x_input.callback_fn = function(x_msg)
-    print("got here NOTE_ON:NOTE_OFF")
+    LOG("got here NOTE_ON:NOTE_OFF")
     assert(x_msg.message_type == xMidiMessage.TYPE.NOTE_OFF)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 0x3C)
@@ -80,7 +80,7 @@ fn = function()
 
   -- NOTE_OFF with >0 velocity ------------------------------------------------
   x_input.callback_fn = function(x_msg)
-    print("got here NOTE_OFF")
+    LOG("got here NOTE_OFF")
     assert(x_msg.message_type == xMidiMessage.TYPE.NOTE_OFF)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 0x3C)
@@ -94,7 +94,7 @@ fn = function()
 
   -- KEY_AFTERTOUCH -----------------------------------------------------------
   x_input.callback_fn = function(x_msg)
-    print("got here KEY_AFTERTOUCH")
+    LOG("got here KEY_AFTERTOUCH")
     assert(x_msg.message_type == xMidiMessage.TYPE.KEY_AFTERTOUCH)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 0x60)
@@ -113,7 +113,7 @@ fn = function()
   -- exempt message (or we would be initiating a 14-bit message)
   x_input:add_multibyte_exempt(xMidiMessage.TYPE.CONTROLLER_CHANGE,{msg})
   x_input.callback_fn = function(x_msg)
-    print("got here CONTROLLER_CHANGE")
+    LOG("got here CONTROLLER_CHANGE")
     assert(x_msg.message_type == xMidiMessage.TYPE.CONTROLLER_CHANGE)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 0x07)
@@ -136,7 +136,7 @@ fn = function()
   --  14-bit message which was waiting for the second part to arrive)
   local msg_count = 0
   x_input.callback_fn = function(x_msg)
-    print("got here CONTROLLER_CHANGE - msg_count",msg_count)
+    LOG("got here CONTROLLER_CHANGE - msg_count",msg_count)
     msg_count = msg_count+1
     if (msg_count == 1) then
       assert(x_msg.message_type == xMidiMessage.TYPE.CONTROLLER_CHANGE)
@@ -161,7 +161,7 @@ fn = function()
 
   -- CONTROLLER_CHANGE (multibyte disabled) -----------------------------------
   x_input.callback_fn = function(x_msg)
-    print("got here CONTROLLER_CHANGE")
+    LOG("got here CONTROLLER_CHANGE")
     assert(x_msg.message_type == xMidiMessage.TYPE.CONTROLLER_CHANGE)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 0x22) 
@@ -177,7 +177,7 @@ fn = function()
 
   -- PROGRAM_CHANGE -----------------------------------------------------------
   x_input.callback_fn = function(x_msg)
-    print("got here PROGRAM_CHANGE")
+    LOG("got here PROGRAM_CHANGE")
     assert(x_msg.message_type == xMidiMessage.TYPE.PROGRAM_CHANGE)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 0x60)
@@ -192,7 +192,7 @@ fn = function()
   -- CH_AFTERTOUCH -------------------------------------------------------
   --  (note the 0x22 which is ignored/set to 0)
   x_input.callback_fn = function(x_msg)
-    print("got here CH_AFTERTOUCH")
+    LOG("got here CH_AFTERTOUCH")
     assert(x_msg.message_type == xMidiMessage.TYPE.CH_AFTERTOUCH)
     assert(x_msg.channel == 1) 
     assert(x_msg.values[1] == 0x60)
@@ -205,7 +205,7 @@ fn = function()
 
   -- SONG_POSITION ------------------------------------------------------------
   x_input.callback_fn = function(x_msg)
-    print("got here SONG_POSITION")
+    LOG("got here SONG_POSITION")
     assert(x_msg.message_type == xMidiMessage.TYPE.SONG_POSITION)
     assert(x_msg.channel == 0) -- 'undefined', xMidiMessage.DEFAULT_CHANNEL
     assert(x_msg.values[1] == 0x06)
@@ -218,7 +218,7 @@ fn = function()
 
   -- PITCH_BEND (status,LSB,MSB) ----------------------------------------------
   x_input.callback_fn = function(x_msg)
-    print("got here PITCH_BEND")
+    LOG("got here PITCH_BEND")
     assert(x_msg.message_type == xMidiMessage.TYPE.PITCH_BEND)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 0x00)
@@ -232,7 +232,7 @@ fn = function()
 
   -- PITCH_BEND (status,LSB,MSB) ----------------------------------------------
   x_input.callback_fn = function(x_msg)
-    print("got here PITCH_BEND")
+    LOG("got here PITCH_BEND")
     assert(x_msg.message_type == xMidiMessage.TYPE.PITCH_BEND)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 0x7F)
@@ -252,7 +252,7 @@ fn = function()
   end
   x_input:input({0xB0,0x02,0x3F},port_name)
   x_input.callback_fn = function(x_msg)
-    print("got here CONTROLLER_CHANGE")
+    LOG("got here CONTROLLER_CHANGE")
     assert(x_msg.message_type == xMidiMessage.TYPE.CONTROLLER_CHANGE)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 2) 
@@ -300,7 +300,7 @@ fn = function()
   end
   x_input:input({0xB1,0x63,0x7E})
   x_input.callback_fn = function(x_msg)
-    print("got here NRPN - non-terminated message")
+    LOG("got here NRPN - non-terminated message")
     assert(x_msg.message_type == xMidiMessage.TYPE.NRPN)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 16191) 
@@ -329,7 +329,7 @@ fn = function()
   x_input:input({0xB1,0x62,0x3F},port_name)
   x_input:input({0xB1,0x06,0x0F},port_name)
   x_input.callback_fn = function(x_msg)
-    print("got here NRPN - non-terminated message")
+    LOG("got here NRPN - non-terminated message")
     assert(x_msg.message_type == xMidiMessage.TYPE.NRPN)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 16191) 
@@ -367,7 +367,7 @@ fn = function()
   x_input:input({0xB1,0x26,0x2F},port_name)
   x_input:input({0xB1,0x65,0x7F},port_name)
   x_input.callback_fn = function(x_msg)
-    print("got here NRPN - terminated message",x_msg)
+    LOG("got here NRPN - terminated message",x_msg)
     assert(x_msg.message_type == xMidiMessage.TYPE.NRPN)
     assert(x_msg.channel == 1)
     assert(x_msg.values[1] == 16191) 
@@ -390,7 +390,7 @@ fn = function()
   -- TODO process timed-out NRPN message without LSB part
 
 
-  print(">>> xMidiInput: OK - passed all tests")
+  LOG(">>> xMidiInput: OK - passed all tests")
 
 end
 })
