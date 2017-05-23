@@ -239,6 +239,9 @@ function xStreamModel:__init(process)
 
     -- Static classes 
 
+    ["cLib"] = {
+      access = function(env) return cLib end,
+    },
     ["xLib"] = {
       access = function(env) return xLib end,
     },
@@ -269,9 +272,9 @@ function xStreamModel:__init(process)
     ["xAutomation"] = {
       access = function(env) return xAutomation end,
     },
-    ["xParameter"] = {
-      access = function(env) return xParameter end,
-    },
+    --["xParameter"] = {
+    --  access = function(env) return xParameter end,
+    --},
     ["xPatternPos"] = {
       access = function(env) return xPatternPos end,
     },
@@ -287,8 +290,8 @@ function xStreamModel:__init(process)
     ["xPhraseManager"] = {
       access = function(env) return xAudioDevice end,
     },
-    ["LFO"] = {
-      access = function(env) return LFO end,
+    ["xLFO"] = {
+      access = function(env) return xLFO end,
     },
 
   }
@@ -1279,7 +1282,7 @@ end
 function xStreamModel:load_preset_banks()
   TRACE("xStreamModel:load_preset_banks()")
 
-  local preset_bank_folder = self.prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
+  local preset_bank_folder = xStreamPresets.get_preset_bank_path()
   local str_folder = preset_bank_folder..self.name.."/"
   --print("str_folder",str_folder)
   if io.exists(str_folder) then
@@ -1337,7 +1340,7 @@ function xStreamModel:add_preset_bank(str_name)
   if not str_name then
 
     -- supply a unique preset bank name (filename)
-    local preset_bank_folder = self.prefs.user_folder.value..xStream.PRESET_BANK_FOLDER
+    local preset_bank_folder = xStreamPresets.get_preset_bank_path()
     local preset_folder = ("%s%s/Untitled.xml"):format(preset_bank_folder,self.name)
     local str_path = cFilesystem.ensure_unique_filename(preset_folder)
     str_name = cFilesystem.get_raw_filename(str_path)
@@ -1517,8 +1520,7 @@ end
 -- @param str_name (string)
 
 function xStreamModel.get_normalized_file_path(str_name)
-  local prefs = renoise.tool().preferences
-  local models_folder = prefs.user_folder.value .. xStream.MODELS_FOLDER
+  local models_folder = xStreamModels.get_models_path()
   return ("%s%s.lua"):format(models_folder,str_name)
 end
 
