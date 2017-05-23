@@ -215,15 +215,13 @@ end
 
 function xStreamBuffer:_wipe_past()
   TRACE("xStreamBuffer:_wipe_past()")
-  local from_idx = self.xpos.xinc - 1
-  for i = from_idx,self.lowest_xinc,-1 do
+  local prev_xinc = self.xpos.xinc - 1
+  for i = prev_xinc,self.lowest_xinc,-1 do
     self.output_buffer[i] = nil
     self.pattern_buffer[i] = nil
     self.scheduled[i] = nil
-    --print("*** _wipe_past - cleared buffers at ",i)
   end
-  self.lowest_xinc = from_idx
-  --print("lowest_xinc ",from_idx)
+  self.lowest_xinc = prev_xinc
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -232,18 +230,12 @@ end
 
 function xStreamBuffer:wipe_futures()
   TRACE("xStreamBuffer:wipe_futures()")
-  local from_idx = self.xpos.xinc
-  if rns.transport.playing then
-    -- when live streaming, exclude current line
-    from_idx = from_idx+1
-  end
-  --print("*** xStreamBuffer:wipe_futures - wiping from",from_idx,"to",self.highest_xinc)
-  for i = from_idx,self.highest_xinc do
+  local xinc = self:_get_xinc() 
+  for i = xinc,self.highest_xinc do
     self.output_buffer[i] = nil
-    self.scheduled[i] = nil
   end
   self.highest_xinc = self.xpos.xinc
-  --print("*** xStreamBuffer:wipe_futures - self.highest_xinc",self.highest_xinc)
+  self.scheduled = {}
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -284,6 +276,16 @@ function xStreamBuffer:_get_songpos(xinc)
 end
 
 ---------------------------------------------------------------------------------------------------
+-- schedule an xline 
+
+function xStreamBuffer:schedule_line(xline,xinc)
+  TRACE("xStreamBuffer:schedule_line(xline)")
+
+  self.scheduled[xinc] = xLine.apply_descriptor(xline)
+
+end
+
+---------------------------------------------------------------------------------------------------
 -- schedule a single column (merge into existing xline)
 
 function xStreamBuffer:schedule_note_column(xnotecol,col_idx,xinc)
@@ -294,8 +296,8 @@ function xStreamBuffer:schedule_note_column(xnotecol,col_idx,xinc)
   if not xinc then xinc = self:_get_xinc() end
   local xline = self:read_from_pattern(xinc,self:_get_songpos(xinc)) 
   xline.note_columns[col_idx] = xnotecol
-  self.scheduled[xinc] = xline
-
+  self:schedule_line(xline,xinc)
+  
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -309,7 +311,7 @@ function xStreamBuffer:schedule_effect_column(xeffectcol,col_idx,xinc)
   if not xinc then xinc = self:_get_xinc() end
   local xline = self:read_from_pattern(xinc,self:_get_songpos(xinc))
   xline.effect_columns[col_idx] = xeffectcol
-  self.scheduled[xinc] = xline
+  self:schedule_line(xline,xinc)
 
 end
 
@@ -394,6 +396,8 @@ function xStreamBuffer:_create_content(num_lines)
 
   local pos = xSongPos.create(self.xpos.pos)
   local xinc = self.xpos.xinc
+
+  --print(">>> _create_content - xinc,num_lines",xinc,num_lines)
 
   -- special case: if the pattern was deleted from the song, the pos
   -- might be referring to a non-existing pattern
@@ -488,7 +492,7 @@ function xStreamBuffer:set_buffer(xinc,xline)
 end
 
 ---------------------------------------------------------------------------------------------------
--- Read a line from the pattern (or pattern buffer)
+-- Read a line from the pattern (or scheduled, if it exists)
 -- @param xinc (int), the buffer position
 -- @param [pos] (SongPos), where to read from song
 -- @return xLine, xline descriptor (never nil)
@@ -499,11 +503,22 @@ function xStreamBuffer:read_from_pattern(xinc,pos)
   assert(type(xinc)=="number","Expected 'xinc' to be a number")
 
   local xline = nil
-  if pos then
+
+  if self.scheduled[xinc] then 
+    -- read scheduled content - relevant when content is 
+    -- scheduled multiple times for the same buffer position
+    -- (e.g. redefining columns in a scheduled line...)
+    xline = self.scheduled[xinc]
+  --elseif pos then
+  else
+    -- read from pattern and add to buffer 
     xline = xLine.do_read(pos.sequence,pos.line,self.include_hidden,self.track_index)    
     self.pattern_buffer[xinc] = table.rcopy(xline) 
+    --[[
   else 
+    -- 
     xline = self.pattern_buffer[xinc]
+    ]]
   end
   if not xline then
     xline = self.empty_xline
@@ -518,6 +533,7 @@ end
 -- For time-critical situations, perform immediate output for the upcoming line
 
 function xStreamBuffer:immediate_output()
+  TRACE("xStreamBuffer:immediate_output()")
 
   local live_mode = rns.transport.playing
   local xinc = self:_get_xinc() 
@@ -525,7 +541,6 @@ function xStreamBuffer:immediate_output()
   xSongPos.increase_by_lines(1,pos)
 
   --print("*** immediate output")
-  --self:wipe_futures()
   self:write_output(pos,xinc,nil,live_mode)
 
 end
@@ -560,7 +575,7 @@ function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
     if not self.output_buffer[i+xinc] 
       and not self.scheduled[i+xinc]
     then
-      self:_create_content(i+xinc)
+      self:_create_content(i)
     end
   end
 
