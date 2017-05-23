@@ -773,16 +773,6 @@ function NTrap:attach_to_song(new_song)
     end
   )
 
-  --[[
-  rns.selected_pattern_index_observable:add_notifier(
-    function()
-      print("NTrap:selected_pattern_index fired...")
-      local idx = rns.selected_pattern_index
-      self:_attach_to_pattern(false,idx)
-    end
-  )
-  ]]
-
   self:_attach_to_pattern(new_song,rns.selected_pattern_index)
   self:_attach_to_instrument(new_song,rns.selected_instrument_index)
   self._update_requested = true
@@ -983,7 +973,7 @@ function NTrap:_recording_check()
   end
 
   if renoise.song().transport.edit_mode then
-    print("Can't record while edit mode is enabled")
+    LOG("Can't record while edit mode is enabled")
     return false
   end
   ]]
