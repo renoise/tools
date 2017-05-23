@@ -211,11 +211,12 @@ end]],
 -- respond to voice-manager events
 -- ('xvoicemgr.triggered/released/stolen_index' contains the value)
 ------------------------------------------------------------------------------
-
 -- make sure position is always valid
 if (data.position == #xvoices) then
   data.position = data.position-1
-end]],
+end
+-- clear output ahead of the current position
+xbuffer:wipe_futures()]],
   ["voice.triggered"] = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
 -- ('xvoicemgr.triggered/released/stolen_index' contains the value)
@@ -274,5 +275,6 @@ if (#xvoices > 0) then
 else
   xline.note_columns[note_col_idx] = {}
 end
+
 ]],
 }
