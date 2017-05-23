@@ -1,21 +1,22 @@
---[[============================================================================
+--[[===============================================================================================
 xLine
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
-Use xLine to represent a single line (note/effect-columns + automation)
-.
-#
+Represents a single line, including note/effect-columns and automation.
 
-The class uses xLinePattern for notes and effect-columns, and 
-xLineAutomation to represent the automation within that line. 
+## 
+
+The class uses xLinePattern for notes and effect-columns, and xLineAutomation to represent the automation within that line. 
 
 See also:
 @{xLinePattern}
 @{xLineAutomation}
 
 ]]
+
+--=================================================================================================
 
 class 'xLine'
 
