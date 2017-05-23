@@ -2208,11 +2208,11 @@ local function copy_phrases()
     for k,v in ipairs(included_indices) do
 
       local from_phrase = source_instr.phrases[k]
-      print("from_phrase",from_phrase.name)
+      --print("from_phrase",from_phrase.name)
 
       for k2,v2 in ipairs(target_instr.phrases) do
         
-        print("target phrase",v2.name)
+        --print("target phrase",v2.name)
 
         -- check if overlapping with source phrase
         local from_rng = from_phrase.mapping.note_range
@@ -2222,13 +2222,13 @@ local function copy_phrases()
           (from_rng[2] <= to_rng[1])
         then
           -- target phrase completely covered by source
-          print("target phrase completely covered by source")
-          rprint(to_rng)
+          --print("target phrase completely covered by source")
+          --rprint(to_rng)
         elseif (from_rng[1] >= to_rng[1]) or
           (from_rng[2] <= to_rng[1])
         then
           -- target phrase partially covered by source
-          print("target phrase partially covered by source")
+          --print("target phrase partially covered by source")
         end
 
       end
@@ -2495,7 +2495,7 @@ local function show_dialog()
   local function keyhandler(dialog, key)
 
     LOG("keyhandler",dialog, key)
-    rprint(key)
+    --rprint(key)
 
     if key.repeated and (key.repeated == true) then
       -- repeated
@@ -2557,7 +2557,6 @@ local function show_dialog()
       end
     end
 
-    print("got here")
     return key
 
   end
