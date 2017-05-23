@@ -401,21 +401,21 @@ function xRulesUICondition:build_condition_row(row_idx,def,logic_label)
     --[[
     -- provide context, depending on message type
     local contextual_aspect,idx = self.editor:get_contextual_aspect(self.aspect)
-    print(">>> contextual_aspect,idx",contextual_aspect,idx)
+    --print(">>> contextual_aspect,idx",contextual_aspect,idx)
     if (self.aspect == xRule.ASPECT.MESSAGE_TYPE) then
       self.editor.last_msg_type = self.value
-      print(">>> last_msg_type",self.editor.last_msg_type)
+      --print(">>> last_msg_type",self.editor.last_msg_type)
     elseif contextual_aspect and (contextual_aspect:sub(1,1) == "$") then
       -- osc message (beginning with $ sign)
       -- check if we are expecting a string value (osc pattern)
       local osc_patt = self.xrule.osc_pattern
-      print("osc_patt",osc_patt)
-      print("osc_patt.complete",osc_patt.complete)
-      print("osc_patt.arguments",rprint(osc_patt.arguments))
+      --print("osc_patt",osc_patt)
+      --print("osc_patt.complete",osc_patt.complete)
+      --print("osc_patt.arguments",rprint(osc_patt.arguments))
       if osc_patt.complete then
         if (osc_patt.arguments[idx]) then
           self.editor.last_osc_type = osc_patt.arguments[idx].tag
-          print(">>> last_osc_type",self.editor.last_osc_type)
+          --print(">>> last_osc_type",self.editor.last_osc_type)
         end
       end
     end 
