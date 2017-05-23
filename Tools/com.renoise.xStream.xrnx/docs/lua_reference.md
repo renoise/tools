@@ -7,15 +7,16 @@ Please note that this is by no means a complete reference of Lua or the Renoise 
 
 ## Constants
 
-	NOTE_OFF_VALUE = 121 ("OFF")
-	EMPTY_NOTE_VALUE = 120 ("---")
-	EMPTY_VOLUME_VALUE = 255
-	EMPTY_VALUE = 255
-	EMPTY_NOTE_COLUMNS = (table)
-	EMPTY_EFFECT_COLUMNS = (table)
-	EMPTY_XLINE = (table)
-	SUPPORTED_EFFECT_CHARS = (table)
-
+|Name|Type|Value|Description|
+|----|----|-----|-----------|
+|`NOTE_OFF_VALUE`|number|121|"OFF" in the pattern editor
+|`EMPTY_NOTE_VALUE`|number|120|"---" in the pattern editor
+|`EMPTY_VOLUME_VALUE`|number|255|
+|`EMPTY_VALUE`|number|255
+|`EMPTY_NOTE_COLUMNS`|table
+|`EMPTY_EFFECT_COLUMNS`|table
+|`EMPTY_XLINE`|table
+|`SUPPORTED_EFFECT_CHARS`|table
 
 ## Properties 
 
@@ -24,19 +25,19 @@ Please note that this is by no means a complete reference of Lua or the Renoise 
 |`rns`|object|Shorthand for renoise.song()  
 |`renoise`|object|Access to the global renoise object  
 |`xinc`|number|An ever-increasing counter, initialized when output is started  
+|`args`|table|Access to [model arguments](about_models.md#arguments)
+|`data`|table|Access to [model user-data](about_models.md#data)  
+|`xpos`|SongPos|The song position, contains these properties:<br> `sequence` : number <br> `line` : number
+|`xplaypos`|xPlayPos|Access the precise playback position<br>_Shorthand for `xstream.xpos.playpos`_    
 |`xline`|table|The current line. See also [xLine](#classes) below.
 |`xline.note_columns[]`|table|Table of note columns (between 1-12).<br> Each column can define the following properties:<br>`note_value` : number, 0-119, 120=Off, 121=Empty <br>`note_string` : string, 'C-0'-'G-9', 'OFF' or '---'  <br>`instrument_value` : number, 0-254, 255==Empty  <br>`instrument_string` : string, '00'-'FE' or '..'  <br>`volume_value` : number, 0-127, or number, 0-65535  <br>`volume_string` -> [string, '00'-'ZF' or '..'  <br>`panning_value` : number, 0-127 or number, 0-65535  <br>`panning_string` : string, '00'-'ZF' or '..' <br>`delay_value` : number, 0-255<br>`delay_string` : string, '00'-'FF' or '..' 
 |`xline.effect_columns[]`|table|Table of effect columns (between 1-8).<br> Each column can define the following properties:<br> `number_value` : number, 0-65535  <br>`number_string` : string, '00'-'ZZ'  <br> `amount_value` : number, 0-255  <br> `amount_string` : string, '00'-'FF'  
 |`xline.automation`|table|
-|`xpos`|SongPos|The song position, contains these properties:<br> `sequence` : number <br> `line` : number
 |`xstream`|xStream|Access to the main application   
 |`xmodel`|xStreamModel|Access to the selected model  
 |`xbuffer`|xStreamBuffer|Access to the stream buffer
 |`xvoicemgr`|xVoiceManager|_Shorthand for `xstream.voicemgr`_  
 |`xvoices`|table|Access to the active voices<br>_Shorthand for `xstream.voicemgr.voices`_  
-|`xplaypos`|xPlayPos|Access the precise playback position<br>_Shorthand for `xstream.stream.playpos`_    
-|`args`|table|Access to [model arguments](about_models.md#arguments)
-|`data`|table|Access to [model user-data](about_models.md#data)  
 |`clear_undefined`|boolean|How to treat empty lines  
 |`expand_columns`|boolean|Whether to automatically show columns as data is written  
 |`include_hidden`|boolean|Whether to include hidden columns when reading & writing  

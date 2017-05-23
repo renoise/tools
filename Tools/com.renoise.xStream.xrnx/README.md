@@ -16,6 +16,6 @@ xStream is a Renoise tool that allows you to generate and transform musical data
 
 ## [Example Models](docs/example_models.md)
 
-## [Live Coding with xStream](docs/live_coding.md)
+## [Live Coding with xStream](docs/live_coding_intro.md)
 
 ## [xStream Lua Reference](docs/lua_reference.md)
