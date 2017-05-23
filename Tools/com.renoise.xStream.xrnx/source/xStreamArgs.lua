@@ -511,10 +511,6 @@ function xStreamArgs:replace(idx,arg)
     end
   end
 
-  --print("PRE self.selected_arg",self.selected_arg)
-  --print("PRE self.selected_arg.value",self.selected_arg.value,type(self.selected_arg.value))
-  --print("PRE self.selected_arg.observable",self.selected_arg.observable,type(self.selected_arg.observable))
-
   -- now replace the argument
   local cached_index = self.selected_index 
   self:remove(idx)
@@ -524,15 +520,7 @@ function xStreamArgs:replace(idx,arg)
     return false,err
   end
 
-  --local xarg = self.args[idx]
-  --xarg.modified_observable:bang()
-
   self.selected_index = cached_index
-
-  --print("POST self.selected_arg",self.selected_arg)
-  --print("POST self.selected_arg.value",self.selected_arg.value,type(self.selected_arg.value))
-  --print("POST self.selected_arg.observable",self.selected_arg.observable,type(self.selected_arg.observable))
-
   self:attach_to_song()
 
 end
