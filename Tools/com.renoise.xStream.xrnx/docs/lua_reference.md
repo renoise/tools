@@ -25,8 +25,8 @@ Please note that this is by no means a complete reference of Lua or the Renoise 
 |`rns`|object|Shorthand for renoise.song()  
 |`renoise`|object|Access to the global renoise object  
 |`xinc`|number|An ever-increasing counter, initialized when output is started  
-|`args`|table|Access to [model arguments](about_models.md#arguments)
-|`data`|table|Access to [model user-data](about_models.md#data)  
+|`args`|table|Provides access to [model arguments](about_models.md#arguments)
+|`data`|table|Provides access to [model user-data](about_models.md#data)  
 |`xpos`|SongPos|The song position, contains these properties:<br> `sequence` : number <br> `line` : number
 |`xplaypos`|xPlayPos|Access the precise playback position<br>_Shorthand for `xstream.xpos.playpos`_    
 |`xline`|table|The current line. See also [xLine](#classes) below.
@@ -41,18 +41,18 @@ Please note that this is by no means a complete reference of Lua or the Renoise 
 |`clear_undefined`|boolean|How to treat empty lines  
 |`expand_columns`|boolean|Whether to automatically show columns as data is written  
 |`include_hidden`|boolean|Whether to include hidden columns when reading & writing  
-|`automation_playmode`|xStreamBuffer.PLAYMODE|The current playmode. Possible values are `POINTS,LINEAR,CUBIC`   
+|`automation_playmode`|number|The automation 'playmode'. Possible values are `xStreamBuffer.PLAYMODE.POINTS`, `xStreamBuffer.PLAYMODE.LINEAR` and `xStreamBuffer.PLAYMODE.CUBIC`   
 |`track_index`|number|The selected track index  
-|`mute_mode`|xStreamBuffer.MUTE_MODE|The current mute mode. Possible values are `NONE,OFF`  
-|`output_mode`|xStreamProcess.OUTPUT_MODE|The current output mode. Possible values are `STREAMING,TRACK,SELECTION`
+|`mute_mode`|number|The current mute mode. Possible values are `xStreamBuffer.MUTE_MODE.NONE` and `xStreamBuffer.MUTE_MODE.OFF`
+|`output_mode`|number|The current output mode. Possible values are `xStreamProcess.OUTPUT_MODE.STREAMING`, `xStreamProcess.OUTPUT_MODE.TRACK` and `xStreamProcess.OUTPUT_MODE.SELECTION`
 
 ## Methods
 
 |Name|Description|
 |----|-----------|
 |`wipe_futures()`|Erase all pre-calculated output ahead of current playback position (shorthand for xbuffer.wipe_futures)
-|`read_from_pattern()`|Erase all pre-calculated output ahead of current playback position (shorthand for xbuffer.wipe_futures)
-|`schedule_line()`|Schedule a note column (shorthand for xbuffer.schedule_line)<br>Arguments: `xline,xinc`
+|`read_from_pattern()`|Read a line from the pattern (or scheduled, if it exists)<br>@param `xinc` (int), the buffer position<br>@param `[pos]` (SongPos), where to read from song<br>@return `xLine`, xline descriptor (never nil)<br>_Note: shorthand for `xbuffer.read_from_pattern`_  <br>
+|`schedule_line()`|_Shorthand for `xbuffer.schedule_line`_<br>Arguments: `xline,xinc`
 |`schedule_note_column()`|_Shorthand for `xbuffer.schedule_note_column`_  <br>Arguments: `xnotecol,col_idx,xinc`
 |`schedule_effect_column()`|_Shorthand for `xbuffer.schedule_effect_column`_<br>Arguments: `xeffectcol,col_idx,xinc`
 
