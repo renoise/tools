@@ -71,7 +71,7 @@ local dialog,dialog_content
 --------------------------------------------------------------------------------
 
 local function start()
-  print("start()")
+  TRACE("start()")
 
   if not dialog or not dialog.visible then
     if not dialog_content then
@@ -81,7 +81,7 @@ local function start()
     end
 
     local function keyhandler(dialog, key)
-      print("key",rprint(key))
+      --print("key",rprint(key))
     end
       
     dialog = renoise.app():show_custom_dialog("vLib Demo", 
@@ -155,7 +155,7 @@ end
 --------------------------------------------------------------------------------
 
 function build()
-  print("build()")
+  TRACE("build()")
 
   -- skeleton
   local content = vb:row{
@@ -269,13 +269,13 @@ end
 -------------------------------------------------------------------------------
 
 function set_ruler_width(val)
-  print("set_ruler_width",val)
+  TRACE("set_ruler_width",val)
   if not val then return end
   vb.views["ruler_width"].width = val
 end
 
 function set_ruler_height(val)
-  print("set_ruler_height",val)
+  TRACE("set_ruler_height",val)
   if not val then return end
   vb.views["ruler_height"].height = val
 end
@@ -291,7 +291,7 @@ function set_control_property(key,val)
   end
 
   if active_ctrl then
-    print("setting property(key,val)",key,val)
+    --print("setting property(key,val)",key,val)
     active_ctrl[key] = val
   end
 
@@ -306,7 +306,7 @@ function set_active_ctrl(idx)
 
   -- hide all property panels
   for _,elm_id in ipairs(vlib_controls) do
-    print("elm_id",elm_id)
+    --print("elm_id",elm_id)
     vb.views[elm_id].visible = false
     vb.views[elm_id.."_properties"].visible = false
   end
@@ -401,7 +401,7 @@ end
 -------------------------------------------------------------------------------
 
 function build_vcontrol()
-  print("build_vcontrol()")
+  TRACE("build_vcontrol()")
 
   vb.views.basic_row:add_child(vb:column{
     style = "panel",
@@ -442,7 +442,7 @@ end
 -------------------------------------------------------------------------------
 
 function build_vbutton()
-  print("build_vbutton()")
+  TRACE("build_vbutton()")
 
   vb.views.props_row:add_child(vb:column{
     id = "vButton_properties",
@@ -533,16 +533,16 @@ functionally similar to the renoise Viewbuilder version]],
     width = 100,
     --height = 25,
     notifier = function()
-      print("vbutton.notifier()")
+      --print("vbutton.notifier()")
     end,
     pressed = function()
-      print("vbutton.pressed()")
+      --print("vbutton.pressed()")
     end,
     released = function()
-      print("vbutton.released()")
+      --print("vbutton.released()")
     end,
     on_resize = function()
-      print("vbutton.on_resize()")
+      --print("vbutton.on_resize()")
     end,
   }
   vb.views.controls_col:add_child(vbutton.view)
@@ -556,7 +556,7 @@ end
 -------------------------------------------------------------------------------
 
 function build_vtogglebutton()
-  print("build_vtogglebutton()")
+  TRACE("build_vtogglebutton()")
 
   vb.views.props_row:add_child(vb:column{
     id = "vToggleButton_properties",
@@ -685,14 +685,14 @@ with independant settings for the on/off state]],
     width = 50,
     height = 20,
     notifier = function(active)
-      print("vtogglebutton.notifier - active",active)
+      --print("vtogglebutton.notifier - active",active)
     end,
     on_resize = function()
-      print("vtogglebutton.on_resize")
+      --print("vtogglebutton.on_resize")
     end,
   }
   vtogglebutton.enabled_observable:add_notifier(function()
-    print(">>> vtogglebutton.enabled_observable fired")
+    --print(">>> vtogglebutton.enabled_observable fired")
     vb.views["vToggleButton_enabled"].value = vtogglebutton.enabled
   end)
 
@@ -706,7 +706,7 @@ end
 -------------------------------------------------------------------------------
 
 function build_varrowbutton()
-  print("build_varrowbutton()")
+  TRACE("build_varrowbutton()")
 
   vb.views.props_row:add_child(vb:column{
     id = "vArrowButton_properties",
@@ -769,14 +769,14 @@ modified to look like this common UI element]],
     --width = 50,
     --height = 20,
     notifier = function(active)
-      print("varrowbutton.notifier - active",active)
+      --print("varrowbutton.notifier - active",active)
     end,
     on_resize = function()
-      print("varrowbutton.on_resize")
+      --print("varrowbutton.on_resize")
     end,
   }
   varrowbutton.enabled_observable:add_notifier(function()
-    print(">>> varrowbutton.enabled_observable fired")
+    --print(">>> varrowbutton.enabled_observable fired")
     vb.views["vArrowButton_enabled"].value = varrowbutton.enabled
   end)
 
@@ -790,7 +790,7 @@ end
 -------------------------------------------------------------------------------
 
 function build_vtabs()
-  print("build_vtabs()")
+  TRACE("build_vtabs()")
 
   --[[
   vb.views.props_row:add_child(vb:column{
@@ -955,7 +955,7 @@ using the familiar tabbed interface]],
       },
     },
     notifier = function(idx)
-      print("vtabs.notifier - idx",idx)
+      --print("vtabs.notifier - idx",idx)
     end,
     on_resize = function()
       --print("vtabs.on_resize")
@@ -974,7 +974,7 @@ end
 -------------------------------------------------------------------------------
 
 function build_vtable()
-  print(">>> build_vtable()")
+  TRACE(">>> build_vtable()")
 
 
   vb.views.props_row:add_child(vb:column{
@@ -1104,7 +1104,7 @@ components (text, number, checkbox etc.)]],
           local str_data = vb.views.vTable_data.text
           local t,err = string_to_lua(str_data)
           if err then
-            print("Error while parsing data:",err)
+            --print("Error while parsing data:",err)
           else
             set_control_property("data",t)
           end
@@ -1117,7 +1117,7 @@ components (text, number, checkbox etc.)]],
           local str_data = vb.views.vTable_data.text
           local t,err = string_to_lua(str_data)
           if err then
-            print("Error while parsing data:",err)
+            --print("Error while parsing data:",err)
           else
             --set_control_property("data",t)
             --vtable:set_data(t,true)
@@ -1228,7 +1228,7 @@ components (text, number, checkbox etc.)]],
   end
 
   local handle_table_valuebox = function(elm,val)
-    print("handle_table_valuebox",elm,val)
+    --print("handle_table_valuebox",elm,val)
     local item = elm.owner:get_item_by_id(elm.item_id)
     if item then
       --elm.owner.data[elm.item_id].VALUEBOX = val
@@ -1282,7 +1282,7 @@ components (text, number, checkbox etc.)]],
     end,
   }
   vb.views.controls_col:add_child(vtable.view)
-  print(">>> vtable.data",rprint(vtable.data))
+  --print(">>> vtable.data",rprint(vtable.data))
   --vtable:update()
   table.insert(vlib_controls_ref,vtable)
   table.insert(vlib_controls,vtable.id)
@@ -1292,7 +1292,7 @@ end
 -------------------------------------------------------------------------------
 
 function build_vfilebrowser()
-  print("build_vfilebrowser()")
+  TRACE("build_vfilebrowser()")
 
   -- class properties and methods
   vb.views.props_row:add_child(vb:column{
@@ -1376,7 +1376,7 @@ but is based around the vTable component]],
           local str_data = vb.views.vFileBrowser_file_types.text
           local t,err = string_to_lua(str_data)
           if err then
-            print("Error while parsing data:",err)
+            --print("Error while parsing data:",err)
           else
             set_control_property("file_types",t)
           end
@@ -1401,7 +1401,7 @@ but is based around the vTable component]],
           local str_data = vb.views.vFileBrowser_file_ext.text
           local t,err = string_to_lua(str_data)
           if err then
-            print("Error while parsing data:",err)
+            --print("Error while parsing data:",err)
           else
             set_control_property("file_ext",t)
           end
@@ -1944,7 +1944,7 @@ function build_vgraph()
         min = -1,
         max = 100000,
         notifier = function(val)
-          print("vGraph_selected_index.notifier...",val)
+          --print("vGraph_selected_index.notifier...",val)
           set_control_property("selected_index",val)
         end
       },
@@ -1966,7 +1966,7 @@ function build_vgraph()
           local str_data = vb.views.vGraph_selected_indices.text
           local t,err = string_to_lua(str_data)
           if err then
-            print("Error while parsing data:",err)
+            --print("Error while parsing data:",err)
           else
             set_control_property("selected_indices",t)
           end
@@ -2104,7 +2104,7 @@ function build_vgraph()
           local str_data = vb.views.vGraph_data.text
           local t,err = string_to_lua(str_data)
           if err then
-            print("Error while parsing data:",err)
+            --print("Error while parsing data:",err)
           else
             set_control_property("data",t)
           end
@@ -2223,7 +2223,7 @@ function build_vpathselector()
       vb:checkbox{
         id = "vPathSelector_editable",
         notifier = function(val)
-          print("vPathSelector_editable.notifier...",val)
+          --print("vPathSelector_editable.notifier...",val)
           set_control_property("editable",val)
         end
       },
@@ -2319,7 +2319,7 @@ but you can control the message shown when no items are presents]],
       vb:valuebox{
         id = "vPopup_value",
         notifier = function(val)
-          print("vPopup_value.notifier...",val)
+          --print("vPopup_value.notifier...",val)
           set_control_property("value",val)
         end
       },
@@ -2333,7 +2333,7 @@ but you can control the message shown when no items are presents]],
       vb:checkbox{
         id = "vPopup_editable",
         notifier = function(val)
-          print("vPopup_editable.notifier...",val)
+          --print("vPopup_editable.notifier...",val)
           set_control_property("editable",val)
         end
       },
@@ -2455,11 +2455,11 @@ function build_vtextfield()
     style = "strong",
   }
   vtextfield.edit_mode_observable:add_notifier(function()
-    print("vtextfield.edit_mode_observable fired...")
+    --print("vtextfield.edit_mode_observable fired...")
     update_properties()
   end)
   vtextfield.text_observable:add_notifier(function()
-    print("vtextfield.text_observable fired...")
+    --print("vtextfield.text_observable fired...")
     --update_properties()
   end)
 
@@ -2616,16 +2616,16 @@ function build_vsearchfield()
     --edit_mode = false,
   }
   vsearchfield.edit_mode_observable:add_notifier(function()
-    print("vsearchfield.edit_mode_observable fired...")
+    --print("vsearchfield.edit_mode_observable fired...")
   end)
   vsearchfield.text_observable:add_notifier(function()
-    print("vsearchfield.text_observable fired...")
+    --print("vsearchfield.text_observable fired...")
     suppress_notifier = true
     vb.views["vSearchField_text"].text = vsearchfield.text
     suppress_notifier = false
   end)
   vsearchfield.selected_index_observable:add_notifier(function()
-    print("vsearchfield.selected_index_observable fired...")
+    --print("vsearchfield.selected_index_observable fired...")
     --update_properties()
     suppress_notifier = true
     vb.views["vSearchField_selected_index"].value = vsearchfield.selected_index
@@ -2876,7 +2876,7 @@ function build_vwaveform()
           local str_data = vb.views.vWaveform_selected_indices.text
           local t,err = string_to_lua(str_data)
           if err then
-            print("Error while parsing data:",err)
+            --print("Error while parsing data:",err)
           else
             set_control_property("selected_indices",t)
           end
@@ -2998,7 +2998,7 @@ function build_vwaveform()
           local str_data = vb.views.vWaveform_data.text
           local t,err = string_to_lua(str_data)
           if err then
-            print("Error while parsing data:",err)
+            --print("Error while parsing data:",err)
           else
             set_control_property("data",t)
           end
@@ -3112,10 +3112,10 @@ end
 -- widgets can handle values being set without causing feedbacks
 
 function update_properties()
-  --print("update_properties()")
+  TRACE("update_properties()")
 
   local ctrl_name = vlib_controls[prefs.active_ctrl_idx.value]
-  print("*** update_properties - ctrl_name",ctrl_name)
+  --print("*** update_properties - ctrl_name",ctrl_name)
   --print("active_ctrl.width",active_ctrl.width)
   --print("active_ctrl.height",active_ctrl.height)
 
