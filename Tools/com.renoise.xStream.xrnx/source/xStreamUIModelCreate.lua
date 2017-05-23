@@ -313,7 +313,7 @@ function xStreamUIModelCreate:add_save_and_close(model)
   if not got_saved and err then
     renoise.app():show_warning(err)
   end
-  self.xstream.selected_model_index = #self.xstream.process.models
+  self.xstream.selected_model_index = #self.xstream.process.models.models
   self.dialog:close()
   self.dialog = nil
 
