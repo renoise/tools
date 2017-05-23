@@ -41,6 +41,7 @@ require (_vlibroot..'vPrompt')
 require (_vlibroot..'vTable')
 
 require (_xlibroot..'xLib')
+require (_xlibroot..'xLFO')
 require (_xlibroot..'xAudioDevice')
 require (_xlibroot..'xAutomation')
 require (_xlibroot..'xBlockLoop')
@@ -77,6 +78,7 @@ require ('source/xStreamModels')
 require ('source/xStreamProcess')
 require ('source/xStreamPresets')
 require ('source/xStreamPrefs')
+require ('source/xStreamUserData')
 require ('source/xStreamUI')
 require ('source/xStreamUIModelCreate')
 require ('source/xStreamUICallbackCreate')
@@ -86,7 +88,6 @@ require ('source/xStreamUIPresetPanel')
 require ('source/xStreamUIArgsPanel')
 require ('source/xStreamUIArgsEditor')
 
-require ('source/LFO')
 
 --------------------------------------------------------------------------------
 -- local variables & initialization
@@ -97,10 +98,10 @@ local TOOL_NAME = "xStream"
 local MIDI_PREFIX = "Tools:"..TOOL_NAME..":"
 
 renoise.tool().preferences = xStreamPrefs()
+print(">>> main - renoise.tool().preferences ",renoise.tool().preferences)
 
 -- force all dialogs to have this name
 vDialog.DEFAULT_DIALOG_TITLE = "xStream"
-
 
 -------------------------------------------------------------------------------
 -- invoked by menu entries, autostart - 
