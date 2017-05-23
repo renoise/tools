@@ -1,13 +1,13 @@
---[[============================================================================
+--[[===============================================================================================
 xStreamUIArgsPanel
-============================================================================]]--
+===============================================================================================]]--
 --[[
 
 	Supporting class for xStream 
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xStreamUIArgsPanel'
 
@@ -68,9 +68,9 @@ function xStreamUIArgsPanel:__init(xstream,midi_prefix,vb,ui)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Get/Set methods
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIArgsPanel:get_visible()
   return self.visible_observable.value
@@ -89,6 +89,7 @@ function xStreamUIArgsPanel:set_visible(val)
   view_popup.visible = not val
 
   self.visible_observable.value = val
+  
   self:update()
   self:update_visibility()
   view_spacer.visible = not val 
@@ -96,7 +97,7 @@ function xStreamUIArgsPanel:set_visible(val)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIArgsPanel:get_disabled()
   return
@@ -108,7 +109,7 @@ function xStreamUIArgsPanel:set_disabled(val)
   end
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIArgsPanel:get_editor_visible()
   return self.ui.args_editor.visible 
@@ -119,9 +120,9 @@ function xStreamUIArgsPanel:set_editor_visible(val)
   self.ui.update_args_requested = true
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Class methods
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIArgsPanel:get_label_w()
 
@@ -139,7 +140,7 @@ function xStreamUIArgsPanel:get_label_w()
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- (re-)build list of arguments 
 
 function xStreamUIArgsPanel:build_args()
@@ -477,7 +478,6 @@ function xStreamUIArgsPanel:build_args()
             tostring = fn_tostring,
             value = arg.value,
             bind = arg.observable,
-            midi_mapping = midi_mapping,
           })
         end
 
@@ -592,14 +592,14 @@ function xStreamUIArgsPanel:build_args()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- build the basic panel 
 
 function xStreamUIArgsPanel:build()
 
   local vb = self.vb
   return vb:column{
-    style = "panel",
+    --style = "panel",
     id = "xStreamArgsPanel",
     margin = 4,
     --height = 100,
@@ -725,7 +725,7 @@ function xStreamUIArgsPanel:build()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIArgsPanel:update()
 
@@ -775,7 +775,7 @@ function xStreamUIArgsPanel:update()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIArgsPanel:update_controls()
 
@@ -792,7 +792,7 @@ function xStreamUIArgsPanel:update_controls()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIArgsPanel:update_selector()
   TRACE("xStreamUIArgsPanel:update_selector()")
@@ -811,7 +811,7 @@ function xStreamUIArgsPanel:update_selector()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- display untabbed arguments + arguments from active tab
 
 function xStreamUIArgsPanel:update_visibility()
@@ -853,8 +853,7 @@ function xStreamUIArgsPanel:update_visibility()
     v.view_lock.active = not self.editor_visible
 
     -- update link
-    v.view_link.mode = arg.linked and 
-      "transparent" or "body_color"
+    v.view_link.mode = arg.linked and "transparent" or "body_color"
     v.view_link.visible = v.view.visible and arg.tab_name and
       (args:count_linkable(arg.name) > 1) or false
   end
@@ -863,10 +862,11 @@ function xStreamUIArgsPanel:update_visibility()
     return
   end
 
+  local sel_arg = args.selected_arg
   if self.editor_visible or not self.visible then
     -- single argument display
-    self.vb_tabbed.visible = args.selected_arg.tab_name and true or false
-    self.vb_untabbed.visible = not args.selected_arg.tab_name and true or false
+    self.vb_tabbed.visible = sel_arg and sel_arg.tab_name and true or false
+    self.vb_untabbed.visible = sel_arg and not sel_arg.tab_name and true or false
     self.vb_tabbed.style = "invisible"
     self.vb_tab_switcher.visible =  false
   elseif self.visible then
@@ -879,7 +879,7 @@ function xStreamUIArgsPanel:update_visibility()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- maintain the arg_views table as arguments are removed
 
 function xStreamUIArgsPanel:purge_arg_views()
