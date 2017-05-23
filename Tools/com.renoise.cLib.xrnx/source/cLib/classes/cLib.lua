@@ -4,9 +4,9 @@ cLib
 
 --[[--
 
-This is the core cLib class, containing a bunch of static helper methods 
-.
-#
+Contains common methods for working with strings, numbers and tables.
+
+##
 
 Note that several classes in the cLib library invokes the LOG/TRACE statement - 
 therefore, it is recommended that any cLib-powered tool includes this file
