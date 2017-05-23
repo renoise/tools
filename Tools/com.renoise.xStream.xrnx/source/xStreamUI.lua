@@ -639,6 +639,7 @@ function xStreamUI:build()
 
       vb:row{ -- callback, lower panels
         id = "xStreamLowerPanels",
+        style = "body",
         vb:column{
           id = "xStreamMiddlePanel",
           view_callback_panel,
@@ -743,6 +744,10 @@ function xStreamUI:build()
       cObservable.attach(model.args.selected_index_observable,function()
         TRACE("xStreamUI - selected_arg_notifier fired...")
         self.update_args_requested = true
+        local model = self.xstream.selected_model
+        if (model.args.selected_index == 0) then 
+          self.args_editor.visible = false
+        end
       end)
       cObservable.attach(model.args.args_observable,function(arg)
         TRACE("xStreamUI - args_observable_notifier fired...",rprint(arg))
