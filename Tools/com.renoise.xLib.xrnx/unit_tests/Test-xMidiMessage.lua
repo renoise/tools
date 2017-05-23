@@ -8,7 +8,7 @@ _xlib_tests:insert({
 name = "xMidiMessage",
 fn = function()
 
-  print(">>> xMidiMessage: starting unit-test...")
+  LOG(">>> xMidiMessage: starting unit-test...")
 
   require (_clibroot.."cDocument")
   require (_xlibroot.."xMessage")
@@ -17,7 +17,7 @@ fn = function()
 
   --error("No tests defined...")
 
-  print(">>> xMidiMessage: OK - passed all tests")
+  LOG(">>> xMidiMessage: OK - passed all tests")
 
 end
 })

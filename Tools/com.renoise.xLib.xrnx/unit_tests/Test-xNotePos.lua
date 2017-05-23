@@ -12,7 +12,7 @@ fn = function()
   require (_xlibroot.."xCursorPos")
   _trace_filters = {"^xCursorPos*"}
 
-  print(">>> xCursorPos: starting unit-test...")
+  LOG(">>> xCursorPos: starting unit-test...")
 
   -- prepare ----------------------------------------------- 
 
@@ -205,7 +205,7 @@ fn = function()
   rns:delete_track_at(1)
 
 
-  print(">>> xCursorPos: OK - passed all tests")
+  LOG(">>> xCursorPos: OK - passed all tests")
 
 end
 })

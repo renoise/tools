@@ -8,7 +8,7 @@ _xlib_tests:insert({
 name = "xSongPos",
 fn = function()
 
-  print(">>> xSongPos: starting unit-test...")
+  LOG(">>> xSongPos: starting unit-test...")
 
   require (_xlibroot.."xSongPos")
   require (_xlibroot.."xPatternSequencer")
@@ -22,14 +22,14 @@ fn = function()
                   .."created during the test - do you want to proceed?"
     local choice = renoise.app():show_prompt("Create patterns",str_msg,{"OK","Cancel"})
     if (choice == "OK") then
-      print("xSongPos: creating patterns...")
+      LOG("xSongPos: creating patterns...")
       rns.sequencer:insert_new_pattern_at(1)
       rns.sequencer:insert_new_pattern_at(1)
 
       rns.transport.playing = false
       
     else
-      print("xSongPos: aborted unit-test...")
+      LOG("xSongPos: aborted unit-test...")
     end
 
   end
@@ -415,7 +415,7 @@ fn = function()
   assert((xSongPos.get_line_diff(pos1,pos2)==1),"expected line_diff to be 1")
 
 
-  print(">>> xSongPos: OK - passed all tests")
+  LOG(">>> xSongPos: OK - passed all tests")
 
 
 end

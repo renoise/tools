@@ -8,7 +8,7 @@ _xlib_tests:insert({
 name = "xOscMessage",
 fn = function()
 
-  print(">>> xOscMessage: starting unit-test...")
+  LOG(">>> xOscMessage: starting unit-test...")
 
   require (_clibroot.."cDocument")
   require (_xlibroot.."xMessage")
@@ -18,7 +18,7 @@ fn = function()
   require (_xlibroot.."xOscMessage")
   _trace_filters = {"^xOscMessage*"}
 
-  print("construct xOscMessage from scratch")
+  LOG("construct xOscMessage from scratch")
   local msg = xOscMessage{ 
     values = {
       {tag = xOscValue.TAG.STRING,  value = "foo"},
@@ -31,7 +31,7 @@ fn = function()
   assert(msg.values[2].value,32)
   assert(msg.values[3].value,3.14)
 
-  print("construct xOscMessage from renoise.Osc.Message")
+  LOG("construct xOscMessage from renoise.Osc.Message")
   local pattern = "/test/input/"
   local arguments = {
       {tag = xOscValue.TAG.STRING,  value = "foo"},
@@ -45,7 +45,7 @@ fn = function()
   assert(msg.values[2].value,32)
   assert(msg.values[3].value,3.14)
 
-  print(">>> xOscMessage: OK - passed all tests")
+  LOG(">>> xOscMessage: OK - passed all tests")
 
 end
 })

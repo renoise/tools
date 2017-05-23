@@ -8,7 +8,7 @@ _xlib_tests:insert({
 name = "xEffectColumn",
 fn = function()
 
-  print(">>> xEffectColumn: starting unit-test...")
+  LOG(">>> xEffectColumn: starting unit-test...")
 
   require (_xlibroot.."xEffectColumn")
   require (_xlibroot.."xNoteColumn")
@@ -42,7 +42,7 @@ fn = function()
   assert(xEffectColumn.amount_string_to_value("FF") == 0xFF)
   assert(xEffectColumn.amount_value_to_string(0xFF) == "FF")
 
-  print(">>> xEffectColumn: OK - passed all tests")
+  LOG(">>> xEffectColumn: OK - passed all tests")
   
 end
 })
