@@ -199,21 +199,25 @@ end
 function xStreamArg:notifier()
   TRACE("xStreamArg:notifier()")
 
-  if self.linked then
-    -- directly update argument value 
+  if self.linked then -- update linked arguments 
     self.model.args:set_linked(self)
   end
 
-  if self.bind then
-    -- update renoise
+  if self.bind then -- update renoise
     self:bind_notifier(self.observable.value)
-  end
-  if self.properties.impacts_buffer then
-    self.model.process:recompute()
   end
 
   -- invoke event callbacks (if any)
+  -- doing this before recomputing the buffer
+  -- will allow the model to respond to a changed 
+  -- state before recomputing 
   self.model.process:handle_arg_events(self.full_name,self.value)
+
+  -- finally, when/if the argument requires the 
+  -- buffer to be recalculated 
+  if self.properties.impacts_buffer then
+    self.model.process:recompute()
+  end
 
 end
 
