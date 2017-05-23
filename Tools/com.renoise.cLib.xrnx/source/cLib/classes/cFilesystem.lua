@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 cFilesystem
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -19,7 +19,7 @@ cFilesystem.FILETYPE = {
   FILE = 2,
 }
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function cFilesystem.get_userdata_folder()
   TRACE("cFilesystem.get_userdata_folder()")
@@ -40,9 +40,10 @@ function cFilesystem.get_userdata_folder()
       end
     end
   end
+
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function cFilesystem.get_resource_folder()
   TRACE("cFilesystem.get_resource_folder()")
@@ -64,7 +65,7 @@ function cFilesystem.get_resource_folder()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- split path into parts, seperated by slashes
 -- important - folders should end with a slash
 -- note: this is a virtual function which doesn't require I/O access 
@@ -93,7 +94,7 @@ function cFilesystem.get_path_parts(file_path)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- provided with a complete path, returns just the filename (no extension)
 -- note: this is a virtual function which doesn't require I/O access 
 -- @param file_path (string)
@@ -117,7 +118,7 @@ function cFilesystem.get_raw_filename(file_path)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- check if the given string indicates a root folder
 -- note: a root folder is considered "/" on unix-based systems, and 
 --  [drive letter]:/ on windows systems
@@ -139,7 +140,7 @@ function cFilesystem.is_root_folder(str)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- provided with a string, this method will find the parent folder
 -- note: returned string is using unix slashes
 -- note: this is a virtual function which doesn't require I/O access 
@@ -163,26 +164,44 @@ function cFilesystem.get_parent_directory(file_path)
 
 end
 
---------------------------------------------------------------------------------
--- this will work for small files, but is not recommended on larger ones
--- @param file_in (string)
--- @param file_out (string)
--- @return boolean,string
+---------------------------------------------------------------------------------------------------
+-- Recursively copy folder 
+-- @param src_path (string)
+-- @param dest_path (string)
+-- @param [file_ext] (table), whitelisted file extensions, e.g. {"*.bmp"}
+-- @param level (int), how many levels to recurse (undefined or 0 is unlimited)
 
-function cFilesystem.copy_file(file_in,file_out)
-  TRACE("cFilesystem.copy_file(file_in,file_out)",file_in,file_out)
+function cFilesystem.copy_folder(src_path,dest_path,file_ext,level)
+  TRACE("cFilesystem.copy_folder(src_path,dest_path,file_ext,level)",src_path,dest_path,file_ext,level)
 
-  local infile = io.open(file_in, "r")
-  local instr = infile:read("*a")
-  infile:close()
+  cFilesystem.assert_string(src_path,"src_path")
+  cFilesystem.assert_string(dest_path,"dest_path")
 
-  local outfile = io.open(file_out, "w")
-  outfile:write(instr)
-  outfile:close()
+  -- @return false to stop recursion
+  local callback_fn = function(path,file,type)
+    --print(">>> callback_fn - path,file,type",path,file,type)
+    -- find difference between original path and this one, 
+    -- and append that difference to our dest.path 
+    local start_idx,end_idx = path:find(src_path)
+    if not end_idx then
+      error("Unexpected error")
+    end
+    local target_path = dest_path.."/"..path:sub(end_idx,#path)
+    if (type == cFilesystem.FILETYPE.FILE) then
+      local src_fname = path.."/"..file 
+      local dest_fname = target_path.."/"..file
+      cFilesystem.copy_file(src_fname,dest_fname)
+    else
+      os.mkdir(target_path.."/"..file)
+    end 
+    return true
+  end
+
+  cFilesystem.recurse(src_path,callback_fn,file_ext,level)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- if file already exist, return a name with (number) appended to it
 -- @param file_path (string)
 
@@ -212,7 +231,7 @@ function cFilesystem.ensure_unique_filename(file_path)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- break a string into directories
 -- note: this is a virtual function which doesn't require I/O access 
 -- @param file_path (string)
@@ -240,7 +259,7 @@ function cFilesystem.get_directories(file_path)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- create a whole folder structure in one go
 -- (unlike the standard os.mkdir, which is limited to a single folder)
 -- @param file_path (string)
@@ -278,7 +297,7 @@ function cFilesystem.makedir(file_path)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- rename a file or folder
 -- @param old_f (string)
 -- @param new_f (string)
@@ -297,7 +316,7 @@ function cFilesystem.rename(old_f,new_f)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- on non-posix systems (windows), you can't remove a folder which is not
 -- empty - this method will iterate through and delete all files/folders
 -- @param folder_path (string)
@@ -331,7 +350,7 @@ function cFilesystem.rmdir(folder_path)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- make sure a file/folder name does not contain anything considered bad 
 -- (such as special characters or preceding ./ dot-slash combinations)
 -- @param file_path (string)
@@ -354,7 +373,7 @@ function cFilesystem.validate_filename(file_path)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- convert windows-style paths to unix-style 
 --  also: remove doubleslashes 
 -- @param file_path (string)
@@ -368,7 +387,7 @@ function cFilesystem.unixslashes(file_path)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 --- remove illegal characters (similar to validate, but attempts to fix)
 -- @param file_path (string)
 -- @return string
@@ -383,7 +402,7 @@ function cFilesystem.sanitize_filename(file_path)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- add file extension (if it hasn't already got it)
 -- @param file_path (string)
 -- @param extension (string)
@@ -405,7 +424,7 @@ function cFilesystem.file_add_extension(file_path,extension)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- remove file extension (if present and matching)
 -- @param file_path (string)
 -- @param extension (string)
@@ -429,7 +448,7 @@ function cFilesystem.file_strip_extension(file_path,extension)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- so widely used it got it's own function
 
 function cFilesystem.assert_string(str,str_name)
@@ -440,7 +459,7 @@ function cFilesystem.assert_string(str,str_name)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- load string from disk
 
 function cFilesystem.load_string(file_path)
@@ -468,10 +487,10 @@ function cFilesystem.load_string(file_path)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- list files in a given folder
 -- @param str_path (string)
--- @param file_ext (table), valid file extensions 
+-- @param file_ext (table), valid file extensions , e.g. {"*.bmp"}
 -- @param include_path (bool), when true we append path to string
 -- @return table<string> 
 
@@ -502,7 +521,7 @@ function cFilesystem.list_files(str_path,file_ext,include_path)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- save string to disk
 -- @param file_path (string)
 -- @param str (string)
@@ -535,13 +554,48 @@ function cFilesystem.write_string_to_file(file_path,str)
 
 end
 
+---------------------------------------------------------------------------------------------------
+-- this will work for small files, but is not recommended on larger ones
+-- @param file_in (string)
+-- @param file_out (string)
+-- @return boolean,string
 
---------------------------------------------------------------------------------
--- iterate through folders, starting from the provided path
--- @param str_path (string)
+function cFilesystem.copy_file(file_in,file_out)
+  TRACE("cFilesystem.copy_file(file_in,file_out)",file_in,file_out)
+
+  cFilesystem.assert_string(file_in,"file_in")
+  cFilesystem.assert_string(file_out,"file_out")
+
+  local infile,err = io.open(file_in, "r")
+  if not infile then return false,err end
+  
+  local str = infile:read("*a")
+  if not str then
+    infile:close()
+    return false, "Failed to read from file"
+  end
+  
+  infile:close()
+
+  local outfile = io.open(file_out, "w")
+  if not outfile then return false,err end
+  
+  local success,err = outfile:write(str)
+  if not success then return false,err end
+
+  outfile:close()
+
+end
+
+
+---------------------------------------------------------------------------------------------------
+-- Iterate through files and folders and invoke a callback function for each entry
+-- @param str_path (string), path to start recursion
 -- @param callback_fn (function) return false to stop recursion
--- @param file_ext (table)
--- @param level (int) 
+-- @param [file_ext] (table), valid file extensions , e.g. {"*.bmp"}
+-- @param level (int), how many levels to recurse (undefined or 0 is unlimited)
+-- @return boolean, true when finished recursing (including when aborted in callback)
+-- @return string, error message when failed (e.g. invalid path)
 
 function cFilesystem.recurse(str_path,callback_fn,file_ext,level)
   TRACE("cFilesystem.recurse(str_path,callback_fn,file_ext,level)",str_path,callback_fn,file_ext,level)
@@ -555,8 +609,7 @@ function cFilesystem.recurse(str_path,callback_fn,file_ext,level)
   end
   
   if not io.exists(str_path) then
-    LOG(str_path,"path does not exist, returning")
-    return
+    return false, str_path,"path does not exist, returning..."
   end
 
   local filenames = os.filenames(str_path,file_ext)
