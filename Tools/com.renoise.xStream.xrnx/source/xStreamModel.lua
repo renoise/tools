@@ -122,7 +122,7 @@ function xStreamModel:__init(process)
 
   local props_table = {
 
-    -- Global
+    -- globals
 
     ["rns"] = {
       access = function(env) 
@@ -135,11 +135,7 @@ function xStreamModel:__init(process)
       end,
     },
     
-    -- ["xstream"] = {
-    --   access = function(env) return self.xstream end,
-    -- },
-
-    -- Constants
+    -- constants
 
     ["EMPTY_NOTE_COLUMNS"] = {
       access = function(env) 
@@ -178,11 +174,11 @@ function xStreamModel:__init(process)
     },
     ["SUPPORTED_EFFECT_CHARS"] = {
       access = function(env)
-        return xEffectColumn.SUPPORTED_EFFECT_CHARS
+        return table.rcopy(xEffectColumn.SUPPORTED_EFFECT_CHARS)
       end,
     },
 
-    -- Model properties
+    -- model props
 
     ["args"] = {
       access = function(env) return self.args end,
@@ -191,7 +187,7 @@ function xStreamModel:__init(process)
       access = function(env) return self.data end,
     },
 
-    -- xStream properties
+    -- buffer 
 
     ["clear_undefined"] = {
       access = function(env) return self.process.buffer.clear_undefined end,
@@ -215,11 +211,29 @@ function xStreamModel:__init(process)
     ["mute_mode"] = {
       access = function(env) return self.process.buffer.mute_mode end,
     },
+    ["schedule_line"] = {
+      access = function(env) return self.process.buffer.schedule_line end,
+    },
+    ["schedule_note_column"] = {
+      access = function(env) return self.process.buffer.schedule_note_column end,
+    },
+    ["schedule_effect_column"] = {
+      access = function(env) return self.process.buffer.schedule_effect_column end,
+    },
+    ["wipe_futures"] = {
+      access = function(env) return self.process.buffer.wipe_futures end,
+    },
+    ["read_from_pattern"] = {
+      access = function(env) return self.process.buffer.read_from_pattern end,
+    },
+    
+    -- process props
+    
     ["output_mode"] = {
       access = function(env) return self.process.output_mode end,
     },
 
-    -- xStream objects
+    -- class instances
 
     ["xmodel"] = {
       access = function(env) return self end,
@@ -237,7 +251,7 @@ function xStreamModel:__init(process)
       access = function(env) return self.process.xstream.voicemgr end,
     },
 
-    -- Static classes 
+    -- classes 
 
     ["cLib"] = {
       access = function(env) return cLib end,
@@ -272,9 +286,6 @@ function xStreamModel:__init(process)
     ["xAutomation"] = {
       access = function(env) return xAutomation end,
     },
-    --["xParameter"] = {
-    --  access = function(env) return xParameter end,
-    --},
     ["xPatternPos"] = {
       access = function(env) return xPatternPos end,
     },
