@@ -1,13 +1,20 @@
-xStream is a tool for [Renoise](http://www.renoise.com/tools) that can generate and transform musical data in real-time, using a subset of the lua language.
+xStream is a tool for Renoise that can generate and transform musical data, using a subset of the lua language. The tool supports real-time operation as well as offline processing.
 
 ## [Introduction](docs/introduction.md)
 
-## [Getting Started](docs/user_interface.md)
+## [The User Interface](docs/user_interface.md)
 
-## [The Model](docs/about_models.md)
+## [About Models](docs/about_models.md)
 
-## [Some Examples](docs/example_models.md)
+## [Examples](docs/example_models.md)
 
 ## [Coding with xStream](docs/coding_intro.md)
 
-## [Lua Reference](docs/lua_reference.md)
+## [xStream Lua Reference](docs/lua_reference.md)
+
+## Links and resources 
+
+* Download from the [Renoise tools page](http://www.renoise.com/tools) (latest release)
+* Visit the [Renoise forum]() for discussion and bug reports. 
+* Source code is located on [github]()
+

@@ -1,11 +1,5 @@
 # Live coding with xStream
 
-## The main loop
-
-Let's begin with the basic building stone: 
-
-### The language
-
 To get comfortable using xStream, it's essential to at least have a good understanding of how notes, columns and pattern commands work in Renoise. 
 If you do, it should be simple enough to read the syntax -  because all the variables and properties are modelled after their Renoise counterpart, 
 The rest - the programming part - is using pretty basic, lua-based logic. The results , with a small bag of tricks on top. Most are documented through the available   that can be adapted to various purposes. The whole idea was to make the pattern more accessible, after all. 

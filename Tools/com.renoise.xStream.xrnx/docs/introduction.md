@@ -24,17 +24,4 @@ The live streaming makes xStream rather unique. You're able to record every para
 Streaming output could be described as a brick-road that is laid out in front of you as you travel forward.
 
 
-## Further reading
-
-## [User Interface](user_interface.md)
-
-## [The Model](about_models.md)
-
-## [Some Examples](example_models.md)
-
-## [Coding with xStream](coding_intro.md)
-
-## [Lua Reference](lua_reference.md)
-
-
 
