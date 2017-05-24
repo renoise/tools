@@ -150,8 +150,6 @@ return function(xinc,phase)
     data.prev_phases[k] = nil
   end
   data.purge_until = xinc - keep_count
-  print(">>> data.purge_until,xinc",data.purge_until,xinc,#data.prev_phases)
-  --rprint(data.prev_phases)
   
 end]],
 },
@@ -215,11 +213,5 @@ end
 -- remember the phase - used for maintaining the 
 -- phase while changing the period/frequency...
 data.store_phase(xinc,phase)
-
-
-
-
-
-
 ]],
 }
