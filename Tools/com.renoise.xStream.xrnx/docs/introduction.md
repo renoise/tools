@@ -18,7 +18,7 @@ The next page, [User Interface](user_interface.md), aims to make you familiar wi
 
 The basic idea is quite simple - when you hit 'play' in xStream, everything you hear is the result of notes and pattern commands that got written into the pattern a little bit ahead of time. xStream has been built from the ground up, around that very idea. It works like this: 
 
-...illustration...
+<img src="./images/euclidean.gif"> 
 
 It could also be described as a road that is laid out in front of you, as you travel forward. Just how _far_ ahead (how many lines) is determined by the `writeahead` amount, which in turn depends on a combination of the current BPM and LPB. But the point is to ensure a constant, steady stream of output. 
 
@@ -28,16 +28,13 @@ The actual output is produced by the `main` method of the model. Nothing weird a
 
 When the output meets a boundary of some sort - the end of a pattern, or the song - the tool is smart enough to 'wrap' the output around. Essentially, it follows - or at least, tries to follow, your every move inside the pattern sequence. This includes not only pattern loops but also block and sequence loops.
 
-...illustration...
-
 The boundary-detection is very nice when live streaming, but disabled while using the tool in [offline mode](main_toolbar,md#offline_output). If you apply the selected model to the selected range in the pattern, it wouldn't be desirable that a block loop affected the output - and it won't. 
 
 ### Recording a performance
 
-Since xStream is always recording while streaming, the trick is to 'direct' the output where you want it. By default, xStream simply writes to the currently selected track in the currently playing pattern. So capturing a live performance doesn't involve much more than setting up a number of patterns in advance and then hitting play. 
+Since xStream is always recording while streaming, the trick is to 'direct' the output where you want it. By default, xStream simply writes to the currently selected track in the currently playing pattern. So capturing a complete live performance doesn't involve much more than setting up a number of patterns in advance and then hitting 'play'. 
 
-> NB: if you would like to record an 'endless' number of patterns without having to worry about making room first, consider installing the [AutoClonePatterns](...) tool by bystrano. 
-
+You could also consider installing a small tool such as [AutoClonePatterns](...). It allow you to jam on top of a backing track, in the form of a pattern or series of looped patterns.
 
 > Next - [User Interface](user_interface.md) >
 
