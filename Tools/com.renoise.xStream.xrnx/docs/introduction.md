@@ -23,7 +23,7 @@ Sounds complicated? Well, xStream is somewhere between a development tool and an
 
 As a tool, xStream is pretty open-ended. You can use it strictly as a compositional aid - "stamp" the output onto a given range (track or selection), using the available keyboard shortcuts. Or you can connect your MIDI controller and use it for improvisation and live/streaming recordings.
 
-The next page, [User Interface](user_interface.md), aims to make you familiar with basic operation. But essentially, you have a very powerful favorites & preset system that can create shapshots of any given settings. You can recall presets and stream or apply them anywhere, to [any track](known_limitations.md) in Renoise. Also, Streaming can be set up to start automatically, when playback is active, or when playing while in edit mode. 
+The next page, [User Interface](user_interface.md), aims to make you familiar with basic operation. But essentially, you have a very powerful favorites & preset system that can create shapshots of any given settings. You can recall presets and stream or apply them anywhere, to [any track](known_limitations-gotchas.md) in Renoise. Also, Streaming can be set up to start automatically, when playback is active, or when playing while in edit mode. 
 
 ## So, how does streaming work?
 

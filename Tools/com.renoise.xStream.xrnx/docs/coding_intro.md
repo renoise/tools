@@ -7,7 +7,10 @@ If you are familiar with these things, the xStream syntax should make some sense
 
 ## A new model, a new `main`
 
-To create a new model, follow these steps:
+As it was mentioned in the [introduction](), streaming works thanks to output being written just ahead of the playback. And the part which is reponsible for writing the output is called the 'main' method. 
+
+So, to create a new main method, we need to create a new model. 
+That's not hard, just follow these steps:
 
 1. Click the '+' button in the model toolbar to show the 'Create/Import' dialog.
 2. Next, select 'Create from scratch (empty)'
@@ -18,9 +21,9 @@ You should now see something that looks similar to this:
 
 What you're seeing is the `main` method. This is the basic function that is evaluated once for every line that xStream processes. 
 
-> Note: if you don't see the editor as pictured above, press the arrow button on the left-hand side and/or switch to [expanded mode]. This will toggle the visibility of the code editor. 
+> Note: if you don't see the editor as pictured above, perhaps that part of the user interface is collapsed or hidden. You can control this from the [main-toolbar ](main_toolbar.md#main-toolbar). 
 
-Let's walk through the code as it appears.
+Ready? ... OK, let's take a look at the code:
 
     -------------------------------------------------------------------------------
     -- Empty configuration
@@ -32,7 +35,7 @@ Let's walk through the code as it appears.
 
 The variable `xline` refers to the _current line_ in the track, and `xline.note_columns[1]` provides access to the first note column in that line.  
 
-Notice also that all lines are prefixed with two (or more) dashes - this means that it is a comment. Comments are excluded from the processing, and can be used for documentating the code.
+Notice also that all lines are prefixed with two (or more) dashes - in lua, this means that the line is a comment. Comments can be used for documentating the code.
 
 ## Live syntax checking
 
