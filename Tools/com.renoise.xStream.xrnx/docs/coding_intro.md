@@ -95,6 +95,10 @@ Here, it's much easier and more convenient to simply raise the value by 12 (12 s
 	-- raise existing notes by one octave 
 	xline.note_columns[1].note_value = xline.note_columns[1].note_value + 12
 
+**NB: The code above is actually a bad example**, as the notes will eventually exceed the valid range. Maybe not the first time you run the code, but eventually. The reason is simple enough: notes can't have a value higher than 120. To fix this problem, use a function such as `math.min(120,my_note_value)` or, to address both upper and lower boundaries at the same, clamp the value using `cLib.clamp_value(val,min,max)`
+
+
+
 > Note: if you have the need to convert between string and number values, the classes xNoteColumn and xEffectColumn have a lot of handy methods. See the [lua reference](lua_reference.md#supporting-classes) for more information
 
 ## Changing things over time
@@ -128,17 +132,23 @@ When pressing play, this time you should see the following output:
     xpos  1, 4
     etc.
 
-The difference between the two is that `xinc` does not reflection the playback position in the pattern. For example, in case you have looped the pattern it will keep increasing as the streaming reaches the end of the pattern and starts over at the top. And also, `xinc` starts counting from zero while `xpos` counts from 1. 
+The difference between the two is that `xinc` does not reflect the playback position in the pattern. For example, in case you have looped the pattern it will keep increasing as the streaming reaches the end of the pattern and starts over at the top. And also, `xinc` starts counting from zero while `xpos` counts from 1. 
 
 Rule of thumb: if the output should somehow synchronize with the pattern, use `xpos`. Otherwise, `xinc` is often the better choice.
 
 ## Changing things on the fly
 
-While it is possible to type text into the code editor, this is hardly an optimal way to e.g. change notes or control the velocity of notes. A much better alternative is to use 'arguments' for this kind of purpose. 
+While it is possible to type text into the code editor, this is hardly an optimal way to e.g. change notes or control the velocity of notes. A much better alternative is to use _arguments_ for this kind of purpose. 
 
 Essentially, arguments allow you to associate values in the code with something outside the code. This includes things such as an on-screen slider or checkbox, MIDI input or states within Renoise itself.
 
-See also [this chapter](model_arguments.md) for more information on arguments - their properties, and how to create them. 
+While that might sound complicated, arguments are actually really simple to work with. Here is an example:
+
+    -- assigns the value of my_arg to a note
+    xline.note_columns[1].note_value = args.my_arg 
+
+In the context of the `main` method, arguments are treated just like any other value. There is more to arguments than this, but that is all covered in more detail [here](model_arguments.md) (how to create arguments, what their properties are, etc.)
+
 
 ## Writing automation
 
