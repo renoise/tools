@@ -6,7 +6,7 @@ xBlockLoop
 
 Methods for working with the Renoise loop-block.
 
-# About
+## About
 
 In the Renoise API, the loop-block can be controlled via transport.loop_range(). But the 
 implementation is a both quite strict (as values are restricted to coefficients) and bit fuzzy, 

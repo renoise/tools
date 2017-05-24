@@ -17,15 +17,25 @@ See also:
 
 class 'xLinePattern'
 
+--- enum, defines the available column types 
 xLinePattern.COLUMN_TYPES = {
   NOTE_COLUMN = 1,
   EFFECT_COLUMN = 2,
 }
 
+--- number, maximum number of note columns 
 xLinePattern.MAX_NOTE_COLUMNS = 12
+
+--- number, maximum number of effect columns 
 xLinePattern.MAX_EFFECT_COLUMNS = 8
+
+--- number, constant value used for representing empty values 
 xLinePattern.EMPTY_VALUE = 255     
+
+--- string, constant value used for representing empty values 
 xLinePattern.EMPTY_STRING = "00"
+
+--- table, supported effect characters
 xLinePattern.EFFECT_CHARS = {
   "0","1","2","3","4","5","6","7", 
   "8","9","A","B","C","D","E","F", 

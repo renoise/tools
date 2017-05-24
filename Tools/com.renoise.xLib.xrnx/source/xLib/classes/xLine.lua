@@ -20,17 +20,24 @@ See also:
 
 class 'xLine'
 
+--- table, containing 12 empty tables 
 xLine.EMPTY_NOTE_COLUMNS = {
   {},{},{},{},
   {},{},{},{},
   {},{},{},{},
 }
 
+--- table, containing 8 empty tables 
 xLine.EMPTY_EFFECT_COLUMNS = {
   {},{},{},{},
   {},{},{},{},
 }
 
+--- table, containing the following
+--    {
+--      note_columns = xLine.EMPTY_NOTE_COLUMNS,
+--      effect_columns = xLine.EMPTY_EFFECT_COLUMNS,
+--    }
 xLine.EMPTY_XLINE = {
   note_columns = xLine.EMPTY_NOTE_COLUMNS,
   effect_columns = xLine.EMPTY_EFFECT_COLUMNS,

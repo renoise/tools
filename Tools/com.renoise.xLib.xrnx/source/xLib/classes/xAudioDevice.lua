@@ -4,9 +4,7 @@ xLib
 
 --[[--
 
-Static methods for dealing with Audio Devices
-.
-#
+Static methods for dealing with Audio Devices.
 
 ]]
 

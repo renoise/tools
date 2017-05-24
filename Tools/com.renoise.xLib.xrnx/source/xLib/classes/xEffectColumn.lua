@@ -1,21 +1,26 @@
---[[============================================================================
+--[[===============================================================================================
 xEffectColumn
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
-Use xEffectColumn to create 'virtual' renoise.EffectColumn objects
-.
+Use xEffectColumn to create 'virtual' renoise.EffectColumn objects.
+
 #
 
-Unlike the renoise.EffectColumn, this one can be freely defined, 
-without the need to have the line present in an actual song 
+Unlike the renoise.EffectColumn, this one can be freely defined, without the need to have 
+the line present somewhere in the actual song.
 
-You create an instance by feeding it a descriptive table in the constructor.
-All string-based values are automatically converted into their numeric
-counterparts. 
+You can create an instance by feeding it a descriptive table in the constructor, or by letting 
+the class read a specific effect-column (via the method `do_read()`)
+
+Note that all string-based values are automatically converted into numbers, and vice versa. 
+Setting the `note_string` and then requesting the `note_value` will yield the same value, 
+represented as string or number, respectively. 
 
 ]]
+
+--=================================================================================================
 
 class 'xEffectColumn'
 
@@ -31,58 +36,38 @@ xEffectColumn.output_tokens = {
     "amount_value",
 }
 
---- List of effect commands (names)
+--- List of supported effect commands. <br>Values are represented 
+-- in the accompanying table, `xEffectColumn.SUPPORTED_EFFECT_CHARS` 
 xEffectColumn.SUPPORTED_EFFECTS = {
-  "Axy - Arpeggio",
-  "Bxx - Backwards",
-  "Cxy - Cut Volume",
-  "Dxx - Slide Pitch Down",
-  "Exx - Set Envelope Pos",
-  "Gxx - Glide Note ",
-  "Ixx - Fade Volume In",
-  "Jxx - Track Routing",
-  "Lxx - Set Track Level",
-  "Mxx - Set Note Volume",
-  "Nxy - Set Auto Pan",
-  "Pxx - Set Track Pan",
-  "Qxx - Delay By Ticks",
-  "Rxy - Retrigger Line",
-  "Sxx - Trigger Offset/Slice",
-  "Txy - Set Tremolo",
-  "Uxy - Slide Pitch Up",
-  "Vxy - Set Vibrato",
-  "Wxx - Set Track Width",
-  "Xxx - Stop All Notes",
-  "Yxx - MaYbe Trigger Line",
-  "Zxy - Trigger Phrase", -- API5
+  "Axy - Arpeggio", -- `SUPPORTED_EFFECT_CHARS` = 10
+  "Bxx - Backwards", -- `SUPPORTED_EFFECT_CHARS` = 11
+  "Cxy - Cut Volume", -- `SUPPORTED_EFFECT_CHARS` = 12
+  "Dxx - Slide Pitch Down", -- `SUPPORTED_EFFECT_CHARS` = 13
+  "Exx - Set Envelope Pos", -- `SUPPORTED_EFFECT_CHARS` = 14
+  "Gxx - Glide Note ", -- `SUPPORTED_EFFECT_CHARS` = 16
+  "Ixx - Fade Volume In", -- `SUPPORTED_EFFECT_CHARS` = 18
+  "Jxx - Track Routing", -- `SUPPORTED_EFFECT_CHARS` = 19
+  "Lxx - Set Track Level", -- `SUPPORTED_EFFECT_CHARS` = 21
+  "Mxx - Set Note Volume", -- `SUPPORTED_EFFECT_CHARS` = 22
+  "Nxy - Set Auto Pan", -- `SUPPORTED_EFFECT_CHARS` = 23
+  "Pxx - Set Track Pan", -- `SUPPORTED_EFFECT_CHARS` = 25
+  "Qxx - Delay By Ticks", -- `SUPPORTED_EFFECT_CHARS` = 26
+  "Rxy - Retrigger Line", -- `SUPPORTED_EFFECT_CHARS` = 27
+  "Sxx - Trigger Offset/Slice", -- `SUPPORTED_EFFECT_CHARS` = 28
+  "Txy - Set Tremolo", -- `SUPPORTED_EFFECT_CHARS` = 29
+  "Uxy - Slide Pitch Up", -- `SUPPORTED_EFFECT_CHARS` = 30
+  "Vxy - Set Vibrato", -- `SUPPORTED_EFFECT_CHARS` = 31
+  "Wxx - Set Track Width", -- `SUPPORTED_EFFECT_CHARS` = 32
+  "Xxx - Stop All Notes", -- `SUPPORTED_EFFECT_CHARS` = 33
+  "Yxx - MaYbe Trigger Line", -- `SUPPORTED_EFFECT_CHARS` = 34
+  "Zxy - Trigger Phrase", -- -- `SUPPORTED_EFFECT_CHARS` = 35 (API5 ONLY)
 }
 
--- List of effect commands (values)
 xEffectColumn.SUPPORTED_EFFECT_CHARS = {
-  10, --A
-  11, --B
-  12, --C
-  13, --D
-  14, --E
-  16, --G
-  18, --I
-  19, --J
-  21, --L
-  22, --M
-  23, --N
-  25, --P
-  26, --Q
-  27, --R
-  28, --S
-  29, --T
-  30, --U
-  31, --V
-  32, --W
-  33, --X
-  34, --Y
-  35, --Z (API5)             
+  10,11,12,13,14,16,18,19,21,22,23,25,26,27,28,29,30,31,32,33,34,35       
 }
--------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------
 -- [Constructor] accepts a single argument for initializing the class  
 -- @param args (table), descriptor
 
@@ -113,7 +98,7 @@ function xEffectColumn:__init(args)
 end
 
 -- Get/set methods
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xEffectColumn:get_number_value()
   return self._number_value
@@ -133,7 +118,7 @@ function xEffectColumn:set_number_string(str)
   self._number_value = xEffectColumn.number_string_to_value(str)
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xEffectColumn:get_amount_value()
   return self._amount_value
@@ -153,7 +138,7 @@ function xEffectColumn:set_amount_string(str)
   self._amount_value = xEffectColumn.amount_string_to_value(str)
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [Class] Write output to the provided effect-column 
 -- @param fx_col (renoise.EffectColumn)
 -- @param tokens (table<xStreamModel.output_tokens>)
@@ -176,7 +161,7 @@ function xEffectColumn:do_write(fx_col,tokens,clear_undefined)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [Class] Define a function for each possible token (see above)
 
 function xEffectColumn:do_write_number_value(fx_col,clear_undefined)
@@ -215,7 +200,7 @@ function xEffectColumn:do_write_amount_string(fx_col,clear_undefined)
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [Static] Convert number value to string 
 -- @param val (number)
 -- @return string 
@@ -242,7 +227,7 @@ function xEffectColumn.number_string_to_value(str)
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [Static] Convert amount value to string 
 -- @param val (number)
 -- @return string 
@@ -256,7 +241,7 @@ function xEffectColumn.amount_string_to_value(str)
   return tonumber("0x"..str)
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [Static] Read from pattern and turn into descriptor 
 -- @param fx_col (renoise.EffectColumn)
 -- @return table 
@@ -274,7 +259,7 @@ function xEffectColumn.do_read(fx_col)
 end
 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xEffectColumn:__tostring()
 

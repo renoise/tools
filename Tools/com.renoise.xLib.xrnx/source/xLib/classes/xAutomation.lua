@@ -4,9 +4,7 @@ xAutomation
 
 --[[--
 
-Easy control of parameter automation
-.
-#
+Easy control of parameter automation.
 
 ]]
 
