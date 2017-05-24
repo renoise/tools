@@ -271,6 +271,12 @@ function xStreamModel:__init(process)
     ["xMidiMessage"] = {
       access = function(env) return xMidiMessage end,
     },
+    ["xNoteColumn"] = {
+      access = function(env) return xNoteColumn end,
+    },
+    ["xEffectColumn"] = {
+      access = function(env) return xEffectColumn end,
+    },
     ["xOscMessage"] = {
       access = function(env) return xOscMessage end,
     },
