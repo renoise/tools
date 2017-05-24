@@ -1,18 +1,20 @@
---[[============================================================================
+--[[===============================================================================================
 cReflection
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
-Pull off some API tricks to achieve reflection-alike abilities
-.
-#
+Pull off some API tricks to achieve reflection-alike abilities.
+
+##
 
 ]]
 
+--=================================================================================================
+
 class 'cReflection'
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Copy properties from one class instance to another
 -- @param from_class (userdata)
 -- @param to_class (userdata)
@@ -55,7 +57,7 @@ function cReflection.copy_object_properties(from_class,to_class,level)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- cast variable as basic datatype (boolean,number,string)
 
 function cReflection.cast_value(val,val_type)
@@ -89,7 +91,7 @@ function cReflection.cast_value(val,val_type)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- get properties from class instance 
 -- @param class (userdata)
 -- @param level (int) internal counter
@@ -118,7 +120,7 @@ function cReflection.get_object_properties(class,level)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- get information about native object (renoise API)
 
 function cReflection.get_object_info(class)
@@ -130,7 +132,7 @@ function cReflection.get_object_info(class)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param val (string), the type we want to check
 -- @return int, or nil if not a recognized type
 
@@ -148,7 +150,7 @@ function cReflection.is_standard_type(val)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- evaluate string, assign value to the resulting object 
 -- @param str (string), e.g. "renoise.song().transport.keyboard_velocity"
 -- @param value (vararg), any basic lua type
@@ -172,7 +174,7 @@ function cReflection.set_property(str,value)
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param str (string), name of indentifier 
 -- @return boolean, string (error message when failed)
 

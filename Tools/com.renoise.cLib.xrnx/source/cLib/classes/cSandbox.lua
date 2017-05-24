@@ -4,8 +4,8 @@ cSandbox
 
 --[[--
 
-cSandbox allows you to execute code in a controlled environment
-.
+cSandbox allows you to execute code in a controlled environment.
+
 #
 
 ## How to use

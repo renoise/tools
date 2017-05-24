@@ -4,10 +4,9 @@ cNumber
 
 --[[--
 
-Extend standard number with min/max and polarity
-.
-#
+Extend standard number with min/max and polarity.
 
+## 
 A good base class for e.g. device parameters, which it is modelled over
 
 ]]
