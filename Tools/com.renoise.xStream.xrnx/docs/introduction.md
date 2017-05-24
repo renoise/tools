@@ -1,16 +1,25 @@
 # Introduction
 
-xStream is a [Renoise tool](http://www.renoise.com/tools/xstream) that facilitates _live coding_ in Renoise, using a subset of the lua language. 
+Welcome to the xStream documentation. 
+Written for v1.9. 
+
+## How does works xStreaming work?
+
+xStream works by using _live evaluated code_ to "program" the pattern editor and automation in Renoise. 
+This is done, using a subset of the lua language with some xStream additions on top. 
 
 So you can pick up the tool, start typing some commands, and soon enough, output starts to appear in the pattern editor. 
 
 ...illustration...
 
-Any such code represents a 'program' that, in xStream terminology, is referred to as a _model_. These models can easily be saved and exchanged with with others, as they are entirely text-based.
+Such a thing is called a [model](about_models.md). Essential a model is a small program, and xStream comes with 'batteries included' - demonstration models that range from basic examples to very advanced ones.
 
-If this all sounds rather nerdy - well, it is! But don't worry: the tool comes with 'batteries included': there is a built-in selection of models to choose from - not just basic examples, but also more advanced ones that aim to be genuinely useful.
+Models can easily be saved and exchanged with with others, as they are entirely text-based. Read about the file formats [here](file_formats.md).
 
-Once you learn what can be achieved with just a few lines of code, you'll probably want to create new scripts (models) from scratch. This is what the later chapter, [Live Coding with xStream](), is all about. 
+## Learning more
+
+Once you learn what can be achieved with just a few lines of code, you'll probably want to create new scripts (models) from scratch. This is what the later chapter, [Live Coding with xStream](), is about. 
+
 
 ## Features at a glance
 

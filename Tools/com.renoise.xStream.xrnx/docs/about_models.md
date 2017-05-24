@@ -6,7 +6,7 @@ And obviously, the focus in xStream is very much on the 'coding' aspect - creati
 
 To learn how models are structured, read on. Each of these chapters deal with their most important aspects:
 
-## [Live coding](live_coding_intro.md)
+## [Live coding](coding_intro.md)
 
 * Getting comfortable with the `main` method
 * Sub-methods and data

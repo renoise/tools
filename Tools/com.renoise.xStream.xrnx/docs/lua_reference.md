@@ -7,25 +7,26 @@ Please note that this is by no means a complete reference of Lua or the Renoise 
 
 ## Constants
 
-|Name|Type|Value|Description|
-|----|----|-----|-----------|
-|`NOTE_OFF_VALUE`|number|121|"OFF" in the pattern editor
-|`EMPTY_NOTE_VALUE`|number|120|"---" in the pattern editor
-|`EMPTY_VOLUME_VALUE`|number|255|
-|`EMPTY_VALUE`|number|255
-|`EMPTY_NOTE_COLUMNS`|table
-|`EMPTY_EFFECT_COLUMNS`|table
-|`EMPTY_XLINE`|table
-|`SUPPORTED_EFFECT_CHARS`|table
+|Name|Type|Value/Description|
+|----|----|-----------------|
+|`NOTE_OFF_VALUE`|number|121, shown as "OFF" in pattern. <br>See [xNoteColumn.NOTE_OFF_VALUE](https://renoise.github.io/luadocs/xlib/modules/xNoteColumn.html#NOTE_OFF_VALUE)
+|`EMPTY_NOTE_VALUE`|number|120, shown as "---" in pattern. <br>See [xNoteColumn.EMPTY_NOTE_VALUE](https://renoise.github.io/luadocs/xlib/modules/xNoteColumn.html#EMPTY_NOTE_VALUE)
+|`EMPTY_VOLUME_VALUE`|number|255, shown as "‥" in pattern. <br>See [xNoteColumn.EMPTY_VOLUME_VALUE](https://renoise.github.io/luadocs/xlib/modules/xNoteColumn.html#EMPTY_VOLUME_VALUE)
+|`EMPTY_VALUE`|number|255, shown as "…" in pattern. <br>See [xLinePattern.EMPTY_VALUE](https://renoise.github.io/luadocs/xlib/modules/xLinePattern.html#EMPTY_VALUE)
+|`EMPTY_NOTE_COLUMNS`|table|Set of 12 empty tables. <br>See [xLine.EMPTY_NOTE_COLUMNS](https://renoise.github.io/luadocs/xlib/modules/xLine.html#EMPTY_NOTE_COLUMNS)
+|`EMPTY_EFFECT_COLUMNS`|table|Set of 8 empty tables. <br>See [xLine.EMPTY_EFFECT_COLUMNS](#classes).
+|`EMPTY_XLINE`|table|Set of empty note/effect-columns. <br>See [xLine.EMPTY_XLINE](#classes)
+|`SUPPORTED_EFFECT_CHARS`|table|List of effect commands (values) <br>See [xEffectColumn.SUPPORTED_EFFECT_CHARS](https://renoise.github.io/luadocs/xlib/modules/xEffectColumn.html#SUPPORTED_EFFECTS)
 
 ## Properties 
 
+
 |Name|Type|Description|
 |----|----|-----------|
-|`rns`|object|Shorthand for renoise.song()  
-|`renoise`|object|Access to the global renoise object  
-|`xinc`|number|An ever-increasing counter, initialized when output is started  
-|`args`|table|Provides access to [model arguments](about_models.md#arguments)
+|`rns`|object|Shorthand for `renoise.song()` [read-only]
+|`renoise`|object|Access to the global renoise object [read-only] 
+|`xinc`|number|An ever-increasing counter, available once output starts [read-only]
+|`args`|table|Provides access to [model arguments](about_models.md#arguments) 
 |`data`|table|Provides access to [model user-data](about_models.md#data)  
 |`xpos`|SongPos|The song position, contains these properties:<br> `sequence` : number <br> `line` : number
 |`xplaypos`|xPlayPos|Access the precise playback position<br>_Shorthand for `xstream.xpos.playpos`_    
