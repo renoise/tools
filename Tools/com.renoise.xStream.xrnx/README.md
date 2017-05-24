@@ -1,3 +1,12 @@
+
+    ██╗  ██╗███████╗████████╗██████╗ ███████╗ █████╗ ███╗   ███╗
+    ╚██╗██╔╝██╔════╝╚══██╔══╝██╔══██╗██╔════╝██╔══██╗████╗ ████║
+     ╚███╔╝ ███████╗   ██║   ██████╔╝█████╗  ███████║██╔████╔██║
+     ██╔██╗ ╚════██║   ██║   ██╔══██╗██╔══╝  ██╔══██║██║╚██╔╝██║
+    ██╔╝ ██╗███████║   ██║   ██║  ██║███████╗██║  ██║██║ ╚═╝ ██║
+    ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝
+
+
 xStream is a tool for Renoise that can generate and transform musical data, using a subset of the lua language. The tool supports real-time operation as well as offline processing.
 
 ## [Introduction](docs/introduction.md)
