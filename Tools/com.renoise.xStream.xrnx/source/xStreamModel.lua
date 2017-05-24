@@ -143,17 +143,17 @@ function xStreamModel:__init(process)
 
     ["EMPTY_NOTE_COLUMNS"] = {
       access = function(env) 
-        return xLine.EMPTY_NOTE_COLUMNS 
+        return table.rcopy(xLine.EMPTY_NOTE_COLUMNS)
       end,
     },
     ["EMPTY_EFFECT_COLUMNS"] = {
       access = function(env) 
-        return xLine.EMPTY_EFFECT_COLUMNS
+        return table.rcopy(xLine.EMPTY_EFFECT_COLUMNS)
       end,
     },
     ["EMPTY_XLINE"] = {
       access = function(env) 
-        return xLine.EMPTY_XLINE
+        return table.rcopy(xLine.EMPTY_XLINE)
       end,
     },
     ["NOTE_OFF_VALUE"] = {
@@ -356,7 +356,6 @@ function xStreamModel:set_callback_str(str_fn)
 
   -- check if the callback contain any code at all? 
   self.callback_contains_code = cSandbox.contains_code(str_fn)
-  --print("self.callback_contains_code",self.callback_contains_code,self.name)
 
   -- live syntax check
   -- (a bit 'funny'' to set the buffer status from here, but...)
@@ -375,7 +374,7 @@ function xStreamModel:set_callback_str(str_fn)
     if not passed then -- should not happen! 
       error("*** "..tostring(err))
     end
-    
+    -- process is listening for this  
     self.compiled_observable:bang()
 
   else
