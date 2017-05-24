@@ -1,10 +1,20 @@
 # xStream Changelog
 
 ## 1.55
-- Tool-dev: refactoring several internal classes 
+- Core: refactored several internal classes
+- Core: more solid, simpler streaming implementation
 - Fixed: loading favorites.xml was broken
-- Added: LFO class + test-models
-- Added: RandomScale model
+- Fixed: selecting [no argument] would throw an error
+- Fixed: table constants (e.g. EMPTY_XLINE) are now returned as a copy
+- Fixed: read-only value arguments are not MIDI assignable
+- Fixed: error when trying to create argument with just one "item"
+- Fixed: failure to export presets when arguments are tabbed
+- Fixed: setting custom userdata folder is now applied immediately
+- Tweaked: lua syntax now features additional shorthand accessors
+- Added: ability to migrate userdata to a custom folder
+- Added: xLFO class + demonstration model
+- Added: RandomScale model 
+- Added: Updated documentation 
 
 ## 1.52 
 - Fixed: Automation output accidentally got broken in 1.51
