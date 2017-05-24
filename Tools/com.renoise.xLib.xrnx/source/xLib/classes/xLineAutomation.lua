@@ -51,7 +51,10 @@ function xLineAutomation:do_write(line,ptrack_auto,patt_num_lines)
     return
   end
 
-  -- TODO clear existing, using API5 feature that can "clear line at"
+  -- clear existing line, if supported 
+  if (renoise.API_VERSION <= 5) then
+    ptrack_auto:clear_range(line,line+1)
+  end
 
   for k,v in ipairs(self.automation) do
     ptrack_auto:add_point_at(line+v.time_offset or 0,v.value or 0)
