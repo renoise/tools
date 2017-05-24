@@ -67,7 +67,7 @@ xStream-specific classes
     xStream
     xStreamProcess
 
-## Supporting classes. 
+## Supporting classes
 
 > Please see the [xLib](https://renoise.github.io/luadocs/xlib/index.html) and [cLib](https://renoise.github.io/luadocs/clib/index.html) luadoc references for more information.
 
@@ -81,6 +81,8 @@ xStream-specific classes
 | xTransport | Extended control of the Renoise transport
 | xScale | Methods for working with notes & harmonic scales
 | xMidiMessage | An extended MIDI message
+| xNoteColumn | A virtual representation of renoise.NoteColumn
+| xEffectColumn | A virtual representation of renoise.EffectColumn
 | xOscMessage | An extended OSC message
 | xAutomation | Easy control of parameter automation
 | xParameter | N/A
