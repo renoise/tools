@@ -73,30 +73,59 @@ Alternatively, we could have defined the note using a numeric value:
 
 And we could continue like this, creating one note-columns after another, using the column index as the indicator:
 
-	-- Example A: major triad in C...
+	-- a major triad in C...
 	xline.note_columns[1].note_string = "C-4"
 	xline.note_columns[2].note_string = "E-4"
 	xline.note_columns[3].note_string = "G-4"
 
-## (Re-)defined and undefined ...
+Effect columns are defined pretty much the same way: 
 
-A different syntax is possible too. Consider the following example, which uses curly brackets {} instead of square ones []: 
+	-- produce an endless stream of Zxx commands:
+	xline.effect_columns[1].number_string = "0Z"
+	xline.effect_columns[1].amount_value = 1
 
-	-- Example B: also a major triad in C...
-	xline.note_columns = {
-    {note_string = "C-4"},
-    {note_string = "E-4"},
-    {note_string = "G-4"},
-  }
+## Transforming pattern data
 
-It looks similar and certainly creates similar output. But there is actually a subtle, but important difference: in the curly bracketed example, you are _redefining_ the note columns entirely. The first example will keep any existing data (i.e. what was read from the pattern and then passed on as `xline`). But in the second example, any existing note-columns - including the fourth, fifth etc. ones - has become 'undefined'. 
+As you might have noticed, the previous examples were sometimes using `note_string`, and at other times, `note_value`. 
 
+The difference is that one takes a string as argument and the other one is a numeric representation of the same value. So having the note specified as a number as a opposed to, say, `C-4`, is better when the note value is not a fixed value, but changes over time. 
 
-...
+Which brings us to...
 
 ## Changing things over time
 
-...
+Since xStream is all about streaming and generating output over time, there are two important properties to learn about. 
+
+The first one is called `xinc`. This is an ever-increasing counter that starts from 0 as you start streaming and counts upwards by one, for each line that got processed. 
+
+To demonstrate, add the following statement to the main method:
+
+    print('xinc',xinc)
+
+Press play and you should see this output in the scripting console:
+
+    xinc  0
+    xinc  1
+    xinc  2
+    etc.
+
+The _other_ important time-keeper is called xpos. This is a regular `renoise.SongPos` that reflect the currently playing/streaming position in the pattern. Technically, a song-pos is a table-alike object containing two properties: `line` and `sequence`.
+
+Try to replace the previous print statement with this one:
+
+    print('xpos',xpos)
+
+When pressing play, this time you should see the following output:
+
+    xpos  1, 1
+    xpos  1, 2
+    xpos  1, 3
+    xpos  1, 4
+    etc.
+
+The difference between the two is that `xinc` does not reflection the playback position in the pattern. For example, in case you have looped the pattern it will keep increasing as the streaming reaches the end of the pattern and starts over at the top. And also, `xinc` starts counting from zero while `xpos` counts from 1. 
+
+Rule of thumb: if the output should somehow synchronize with the pattern, use `xpos`. Otherwise, `xinc` is often the better choice.
 
 ## Changing things on the fly
 
@@ -109,6 +138,32 @@ See also [this chapter](model_arguments.md) for more information on arguments - 
 ## Writing automation
 
 ...
+
+## Advanced topic: defined vs. undefined
+
+We have already covered how you can access the `xline` and modify notes or write effect commands. But there is an additional feature which might not be immediately obvious. It involves how xStream is dealing with 'undefined' content. 
+
+Take a quick look at this previous example:
+
+	-- Example A: major triad in C...
+	xline.note_columns[1].note_string = "C-4"
+	xline.note_columns[2].note_string = "E-4"
+	xline.note_columns[3].note_string = "G-4"
+
+Now consider the following example, which packs the note columns in curly brackets {} instead of square ones: 
+
+    -- Example B: also a major triad in C...
+    xline.note_columns = {
+      {note_string = "C-4"},
+      {note_string = "E-4"},
+      {note_string = "G-4"},
+    }
+
+It looks similar and certainly creates similar output. But there is actually an important difference: in the second example, you are _redefining_ the note columns entirely. Any existing information in note-columns - including the fourth, fifth etc. ones - have become 'undefined'. 
+
+Perhaps this doesn't sound like a big deal, but 'undefined' has a special meaning in xStream. Using the global `clear_undefined` flag, you can decide whether undefined content should be erased on output or left as-is. 
+
+One example that clearly demonstrates how much of a difference this makes is the  model called `Random Increase`. Running it with `clear_undefined` disabled will gradually amass a huge amount of notes. When enabled, all you will get is a periodic note, every now and then. 
 
 
 > < Previous - [Examples](example_models.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [xStream Lua Reference](lua_reference.md) >
