@@ -4,7 +4,7 @@ xEffectColumn
 
 --[[--
 
-Use xEffectColumn to create 'virtual' renoise.EffectColumn objects.
+A virtual representation of renoise.EffectColumn.
 
 #
 

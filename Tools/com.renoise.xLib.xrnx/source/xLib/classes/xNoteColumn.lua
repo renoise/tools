@@ -4,8 +4,8 @@ xNoteColumn
 
 --[[--
 
-This class is representing a single renoise.NoteColumn in xLib
-.
+A virtual representation of renoise.NoteColumn.
+
 #
 
 Unlike the renoise.NoteColumn, this one can be freely defined, without 
