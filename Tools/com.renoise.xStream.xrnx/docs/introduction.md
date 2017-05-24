@@ -11,38 +11,30 @@
 Welcome to the xStream documentation. 
 Written for v1.9. 
 
-## What does it mean to xStream?
+## What is xStream?
 
-xStream is using _live evaluated code_ to "re-program" the pattern editor and automation data. 
+xStream is tool for [Renoise](http://www.renoise.com/tools) that uses _live evaluated code_ to "re-program" the pattern editor and automation data. 
 
 It's up to you to decide how to use it: as a composition tool where you "apply" the output to a given range (track or selection), or as a real-time streaming tool, suitable for improvisation and live performances.
 
-The live streaming aspect is the one aspect that makes xStream unique. It's able to record everything, from parameter tweaking to switching between presets. 
-This is so, as everything is written into the pattern a moment before it is supposed to play
+The live streaming makes xStream rather unique. You're able to record every parameter tweak, preset switch with ease. Actually - the hard part is *not* to record these things (hint: you can't). This is so, because everything you hear is the result of notes and pattern commands that got written into the pattern a little bit ahead of time.
 
 ...illustration...
 
-A kind of brick-road that lays itself out in front of you :D
+Streaming output could be described as a brick-road that is laid out in front of you as you travel forward.
 
-xStream comes with 'batteries included' - demonstration models that range from basic examples to very advanced ones.
-Please take your time to play with some of the provided models before you venture deeper into this tool! 
-[Example models](example_models.md)
 
 ## Further reading
 
-### User interface
-An introduction to the various parts that make up the xStream UI. 
+## [User Interface](user_interface.md)
 
-### Models
-As the previous illustration showed, output is written ahead of the playback. So how does that actually work?
-It comes down to a thing called the [model](about_models.md). Essentialy, a small program. 
+## [The Model](about_models.md)
 
-### File formats
-Models can easily be saved and exchanged with with others, as they are entirely text-based.   
-Read about the file formats [here](file_formats.md).
+## [Some Examples](example_models.md)
 
-### Coding
-Once you learn what can be achieved with just a few lines of code, you'll probably want to create new scripts (models) from scratch. This is what the later chapter, [Live Coding with xStream](coding_intro.md), is about. 
+## [Coding with xStream](coding_intro.md)
+
+## [Lua Reference](lua_reference.md)
 
 
 

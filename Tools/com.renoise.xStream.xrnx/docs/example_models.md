@@ -1,6 +1,6 @@
 # Bundled examples
 
-Here are a few examples to give you a taste of what xStream can be used for:
+To help illustrate how this works, xStream comes with 'batteries included' - various examples that demonstrate its possibilities. They will help you to get a hang of the basics, and then some.  
 
 |Name|Description|
 |----|-----------|
