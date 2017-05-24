@@ -216,7 +216,7 @@ if (data.position == #xvoices) then
   data.position = data.position-1
 end
 -- clear output ahead of the current position
-wipe_futures()]],
+xbuffer:wipe_futures()]],
   ["voice.triggered"] = [[------------------------------------------------------------------------------
 -- respond to voice-manager events
 -- ('xvoicemgr.triggered/released/stolen_index' contains the value)
@@ -230,7 +230,7 @@ if (#xvoices == 1) then
   
 end
 
-wipe_futures()]],
+xbuffer:wipe_futures()]],
 },
 options = {
  color = 0x935875,

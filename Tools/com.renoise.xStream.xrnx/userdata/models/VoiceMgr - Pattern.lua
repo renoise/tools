@@ -106,7 +106,7 @@ events = {
 print(">>> events.voice.triggered",xvoicemgr.triggered_index)
 local voice = xvoices[arg.index]
 local pos,scheduled_xinc = xpos:get_scheduled_pos(args.schedule)
-schedule_note_column({
+xbuffer:schedule_note_column({
   note_value = voice.values[1],
   volume_value = voice.values[2],
   instrument_value = rns.selected_instrument_index-1,
@@ -125,11 +125,11 @@ xvoicemgr.voice_limit = args.voice_limit]],
 print(">>> events.voice.released",xvoicemgr.released_index)
 local voice = xvoices[arg.index]
 local pos,scheduled_xinc = xpos:get_scheduled_pos(args.schedule)
-local xline = read_from_pattern(scheduled_xinc)
+local xline = xbuffer:read_from_pattern(scheduled_xinc)
 local note_col = xline.note_columns[voice.note_column_index]
 -- output note-off only when not occupied by note
 if (note_col.note_value >= EMPTY_NOTE_VALUE) then
-  schedule_note_column({
+  xbuffer:schedule_note_column({
     note_string = "OFF",
     delay_value = data.get_delay_value("release"),
   },voice.note_column_index,travelled)
@@ -139,11 +139,11 @@ end]],
 -- @param xmsg, the xMidiMessage we have received
 ------------------------------------------------------------------------------
 local visible_note_columns = rns.tracks[track_index].visible_note_columns
-schedule_note_column({
+xbuffer:schedule_note_column({
   instrument_value = rns.selected_instrument_index,
   panning_string = "M1",
 },visible_note_columns)
-schedule_effect_column({
+xbuffer:schedule_effect_column({
   number_string = ("%.2X"):format(xmsg.values[2]),
   amount_value = 0,
 },1)]],

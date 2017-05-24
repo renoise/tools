@@ -29,7 +29,7 @@ if (xinc == 0) then
 
   -- schedule three note columns for line #00:
   
-  schedule_line({
+  xbuffer:schedule_line({
     note_columns = {
       {note_string = "C-4"},
       {note_string = "D-4"},      
@@ -39,15 +39,15 @@ if (xinc == 0) then
 
   -- next, schedule note columns 2 & 3, output at line 1 & 2:
 
-  schedule_note_column({note_string="F-4"},2,1)
-  schedule_note_column({note_string="G-4"},3,2)
+  xbuffer:schedule_note_column({note_string="F-4"},2,1)
+  xbuffer:schedule_note_column({note_string="G-4"},3,2)
 
   -- finally, schedule lines 3 & 4 for effect column #1
 
-  schedule_effect_column({
+  xbuffer:schedule_effect_column({
     number_string="11"
   },1,3)
-  schedule_effect_column({
+  xbuffer:schedule_effect_column({
     number_string = "0Z",
     amount_string = "22"
   },1,4)

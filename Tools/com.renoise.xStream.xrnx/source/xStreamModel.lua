@@ -211,21 +211,6 @@ function xStreamModel:__init(process)
     ["mute_mode"] = {
       access = function(env) return self.process.buffer.mute_mode end,
     },
-    ["schedule_line"] = {
-      access = function(env) return self.process.buffer.schedule_line end,
-    },
-    ["schedule_note_column"] = {
-      access = function(env) return self.process.buffer.schedule_note_column end,
-    },
-    ["schedule_effect_column"] = {
-      access = function(env) return self.process.buffer.schedule_effect_column end,
-    },
-    ["wipe_futures"] = {
-      access = function(env) return self.process.buffer.wipe_futures end,
-    },
-    ["read_from_pattern"] = {
-      access = function(env) return self.process.buffer.read_from_pattern end,
-    },
     
     -- process props
     
@@ -244,11 +229,17 @@ function xStreamModel:__init(process)
     ["xbuffer"] = {
       access = function(env) return self.process.buffer end,
     },
+    ["xstream"] = {
+      access = function(env) return self.process.xstream end,
+    },
     ["xvoices"] = {
       access = function(env) return self.process.xstream.voicemgr.voices end,
     },
     ["xvoicemgr"] = {
       access = function(env) return self.process.xstream.voicemgr end,
+    },
+    ["output_message"] = {
+      access = function(env) return self.process.xstream.output_message end,
     },
 
     -- classes 

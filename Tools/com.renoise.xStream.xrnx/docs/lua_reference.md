@@ -49,13 +49,16 @@ Please note that this is by no means a complete reference of Lua or the Renoise 
 
 ## Methods
 
+These are the most important methods to know about, as they are used in the example models: 
+
 |Name|Description|
 |----|-----------|
-|`wipe_futures()`|Erase all pre-calculated output ahead of current playback position (shorthand for xbuffer.wipe_futures)
-|`read_from_pattern()`|Read a line from the pattern (or scheduled, if it exists)<br>@param `xinc` (int), the buffer position<br>@param `[pos]` (SongPos), where to read from song<br>@return `xLine`, xline descriptor (never nil)<br>_Note: shorthand for `xbuffer.read_from_pattern`_  <br>
-|`schedule_line()`|_Shorthand for `xbuffer.schedule_line`_<br>Arguments: `xline,xinc`
-|`schedule_note_column()`|_Shorthand for `xbuffer.schedule_note_column`_  <br>Arguments: `xnotecol,col_idx,xinc`
-|`schedule_effect_column()`|_Shorthand for `xbuffer.schedule_effect_column`_<br>Arguments: `xeffectcol,col_idx,xinc`
+|`xstream:output_message()`| Trigger MIDI messages over the internal OSC server in Renoise. <br>@param xmsg (xMidiMessage or xOscMessage) <br>@param mode (xStream.OUTPUT_OPTIONS)
+|`xbuffer:wipe_futures()`|Erase all pre-calculated output ahead of current playback position
+|`xbuffer:read_from_pattern()`|Read a line from the pattern (or scheduled, if it exists)<br>@param `xinc` (int), the buffer position<br>@param `[pos]` (SongPos), where to read from song<br>@return `xLine`, xline descriptor (never nil)
+|`xbuffer:schedule_line()`|Arguments: `xline,xinc`
+|`xbuffer:schedule_note_column()`|Arguments: `xnotecol,col_idx,xinc`
+|`xbuffer:schedule_effect_column()`|Arguments: `xeffectcol,col_idx,xinc`
 
 ## Classes
 

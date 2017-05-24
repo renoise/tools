@@ -14,7 +14,7 @@ com.renoise.xStream.xrnx (main.lua)
 rns = nil -- reference to renoise.song() 
 _trace_filters = nil -- don't show traces in console
 --_trace_filters = {".*"}
---_trace_filters = {"^vDialog"}
+_trace_filters = {"^xOscClient"}
 
 --------------------------------------------------------------------------------
 -- required files

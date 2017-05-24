@@ -10,7 +10,6 @@
 - Fixed: error when trying to create argument with just one "item"
 - Fixed: failure to export presets when arguments are tabbed
 - Fixed: setting custom userdata folder is now applied immediately
-- Tweaked: lua syntax now features additional shorthand accessors
 - Added: ability to migrate userdata to a custom folder
 - Added: xLFO class + demonstration model
 - Added: RandomScale model 
