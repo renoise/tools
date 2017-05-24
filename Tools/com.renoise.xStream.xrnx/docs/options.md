@@ -35,6 +35,8 @@
 
 **Writeahead factor:** this value will determine how far ahead the streaming will write. Lower values will cause more lines to be written, while a higher value will decrease the number of lines. The _actual_ number of lines depends on the current BPM/LPB combination (the General Options will display this value).     
 
+if you have plenty of CPU power, you could try decrease the `writeahead` amount. This will in turn increase the number of lines being written to the pattern, ahead of the playback position, and thus, reduce the risk of skipped lines.
+
 #### MIDI Options
 
 <img src="./images/options_midi.png"> 

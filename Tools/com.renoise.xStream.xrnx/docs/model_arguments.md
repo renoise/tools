@@ -5,7 +5,7 @@
 Arguments offer control of a values in a running model. For example, the base-note or velocity. 
 They are shown as on-screen controls: sliders, checkboxes, etc., and situated underneath the editor. 
 
-...IMAGE 
+...illustration 
 
 ### Arguments
 
@@ -65,7 +65,7 @@ Arguments can be edited by pressing the 'Edit' button in the Arguments panel. Ea
 
 Hit the '+' button - the argument-editor panel appears:
 
-...IMAGE
+...illustration
 
 From here, you can adjust all properties of the selected arguments. This includes:
 

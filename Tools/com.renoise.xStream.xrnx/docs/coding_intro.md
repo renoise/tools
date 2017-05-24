@@ -3,7 +3,7 @@
 The next chapter of this documentation contains a full reference, listing all the  properties and methods of the xStream 'language'. But before you get that far, it's recommended to read this chapter, as it will attempt to explain the basics of creating an xStream model - even for someone not familiar with the lua language.
 
 However, that's not the same as saying that there's not a pretty steep learning curve. Getting comfortable with xStream involves having a good understanding of Renoise itself - how notes, columns and pattern commands are specified. 
-If you are familiar with these things, the xStream syntax should make some sense - after all, most of the 'baked-in' variables and properties are based on, or inspired by Renoise.
+If you are familiar with these things, the xStream syntax should make some sense.
 
 ## A new model, a new `main`
 
@@ -14,11 +14,11 @@ To create a new model, follow these steps:
 
 You should now see something that looks similar to this:
 
-... IMAGE
-
-> Note: if you don't see the editor as pictured above, press the arrow button on the left-hand side and/or switch to [expanded mode]. This will toggle the visibility of the code editor. 
+... illustration
 
 What you're seeing is the `main` method. This is the basic function that is evaluated once for every line that xStream processes. 
+
+> Note: if you don't see the editor as pictured above, press the arrow button on the left-hand side and/or switch to [expanded mode]. This will toggle the visibility of the code editor. 
 
 Let's walk through the code as it appears.
 
@@ -66,16 +66,34 @@ We can write pattern data by defining a method as simple as this one:
 	xline.note_columns[1].note_string = "C-4"
 
 The note is defined as a string, exactly as it shows in the pattern editor: `C-4`.
- 
-## Changing the behaviour
 
-While it is possible to type text into the code editor, this is hardly an optimal way to e.g. change notes or control the velocity of notes. 
+And while we could continue like this, creating note-columns using the column index as the indicator:
 
-A much better alternative is to use 'arguments' for this purpose. They allow variables (numbers/booleans/strings) to become bound to something else:
+	-- Example A: major triad in C...
+	xline.note_columns[1].note_string = "C-4"
+	xline.note_columns[2].note_string = "E-4"
+	xline.note_columns[3].note_string = "G-4"
 
-* On-screen controls (sliders, checkboxes, etc.)
-* Automation or MIDI input
-* The Renoise API 
+A different syntax is possible too. Consider the following example, which uses curly brackets {} instead of square ones []: 
+
+	-- Example B: also a major triad in C...
+	xline.note_columns = {
+    {note_string = "C-4"},
+    {note_string = "E-4"},
+    {note_string = "G-4"},
+  }
+
+It looks similar and certainly creates similar output. But there is actually a subtle, but important difference: in the curly bracketed example, you are _redefining_ the note columns entirely. The first example will keep any existing data (i.e. what was read from the pattern and then passed on as `xline`). But in the second example, any existing note-columns - including the fourth, fifth etc. ones - has become 'undefined'. 
+
+## Undefined content
+
+...
+
+## Changing things on the fly
+
+While it is possible to type text into the code editor, this is hardly an optimal way to e.g. change notes or control the velocity of notes. A much better alternative is to use 'arguments' for this purpose. 
+
+Essentially, arguments allow you to associate values in the code with something outside the code. This includes things such as an on-screen slider or checkbox, MIDI input or states within Renoise itself.
 
 See also [this chapter](model_arguments.md) for more information on arguments - their properties, and how to create them. 
 

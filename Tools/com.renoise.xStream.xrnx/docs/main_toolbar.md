@@ -1,6 +1,8 @@
-# UI: Global toolbar 
+# UI: Toolbar 
 
 < [The user interface](user_interface.md)
+
+## Main toolbar
 
 <img src="./images/global_toolbar.png"> 
 
@@ -13,9 +15,23 @@
 * **Favorites** - Click to open the Favorites dialog
 * **Options** - Click to open the Options dialog
 
-### Models toolbar
+### Realtime-streaming
 
-The model toolbar is located just beneath the global toolbar, and provides access to all loaded models. 
+The transport controls (PLAY, STOP, RECORD, MUTE) represent the 'live' or 'realtime' streaming mode of xStream. 
+
+### Offline output
+
+The buttons TRK/SEL/SEL together represent 'offline processing' in xStream. Pressing these button will apply the selected model to the selected range. 
+
+> Note that these buttons will continue to function, even as live streaming is active. 
+
+### Compact vs. expanded mode
+
+...
+
+## Models toolbar
+
+In expanded mode, this toolbar is located just beneath the global toolbar, and provides access to all loaded models. 
 
 <img src="./images/model_toolbar.png"> 
 
