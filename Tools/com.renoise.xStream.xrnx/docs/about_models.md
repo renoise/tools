@@ -6,9 +6,9 @@ And obviously, the focus in xStream is very much on the 'coding' aspect - creati
 
 To learn how models are structured, read on. Each of these chapters deal with their most important aspects:
 
-## [Live coding](coding_intro.md)
+## [Coding with xStream](coding_intro.md)
 
-* Getting comfortable with the `main` method
+* Getting comfortable with the xStream lua syntax 
 * Sub-methods and data
 
 ## [Model arguments](model_arguments.md)
@@ -23,12 +23,11 @@ To learn how models are structured, read on. Each of these chapters deal with th
 * Track changes in Renoise API
 * Respond to MIDI Input 
 
+## [File formats](file_formats.md)
 
-## [File formats](...)
+* Easily exchangable, plain-text Lua or XML files
 
-* Easily exchangable, plain-text based
-* Lua or XML 
-
+> < Previous - [The User Interface](user_interface.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Examples](example_models.md) >
 
 
 

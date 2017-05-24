@@ -87,3 +87,4 @@ xStream-specific classes
 | xAudioDevice | Static methods for dealing with Audio Devices.
 | xPhraseManager | tatic methods for managing phrases, phrase mappings and presets.
 
+> < Previous - [Coding with xStream](coding_intro.md) 

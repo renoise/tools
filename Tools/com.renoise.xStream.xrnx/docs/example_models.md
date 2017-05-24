@@ -12,8 +12,4 @@ To help illustrate how this works, xStream comes with 'batteries included' - var
 |**Granular**|Swervy swarms of chopped-up sounds, using pitch and sample offset commands. Works best on ambient and atmospheric sounds.
 |**Chord Memory**|This model can read chords from the pattern and apply them anywhere. Useful to create shapshots of chord progressions.       
 
-## Further reading
-
-See [About Models](about_models.md) to learn how models work, what they can do.  
-See [Live Coding in xStream](coding_intro.md) to write your first model.  
-See [xStream Lua Reference](lua_reference.md) to learn about properties and methods.  
+> < Previous - [About Models](about_models.md) &nbsp; &nbsp; | &nbsp; &nbsp; Next - [Coding with xStream](coding_intro.md) >
