@@ -86,11 +86,16 @@ Effect columns are defined pretty much the same way:
 
 ## Transforming pattern data
 
-As you might have noticed, the previous examples were sometimes using `note_string`, and at other times, `note_value`. 
+As you might have noticed, the previous examples were sometimes using `note_string`, and at other times, `note_value`. The difference is that one takes a string as argument and the other one is a numeric representation of the same value. 
 
-The difference is that one takes a string as argument and the other one is a numeric representation of the same value. So having the note specified as a number as a opposed to, say, `C-4`, is better when the note value is not a fixed value, but changes over time. 
+Having a string representation is good, because it's easier to remember `A-4` than the numeric representation of that pitch. But it would be pretty complex to raise a note by an octave - you would have to pick apart the string, and create a new string each time. 
 
-Which brings us to...
+Here, it's much easier and more convenient to simply raise the value by 12 (12 semitones == one octave): 
+
+	-- raise existing notes by one octave 
+	xline.note_columns[1].note_value = xline.note_columns[1].note_value + 12
+
+> Note: if you have the need to convert between string and number values, the classes xNoteColumn and xEffectColumn have a lot of handy methods. See the [lua reference](lua_reference.md#supporting-classes) for more information
 
 ## Changing things over time
 
