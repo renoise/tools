@@ -588,7 +588,7 @@ function xStreamUIArgsPanel:build()
   local vb = self.vb
   return vb:column{
     id = "xStreamArgsPanel",
-    margin = 4,
+    margin = 3,
     vb:space{
       width = PANEL_W,    
     },
