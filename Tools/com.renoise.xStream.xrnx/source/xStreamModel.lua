@@ -373,26 +373,24 @@ function xStreamModel:set_callback_str(str_fn)
   -- (a bit 'funny'' to set the buffer status from here, but...)
   local passed,err = self.sandbox:test_syntax(str_fn)
   self.process.buffer.callback_status_observable.value = passed and "" or err
-  
-  if not err then
-
-    self.sandbox.callback_str_observable.value = str_fn
-
-    -- extract tokens for the output stage
-    self:extract_tokens(xStreamModel.CB_TYPE.MAIN)
-
-    -- compile right away? 
-    local passed,err = self.sandbox:compile()
-    if not passed then -- should not happen! 
-      error("*** "..tostring(err))
-    end
-    -- process is listening for this  
-    self.compiled_observable:bang()
-
-  else
+  if err then
     LOG(err)
-  end
+    return
+  end 
 
+  self.sandbox.callback_str_observable.value = str_fn
+
+  -- extract tokens for the output stage
+  self:extract_tokens(xStreamModel.CB_TYPE.MAIN)
+
+  local passed,err = self.sandbox:compile()
+  if not passed then 
+    self.process.buffer.callback_status_observable.value = err  
+    LOG(err)
+    return
+  end
+  -- process is listening for this  
+  self.compiled_observable:bang()
 
 end
 
