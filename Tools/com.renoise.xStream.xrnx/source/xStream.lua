@@ -173,7 +173,6 @@ function xStream:__init(...)
   self.ui.args_panel.visible = self.prefs.model_args_visible.value
   self.ui.presets.visible = self.prefs.presets_visible.value
   self.ui.favorites.pinned = self.prefs.favorites_pinned.value
-  self.ui.editor_visible_lines = self.prefs.editor_visible_lines.value
   self.ui.dialog_visible_observable:add_notifier(function()
     TRACE("xStream  - ui.dialog_visible_observable fired...")
     self.process.models:select_launch_model()
