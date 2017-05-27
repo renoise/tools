@@ -2,6 +2,7 @@
 
 ## 1.57
 - Fixed: error when updating view with out-of-range value #99
+- Fixed: error when trying to select data from editor popup #100
 - Fixed: error is thrown when entering "return" into main method #97
 - Fixed: model doesn't work when last line is comment #95
 - Fixed: expecting "models" to be present in custom user-folder #87
