@@ -62,7 +62,7 @@ xStreamUI.ARROW_LEFT = "◂"
 xStreamUI.ARROW_RIGHT = "▸"
 
 xStreamUI.BITMAP_BUTTON_W = 21
-xStreamUI.BITMAP_BUTTON_H = 19
+xStreamUI.BITMAP_BUTTON_H = 20
 xStreamUI.PRESET_PANEL_W = 196
 xStreamUI.ARGS_PANEL_W = 256
 xStreamUI.FULL_PANEL_W = xStreamUILuaEditor.EDITOR_W 
@@ -616,6 +616,9 @@ function xStreamUI:set_show_editor(val)
 
   local view_expand = self.vb.views["xStreamToggleExpand"]
   view_expand.text = val and xStreamUI.ARROW_UP or xStreamUI.ARROW_DOWN
+
+  local view_lines_container = self.vb.views["xStreamModelEditorNumLinesContainer"]
+  view_lines_container.visible = val
 
   self.lua_editor.visible = val
 

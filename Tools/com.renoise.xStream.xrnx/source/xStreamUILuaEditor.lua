@@ -53,13 +53,9 @@ function xStreamUILuaEditor:__init(xstream,vb)
   -- bool, suppress editor notifications 
   self.suppress_editor_notifier = false
 
-  self.editor_visible_lines = property(self.get_editor_visible_lines,self.set_editor_visible_lines)
-  self.editor_visible_lines_observable = 
-    renoise.Document.ObservableNumber(self.prefs.editor_visible_lines.value)
-
-  self.editor_visible_lines_observable:add_notifier(function()
+  self.prefs.editor_visible_lines:add_notifier(function()
     TRACE("xStreamUI - self.editor_visible_lines_observable fired...")
-    self.prefs.editor_visible_lines.value = self.editor_visible_lines
+    self.xstream.ui.update_editor_requested = true
   end)
 
   self.xstream.process.buffer.callback_status_observable:add_notifier(function()    
@@ -103,17 +99,6 @@ function xStreamUILuaEditor:set_active(val)
     self.vb.views["xStreamCallbackEditor"].active = val
   end
   
-end
-
---------------------------------------------------------------------------------
-
-function xStreamUILuaEditor:get_editor_visible_lines()
-  return self.editor_visible_lines_observable.value
-end
-
-function xStreamUILuaEditor:set_editor_visible_lines(val)
-  self.editor_visible_lines_observable.value = val
-  self.xstream.ui.update_editor_requested = true
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -207,24 +192,7 @@ function xStreamUILuaEditor:build()
             self:remove_callback()
           end,
         },
-        --[[
-        vb:row{
-          id = "xStreamModelEditorNumLinesContainer",
-          tooltip = "Number of lines",
-          vb:text{
-            id = "xStreamEditorNumLinesTitle",
-            text = "Lines",
-          },
-          vb:valuebox{
-            min = 12,
-            max = 51,
-            id = "xStreamModelEditorNumLines",
-            notifier = function(val)
-              self.editor_visible_lines = val
-            end,
-          }
-        }
-        ]]
+
       },
     }
   }
@@ -273,11 +241,9 @@ function xStreamUILuaEditor:update()
   TRACE("xStreamUILuaEditor:update()")
 
   local model = self.xstream.selected_model
-  --local view_lines = self.vb.views["xStreamModelEditorNumLines"]
   local view = self.vb.views["xStreamCallbackEditor"]
 
-  --view_lines.value = self.editor_visible_lines
-  view.height = self.editor_visible_lines * xStreamUILuaEditor.LINE_HEIGHT - 6
+  view.height = self.prefs.editor_visible_lines.value * xStreamUILuaEditor.LINE_HEIGHT - 6
 
   -- type popup: include defined data + events 
   local vb_type_popup = self.vb.views["xStreamCallbackType"]

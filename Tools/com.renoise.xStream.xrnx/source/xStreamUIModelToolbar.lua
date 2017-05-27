@@ -12,6 +12,7 @@ function xStreamUIModelToolbar:__init(xstream,vb,ui)
   self.vb = vb
   self.ui = ui
   
+  self.prefs = renoise.tool().preferences
 
 end
 
@@ -177,18 +178,29 @@ function xStreamUIModelToolbar:build()
           end,
         },  
       },  
+      vb:space{
+
+      },
       vb:row{
-        --[[
+        id = "xStreamModelEditorNumLinesContainer",
+        tooltip = "Number of lines",
         vb:text{
-          text = "Stack",
-          font = "bold",
-        },        
-        vb:popup{
-          items = {"A","B","C","D","E","F"},
-          width = 50,
-        },  
-        ]]      
-      }      
+          id = "xStreamEditorNumLinesTitle",
+          text = "Lines",
+        },
+        vb:valuebox{
+          min = 12,
+          max = 51,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          id = "xStreamModelEditorNumLines",
+          bind = self.prefs.editor_visible_lines,
+          --[[
+          notifier = function(val)
+            self.prefs.editor_visible_lines.value = val
+          end,
+          ]]
+        }
+      }
     }
   
 
