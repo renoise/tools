@@ -20,6 +20,9 @@ require (_clibroot.."cNumber")
 
 class 'cLib'
 
+--- placeholder value for nil, storable in table.
+cLib.NIL = {} 
+
 ---------------------------------------------------------------------------------------------------
 -- [Static] LOG statement - invokes cLib.log(). 
 -- you can override this method with your own custom implementation  
@@ -62,8 +65,13 @@ function cLib.log(...)
 end
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Turn varargs into a table
+-- [Static] For class constructors that use this syntax: 
+--    local obj = SomeObject{
+--      some_prop = "initial value",
+--      other_prop = 42
+--    }
 -- @param ... (vararg)
+-- @return (likely table, but depends on what you feed it)
 
 function cLib.unpack_args(...)
   local args = {...}
@@ -72,6 +80,22 @@ function cLib.unpack_args(...)
   else
     return args[1]
   end
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Vararg packer with `nil` placeholder
+-- See http://lua-users.org/wiki/VarargTheSecondClassCitizen
+-- @param ... (vararg)
+-- @return table 
+
+function cLib.pack(...)
+  local n = select('#', ...)
+  local t = {}
+  for i = 1,n do
+    local v = select(i, ...)
+    t[i] = (v == nil) and NIL or v
+  end
+  return t
 end
 
 ---------------------------------------------------------------------------------------------------
