@@ -1,24 +1,24 @@
---[[============================================================================
+--[[===============================================================================================
 com.renoise.xStream.xrnx (main.lua)
-============================================================================]]--
+===============================================================================================]]--
 --[[
 
   Create an instance of xStream
 
 ]]
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- global variables
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 rns = nil -- reference to renoise.song() 
 _trace_filters = nil -- don't show traces in console
 --_trace_filters = {".*"}
 --_trace_filters = {"^xOscClient"}
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- required files
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 _clibroot = 'source/cLib/classes/'
 _vlibroot = 'source/vLib/classes/'
@@ -79,9 +79,12 @@ require ('source/xStreamProcess')
 require ('source/xStreamPresets')
 require ('source/xStreamPrefs')
 require ('source/xStreamUserData')
+require ('source/xStreamUILuaEditor')
 require ('source/xStreamUI')
 require ('source/xStreamUIModelCreate')
 require ('source/xStreamUICallbackCreate')
+require ('source/xStreamUIGlobalToolbar')
+require ('source/xStreamUIModelToolbar')
 require ('source/xStreamUIOptions')
 require ('source/xStreamUIFavorites')
 require ('source/xStreamUIPresetPanel')
@@ -89,21 +92,20 @@ require ('source/xStreamUIArgsPanel')
 require ('source/xStreamUIArgsEditor')
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- local variables & initialization
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 local xstream
 local TOOL_NAME = "xStream"
 local MIDI_PREFIX = "Tools:"..TOOL_NAME..":"
 
 renoise.tool().preferences = xStreamPrefs()
-print(">>> main - renoise.tool().preferences ",renoise.tool().preferences)
 
 -- force all dialogs to have this name
 vDialog.DEFAULT_DIALOG_TITLE = "xStream"
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- invoked by menu entries, autostart - 
 -- first time around, the UI/class instances are created 
 
@@ -123,7 +125,7 @@ function show()
   xstream.ui:show()
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- tool menu entry
 
 function register_tool_menu()
@@ -144,9 +146,9 @@ end
 
 register_tool_menu()    
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- notifications
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   TRACE("xStream main app_new_document_observable fired...")
@@ -155,12 +157,15 @@ renoise.tool().app_new_document_observable:add_notifier(function()
   end
 end)
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- keyboard/midi mappings
 
-for i = 1,128 do
-  local midi_mapping = MIDI_PREFIX..
-    ("Favorites:Favorite #%.2d [Trigger]"):format(i)
+local key_mapping, midi_mapping = nil,nil
+
+--== "favorites" ==--
+
+for i = 1,64 do
+  midi_mapping = MIDI_PREFIX..("Favorites:Favorite #%.2d [Trigger]"):format(i)
   renoise.tool():add_midi_mapping{
     name = midi_mapping,
     invoke = function() 
@@ -169,8 +174,7 @@ for i = 1,128 do
       end
     end
   }
-  local key_mapping = "Global:"..TOOL_NAME..":"..
-    ("Favorite #%.2d [Trigger]"):format(i)
+  key_mapping = "Global:"..TOOL_NAME..":"..("Favorite #%.2d [Trigger]"):format(i)
   renoise.tool():add_keybinding{
     name = key_mapping,
     invoke = function(repeated) 
@@ -182,3 +186,182 @@ for i = 1,128 do
     end
   }
 end
+
+
+--== "presets" ==--
+
+for i = 1,16 do
+  midi_mapping = MIDI_PREFIX..("Presets:Preset #%.2d [Trigger]"):format(i)
+  renoise.tool():add_midi_mapping{
+    name = midi_mapping,
+    invoke = function() 
+      if xstream then
+        xstream.process:set_selected_preset_index(i)
+      end
+    end
+  }
+  
+  key_mapping = "Global:"..TOOL_NAME..":"..("Preset #%.2d [Trigger]"):format(i)
+  renoise.tool():add_keybinding{
+    name = key_mapping,
+    invoke = function(repeated) 
+      if not repeated then
+        if xstream then
+          xstream.process:set_selected_preset_index(i)
+        end
+      end
+    end
+  }
+--[[
+]]
+  
+end
+
+midi_mapping = MIDI_PREFIX.."Presets:Select Next Preset [Trigger]"
+renoise.tool():add_midi_mapping{
+  name = midi_mapping,
+  invoke = function() 
+    if xstream then
+      xstream.process:select_next_preset()
+    end
+  end
+}
+key_mapping = "Global:"..TOOL_NAME..":".."Select Next Preset [Trigger]"
+renoise.tool():add_keybinding{
+  name = key_mapping,
+  invoke = function(repeated) 
+    if not repeated then
+      if xstream then
+        xstream.process:select_next_preset()
+      end
+    end
+  end
+}
+
+midi_mapping = MIDI_PREFIX.."Presets:Select Previous Preset [Trigger]"
+renoise.tool():add_midi_mapping{
+  name = midi_mapping,
+  invoke = function() 
+    if xstream then
+      xstream.process:select_previous_preset()
+    end
+  end
+}
+key_mapping = "Global:"..TOOL_NAME..":".."Select Previous Preset [Trigger]"
+renoise.tool():add_keybinding{
+  name = key_mapping,
+  invoke = function(repeated) 
+    if not repeated then
+      if xstream then
+        xstream.process:select_previous_preset()
+      end
+    end
+  end
+}
+
+--== "apply" ==--
+
+midi_mapping = MIDI_PREFIX.."Apply to Track [Trigger]"
+renoise.tool():add_midi_mapping{
+  name = midi_mapping,
+  invoke = function() 
+    if xstream then
+      xstream.process:fill_track()
+    end
+  end
+}
+key_mapping = "Global:"..TOOL_NAME..":".."Apply to Track [Trigger]"
+renoise.tool():add_keybinding{
+  name = key_mapping,
+  invoke = function(repeated) 
+    if not repeated then
+      if xstream then
+        xstream.process:fill_track()
+      end
+    end
+  end
+}
+
+midi_mapping = MIDI_PREFIX.."Apply to Selection (Local) [Trigger]"
+renoise.tool():add_midi_mapping{
+  name = midi_mapping,
+  invoke = function() 
+    if xstream then
+      xstream.process:fill_selection(true)
+    end
+  end
+}
+key_mapping = "Global:"..TOOL_NAME..":".."Apply to Selection (Local) [Trigger]"
+renoise.tool():add_keybinding{
+  name = key_mapping,
+  invoke = function(repeated) 
+    if not repeated then
+      if xstream then
+        xstream.process:fill_selection(true)
+      end
+    end
+  end
+}
+
+midi_mapping = MIDI_PREFIX.."Apply to Selection [Trigger]"
+renoise.tool():add_midi_mapping{
+  name = midi_mapping,
+  invoke = function() 
+    if xstream then
+      xstream.process:fill_selection()
+    end
+  end
+}
+key_mapping = "Global:"..TOOL_NAME..":".."Apply to Selection [Trigger]"
+renoise.tool():add_keybinding{
+  name = key_mapping,
+  invoke = function(repeated) 
+    if not repeated then
+      if xstream then
+        xstream.process:fill_selection()
+      end
+    end
+  end
+}
+
+midi_mapping = MIDI_PREFIX.."Apply to Line (Local) [Trigger]"
+renoise.tool():add_midi_mapping{
+  name = midi_mapping,
+  invoke = function() 
+    if xstream then
+      xstream.process:fill_line(true)
+    end
+  end
+}
+key_mapping = "Global:"..TOOL_NAME..":".."Apply to Line (Local) [Trigger]"
+renoise.tool():add_keybinding{
+  name = key_mapping,
+  invoke = function(repeated) 
+    if not repeated then
+      if xstream then
+        xstream.process:fill_line(true)
+      end
+    end
+  end
+}
+
+midi_mapping = MIDI_PREFIX.."Apply to Line [Trigger]"
+renoise.tool():add_midi_mapping{
+  name = midi_mapping,
+  invoke = function() 
+    if xstream then
+      xstream.process:fill_line()
+    end
+  end
+}
+key_mapping = "Global:"..TOOL_NAME..":".."Apply to Line [Trigger]"
+renoise.tool():add_keybinding{
+  name = key_mapping,
+  invoke = function(repeated) 
+    if not repeated then
+      if xstream then
+        xstream.process:fill_line()
+      end
+    end
+  end
+}
