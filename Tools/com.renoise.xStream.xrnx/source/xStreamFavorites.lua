@@ -49,7 +49,8 @@ function xStreamFavorites:__init(xstream)
   -- bool, true whenever a favorite has been edited
   -- (emulates a 'bang' - implemented as an ever-increasing integer value)
   self.modified = property(self.get_modified,self.set_modified)
-  self.modified_observable = renoise.Document.ObservableNumber(0)
+  self._modified = renoise.Document.ObservableBoolean()
+  self.modified_observable = renoise.Document.ObservableBang()
 
   -- bool, true whenever a favorite has been edited
   -- (emulates a 'bang' - implemented as an ever-increasing integer value)
@@ -696,12 +697,13 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function xStreamFavorites:get_modified()
-  return self.modified_observable.value
+  return self._modified
 end
 
 function xStreamFavorites:set_modified()
   TRACE("xStreamFavorites:set_modified()")
-  self.modified_observable.value = self.modified_observable.value + 1
+  self._modified = true
+  self.modified_observable:bang()
 end
 
 ---------------------------------------------------------------------------------------------------
