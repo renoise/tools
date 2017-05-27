@@ -107,7 +107,7 @@ function xStreamUICallbackCreate:create_dialog()
             value = self.dialog_option,
             items = {
               "Add event handler",
-              "Add userdata (value or function)",
+              "Add data (value or function)",
             },
             notifier = function(idx)
               self.dialog_option = idx
@@ -294,7 +294,7 @@ function xStreamUICallbackCreate:update_dialog()
       
       view_page_2_opt1.visible = true
       
-      local str_name = self.xstream.selected_model:get_suggested_callback_name("my_userdata",self.cb_type)
+      local str_name = self.xstream.selected_model:get_suggested_callback_name("my_data",self.cb_type)
       local view_name = vb.views["xStreamDialogName"]
       view_name.text = str_name
 
@@ -361,7 +361,7 @@ function xStreamUICallbackCreate:show_next_page()
 
     if (self.cb_type == xStreamModel.CB_TYPE.DATA) then 
     
-      -- create userdata 
+      -- create data 
 
       local view_name = vb.views["xStreamDialogName"]
       if not self:validate_callback_name(view_name.text) then
@@ -372,11 +372,11 @@ function xStreamUICallbackCreate:show_next_page()
         -- pick a template
         local vb_arg_types = vb.views["xStreamDialogArgumentTypes"]
         local arg_type = vb_arg_types.items[vb_arg_types.value]
-        local str_fn = self:get_userdata_template(arg_type)
+        local str_fn = self:get_data_template(arg_type)
 
-        self.xstream.selected_model:add_userdata(view_name.text,str_fn)
-        self.ui.editor_view = ("data.%s"):format(view_name.text)
-        self.ui:update_editor()
+        self.xstream.selected_model:add_data(view_name.text,str_fn)
+        self.ui.lua_editor.editor_view = ("data.%s"):format(view_name.text)
+        self.ui.lua_editor:update()
         self.dialog:close()
         self.dialog = nil
       end
@@ -405,8 +405,8 @@ function xStreamUICallbackCreate:show_next_page()
       else
 
         self.xstream.selected_model:add_event(str_name)
-        self.ui.editor_view = ("events.%s"):format(str_name)
-        self.ui:update_editor()
+        self.ui.lua_editor.editor_view = ("events.%s"):format(str_name)
+        self.ui.lua_editor:update()
         self.dialog:close()
         self.dialog = nil
       end
@@ -504,7 +504,7 @@ end
 -------------------------------------------------------------------------------
 -- @param arg_type (int)
 
-function xStreamUICallbackCreate:get_userdata_template(arg_type)
+function xStreamUICallbackCreate:get_data_template(arg_type)
 
   local arg_types = {
     ["number"]   = '-- return a value of some kind \nreturn 42',

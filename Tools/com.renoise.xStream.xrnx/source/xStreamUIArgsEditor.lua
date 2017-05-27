@@ -9,6 +9,8 @@ xStreamUIArgsEditor
 
 --==============================================================================
 
+local PANEL_W = xStreamUI.ARGS_PANEL_W - 8 -- margins
+
 class 'xStreamUIArgsEditor'
 
 function xStreamUIArgsEditor:__init(xstream,vb)
@@ -36,7 +38,6 @@ function xStreamUIArgsEditor:set_visible(val)
   local view_button = self.vb.views["xStreamArgsEditButton"]
   local view_popup = self.vb.views["xStreamArgsSelectorRack"]
   local view_editor = self.vb.views["xStreamArgsEditorRack"]
-  local view_spacer = self.vb.views["xStreamArgsVerticalSpacer"]
   local view_arrow = self.vb.views["xStreamModelArgsToggle"]
 
   local args = self.xstream.ui.args_panel
@@ -55,8 +56,6 @@ function xStreamUIArgsEditor:set_visible(val)
   end
   view_editor.visible = val
 
-  view_spacer.visible = not val 
-
   self.visible_observable.value = val
 
   self:update()
@@ -70,7 +69,7 @@ function xStreamUIArgsEditor:build()
 
   local vb = self.vb
   local label_w = 75
-  local control_w = 165
+  local control_w = PANEL_W-label_w
   local control_short_w = 80
   local display_as_items = table.copy(xStreamArg.DISPLAYS)
   table.insert(display_as_items,1,"(select)")
@@ -80,6 +79,7 @@ function xStreamUIArgsEditor:build()
     },
     vb:column{
       style = "group",
+      width = PANEL_W,
       margin = 4,
       spacing = 1,
       vb:row{
@@ -600,6 +600,11 @@ function xStreamUIArgsEditor:update()
   if not self.visible then
     --print("*** xStreamUIArgsEditor:update - editor not visible")
     return
+  end
+
+  local model = self.xstream.selected_model
+  if (model.args.selected_index == 0) then 
+    self.visible = false
   end
 
   local view_name         = self.vb.views["xStreamArgsEditorName"]

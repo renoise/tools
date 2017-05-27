@@ -26,7 +26,7 @@ xStreamUIPresetPanel.CONTROLS = {
   "xStreamPresetsToggle",
 }
 
-xStreamUIPresetPanel.PRESET_SELECTOR_W = 110
+xStreamUIPresetPanel.PRESET_RECALL_W = xStreamUI.PRESET_PANEL_W - 80
 
 --------------------------------------------------------------------------------
 
@@ -42,6 +42,9 @@ function xStreamUIPresetPanel:__init(xstream,vb,ui)
   self.visible_observable = renoise.Document.ObservableBoolean(false)
 
   self.disabled = property(self.get_disabled,self.set_disabled)
+
+  self.base_color_highlight = cColor.adjust_brightness(xStreamUI.COLOR_BASE,xStreamUI.HIGHLIGHT_AMOUNT)
+
 
 end
 
@@ -89,9 +92,6 @@ function xStreamUIPresetPanel:build_panel()
   return vb:column{
     --style = "panel",
     margin = 4,
-    vb:space{
-      width = xStreamUI.LEFT_PANEL_W,
-    },
     vb:row{
       vb:button{
         text=xStreamUI.ARROW_DOWN,
@@ -103,29 +103,24 @@ function xStreamUIPresetPanel:build_panel()
           self.visible = not self.visible
         end,
       },
+      --[[
       vb:text{
-        text = "Preset/bank",
+        text = "Presets",
         font = "bold",
       },
-    },
-    vb:row{
-      vb:bitmap{
-        bitmap = "./source/icons/preset_bank.bmp",
-        mode = "body_color",
-        width = xStreamUI.BITMAP_BUTTON_W,
-        height = xStreamUI.BITMAP_BUTTON_H,
-      },
+      ]]
       vb:popup{
         items = {xStreamPresets.DEFAULT_BANK_NAME},
         tooltip = "Choose between available preset banks",
         id = "xStreamPresetBankSelector",
-        width = xStreamUIPresetPanel.PRESET_SELECTOR_W, -- xStreamUI.BITMAP_BUTTON_W,
+        width = xStreamUI.PRESET_PANEL_W - 86, 
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function(idx)
           self.xstream.selected_model.selected_preset_bank_index = idx
         end
       },
       vb:row{
+        spacing = xStreamUI.MIN_SPACING,
         vb:button{
           --text = "‒",
           --bitmap = "./source/icons/delete.bmp",
@@ -136,8 +131,8 @@ function xStreamUIPresetPanel:build_panel()
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
             local choice = renoise.app():show_prompt("Delete preset bank",
-                "Are you sure you want to delete this preset bank \n"
-              .."(this action can not be undone)?",
+                "Are you sure you want to delete this preset bank "
+              .."\n(this action can not be undone)?",
               {"OK","Cancel"})
             if (choice == "OK") then
               local model = self.xstream.selected_model
@@ -203,105 +198,124 @@ function xStreamUIPresetPanel:build_panel()
           end
         },
 
-      },
+      },      
+     
     },
+
     vb:row{
       vb:bitmap{
-        bitmap = "./source/icons/presets.bmp",
-        --bitmap = "./source/icons/InstrumentBox.bmp",
+        bitmap = "./source/icons/preset_bank.bmp",
         mode = "body_color",
         width = xStreamUI.BITMAP_BUTTON_W,
         height = xStreamUI.BITMAP_BUTTON_H,
       },
-      vb:popup{
-        items = {},
-        id = "xStreamPresetSelector",
-        tooltip = "Choose between available presets",
-        width = xStreamUIPresetPanel.PRESET_SELECTOR_W,
-        height = xStreamUI.BITMAP_BUTTON_H,
-        notifier = function(idx)
-          local preset_bank = self.xstream.selected_model.selected_preset_bank
-          preset_bank.selected_preset_index = idx-1
-        end
-      },
-      vb:button{
-        bitmap = "./source/icons/delete_small.bmp",
-        tooltip = "Remove the selected preset",
-        id = "xStreamRemovePreset",
-        width = xStreamUI.BITMAP_BUTTON_W,
-        height = xStreamUI.BITMAP_BUTTON_H,
-        notifier = function(val)
-          local model = self.xstream.selected_model
-          local preset_idx = model.selected_preset_bank.selected_preset_index
-          model.selected_preset_bank:remove_preset(preset_idx)
-        end,
-      },
-      vb:button{
-        bitmap = "./source/icons/add.bmp",
-        tooltip = "Add new preset with the current settings",
-        id = "xStreamAddPreset",
-        width = xStreamUI.BITMAP_BUTTON_W,
-        height = xStreamUI.BITMAP_BUTTON_H,
-        notifier = function(val)
-          local model = self.xstream.selected_model
-          local added,err = model.selected_preset_bank:add_preset()
-          if not added then
-            renoise.app():show_warning(err)
-          else
-            model.selected_preset_bank.selected_preset_index = #model.selected_preset_bank.presets
+      vb:row{
+        spacing = xStreamUI.MIN_SPACING,
+        --[[
+        vb:bitmap{
+          bitmap = "./source/icons/presets.bmp",
+          --bitmap = "./source/icons/InstrumentBox.bmp",
+          mode = "body_color",
+          width = xStreamUI.BITMAP_BUTTON_W,
+          height = xStreamUI.BITMAP_BUTTON_H,
+        },
+        ]]
+        vb:popup{
+          items = {},
+          id = "xStreamPresetSelector",
+          tooltip = "Choose between available presets",
+          width = xStreamUI.PRESET_PANEL_W-86,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function(idx)
+            self.xstream.process:set_selected_preset_index(idx-1)
           end
-        end,
-      },
-      vb:button{
-        bitmap = "./source/icons/rename.bmp",
-        tooltip = "Assign a new name to this preset",
-        id = "xStreamPresetRename",
-        active = false,
-        width = xStreamUI.BITMAP_BUTTON_W,
-        height = xStreamUI.BITMAP_BUTTON_H,
-        notifier = function()
-          local presets = self.xstream.selected_model.selected_preset_bank
-          local success,err = presets:rename_preset(presets.selected_preset_index)
-          if not success and err then
-            renoise.app():show_warning(err)
-          end
-        end,
-      },
+        },
+        vb:space{
+          width = 6,
+        },
+        vb:button{
+          bitmap = "./source/icons/delete_small.bmp",
+          tooltip = "Remove the selected preset",
+          id = "xStreamRemovePreset",
+          width = xStreamUI.BITMAP_BUTTON_W,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function(val)
+            local model = self.xstream.selected_model
+            local preset_idx = model.selected_preset_bank.selected_preset_index
+            model.selected_preset_bank:remove_preset(preset_idx)
+          end,
+        },
+        vb:button{
+          bitmap = "./source/icons/add.bmp",
+          tooltip = "Add new preset with the current settings",
+          id = "xStreamAddPreset",
+          width = xStreamUI.BITMAP_BUTTON_W,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function(val)
+            local model = self.xstream.selected_model
+            local added,err = model.selected_preset_bank:add_preset()
+            if not added then
+              renoise.app():show_warning(err)
+            else
+              model.selected_preset_bank.selected_preset_index = #model.selected_preset_bank.presets
+            end
+          end,
+        },
+        vb:button{
+          bitmap = "./source/icons/rename.bmp",
+          tooltip = "Assign a new name to this preset",
+          id = "xStreamPresetRename",
+          active = false,
+          width = xStreamUI.BITMAP_BUTTON_W,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function()
+            local presets = self.xstream.selected_model.selected_preset_bank
+            local success,err = presets:rename_preset(presets.selected_preset_index)
+            if not success and err then
+              renoise.app():show_warning(err)
+            end
+          end,
+        },
 
-      vb:button{
-        bitmap = "./source/icons/update.bmp",
-        tooltip = "Update preset with current settings",
-        id = "xStreamUpdatePreset",
-        width = xStreamUI.BITMAP_BUTTON_W,
-        height = xStreamUI.BITMAP_BUTTON_H,
-        notifier = function(val)
-          local model = self.xstream.selected_model
-          local preset_idx = model.selected_preset_bank.selected_preset_index
-          model.selected_preset_bank:update_preset(preset_idx)
-        end,
-      },
+        vb:button{
+          bitmap = "./source/icons/update.bmp",
+          tooltip = "Update preset with current settings",
+          id = "xStreamUpdatePreset",
+          width = xStreamUI.BITMAP_BUTTON_W,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function(val)
+            local model = self.xstream.selected_model
+            local preset_idx = model.selected_preset_bank.selected_preset_index
+            model.selected_preset_bank:update_preset(preset_idx)
+          end,
+        },
 
-      vb:button{
-        text = xStreamUI.FAVORITE_TEXT.ON,
-        tooltip = "Add preset to favorites",
-        id = "xStreamFavoritePreset",
-        width = xStreamUI.BITMAP_BUTTON_W,
-        height = xStreamUI.BITMAP_BUTTON_H,
-        notifier = function(val)
-          local model = self.xstream.selected_model
-          local preset_idx = model.selected_preset_bank.selected_preset_index
-          local preset_bank_name = model.selected_preset_bank.name
-          self.xstream.favorites:toggle_item(model.name,preset_idx,preset_bank_name)
-        end,
-      },          
+        vb:button{
+          text = xStreamUI.FAVORITE_TEXT.ON,
+          tooltip = "Add preset to favorites",
+          id = "xStreamFavoritePreset",
+          width = xStreamUI.BITMAP_BUTTON_W,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function(val)
+            local model = self.xstream.selected_model
+            local preset_idx = model.selected_preset_bank.selected_preset_index
+            local preset_bank_name = model.selected_preset_bank.name
+            self.xstream.favorites:toggle_item(model.name,preset_idx,preset_bank_name)
+            self.xstream.ui.update_presets_requested = true
+          end,
+        },          
 
+      }, 
     },
+
     vb:space{
       height = xStreamUI.SMALL_VERTICAL_MARGIN,
     },
     vb:column{
       tooltip = "Available presets for this model",
       id = 'xStreamArgPresetContainer',
+      spacing = xStreamUI.MIN_SPACING,
+      margin = 0,
       -- add buttons here..
     },
   }  
@@ -354,22 +368,19 @@ function xStreamUIPresetPanel:build_list()
     vb_container:remove_child(v)
   end
 
-
   self.preset_views = {}
 
   if (model.args.length == 0) then
     return
   end
 
-  --local preset_names = model.selected_preset_bank.preset_names
-  
   for k = 1,#model.selected_preset_bank.presets do
     
     local preset_name = model.selected_preset_bank:get_preset_display_name(k)
 
     local row = vb:row{
+      spacing = xStreamUI.MIN_SPACING,
       vb:button{
-        --text = "-",
         bitmap = "./source/icons/delete_small.bmp",
         id = "xStreamModelPresetDelete"..k,
         tooltip = "Remove this preset",
@@ -377,7 +388,6 @@ function xStreamUIPresetPanel:build_list()
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function()
           model.selected_preset_bank:remove_preset(k)
-          --self:build_list()
         end
       },
       vb:button{
@@ -394,7 +404,7 @@ function xStreamUIPresetPanel:build_list()
         text = preset_name,
         id = "xStreamModelPresetRecall"..k,
         tooltip = "Activate this preset",
-        width = xStreamUIPresetPanel.PRESET_SELECTOR_W, ---xStreamUI.BITMAP_BUTTON_W+1,
+        width = xStreamUIPresetPanel.PRESET_RECALL_W, 
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function()
           model.selected_preset_bank.selected_preset_index = k
@@ -408,7 +418,6 @@ function xStreamUIPresetPanel:build_list()
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function()
           local presets = self.xstream.selected_model.selected_preset_bank
-          --local preset_index = presets.selected_preset_index
           local got_moved,_ = presets:swap_index(k,k-1)
           if got_moved then
             presets.selected_preset_index = k - 1
@@ -423,7 +432,6 @@ function xStreamUIPresetPanel:build_list()
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function()
           local presets = self.xstream.selected_model.selected_preset_bank
-          --local preset_index = presets.selected_preset_index
           local got_moved,_ = presets:swap_index(k,k+1)
           if got_moved then
             presets.selected_preset_index = k + 1
@@ -431,7 +439,6 @@ function xStreamUIPresetPanel:build_list()
         end
       },
       vb:button{
-        --text = "Update",
         bitmap = "./source/icons/update.bmp",
         id = "xStreamModelPresetUpdate"..k,
         tooltip = "Update this preset with the current settings",
@@ -451,6 +458,7 @@ function xStreamUIPresetPanel:build_list()
         notifier = function()
           local preset_bank_name = model.selected_preset_bank.name
           self.xstream.favorites:toggle_item(model.name,k,preset_bank_name)
+          self.xstream.ui.update_presets_requested = true
         end,
       },
 
@@ -542,7 +550,7 @@ function xStreamUIPresetPanel:update_preset_list_row(idx)
   end
   view_bt.color = preset_color
   view_bt.text = self.xstream.selected_model.selected_preset_bank:get_preset_display_name(idx)
-  view_bt.width = xStreamUIPresetPanel.PRESET_SELECTOR_W
+  view_bt.width = xStreamUIPresetPanel.PRESET_RECALL_W
 
   view_bt = self.vb.views["xStreamPresetListMoveUpButton"..idx]
   view_bt.color = base_color
@@ -557,7 +565,7 @@ function xStreamUIPresetPanel:update_preset_list_row(idx)
   if view_bt then
     view_bt.color = base_color
     view_bt.text = self.xstream.favorites:get(self.xstream.selected_model.name,idx,preset_bank_name) and 
-      xStreamUI.FAVORITE_TEXT.ON or xStreamUI.FAVORITE_TEXT.OFF
+      xStreamUI.FAVORITE_TEXT.ON or xStreamUI.FAVORITE_TEXT.DIMMED
   end
 
 end

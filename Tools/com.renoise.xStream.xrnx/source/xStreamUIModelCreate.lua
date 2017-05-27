@@ -10,6 +10,8 @@ Supporting UI class for xStream
 
 --==============================================================================
 
+local PANEL_W = xStreamUI.FULL_PANEL_W
+
 class 'xStreamUIModelCreate' (vDialogWizard)
 
 function xStreamUIModelCreate:__init(ui)
@@ -102,7 +104,7 @@ function xStreamUIModelCreate:create_dialog()
               font = "mono",
               id = "xStreamNewModelDialogDefinition",
               height = TEXT_H,
-              width = xStreamUI.CALLBACK_EDITOR_W,
+              width = PANEL_W,
             },
           },
           vb:column{

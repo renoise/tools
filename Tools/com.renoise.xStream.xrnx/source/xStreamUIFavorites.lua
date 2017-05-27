@@ -100,7 +100,6 @@ function xStreamUIFavorites:get_pinned()
 end
 
 function xStreamUIFavorites:set_pinned(val)
-  --print("set pinned",val)
   self.pinned_observable.value = val
 end
 
@@ -645,7 +644,6 @@ function xStreamUIFavorites:update_button(idx,brightness)
   if not (type(favorite)=="xStreamFavorite") then
     str_txt = xStreamUIFavorites.EMPTY_FAVORITE_TXT
   else
-    --print("favorite",rprint(favorite))
     local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
     if not model then
       -- Display as 
@@ -655,8 +653,6 @@ function xStreamUIFavorites:update_button(idx,brightness)
     else
       color = cColor.value_to_color_table(model.color)
       local str_launch_mode = xStreamFavorites.LAUNCH_MODES_SHORT[favorite.launch_mode]
-      --print("favorite.launch_mode",favorite.launch_mode)
-      --print("str_launch_mode",str_launch_mode)
       local is_automatic = (favorite.launch_mode == xStreamFavorites.LAUNCH_MODE.AUTOMATIC)
       local is_default_bank = (favorite.preset_bank_name == xStreamPresets.DEFAULT_BANK_NAME)
       local preset_bank_index = model:get_preset_bank_by_name(favorite.preset_bank_name)
@@ -782,7 +778,6 @@ function xStreamUIFavorites:update_edit_rack()
       schedule_rack.visible = true
       local schedule_popup = vb.views["xStreamFavoritesSchedulePopup"]
       schedule_popup.value = favorite.schedule_mode
-      --print("schedule_popup.value",favorite.schedule_mode)
     elseif (favorite.launch_mode == xStreamFavorites.LAUNCH_MODE.APPLY_TRACK) then
       -- 
     elseif (favorite.launch_mode == xStreamFavorites.LAUNCH_MODE.APPLY_SELECTION) then
@@ -803,8 +798,6 @@ function xStreamUIFavorites:update_edit_rack()
   self:update_bank_selector()
   self:update_preset_selector()
 
-  --print("*** update_edit_rack - got here")
-
 end
 
 --------------------------------------------------------------------------------
@@ -823,10 +816,7 @@ function xStreamUIFavorites:update_edit_model_selector()
     return
   end
 
-  --print(">>> model_selector.items",rprint(model_selector.items))
-
   local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
-  --print("model_idx,model",model_idx,model)
   if not model then
     model_status.text = xStreamUIFavorites.EDIT_RACK_WARNING
     model_status.tooltip = "This model is not available"
@@ -863,14 +853,11 @@ function xStreamUIFavorites:update_bank_selector()
   end
 
   local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
-  --print("model_idx,model",model_idx,model)
-
   if not model then
     bank_status.text = xStreamUIFavorites.EDIT_RACK_WARNING
     bank_selector.items = {xStreamUIFavorites.NO_PRESET_BANKS_AVAILABLE}
   else
     bank_selector.items = model:get_preset_bank_names()
-    --print("favorite.preset_bank_name",favorite.preset_bank_name)
     local preset_bank_index = model:get_preset_bank_by_name(favorite.preset_bank_name)
     if preset_bank_index then
       bank_selector.value = preset_bank_index
@@ -907,7 +894,6 @@ function xStreamUIFavorites:update_preset_selector()
     local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
 
     if model then
-      --print("favorite.preset_bank_name",favorite.preset_bank_name)
       local preset_bank_index = model:get_preset_bank_by_name(favorite.preset_bank_name)
       if preset_bank_index then
         -- gather preset names
@@ -917,7 +903,6 @@ function xStreamUIFavorites:update_preset_selector()
         for k,v in ipairs(preset_bank.presets) do
           table.insert(preset_names,("Preset %.02d"):format(k))
         end
-        --rprint(preset_names)
         preset_selector.items = preset_names
         local preset_index = (favorite.preset_index > 0) and favorite.preset_index+1 or 1
         if (preset_index <= #preset_selector.items) then
@@ -977,7 +962,7 @@ function xStreamUIFavorites:apply_property(favorite_idx,prop_name,prop_value)
   -- update controls (favorite icon)
   if self.xstream.selected_model then
     if (favorite.model_name == self.xstream.selected_model.name) then
-      self.xstream.ui:update_model_controls() 
+      self.xstream.ui.model_toolbar:update() 
       self.xstream.ui:update_preset_list() 
       if (favorite.preset_bank_name == self.xstream.selected_model.selected_preset_bank.name) then
         self:update_preset_controls() 
@@ -1060,13 +1045,10 @@ function xStreamUIFavorites:on_idle()
   if self.build_requested then
     self.build_requested = false
     self:build()
-    --self:update_buttons()
-    --self:update_favorite_selector()
     self.update_requested = true
   end
 
   if self.update_requested then
-    --print("favorites self.update_requested")
     self.update_requested = false
     self:update_buttons()
     self:update_favorite_selector()

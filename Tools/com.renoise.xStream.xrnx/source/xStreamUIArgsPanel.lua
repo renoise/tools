@@ -7,9 +7,15 @@ xStreamUIArgsPanel
 
 ]]
 
+
+
 --=================================================================================================
 
+local PANEL_W = xStreamUI.ARGS_PANEL_W
+
 class 'xStreamUIArgsPanel'
+
+--------------------------------------------------------------------------------------------------
 
 xStreamUIArgsPanel.CONTROLS = {
   "xStreamArgsAddButton",
@@ -24,10 +30,13 @@ xStreamUIArgsPanel.CONTROLS = {
 
 xStreamUIArgsPanel.NO_ARGS_AVAILABLE = "No arguments"
 xStreamUIArgsPanel.NO_ARG_SELECTED = "(Select argument)"
-xStreamUIArgsPanel.ARGS_SELECTOR_W = 201
-xStreamUIArgsPanel.ARGS_SLIDER_W = 90
 
 function xStreamUIArgsPanel:__init(xstream,midi_prefix,vb,ui)
+
+  assert(type(xstream)=="xStream")
+  assert(type(midi_prefix)=="string")
+  assert(type(vb)=="ViewBuilder")
+  assert(type(ui)=="xStreamUI") -- we need this before it's added to the xStream instance
 
   self.midi_prefix = midi_prefix
   self.vb = vb
@@ -80,19 +89,10 @@ function xStreamUIArgsPanel:set_visible(val)
   TRACE("xStreamUIArgsPanel:set_visible(val)",val)
 
   self.editor_visible = false
-
-  local view_arrow = self.vb.views["xStreamModelArgsToggle"]
-  local view_popup = self.vb.views["xStreamArgsSelectorRack"]
-  local view_spacer = self.vb.views["xStreamArgsVerticalSpacer"]
-
-  view_arrow.text = val and xStreamUI.ARROW_UP or xStreamUI.ARROW_DOWN
-  view_popup.visible = not val
-
   self.visible_observable.value = val
   
   self:update()
   self:update_visibility()
-  view_spacer.visible = not val 
 
 
 end
@@ -117,7 +117,7 @@ end
 
 function xStreamUIArgsPanel:set_editor_visible(val)
   self.ui.args_editor.visible = val
-  self.ui.update_args_requested = true
+  self:update_all()
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ function xStreamUIArgsPanel:get_label_w()
   for k,arg in ipairs(args.args) do
     arg_max_length = math.max(arg_max_length,#arg.name)
   end
-  return (arg_max_length > 0) and arg_max_length*xStreamUI.MONO_CHAR_W or 30
+  return (arg_max_length > 0) and arg_max_length*xStreamUILuaEditor.MONO_CHAR_W or 30
 
 end
 
@@ -183,10 +183,10 @@ function xStreamUIArgsPanel:build_args()
   end
 
   local args_label_w = self:get_label_w()
-
-  local slider_width = xStreamUIArgsPanel.ARGS_SLIDER_W
-  local full_width = xStreamUIArgsPanel.ARGS_SELECTOR_W
-  local items_width = xStreamUIArgsPanel.ARGS_SELECTOR_W-60
+  
+  local slider_width = PANEL_W-136
+  local items_width = PANEL_W-90
+  local full_width = PANEL_W-90
 
   -- tabbed/untabbed args put in different views
   self.vb_untabbed = vb:column{
@@ -195,18 +195,15 @@ function xStreamUIArgsPanel:build_args()
   self.vb_tabbed = vb:column{
     style = "group",
     margin = 2,
-    vb:space{
-      width = xStreamUI.RIGHT_PANEL_W - 10,      
-    }
+    
   }
 
   -- add a custom control for tabs, if any
-  --print(">>> args._tab_names",rprint(args._tab_names))
   if not table.is_empty(args._tab_names) 
     and (#args._tab_names > 1)
   then
     self.vb_tab_switcher = vb:switch{
-      width = xStreamUI.RIGHT_PANEL_W-6,    
+      width = PANEL_W,    
       items = args._tab_names or {},
       value = self.selected_tab_index or 1,
       notifier = function(idx)
@@ -225,7 +222,6 @@ function xStreamUIArgsPanel:build_args()
     local fn_tostring = nil
     local fn_tonumber = nil
     
-    --print("arg.properties",rprint(arg.properties))
     local display_as = table.find(xStreamArg.DISPLAYS,arg.properties.display_as) 
     local integered = false
 
@@ -311,7 +307,6 @@ function xStreamUIArgsPanel:build_args()
     }
 
     local view_lock = vb:checkbox{
-        --bind = arg.locked_observable,
         value = arg.locked,
         width = 14,
         height = 14,
@@ -335,9 +330,11 @@ function xStreamUIArgsPanel:build_args()
     local arg_control = nil
     local model_name = self.xstream.selected_model.name
     local midi_mapping = ("Tools:xStream:%s:%s [Set]"):format(model_name,arg.full_name)
-    --print(">>> midi_mapping",midi_mapping)
 
     if (type(arg.observable) == "ObservableNumber") then
+
+      -- play it safe and clamp value to range before continuing
+      local val = arg:get_clamped_value()
 
       if arg.properties.items then -- select (default to popup)
         display_as = display_as or xStreamArg.DISPLAY_AS.POPUP
@@ -347,7 +344,7 @@ function xStreamUIArgsPanel:build_args()
           --print("display_as popup",arg.name)
           arg_control = vb:popup{
             items = arg.properties.items,
-            value = arg.value,
+            value = val,
             width = items_width,
             bind = arg.observable,
             midi_mapping = midi_mapping,
@@ -362,8 +359,8 @@ function xStreamUIArgsPanel:build_args()
         elseif (display_as == xStreamArg.DISPLAY_AS.CHOOSER) then
           arg_control = vb:chooser{
             items = arg.properties.items,
-            value = arg.value,
-            width = items_width,
+            value = val,
+            width = full_width,
             bind = arg.observable,
             midi_mapping = midi_mapping,
           }
@@ -378,8 +375,8 @@ function xStreamUIArgsPanel:build_args()
         elseif (display_as == xStreamArg.DISPLAY_AS.SWITCH) then
           arg_control = vb:switch{
             items = arg.properties.items,
-            value = arg.value,
-            width = items_width,
+            value = val,
+            width = full_width,
             bind = arg.observable,
             midi_mapping = midi_mapping,
           }
@@ -401,7 +398,7 @@ function xStreamUIArgsPanel:build_args()
         arg_control = vb:valuebox{
           tostring = fn_tostring,
           tonumber = fn_tonumber,
-          value = arg.value,
+          value = val,
           min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
           max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
           bind = arg.observable,
@@ -424,7 +421,7 @@ function xStreamUIArgsPanel:build_args()
         local readout = vb:valuefield{
           tostring = fn_tostring,
           tonumber = fn_tonumber,
-          value = arg.value,
+          value = val,
           min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
           max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
           bind = arg.observable,
@@ -436,7 +433,7 @@ function xStreamUIArgsPanel:build_args()
           or (display_as == xStreamArg.DISPLAY_AS.PERCENT) 
         then
           arg_control = vb:minislider{
-            value = arg.value,
+            value = val,
             width = slider_width,
             height = 17,
             min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
@@ -452,7 +449,7 @@ function xStreamUIArgsPanel:build_args()
           })
         elseif (display_as == xStreamArg.DISPLAY_AS.ROTARY) then
           arg_control = vb:rotary{
-            value = arg.value,
+            value = val,
             height = 24,
             min = arg.properties.min or xStreamUI.ARGS_MIN_VALUE,
             max = arg.properties.max or xStreamUI.ARGS_MAX_VALUE,
@@ -476,7 +473,7 @@ function xStreamUIArgsPanel:build_args()
         elseif (display_as == xStreamArg.DISPLAY_AS.VALUE) then
           view:add_child(vb:value{
             tostring = fn_tostring,
-            value = arg.value,
+            value = val,
             bind = arg.observable,
           })
         end
@@ -516,8 +513,6 @@ function xStreamUIArgsPanel:build_args()
     end
 
     if view then
-      --table.insert(self.arg_bops,view_bop)
-      --table.insert(self.arg_labels,view_label)
       if arg_control 
         and not renoise.tool():has_midi_mapping(midi_mapping)
       then
@@ -574,21 +569,14 @@ function xStreamUIArgsPanel:build_args()
       else
         self.vb_untabbed:add_child(view)
       end
-
-      --print("add",arg)
-
     end
-
 
   end
 
   -- done looping through arguments
-  --print(">>> args._tab_names",rprint(args._tab_names))
   vb_container:add_child(self.vb_tab_switcher)
   vb_container:add_child(self.vb_tabbed)
   vb_container:add_child(self.vb_untabbed)
-
-
 
 end
 
@@ -599,12 +587,10 @@ function xStreamUIArgsPanel:build()
 
   local vb = self.vb
   return vb:column{
-    --style = "panel",
     id = "xStreamArgsPanel",
     margin = 4,
-    --height = 100,
     vb:space{
-      width = xStreamUI.RIGHT_PANEL_W-4,    
+      width = PANEL_W,    
     },
     vb:row{
       vb:button{
@@ -621,7 +607,73 @@ function xStreamUIArgsPanel:build()
         text = "Args",
         font = "bold",
       },
+     
+      vb:row{ -- hidden when panel is compact 
+        id = "xStreamArgsExpandedOptions",
+        vb:space{
+          width = PANEL_W-204,
+        },
+        vb:row{
+          spacing = xStreamUI.MIN_SPACING,
+          vb:button{
+            id = "xStreamArgsMoveUpButton",
+            bitmap = "./source/icons/move_up.bmp",
+            tooltip = "Move argument up in list",
+            width = xStreamUI.BITMAP_BUTTON_W,
+            height = xStreamUI.BITMAP_BUTTON_H,
+            notifier = function()
+              local args = self.xstream.selected_model.args
+              local got_moved,_ = args:swap_index(args.selected_index,args.selected_index-1)
+              if got_moved then
+                args.selected_index = args.selected_index - 1
+              end
+            end
+          },
+          vb:button{
+            id = "xStreamArgsMoveDownButton",
+            bitmap = "./source/icons/move_down.bmp",
+            tooltip = "Move argument down in list",
+            width = xStreamUI.BITMAP_BUTTON_W,
+            height = xStreamUI.BITMAP_BUTTON_H,
+            notifier = function()
+              local args = self.xstream.selected_model.args
+              local got_moved,_ = args:swap_index(args.selected_index,args.selected_index+1)
+              if got_moved then
+                args.selected_index = args.selected_index + 1
+              end
+            end
+          },
+        },
+        vb:button{
+          id = "xStreamArgsRandomize",
+          text = "Random",--"☢ Rnd",
+          tooltip = "Randomize all unlocked parameters",
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function()
+            if self.xstream.selected_model then
+              self.xstream.selected_model.args:randomize()
+            end
+          end
+        },
+      },
       vb:row{
+        id = "xStreamArgsSelectorRack",
+        vb:popup{
+          items = {},
+          id = "xStreamArgsSelector",
+          tooltip = "Choose between available arguments",
+          width = PANEL_W-112,
+          height = xStreamUI.BITMAP_BUTTON_H,
+          notifier = function(idx)
+            local model = self.xstream.selected_model
+            if model then
+              model.args.selected_index = idx-1
+            end
+          end,
+        },
+      },       
+      vb:row{
+        spacing = xStreamUI.MIN_SPACING,
         vb:button{
           bitmap = "./source/icons/add.bmp",
           tooltip = "Create new argument",
@@ -642,87 +694,43 @@ function xStreamUIArgsPanel:build()
           end,
         },
         vb:button{
-          id = "xStreamArgsMoveUpButton",
-          bitmap = "./source/icons/move_up.bmp",
-          tooltip = "Move argument up in list",
-          height = xStreamUI.BITMAP_BUTTON_H,
-          notifier = function()
-            local args = self.xstream.selected_model.args
-            local got_moved,_ = args:swap_index(args.selected_index,args.selected_index-1)
-            if got_moved then
-              args.selected_index = args.selected_index - 1
-            end
-          end
-        },
-        vb:button{
-          id = "xStreamArgsMoveDownButton",
-          bitmap = "./source/icons/move_down.bmp",
-          tooltip = "Move argument down in list",
-          height = xStreamUI.BITMAP_BUTTON_H,
-          notifier = function()
-            local args = self.xstream.selected_model.args
-            local got_moved,_ = args:swap_index(args.selected_index,args.selected_index+1)
-            if got_moved then
-              args.selected_index = args.selected_index + 1
-            end
-          end
-        },
-        vb:button{
           id = "xStreamArgsEditButton",
           text = "Edit",
           tooltip = "Edit selected argument",
           height = xStreamUI.BITMAP_BUTTON_H,
+          width = 42,
           notifier = function()
             self.editor_visible = not self.editor_visible
           end
-        },
-        vb:button{
-          id = "xStreamArgsRandomize",
-          text = "Random",--"☢ Rnd",
-          tooltip = "Randomize all unlocked parameters",
-          height = xStreamUI.BITMAP_BUTTON_H,
-          notifier = function()
-            if self.xstream.selected_model then
-              self.xstream.selected_model.args:randomize()
-            end
-          end
-        },
-      },
+        },   
+      }
     },
-    vb:row{
-      id = "xStreamArgsSelectorRack",
-      vb:popup{
-        items = {},
-        id = "xStreamArgsSelector",
-        tooltip = "Choose between available arguments",
-        width = xStreamUIArgsPanel.ARGS_SELECTOR_W,
-        height = xStreamUI.BITMAP_BUTTON_H,
-        notifier = function(idx)
-          local model = self.xstream.selected_model
-          if model then
-            model.args.selected_index = idx-1
-          end
-        end,
-      },
-    },
+
     vb:text{
       id = "xStreamArgsNoneMessage",
-      text = "There are no arguments to display",
+      text = "(No arguments)",
     },
     vb:column{
       id = 'xStreamArgsContainer',
     },
-    vb:space{
-      id = 'xStreamArgsVerticalSpacer',
-      height = 7,
-    },
     vb:column{
       id = 'xStreamArgsEditorRack',
+      --style = "group",
       visible = self.editor_visible,
       self.ui.args_editor:build(),
     },
   }
 
+end
+
+
+---------------------------------------------------------------------------------------------------
+
+function xStreamUIArgsPanel:update_all()
+  self:update()
+  self:update_selector()
+  self:update_controls()
+  self:update_visibility()
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -732,6 +740,7 @@ function xStreamUIArgsPanel:update()
   local model = self.xstream.selected_model
 
   -- show message if not args
+  local args_container = self.vb.views["xStreamArgsContainer"]
   local view_msg = self.vb.views["xStreamArgsNoneMessage"]
   if model then
     view_msg.visible = self.visible 
@@ -739,11 +748,7 @@ function xStreamUIArgsPanel:update()
   else
     view_msg.visible = true
   end
-
-  if view_msg.visible then
-    local view_msg = self.vb.views["xStreamArgsPanel"]
-    view_msg.height = 72
-  end
+  args_container.visible = not view_msg.visible
 
   if self.vb_tabbed then
     self.vb_tabbed.visible = not view_msg.visible
@@ -751,8 +756,7 @@ function xStreamUIArgsPanel:update()
     self.vb_tab_switcher.visible = not view_msg.visible
   end
 
-
-  --print(">>> view_msg.visible",view_msg.visible)
+  local args_label_w = self:get_label_w()
 
   for k,v in ipairs(self.arg_views) do
     --print("v.view",v.view)
@@ -763,6 +767,7 @@ function xStreamUIArgsPanel:update()
       v.view_label.text = model and model.args.args[k].name or ""
       v.view_label.font = model and (k == model.args.selected_index) 
         and "bold" or "mono"
+      v.view_label.width = args_label_w
 
       -- update bops
       local bop = model and model.args.args[k]:get_bop()
@@ -773,6 +778,14 @@ function xStreamUIArgsPanel:update()
 
   end
 
+  local view_arrow = self.vb.views["xStreamModelArgsToggle"]
+  local view_popup = self.vb.views["xStreamArgsSelectorRack"]
+  local expanded_opts = self.vb.views["xStreamArgsExpandedOptions"]
+  view_arrow.text = self.visible and xStreamUI.ARROW_UP or xStreamUI.ARROW_DOWN
+  view_popup.visible = not self.visible or self.editor_visible
+  expanded_opts.visible = self.visible and not self.editor_visible
+  
+
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -782,12 +795,14 @@ function xStreamUIArgsPanel:update_controls()
   local view_up = self.vb.views["xStreamArgsMoveUpButton"]
   local view_down = self.vb.views["xStreamArgsMoveDownButton"]
   local view_edit = self.vb.views["xStreamArgsEditButton"]
+  local randomize = self.vb.views["xStreamArgsRandomize"]
 
   local model = self.xstream.selected_model
   local has_selected = (model and model.args.selected_index > 0) and true or false
   view_up.active = has_selected
   view_down.active = has_selected
   view_edit.active = has_selected
+  randomize.active = model and (#model.args.args > 0) and true or false
 
 
 end
@@ -826,14 +841,9 @@ function xStreamUIArgsPanel:update_visibility()
   if not table.is_empty(args._tab_names) then
     selected_tab_name = args._tab_names[self.selected_tab_index]
   end
-  --print(">>> selected_tab_name",selected_tab_name)
-  --print(">>> args.selected_index",args.selected_index)
-  --print(">>> self.editor_visible",self.editor_visible)
-
 
   for k,v in ipairs(self.arg_views) do
     local arg = args:get_arg_by_name(v.name,v.tab_name)
-    --print(">>> arg",v,arg)
     if not self.xstream.selected_model then
       v.view.visible = false
     elseif self.editor_visible or not self.visible then 
@@ -876,6 +886,7 @@ function xStreamUIArgsPanel:update_visibility()
     self.vb_tab_switcher.visible =  selected_tab_name and true or false
   end
 
+  self.vb_tabbed.width = PANEL_W 
 
 end
 
