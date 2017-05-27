@@ -20,6 +20,10 @@ xStreamModel.CB_TYPE = {
   EVENTS = "events",
 }
 
+xStreamModel.DEFAULT_DATA_STR = [[-- specify an initial value for the variable
+return %s
+]]
+
 -------------------------------------------------------------------------------
 -- constructor
 -- @param xstream (xStream)
@@ -441,7 +445,7 @@ end
 function xStreamModel:reset()
   TRACE("xStreamModel:reset()")
 
-  self:parse_userdata(self.data_initial)
+  self:parse_data(self.data_initial)
   self.modified = false
 
 end
@@ -545,7 +549,6 @@ function xStreamModel:load_from_string(str_def)
   self.modified = false
   return true
 
-
 end
 
 -------------------------------------------------------------------------------
@@ -559,7 +562,7 @@ function xStreamModel:parse_definition(def)
   self:parse_options(def.options)
   self:parse_arguments(def.arguments)
   self:parse_presets(def.presets)
-  self:parse_userdata(def.data)
+  self:parse_data(def.data)
   self:parse_events(def.events)
 
   -- process the callback method ------
@@ -640,8 +643,8 @@ end
 -- @param data_def (table), new userdata definitions 
 -- @return string, containing potential error message 
 
-function xStreamModel:parse_userdata(data_def)
-  TRACE("xStreamModel:parse_userdata(data_def)",data_def)
+function xStreamModel:parse_data(data_def)
+  TRACE("xStreamModel:parse_data(data_def)",data_def)
 
   self.data = {}
   self.data_initial = {}
@@ -678,9 +681,6 @@ function xStreamModel:parse_userdata(data_def)
 
     end
   end
-
-  --print(">>> parse_userdata - self.data",rprint(self.data))
-  --print(">>> parse_userdata - self.data_initial",rprint(self.data_initial))
 
   return str_status
 
@@ -759,7 +759,7 @@ function xStreamModel:rename_token(old_name,new_name,cb_type)
     end
   end
   if data_modified then
-    self.parse_userdata(self.data_initial)
+    self.parse_data(self.data_initial)
     self.modified = true
   end
 
@@ -808,14 +808,35 @@ function xStreamModel:remove_callback(cb_type,cb_key)
 end
 
 -------------------------------------------------------------------------------
+-- define initial data from current value 
+-- @param str_name (string)
+--[[
+function xStreamModel:add_initial_data(str_name)
+  TRACE("xStreamModel:add_initial_data(str_name)",str_name)
 
-function xStreamModel:add_userdata(str_name,str_fn)
-  TRACE("xStreamModel:add_userdata(str_name)",str_name,str_fn)
+  local val = self.data[str_name]
+  if val and not self.data_initial[str_name] then 
+    local str_fn = nil
+    if (type(val)=="table") then 
+      str_fn = xStreamModel.DEFAULT_DATA_STR:format(cLib.serialize_table(val))
+    else
+      str_fn = xStreamModel.DEFAULT_DATA_STR:format(cLib.serialize_object(val))
+    end 
+    self.data_initial[str_name] = str_fn
+  end
+
+end
+]]
+
+-------------------------------------------------------------------------------
+-- Register a new data entry
+-- @param str_name (string)
+
+function xStreamModel:add_data(str_name,str_fn)
+  TRACE("xStreamModel:add_data(str_name)",str_name,str_fn)
 
   if not str_fn then
-    str_fn = [[-- provide a return value of some kind
-return {"some_value"}
-]]
+    str_fn = xStreamModel.DEFAULT_DATA_STR:format('{"some_value"}')
   end
 
   self.data[str_name] = str_fn
@@ -1066,7 +1087,7 @@ function xStreamModel:refresh()
 
   if self.modified then
     local str_msg = "Are you sure you want to (re-)load the model from disk?"
-                  .."(this change cannot be undone)"
+                  .."\nNB: Any unsaved changes will be lost!"
     local choice = renoise.app():show_prompt("Refresh model", str_msg, {"OK","Cancel"})
     if (choice == "Cancel") then
       return true
@@ -1121,6 +1142,12 @@ function xStreamModel:save(as_copy)
                   .."\n(avoid using block comments and longstrings)"
     renoise.app():show_prompt("Strip comments",str_msg,{"OK"})
     return false
+  end
+
+  local folder,_,__ = cFilesystem.get_path_parts(file_path)
+  local folder_created,err = cFilesystem.makedir(folder)
+  if not folder_created then
+    return false,err
   end
 
   local got_saved,err = cFilesystem.write_string_to_file(file_path,self:serialize())
