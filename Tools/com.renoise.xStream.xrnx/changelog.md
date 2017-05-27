@@ -8,6 +8,8 @@
 - Fixed: expecting "models" to be present in custom user-folder #87
 - Fixed: favorite icons and preset highlighting (got broken in 1.55)
 - Fixed: ChordMemory model had a few flaws
+- Added: "Apply to Line", for quick single-line output
+- Added: additional keyboard shortcuts and midi mappings 
 - Changed: more compact, cleaned up GUI
 
 ## 1.55
