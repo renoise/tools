@@ -15,11 +15,13 @@ xStream is a tool for Renoise that can generate and transform musical data, usin
 
 ## [About Models](docs/about_models.md)
 
-## [Examples](docs/example_models.md)
+## [Some Examples](docs/example_models.md)
 
 ## [Coding with xStream](docs/coding_intro.md)
 
 ## [xStream Lua Reference](docs/lua_reference.md)
+
+## [Keyboard/MIDI mappings](docs/shortcuts_and_mappings.md)
 
 ## Links and resources 
 
