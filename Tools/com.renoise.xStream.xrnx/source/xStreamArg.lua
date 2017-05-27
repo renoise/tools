@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xStreamArg
-============================================================================]]--
+===============================================================================================]]--
 --[[
 
   This class is representing a single xStream argument
@@ -8,7 +8,7 @@ xStreamArg
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xStreamArg'
 
@@ -80,7 +80,7 @@ xStreamArg.STRING_DISPLAYS = {
   xStreamArg.DISPLAY_AS.TEXTFIELD,
 }
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- constructor
 -- @param args (table), 
 --  xstream
@@ -193,7 +193,7 @@ function xStreamArg:__init(arg)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- notifier for argument (== user events) 
 
 function xStreamArg:notifier()
@@ -221,7 +221,7 @@ function xStreamArg:notifier()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- update renoise (when bound to API)
 -- @param val (string,number or boolean) set when user event
 
@@ -252,7 +252,7 @@ function xStreamArg:bind_notifier(val)
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- get name, including tab (if present)
 
 function xStreamArg:get_full_name()
@@ -263,7 +263,7 @@ function xStreamArg:get_full_name()
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamArg:get_locked()
   return self.locked_observable.value
@@ -278,7 +278,7 @@ function xStreamArg:set_locked(val)
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamArg:get_linked()
   return self.linked_observable.value
@@ -292,7 +292,7 @@ function xStreamArg:set_linked(val)
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- resolve the 'bind string' into an ObservableXXX object
 -- @param bind_str (string), e.g. "rns.transport.keyboard_velocity_observable"
 -- @return ObservableXXX or nil
@@ -313,7 +313,7 @@ function xStreamArg.resolve_binding(bind_str)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- quickly decide if argument is bound or polling 
 
 function xStreamArg:get_bop()
@@ -324,7 +324,7 @@ function xStreamArg:get_bop()
   end
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- create a function which return a value when the bound target has changed
 -- @param str (string), e.g. "rns.transport.keyboard_velocity_observable"
 -- @return function or nil
@@ -350,18 +350,44 @@ function xStreamArg.create_fn(str)
 end
 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamArg:get_value()
   return self.observable.value
 end
 
 function xStreamArg:set_value(val)
-  self.observable.value = val
+  TRACE("xStreamArg:set_value(val)",val)
+  self.observable.value = self:clamp_value(val)
 end
 
+---------------------------------------------------------------------------------------------------
+-- Get current value, restricted to min/max if set 
+-- @return number/boolean/string
 
--------------------------------------------------------------------------------
+function xStreamArg:get_clamped_value()
+  return self:clamp_value(self.value)
+end
+
+---------------------------------------------------------------------------------------------------
+-- Restrict provided value (number only) to min/max 
+-- @param val (number/boolean/string)
+-- @return number/boolean/string
+
+function xStreamArg:clamp_value(val)
+  TRACE("xStreamArg:clamp_value(val)",val)
+  if (type(val)=="number") and 
+    not table.is_empty(self.properties) 
+  then 
+    local min,max = self.properties.min,self.properties.max
+    if min and max then 
+      return cLib.clamp_value(val,min,max)
+    end
+  end
+  return val
+end
+
+---------------------------------------------------------------------------------------------------
 
 function xStreamArg:__tostring()
 
