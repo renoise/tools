@@ -282,7 +282,7 @@ end
 -- [Class] This function is designed to be called in an idle loop
 
 function xStreamPos:update()
-  TRACE("xStreamPos:update()")
+  --TRACE("xStreamPos:update()")
 
   if not rns.transport.playing then
     return
@@ -369,7 +369,7 @@ end
 -- [Class] Decide the writeahead amount, depending on the song tempo
 
 function xStreamPos.determine_writeahead()
-  TRACE("xStream:determine_writeahead()")
+  TRACE("xStreamPos:determine_writeahead()")
 
   local bpm = rns.transport.bpm
   local lpb = rns.transport.lpb
