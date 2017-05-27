@@ -110,7 +110,6 @@ function xStreamArgs:add(arg,index,do_replace)
   if not arg then
     -- provide default argument
     local str_name = self:get_unique_name()
-    --print("str_name",str_name)
     str_name = vPrompt.prompt_for_string(str_name,
       "Enter a name to be used as identifier","Argument Name")
     if not str_name then
@@ -148,10 +147,6 @@ function xStreamArgs:add(arg,index,do_replace)
     arg_tab_name = nil
   end
 
-  --print("arg_tab_name",arg_tab_name)
-  --print("arg_name",arg_name)
-
-
   -- validate --
 
   if (type(arg_name)~='string') then
@@ -172,18 +167,14 @@ function xStreamArgs:add(arg,index,do_replace)
     end
   end
 
-  -- avoid using existing or RESERVED_NAMES
   if not do_replace then
-    --print("type(self[arg_name])",type(self[arg_name]))
-    --if (type(self[arg_name]) ~= 'nil') or 
-    --  (table.find(xStreamArgs.RESERVED_NAMES,arg_name)) 
+    -- TODO avoid using existing or RESERVED_NAMES
     local full_name = nil
     if arg.tab_name then
       full_name = arg.tab_name.."."..arg.name
     else
       full_name = arg.name
     end
-    --print(">>> full_name",full_name)
 
     if table.find(self:get_names(),full_name) then
       return false,"The name '"..full_name.."' is already taken. Please choose another name"
@@ -196,7 +187,7 @@ function xStreamArgs:add(arg,index,do_replace)
   end
 
   if (type(arg.value)=='nil') then
-    return false,"Please provide a default value (makes the type unambigous)"
+    return false,"Please provide a default value-type (boolean/string/number)"
   end
 
   if arg.poll and arg.bind then
@@ -208,16 +199,11 @@ function xStreamArgs:add(arg,index,do_replace)
     if not is_valid then
       return false,err
     end
-
     -- when bound, enforce the target min & max 
     local obs = cObservable.get_by_type_and_name(type(arg.value),arg.bind,"rns.")
-    --print("min,max PRE",arg.properties.min,arg.properties.max)
     arg.properties.min = obs.min or arg.properties.min
     arg.properties.max = obs.max or arg.properties.max
-    --print("min,max POST",arg.properties.min,arg.properties.max)
-
     -- (TODO add dummy entries to lists)
-
   end
 
   if arg.poll then
@@ -232,7 +218,6 @@ function xStreamArgs:add(arg,index,do_replace)
   -- current value. If that fails, provide the default value
   local parsed_val,err
   if arg.bind then
-    --print("default value for arg.bind",arg.bind)
     local bind_val_no_obs = string.sub(arg.bind,1,#arg.bind-11)
     parsed_val,err = cLib.parse_str(bind_val_no_obs)
     if not parsed_val and err then
@@ -240,14 +225,12 @@ function xStreamArgs:add(arg,index,do_replace)
       LOG("Warning: 'bind' failed to resolve: "..err)
     end
   elseif arg.poll then
-    --print("default value for arg.poll",arg.poll)
     parsed_val,err = cLib.parse_str(arg.poll)
     if not parsed_val and err then
       arg.poll = nil
       LOG("Warning: 'poll' failed to resolve: "..err)
     end
   end
-  --print("parsed_val",parsed_val)
   if not err then
     arg.value = parsed_val or arg.value
   else
@@ -266,9 +249,6 @@ function xStreamArgs:add(arg,index,do_replace)
   arg.tab_name = arg_tab_name
   arg.name = arg_name
 
-  --print(">>> type(arg.value)",type(arg.value))
-  --print(">>> create xStreamArg...",rprint(arg))
-
   local xarg = xStreamArg(arg)
 
   if index then
@@ -278,16 +258,12 @@ function xStreamArgs:add(arg,index,do_replace)
   end
   self.args_observable:insert(#self.args)
 
-  --print(">>> inserted at index",index,"args length",#self.args)
-
-
   -- getter/setter methods --------------------------------
   -- as used by the callback method
 
   local getter = function()  
     -- index can change as arguments are rearranged
     -- so we always fetch by the name...
-    --print("self:get_arg_by_name(arg.name)",arg.name,self:get_arg_by_name(arg.name))
     local val = self:get_arg_by_name(arg.name,arg.tab_name).value
     if arg.properties then
       -- apply transformation 
@@ -313,30 +289,24 @@ function xStreamArgs:add(arg,index,do_replace)
 
   -- NB: added only once, reused 
   if arg_tab_name then
-    --print("self[arg_tab_name]",self[arg_tab_name],arg_tab_name,type(self[arg_tab_name]))
     if (type(self[arg_tab_name]) == "nil") then
       self[arg_tab_name] = xStreamArgsTab()
       table.insert(self._tab_names,arg_tab_name)
-      --print(">>> creating xStreamArgsTab for this arg",arg.name)
     end
     if (type(self[arg_tab_name][arg_name]) == "nil") then
-      --print(">>> adding tabbed arg",arg_name)
       self[arg_tab_name][arg_name] = property(getter,setter)
     end
   else
     if (type(self[arg.name]) == "nil") then
-      --print(">>> adding untabbed arg",arg.name)
       self[arg.name] = property(getter,setter)
     end
   end
 
   -- detect changes to definition
   xarg.modified_observable:add_notifier(function()
-    --print("xarg.modified_observable fired...",self.modified_observable)
     self.modified_observable:bang()
   end)
 
-  --print(">>> added arg",arg.name)
   return true
 
 end
@@ -361,7 +331,7 @@ end
 -------------------------------------------------------------------------------
 -- return argument by it's name/tab
 -- @param str_name (string)
--- @param str_tab_name (string), optional
+-- @param [str_tab_name] (string), optional
 
 function xStreamArgs:get_arg_by_name(str_name,str_tab_name)
   TRACE("xStreamArgs:get_arg_by_name(str_name)",str_name)
@@ -501,12 +471,9 @@ function xStreamArgs:replace(idx,arg)
   local presets = self.model.selected_preset_bank.presets
   if arg.max and arg.min then
     for k,v in ipairs(presets) do
-      --print("k,v",k,v,rprint(v))
       if (k == arg.name) then
-        --print("value pre",v)
         v = (v > arg.max) and arg.max or v
         v = (v < arg.min) and arg.min or v
-        --print("value post",v)
       end
     end
   end
@@ -567,16 +534,13 @@ end
 -- apply a random value to boolean, numeric values
 
 function xStreamArgs:randomize()
+  TRACE("xStreamArgs:randomize()")
 
   for _,arg in ipairs(self.args) do
-
     if not arg.locked then
-
       local val
-
       if (type(arg.value) == "boolean") then
         val = (math.random(0,1) == 1) and true or false
-        --print(">>> boolean random",val)
       elseif (type(arg.value) == "number") then
         if arg.properties then
           if (arg.properties.items) then
@@ -593,13 +557,10 @@ function xStreamArgs:randomize()
           end
         end
       end
-
       if (type(val) ~= "nil") then
         arg.observable.value = val
       end
-
     end
-
   end
 
 end
@@ -626,6 +587,7 @@ end
 -------------------------------------------------------------------------------
 
 function xStreamArgs:toggle_link(arg)
+  TRACE("xStreamArgs:toggle_link(arg)",arg)
 
   arg.linked = not arg.linked
   if not arg.linked then
@@ -640,6 +602,7 @@ end
 -- @param name - set link property for all tabbed args matching this name
 
 function xStreamArgs:set_link(name)
+  TRACE("xStreamArgs:set_link(name)",name)
 
   self._linked[name] = {}
 
@@ -650,24 +613,20 @@ function xStreamArgs:set_link(name)
     end
   end
 
-  --print(">>> post set_link",name,rprint(self._linked))
-
 end
 
 -------------------------------------------------------------------------------
 -- @param name - unset link property for all tabbed args matching this name
 
 function xStreamArgs:unset_link(name)
+  TRACE("xStreamArgs:unset_link(name)",name)
 
   for k,arg in ipairs(self.args) do
     if arg.tab_name and (arg.name == name) then
       arg.linked = false
     end
   end
-
   self._linked[name] = nil
-
-  --print(">>> post unset_link",name,rprint(self._linked))
 
 end
 
