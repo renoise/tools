@@ -386,8 +386,8 @@ end
 -- and update output_buffer with result
 -- @param num_lines, int 
 
-function xStreamBuffer:_create_content(num_lines)
-  TRACE("xStreamBuffer:_create_content(num_lines)",num_lines)
+function xStreamBuffer:_create_content(num_lines,xinc)
+  TRACE("xStreamBuffer:_create_content(num_lines,xinc)",num_lines,xinc)
 
   if not self.callback then
     LOG("*** Can't write output - no callback defined")
@@ -395,7 +395,7 @@ function xStreamBuffer:_create_content(num_lines)
   end
 
   local pos = xSongPos.create(self.xpos.pos)
-  local xinc = self.xpos.xinc
+  --local xinc = self.xpos.xinc
 
   --print(">>> _create_content - xinc,num_lines",xinc,num_lines)
 
@@ -554,7 +554,7 @@ end
 -- @param live_mode (bool), skip line at playpos when true
 
 function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
-  TRACE("xStreamBuffer:write_output(pos,travelled,num_lines,live_mode)",pos,xinc,num_lines,live_mode)
+  TRACE("xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)",pos,xinc,num_lines,live_mode)
 
   --print(">>> write output -- pos,xinc,num_lines",pos,xinc,num_lines)
 
@@ -575,7 +575,7 @@ function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
     if not self.output_buffer[i+xinc] 
       and not self.scheduled[i+xinc]
     then
-      self:_create_content(i)
+      self:_create_content(i,xinc)
     end
   end
 
