@@ -687,6 +687,10 @@ function xStreamUIOptions:on_idle()
     self:update_model_selector()
   end
 
+  if not self:dialog_is_visible() then
+    return
+  end
+
   -- display some stats 
   local xs = self.xstream 
   local view = self.vb.views["xStreamImplStats"]
