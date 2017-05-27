@@ -214,7 +214,7 @@ function cSandbox:prepare_callback(str_fn)
 
   local str_combined = [[return function(...)
   ]]..self.str_prefix..[[
-  ]]..str_fn..[[
+  ]].."\n"..str_fn.."\n"..[[
   ]]..self.str_suffix..[[
   end]]
 
@@ -231,12 +231,14 @@ end
 function cSandbox:compile()
 
   if (self.callback_str == "") then
-    LOG("cSandbox: no function was provided")
-    return true
+    return true,"cSandbox: no function was provided"
   end
 
   local str_combined = self:prepare_callback(self.callback_str)
-  local def = loadstring(str_combined)
+  local def,err = loadstring(str_combined)
+  if not def then
+    return false,err
+  end 
   self.callback = def()
   setfenv(self.callback, self.env)
 
