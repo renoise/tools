@@ -1,5 +1,14 @@
 # xStream Changelog
 
+## 1.57
+- Fixed: error when updating view with out-of-range value #99
+- Fixed: error is thrown when entering "return" into main method #97
+- Fixed: model doesn't work when last line is comment #95
+- Fixed: expecting "models" to be present in custom user-folder #87
+- Fixed: favorite icons and preset highlighting (got broken in 1.55)
+- Fixed: ChordMemory model had a few flaws
+- Changed: more compact, cleaned up GUI
+
 ## 1.55
 - Core: refactored several internal classes
 - Core: more solid, simpler streaming implementation
