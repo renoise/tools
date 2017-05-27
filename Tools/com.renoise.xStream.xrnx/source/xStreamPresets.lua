@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xStreamPresets
-============================================================================]]--
+===============================================================================================]]--
 --[[
 
 	This class manages argument-presets 
@@ -18,13 +18,13 @@ xStreamPresets
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 class 'xStreamPresets'
 
-xStreamPresets.DEFAULT_BANK_NAME = "Default"
+xStreamPresets.DEFAULT_BANK_NAME = "Default bank"
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamPresets:__init(model)
 
@@ -41,10 +41,10 @@ function xStreamPresets:__init(model)
 	self.name = property(self.get_name,self.set_name)
   self.name_observable = renoise.Document.ObservableString(xStreamPresets.DEFAULT_BANK_NAME)
 
-  -- DocumentObservableBoolean, fires when eligible for export
-  -- (emulates a 'bang' - implemented as an ever-increasing integer value)
+  -- DocumentObservableBang, fires when eligible for export
   self.modified = property(self.get_modified,self.set_modified)
-  self.modified_observable = renoise.Document.ObservableNumber(0)
+  self._modified = renoise.Document.ObservableBoolean()
+  self.modified_observable = renoise.Document.ObservableBang()
 
   -- ObservableNumberList, notifier fired when items are added/removed 
   self.presets_observable = renoise.Document.ObservableNumberList()
@@ -57,9 +57,9 @@ function xStreamPresets:__init(model)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Get/set methods
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamPresets:get_name()
   return self.name_observable.value
@@ -69,17 +69,18 @@ function xStreamPresets:set_name(val)
   self.name_observable.value = val
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamPresets:get_modified()
-  return self.modified_observable.value
+  return self._modified
 end
 
 function xStreamPresets:set_modified()
-  self.modified_observable.value = self.modified_observable.value + 1
+  self._modified = true
+  self.modified_observable:bang()
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamPresets:get_selected_preset_index()
   TRACE("xStreamPresets:get_selected_preset_index()")
@@ -101,9 +102,31 @@ function xStreamPresets:set_selected_preset_index(idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Class methods
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- Select the previous preset 
+
+function xStreamPresets:select_previous()
+  TRACE("xStreamPresets:select_previous()")
+  local idx = self.selected_preset_index
+  if (idx > 1) then 
+    self.selected_preset_index = idx - 1
+  end 
+end 
+
+---------------------------------------------------------------------------------------------------
+-- Select the next preset 
+
+function xStreamPresets:select_next()
+  TRACE("xStreamPresets:select_next()")
+  local idx = self.selected_preset_index
+  if (idx < #self.presets) then 
+    self.selected_preset_index = idx + 1
+  end 
+end 
+
+---------------------------------------------------------------------------------------------------
 -- add current/supplied values as new preset 
 -- @param t (table) use these values 
 -- @return bool, true when preset was added
@@ -146,7 +169,7 @@ function xStreamPresets:add_preset(t)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamPresets:remove_all_presets()
   TRACE("xStreamPresets:remove_all_presets()")
@@ -157,7 +180,7 @@ function xStreamPresets:remove_all_presets()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param idx (int)
 
 function xStreamPresets:remove_preset(idx)
@@ -186,7 +209,7 @@ function xStreamPresets:remove_preset(idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamPresets:swap_index(idx1,idx2)
 
@@ -209,7 +232,7 @@ function xStreamPresets:swap_index(idx1,idx2)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- update a preset with the current set of values
 -- @param idx (int)
 
@@ -231,7 +254,7 @@ function xStreamPresets:update_preset(idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- get preset "display name" - for use in lists, selectors etc.
 -- @return string 
 
@@ -251,7 +274,7 @@ function xStreamPresets:get_preset_display_name(idx)
 end
   
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- recall/activate preset 
 -- @param idx (int)
 -- @return bool, true when all arguments were recalled
@@ -291,7 +314,7 @@ function xStreamPresets:recall_preset(idx)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- rename this preset bank (also applies to preset folder, if it exists)
 -- @return bool, true when succeeded or user aborted, false when failed
 -- @return string, error message when failed
@@ -318,7 +341,7 @@ function xStreamPresets:rename(str_name)
       if io.exists(str_to) then
         return false, "Warning: a preset folder with the given name already exists: "..str_to
       end
-      local success,err = os.move(str_from,str_to)
+      local success,err = cFilesystem.rename(str_from,str_to)
       if not success then
         return false, "Error during preset-bank rename: "..err
       end
@@ -343,12 +366,11 @@ function xStreamPresets:rename(str_name)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- @param idx (int)
 -- @param str_name (string)
 -- @return bool, true when successful
 -- @return string, error message when failed
-
 
 function xStreamPresets:rename_preset(idx,str_name)
   TRACE("xStreamPresets:rename_preset(idx,str_name)",idx,str_name)
@@ -374,17 +396,18 @@ function xStreamPresets:rename_preset(idx,str_name)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Import presets from xml file, preserving existing presets
 
 function xStreamPresets:merge()
-  
+  TRACE("xStreamPresets:merge()")
+
   local clear_existing = false
   self:import(clear_existing)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Import all presets from xml file
 -- @param file_path (string), prompt user if not defined
 -- @param clear_existing (bool)
@@ -435,23 +458,18 @@ function xStreamPresets:import(file_path,clear_existing)
   for _,v in ipairs(rslt.kids) do
     if (v.name == "xStreamPresets") then
       for __,v2 in ipairs(v.kids) do
-        --print(">>> v2",v2)
         if (v2.name == "Presets") then
           for k3,v3 in ipairs(v2.kids) do
-            --print(">>> v3",v3)
             if (v3.name == "Preset") then
               local preset = {}
               local preset_name = ""
               for ___,v4 in ipairs(v3.kids) do
-                --print(">>> v4",v4)
                 if (v4.name == "name") then
                   -- name is a special entry
                   preset_name = v4.kids[1] and v4.kids[1].value
-                  --print("preset_name",preset_name)
                 else
                   local arg_name = xStreamPresets.parse_xml_arg_name(v4.name)
                   local arg_index = table.find(arg_names,arg_name)
-                  --print(">>> arg_name,arg_index",arg_name,arg_index)
                   if arg_index then
                     -- make sure we cast to right type, 
                     -- as XML are always defined as strings
@@ -484,7 +502,7 @@ function xStreamPresets:import(file_path,clear_existing)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamPresets:path_to_xml(str_name)
   TRACE("xStreamPresets:path_to_xml(str_name)",str_name)
@@ -492,19 +510,21 @@ function xStreamPresets:path_to_xml(str_name)
   return ("%s/%s.xml"):format(self:path_to_xml_folder(),str_name)
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamPresets:path_to_xml_folder()
+  TRACE("xStreamPresets:path_to_xml_folder()")
   local preset_bank_folder = xStreamPresets.get_preset_bank_path()
   return ("%s%s"):format(preset_bank_folder,self.model.name)
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- auto-saving of external preset banks to a predefined location
 -- @return bool, true when saved
 -- @return string, error message when failed
 
 function xStreamPresets:save()
+  TRACE("xStreamPresets:save()")
 
   if (self.name == xStreamPresets.DEFAULT_BANK_NAME) then
     return
@@ -521,7 +541,7 @@ function xStreamPresets:save()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- export all presets
 -- @param file_path (string), provide a name (prompt user if not defined)
 -- @return bool, true when export was successful
@@ -565,7 +585,7 @@ function xStreamPresets:export(file_path)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- remove our xml file 
 
 function xStreamPresets:remove_xml()
@@ -584,7 +604,7 @@ function xStreamPresets:remove_xml()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [Static] Function to make argument names safe for XML 
 -- (they can contain dots)
 
@@ -592,14 +612,14 @@ function xStreamPresets.store_xml_arg_name(val)
   return val:gsub("%p","_dot_")
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [Static] Function to load 'safe' argument name from XML
 
 function xStreamPresets.parse_xml_arg_name(val)
   return val:gsub("_dot_",".")
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [Static] Retrieve root path for preset banks 
 
 function xStreamPresets.get_preset_bank_path()

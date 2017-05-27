@@ -299,6 +299,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function xStreamProcess:maintain_buffer_mute_state()
+  TRACE("xStreamProcess:maintain_buffer_mute_state()")
 
   if self.active then 
     if self.muted and not self.buffer.mute_xinc then
@@ -308,6 +309,67 @@ function xStreamProcess:maintain_buffer_mute_state()
     end
   end
 
+end
+
+---------------------------------------------------------------------------------------------------
+-- @return xStreamPresets, or false when unable to resolve
+
+function xStreamProcess:get_selected_preset_bank()
+
+  local model = self.models.selected_model
+  if not model then 
+    return false, "No model is selected"
+  end 
+
+  local preset_bank = self.models.selected_model.selected_preset_bank
+  if not preset_bank then 
+    return false, "No preset bank is selected"
+  end 
+
+  return preset_bank
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Attempt to select a preset from the current preset bank 
+-- @return boolean, true when able to set 
+
+function xStreamProcess:set_selected_preset_index(idx)
+  TRACE("xStreamProcess:set_selected_preset_index(idx)",idx)
+  local preset_bank,err = self:get_selected_preset_bank()
+  if err then 
+    return false, err
+  end 
+  preset_bank.selected_preset_index = idx
+  return true 
+end 
+
+---------------------------------------------------------------------------------------------------
+-- Attempt to select the previous preset from the current preset bank
+-- @return boolean, true when able to set 
+
+function xStreamProcess:select_previous_preset()
+  TRACE("xStreamProcess:select_previous_preset()")
+  local preset_bank,err = self:get_selected_preset_bank()
+  if err then 
+    return false, err
+  end 
+  preset_bank:select_previous()
+  return true 
+end
+
+---------------------------------------------------------------------------------------------------
+-- Attempt to select the previous preset from the current preset bank
+-- @return boolean, true when able to set 
+
+function xStreamProcess:select_next_preset()
+  TRACE("xStreamProcess:select_next_preset()")
+  local preset_bank,err = self:get_selected_preset_bank()
+  if err then 
+    return false, err
+  end 
+  preset_bank:select_next()
+  return true 
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -466,10 +528,7 @@ function xStreamProcess:fill_track()
   TRACE("xStreamProcess:fill_track()")
   
   local patt_num_lines = xPatternSequencer.get_number_of_lines(rns.selected_sequence_index)
-  self.output_mode = xStreamProcess.OUTPUT_MODE.TRACK
-  self:apply_to_range(1,patt_num_lines)
-
-  self.output_mode = xStreamProcess.OUTPUT_MODE.STREAMING
+  self:apply_to_range(1,patt_num_lines,xStreamProcess.OUTPUT_MODE.TRACK)
 
 end
 
@@ -516,24 +575,50 @@ function xStreamProcess:fill_selection(locally)
 
   -- write output
   self.buffer.track_index = rns.selection_in_pattern.start_track
-  self.output_mode = xStreamProcess.OUTPUT_MODE.SELECTION
-  self:apply_to_range(from_line,to_line,xinc)
+  self:apply_to_range(from_line,to_line,xStreamProcess.OUTPUT_MODE.SELECTION,xinc)
 
   -- restore settings
   self.buffer.track_index = cached_track_index
-  self.output_mode = xStreamProcess.OUTPUT_MODE.STREAMING
 
 end
+
+---------------------------------------------------------------------------------------------------
+-- Fill pattern-track for the selected line
+-- @param locally (bool) relative to the top of the pattern
+ 
+function xStreamProcess:fill_line(locally)
+  TRACE("xStreamProcess:fill_line(locally)",locally)
+
+  local from_line = rns.transport.edit_pos.line
+  local xinc = (not locally) and (from_line-1) or 0 
+
+  -- backup settings
+  local cached_track_index = self.buffer.track_index
+
+  -- write output
+  self.buffer.track_index = rns.selected_track_index
+  self:apply_to_range(from_line,from_line,xStreamProcess.OUTPUT_MODE.SELECTION,xinc)
+
+  -- restore settings
+  self.buffer.track_index = cached_track_index
+
+end
+
 
 ---------------------------------------------------------------------------------------------------
 -- Write output to a range in the selected pattern,  
 -- temporarily switching to a different set of buffers
 -- @param from_line (int)
 -- @param to_line (int) 
+-- @param mode (xStreamProcess.OUTPUT_MODE)
 -- @param [xinc] (int) where the callback 'started'
 
-function xStreamProcess:apply_to_range(from_line,to_line,xinc)
-  TRACE("xStreamProcess:apply_to_range(from_line,to_line,xinc)",from_line,to_line,xinc)
+function xStreamProcess:apply_to_range(from_line,to_line,mode,xinc)
+  TRACE("xStreamProcess:apply_to_range(from_line,to_line,mode,xinc)",from_line,to_line,mode,xinc)
+
+  assert(type(from_line)=="number")
+  assert(type(to_line)=="number")
+  assert(type(mode)=="number")
 
   local pos = {
     sequence = rns.transport.edit_pos.sequence,
@@ -562,6 +647,7 @@ function xStreamProcess:apply_to_range(from_line,to_line,xinc)
     block = xSongPos.BLOCK_BOUNDARY.NONE,
   })
   -- write output
+  self.output_mode = mode -- NB: models can access this value
   self.active = true
   self.xpos.pos.line = from_line
   self.buffer:write_output(pos,xinc,num_lines,live_mode)
@@ -572,6 +658,8 @@ function xStreamProcess:apply_to_range(from_line,to_line,xinc)
   self.buffer.pattern_buffer = cached_read_buffer
   self.xpos.pos = cached_pos
   xSongPos.set_defaults(cached_xsongpos)
+
+  self.output_mode = xStreamProcess.OUTPUT_MODE.STREAMING
 
 end
 
