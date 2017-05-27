@@ -46,9 +46,6 @@ function xStreamModels:__init(process)
   --- xStreamModel, read-only - nil when none are available
   self.selected_model = nil
 
-  --- string, last file path from where we imported models ('load_models')
-  self.last_models_path = ""
-
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -112,7 +109,7 @@ function xStreamModels:set_selected_model_index(idx)
   local presets_modified_notifier = function()
     TRACE("xStreamModels - selected_preset_bank.modified_observable fired...")
     if self.selected_model.selected_preset_bank.modified then
-      self.preset_bank_export_requested = true
+      self.xstream.preset_bank_export_requested = true
     end
   end
 
@@ -194,7 +191,7 @@ function xStreamModels:create(str_name)
 
   model.modified = true
   model.name = str_name
-  model.file_path = ("%s%s.lua"):format(self.last_models_path,str_name)
+  model.file_path = ("%s%s.lua"):format(self:get_models_path(),str_name)
   model:parse_definition({
     callback = [[-------------------------------------------------------------------------------
 -- Empty configuration
@@ -312,10 +309,6 @@ function xStreamModels:load_all(str_path)
   if (log_msg ~= "") then
      LOG(log_msg.."*** WARNING One or more models failed to load during startup")
   end
-
-  -- save the path for later use
-  -- (when creating 'virtual' models, this is where they will be saved)
-  self.last_models_path = str_path
 
 end
 
