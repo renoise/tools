@@ -177,3 +177,45 @@ function xScale.get_scale_index_by_name(name)
   end
 
 end
+
+--------------------------------------------------------------------------------
+-- [Scale] get scales with a specific number of keys
+-- @param count (number)
+-- @return table of xScale.SCALES or nil
+
+function xScale.get_scales_with_count(count)
+  TRACE("xScale.get_scales_with_count(count)",count)
+
+  local rslt = {}
+  for k,v in pairs(xScale.SCALES) do
+    if (v.count == count) then
+      table.insert(rslt,v)
+    end 
+  end
+  return rslt
+
+end
+
+--------------------------------------------------------------------------------
+
+function xScale.get_selected_scale()
+  TRACE("xScale.get_selected_scale()")
+
+  local instr = rns.selected_instrument 
+  if instr then 
+    return instr.trigger_options.scale_mode
+  end 
+
+end
+
+--------------------------------------------------------------------------------
+
+function xScale.get_selected_key()
+  TRACE("xScale.get_selected_key()")
+  local instr = rns.selected_instrument 
+  if instr then 
+    return instr.trigger_options.scale_key
+  end 
+
+end
+
