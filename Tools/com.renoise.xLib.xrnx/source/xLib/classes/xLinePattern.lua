@@ -407,19 +407,56 @@ end
 -- @param track renoise.Track
 -- @param line renoise.PatternLine
 -- @param cmd xMidiCommand
---[[
-function xLinePattern.set_midi_command(track,line,cmd)
+-- @param [expand] boolean, expand to show panning column 
+
+function xLinePattern.set_midi_command(track,line,cmd,expand)
+  TRACE("xLinePattern.set_midi_command(track,line,cmd,expand)",track,line,cmd,expand)
+
+  assert(type(track)=="Track","Expected renoise.Track as argument")
+  assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
+  assert(type(cmd)=="xMidiCommand","Expected xMidiCommand as argument")
+
+  local note_col = line.note_columns[track.visible_note_columns]
+  local fx_col = line.effect_columns[1]
+
+  note_col.instrument_value = cmd.instrument_index-1
+  note_col.panning_string = ("M%d"):format(cmd.message_type)
+  fx_col.number_value = cmd.number_value
+  fx_col.amount_value = cmd.amount_value
+
+  if expand and not track.panning_column_visible then 
+    track.panning_column_visible = true
+  end 
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Clear previously set midi command. 
+-- @param track renoise.Track
+-- @param line renoise.PatternLine
+
+function xLinePattern.clear_midi_command(track,line)
+  TRACE("xLinePattern.clear_midi_command(track,line)",track,line)
 
   assert(type(track)=="Track","Expected renoise.Track as argument")
   assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
 
-  local note_col = line.note_columns[#track.visible_note_columns]
-  
-  -- TODO
+  local note_col = line.note_columns[track.visible_note_columns]
+  local fx_col = line.effect_columns[1]
 
+  note_col.panning_value = xLinePattern.EMPTY_VALUE
+  fx_col.number_value = 0
+  fx_col.amount_value = 0
+
+  -- remove instrument if last thing left
+  if (note_col.volume_value == xLinePattern.EMPTY_VALUE)
+    and (note_col.delay_value == 0)
+    and (note_col.note_value == 121)
+  then 
+    note_col.instrument_value = xLinePattern.EMPTY_VALUE
+  end
 
 end
-]]
 
 ---------------------------------------------------------------------------------------------------
 
