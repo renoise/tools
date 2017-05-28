@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>5</ApiVersion>
+  <Id>com.renoise.ScaleMate</Id>
+  <Version>0.1</Version>
+  <Author>danoise [bjorn.nesby@gmail.com]</Author>
+  <Name>ScaleMate</Name>
+  <Category>Midi</Category>
+  <Description>A tool that brings basic MIDI record-arming to Renoise</Description>
+  <Homepage></Homepage>
+</RenoiseScriptingTool>
