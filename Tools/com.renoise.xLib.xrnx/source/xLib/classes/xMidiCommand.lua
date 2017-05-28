@@ -21,6 +21,7 @@ See also:
 class 'xMidiCommand'
 
 
+-- same as value entered in the panning column
 xMidiCommand.TYPE = {
   CONTROLLER_CHANGE = 0,
   PITCH_BEND = 1,
