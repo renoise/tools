@@ -23,22 +23,11 @@ Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/T
 --==============================================================================
 
 
-local function unpack_args(...)
-  local args = {...}
-  if not args[1] then
-    return {}
-  else
-    return args[1]
-  end
-end
-
-
-
 class 'NTrapEvent'
 
 function NTrapEvent:__init(...)
 
-	local args = unpack_args(...)
+	local args = cLib.unpack_args(...)
   
 	-- (number)
 	self.timestamp = args.timestamp
