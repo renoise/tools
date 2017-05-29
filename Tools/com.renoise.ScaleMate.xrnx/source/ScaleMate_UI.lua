@@ -1,15 +1,17 @@
---[[============================================================================
+--[[===============================================================================================
 ScaleMate_UI
-============================================================================]]--
+===============================================================================================]]--
 --[[
 
 User interface for ScaleMate
 
 ]]
 
+--=================================================================================================
+
 class 'ScaleMate_UI'
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Constructor method
 
 function ScaleMate_UI:__init(...)
@@ -18,11 +20,10 @@ function ScaleMate_UI:__init(...)
   local args = cLib.unpack_args(...)
 
   self.dialog_title = args.dialog_title or ""
-
+  self.midi_prefix = args.midi_prefix or ""
   self.owner = args.owner
 
   self.vb = renoise.ViewBuilder()
-
   self.prefs = renoise.tool().preferences
 
   -- renoise.Dialog
@@ -37,24 +38,26 @@ function ScaleMate_UI:__init(...)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-function ScaleMate_UI:key_handler(self,key)
-  TRACE("ScaleMate_UI:key_handler(self,key)",self,key)
+function ScaleMate_UI:key_handler(key)
+  TRACE("ScaleMate_UI:key_handler(key)",key)
 
+  --print("keyhandler",self,key)
+  local handled = xCursorPos.handle_key(key)
+  print(">>> handled",handled)
 
 end 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function ScaleMate_UI:show()
   TRACE("ScaleMate_UI:show()")
 
-  if not self.vb_content then 
-    self:build()
-  end 
-
-  if not self.dialog then 
+  if not self.dialog or not self.dialog.visible then 
+    if not self.vb_content then 
+      self:build()
+    end 
     self.dialog = renoise.app():show_custom_dialog(
       self.dialog_title,
       self.vb_content,
@@ -63,10 +66,11 @@ function ScaleMate_UI:show()
   end 
 
   self.dialog:show()
+  self:update()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Build the UI (executed once)
 
 function ScaleMate_UI:build()
@@ -76,24 +80,14 @@ function ScaleMate_UI:build()
   local vb_content = vb:column{
     vb:row{
       style = "plain",
-      --[[
-      vb:row{
-        vb:checkbox{
-          bind = renoise.tool().preferences.autostart
-        },
-        vb:text{
-          text = "autostart"
-        }
-      }
-      ]]
       vb:column{
-        self:build_n_tones(12,50),
-        self:build_n_tones(5,120),
-        self:build_n_tones(6,90),
-        self:build_n_tones(8,120),
-        self:build_n_tones(9,110),
+        self:build_n_tones(12,140),
+        self:build_n_tones(5,140),
+        self:build_n_tones(6,140),
+        self:build_n_tones(8,140),
+        self:build_n_tones(9,140),
       },
-      self:build_n_tones(7,120),
+      self:build_n_tones(7,140),
     },
     vb:horizontal_aligner{
       mode = "justify",
@@ -104,13 +98,13 @@ function ScaleMate_UI:build()
           bind = self.prefs.write_to_pattern
         },
         vb:text{
-          text = "Write to pattern"
+          text = "Write to Pattern"
         }
       },
       vb:button{
-        text = "Clear commands",
+        text = "Clear in Pattern-Track",
         notifier = function()
-          self.owner:clear_commands_in_pattern()
+          self.owner:clear_pattern_track()
         end
       }
     }
@@ -121,7 +115,7 @@ function ScaleMate_UI:build()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function ScaleMate_UI:build_n_tones(count,width)
   TRACE("ScaleMate_UI:build_n_tones(count,width)",count,width)
@@ -134,10 +128,9 @@ function ScaleMate_UI:build_n_tones(count,width)
   local view = vb:column{
     vb:row{
       style = "body",
-      width = 200,
       vb:text{
         text = count.."-tone Scales",
-        width = 200,
+        width = width,
         font = "bold"
       }
     },
@@ -147,17 +140,16 @@ function ScaleMate_UI:build_n_tones(count,width)
   local scales = xScale.get_scales_with_count(count)
   for k,v in ipairs(scales) do
 
+    local str_midi_mapping = ("Set Scale Mode (%s) [Trigger]"):format(v.name)
     local scale_button = vb:button{
       width = 10,
-      midi_mapping = "foo",
+      midi_mapping = self.midi_prefix..str_midi_mapping,
       notifier = function()
-        LOG("got here")
         self.owner:set_scale(v.name)
       end
     }
 
     local scale_label = vb:text{
-      width = width,
       text = v.name,
     }
     
@@ -167,7 +159,6 @@ function ScaleMate_UI:build_n_tones(count,width)
         vb:checkbox{
           width = 1,
           notifier = function()
-            LOG("got here")
             self.owner:set_scale(v.name)
           end
         },
@@ -183,17 +174,22 @@ function ScaleMate_UI:build_n_tones(count,width)
 
 end 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- When instrument has changed
 
 function ScaleMate_UI:update()
+  TRACE"ScaleMate_UI:update()"
+
+  if not self.dialog or not self.dialog.visible then 
+    LOG("Skip update - self.dialog",self.dialog)
+    return 
+  end 
 
   self:update_scales()
 
 end
 
-
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function ScaleMate_UI:update_scales()
   TRACE("ScaleMate_UI:update_scales()")
@@ -207,8 +203,6 @@ function ScaleMate_UI:update_scales()
   for k,v in pairs(self.vb_scale_labels) do 
     v.font = (sel_scale_name == k) and "bold" or "normal"
   end 
-
-
 
 end 
 
