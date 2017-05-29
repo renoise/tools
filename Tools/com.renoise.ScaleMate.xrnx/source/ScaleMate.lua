@@ -1,15 +1,17 @@
---[[============================================================================
+--[[===============================================================================================
 ScaleMate_UI
-============================================================================]]--
+===============================================================================================]]--
 --[[
 
 ScaleMate provides easy control of scales and keys 
 
 ]]
 
+--=================================================================================================
+
 class 'ScaleMate'
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Constructor method
 
 function ScaleMate:__init(...)
@@ -17,22 +19,26 @@ function ScaleMate:__init(...)
 
   local args = cLib.unpack_args(...)
 
-  self.dialog = ScaleMate_UI{
+  self.prefs = renoise.tool().preferences
+  self.ui = ScaleMate_UI{
     owner = self,
     dialog_title = args.dialog_title,
+    midi_prefix = args.midi_prefix,
   }
 
-  self.prefs = renoise.tool().preferences
+  --== initialize ==--
 
   renoise.tool().app_new_document_observable:add_notifier(function()
+    print(">>> app_new_document_observable")
+    rns = renoise.song()
     self:attach_to_song()
   end)
 
-  self:attach_to_song()
+  --self:attach_to_song()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Set selected instrument to the provide scale
 -- @param name (string)
 
@@ -52,7 +58,7 @@ function ScaleMate:set_scale(name)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Set selected instrument to the provide key
 -- @param val (number)
 
@@ -68,14 +74,25 @@ function ScaleMate:set_key(val)
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Update pattern (cursor position) with selected scale
+-- If not able to produce output (e.g. wrong track type), then display an error message in 
+-- the status bar / scripting console
 
 function ScaleMate:write_scale()
   TRACE("ScaleMate:write_scale()")
   
-  local instr = rns.selected_instrument 
   local track = rns.selected_track 
+  print("track.type",track.type)
+  if (track.type ~= renoise.Track.TRACK_TYPE_SEQUENCER) then 
+    local err_msg = "*** Not able to write current scale to pattern - wrong track type."
+    renoise.app():show_status(err_msg)
+    LOG(err_msg)
+    return 
+  end 
+
+
+  local instr = rns.selected_instrument 
   local line = rns.selected_line 
   local cmd = xMidiCommand{
       instrument_index = rns.selected_instrument_index,
@@ -88,10 +105,10 @@ function ScaleMate:write_scale()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-function ScaleMate:clear_commands_in_pattern()
-  TRACE("ScaleMate:clear_commands_in_pattern()")
+function ScaleMate:clear_pattern_track()
+  TRACE("ScaleMate:clear_pattern_track()")
 
   local track = rns.selected_track
   local patt = rns.selected_pattern 
@@ -102,38 +119,38 @@ function ScaleMate:clear_commands_in_pattern()
   for k,line in ipairs(lines) do
     local cmd = xLinePattern.get_midi_command(track,line)
     if cmd then 
-      print("found midi command",cmd)
       xLinePattern.clear_midi_command(track,line)
     end 
   end
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function ScaleMate:attach_to_song()
   TRACE("ScaleMate:attach_to_song()")
 
-
   local instr_notifier = function()
     print(">>> instr_notifier")
-    self.dialog:update()
+    --self.ui:update()
     self:attach_to_instrument()
   end
 
   cObservable.attach(rns.selected_instrument_index_observable,instr_notifier)
-
   self:attach_to_instrument()
+
+  --self.ui:update()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function ScaleMate:attach_to_instrument()
+  TRACE("ScaleMate:attach_to_instrument()")
 
   local scale_notifier = function()
     print(">>> scale_notifier")
-    self.dialog:update()
+    self.ui:update()
   end
 
   cObservable.attach(rns.selected_instrument.trigger_options.scale_mode_observable,scale_notifier)
