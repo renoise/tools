@@ -17,7 +17,7 @@ _xlibroot = 'source/xLib/classes/'
 -- debug/trace filters can be configured here
 -- (see cDebug for more details)
 _trace_filters = nil  -- no tracing
-_trace_filters = {".*"} -- trace everything
+--_trace_filters = {".*"} -- trace everything
 
 require (_clibroot..'cLib')
 require (_clibroot..'cDebug')
@@ -139,13 +139,16 @@ renoise.tool():add_midi_mapping{
 
 ---------------------------------------------------------------------------------------------------
 -- Create the application instance
+-- will register keyboard shortcuts/midi mappings...
 
 function create()
   rns = renoise.song()
-  app = ScaleMate{
-    dialog_title = TOOL_NAME,
-    midi_prefix = MIDI_PREFIX,
-  }
+  if not app then  
+    app = ScaleMate{
+      dialog_title = TOOL_NAME,
+      midi_prefix = MIDI_PREFIX,
+    }
+  end
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -165,8 +168,7 @@ end
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   rns = renoise.song()
-  --show()
-  create()
+  create() 
 end)
 
-
+--show()
