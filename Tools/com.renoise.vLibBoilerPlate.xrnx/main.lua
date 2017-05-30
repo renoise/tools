@@ -1,16 +1,15 @@
---[[============================================================================
-com.renoise.vTableDemo.xrnx/main.lua
-============================================================================]]--
+--[[===============================================================================================
+com.renoise.vLibBoilerPlate.xrnx/main.lua
+===============================================================================================]]--
 --[[
 
-A demonstration of the vTable component  
-.
-#
+A barebones example of a vLib-based tool. Creates a dialog, nothing else.
+
 ]]
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Require files (app+libraries)
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 -- where to find the vLib/cLib classes (required) 
 _clibroot = 'source/cLib/classes/'
@@ -18,8 +17,8 @@ _vlibroot = 'source/vLib/classes/'
 
 -- debug/trace filters can be configured here
 -- (see cDebug for more details)
-_trace_filters = {".*"} -- trace everything
 --_trace_filters = nil  -- no tracing
+_trace_filters = {".*"} -- trace everything
 
 require (_clibroot..'cLib')
 require (_clibroot..'cDebug')
@@ -28,15 +27,15 @@ require (_vlibroot..'vLib')
 require (_vlibroot..'vDialog')
 require (_vlibroot..'vTable')
 
-require ('source/vTableDemo_UI')
-require ('source/vTableDemo_Prefs')
+require ('source/vLibBoilerPlate_UI')
+require ('source/vLibBoilerPlate_Prefs')
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Variables
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 -- this string is assigned as the dialog title
-APP_DISPLAY_NAME = "vTableDemo"
+APP_DISPLAY_NAME = "vLibBoilerPlate"
 
 -- reference to the vDialog that contains the application UI
 -- (you don't _have_ to use vDialog, but it's convenient as it
@@ -46,7 +45,7 @@ local vdialog
 
 -- implementing preferences as a class only has benefits
 -- (you can still use renoise.tool().preferences from anywhere...)   
-local prefs = vTableDemo_Prefs()
+local prefs = vLibBoilerPlate_Prefs()
 renoise.tool().preferences = prefs
 
 -- vLib requires a global reference to renoise.song(),
@@ -55,9 +54,9 @@ rns = nil
 
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- Menu entries & MIDI/Key mappings
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:"..APP_DISPLAY_NAME.."...",
@@ -74,8 +73,8 @@ renoise.tool():add_keybinding {
   end
 }
 
---------------------------------------------------------------------------------
--- Show the application UI --------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- Show the application UI ---------------------------------------------------------------------------------------------------
 
 function show()
 
@@ -84,7 +83,7 @@ function show()
 
   -- create dialog if it doesn't exist
   if not vdialog then
-    vdialog = vTableDemo_UI{
+    vdialog = vLibBoilerPlate_UI{
       dialog_title = APP_DISPLAY_NAME,
       waiting_to_show_dialog = prefs.autostart.value,
     }
@@ -94,8 +93,8 @@ function show()
   
 end
 
---------------------------------------------------------------------------------
--- Idle notifications
+---------------------------------------------------------------------------------------------------
+-- Notifications
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   if prefs.autostart.value then

@@ -6,6 +6,6 @@
   <Author>danoise [bjorn.nesby@gmail.com]</Author>
   <Name>vLibBoilerPlate</Name>
   <Category>Midi</Category>
-  <Description>A tool that brings basic MIDI record-arming to Renoise</Description>
+  <Description>A barebones example of a vLib-based tool. Creates a dialog, nothing else.</Description>
   <Homepage></Homepage>
 </RenoiseScriptingTool>
