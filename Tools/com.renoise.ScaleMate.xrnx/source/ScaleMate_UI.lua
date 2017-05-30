@@ -173,9 +173,7 @@ function ScaleMate_UI:build()
         id = "scalemate_key_switcher",
         width = PANEL_W,
         active = false,
-        items = {
-          "C","C#","D","D#","E","F","F#","G","G#","A","A#","B",
-        },
+        items = xScale.KEYS,
         notifier = function(idx)
           self.owner:set_key(idx)
         end
@@ -260,7 +258,7 @@ function ScaleMate_UI:build_n_tones(count,width)
       scale_button,
       vb:row{
         vb:checkbox{
-          width = 1,
+          visible = false,
           notifier = function()
             self.owner:set_scale(v.name)
           end
