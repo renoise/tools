@@ -4,7 +4,7 @@ xTrack
 
 --[[--
 
-Static Methods for working with renoise.Tracks objects
+Static Methods for working with renoise.Track objects
 .
 #
 
@@ -95,18 +95,18 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- [Static] Get the group track index associated with the provided track 
--- @param track_index (number)
+-- @param track_idx (number)
 -- @param match_self (boolean), allow matching the provided track 
 -- @return number or nil
 
-function xTrack.get_group_track_index(track_index,match_self)
-  TRACE("xTrack.get_group_track_index(track_index)",track_index,match_self)
+function xTrack.get_group_track_index(track_idx,match_self)
+  TRACE("xTrack.get_group_track_index(track_idx)",track_idx,match_self)
 
-  local trk = rns.tracks[track_index]
+  local trk = rns.tracks[track_idx]
   local group_trk = trk.group_parent
 
   if not group_trk and (trk.type == renoise.Track.TRACK_TYPE_GROUP) then
-    return track_index
+    return track_idx
   end
 
   for k,v in ipairs(rns.tracks) do
@@ -119,13 +119,13 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- [Static] Get the first sequencer-track associated with the provided group 
--- @param track_index (number)
+-- @param track_idx (number)
 -- @return number or nil, [error message (string)]
 
-function xTrack.get_first_sequencer_track_in_group(track_index)
-  TRACE("xTrack.get_first_sequencer_track_in_group(track_index)",track_index)
+function xTrack.get_first_sequencer_track_in_group(track_idx)
+  TRACE("xTrack.get_first_sequencer_track_in_group(track_idx)",track_idx)
 
-  local group_track = rns.tracks[track_index]
+  local group_track = rns.tracks[track_idx]
   if (group_track.type ~= renoise.Track.TRACK_TYPE_GROUP) then
     return nil, "Expected a group track as argument"
   end
@@ -140,85 +140,173 @@ end
 
 ---------------------------------------------------------------------------------------------------
 -- [Static] Get the type of track: sequencer/master/send
--- @param track_index (int)
+-- @param track_idx (int)
 -- @return renoise.Track.TRACK_TYPE_xxx or nil 
 
-function xTrack.determine_track_type(track_index)
-  TRACE("xTrack.determine_track_type(track_index)",track_index)
+function xTrack.determine_track_type(track_idx)
+  TRACE("xTrack.determine_track_type(track_idx)",track_idx)
 
   local master_idx = xTrack.get_master_track_index()
   local tracks = rns.tracks
-  if (track_index < master_idx) then
-    local track = rns.tracks[track_index]
+  if (track_idx < master_idx) then
+    local track = rns.tracks[track_idx]
     return track.type -- renoise.Track.TRACK_TYPE_SEQUENCER
-  elseif (track_index == master_idx) then
+  elseif (track_idx == master_idx) then
     return renoise.Track.TRACK_TYPE_MASTER
-  elseif (track_index <= #tracks) then
+  elseif (track_idx <= #tracks) then
     return renoise.Track.TRACK_TYPE_SEND
   end
 
 end
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Navigate to the next sequencer track (skip other types)
--- @param wrap_pattern (boolean)
+-- [Static] Jump to the next sequencer track - see xTrack.get_next_sequencer_track()
+-- @param [track_idx], start from this track (use selected if not specified)
+-- @param [wrap_pattern], boolean (wrap around at pattern edges - default is true)
+
+function xTrack.jump_to_next_sequencer_track(track_idx,wrap_pattern)
+  rns.selected_track_index = xTrack.get_next_sequencer_track(track_idx,wrap_pattern)
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Get the next sequencer track (skip other types)
+-- @param [track_idx], start from this track (use selected if not specified)
+-- @param [wrap_pattern], boolean (wrap around at pattern edges - default is true)
 -- @return boolean, true when able to navigate 
 
-function xTrack.next_sequencer_track(wrap_pattern)
-  TRACE("xTrack.next_sequencer_track(wrap_pattern)",wrap_pattern)
+function xTrack.get_next_sequencer_track(track_idx,wrap_pattern)
+  TRACE("xTrack.get_next_sequencer_track(track_idx,wrap_pattern)",track_idx,wrap_pattern)
 
-  local track_index = rns.selected_track_index
+  track_idx = track_idx or rns.selected_track_index
+  wrap_pattern = wrap_pattern or true
   local master_idx = xTrack.get_master_track_index()
   local matched = false
 
   repeat
-    track_index = track_index+1
-    if (track_index >= master_idx) then
+    track_idx = track_idx+1
+    if (track_idx >= master_idx) then
       if wrap_pattern then
-        track_index = 1
+        track_idx = 1
       else
         return
       end
     end
-    local track_type = xTrack.determine_track_type(track_index)
+    local track_type = xTrack.determine_track_type(track_idx)
     if (track_type == renoise.Track.TRACK_TYPE_SEQUENCER) then
       matched = true
     end
   until matched
-  rns.selected_track_index = track_index
-  return true
+
+  return track_idx
 
 end
 
 ---------------------------------------------------------------------------------------------------
+-- [Static] Jump to the previous sequencer track - see xTrack.get_previous_sequencer_track()
+-- @param [track_idx], start from this track (use selected if not specified)
+-- @param [wrap_pattern], boolean (wrap around at pattern edges - default is true)
+
+function xTrack.jump_to_previous_sequencer_track(track_idx,wrap_pattern)
+  rns.selected_track_index = xTrack.get_previous_sequencer_track(track_idx,wrap_pattern)
+end
+
+---------------------------------------------------------------------------------------------------
 -- [Static] Navigate to the previous sequencer track (skip other types)
--- @param wrap_pattern
--- @return boolean, true when able to navigate 
+-- @param [track_idx], start from this track (use selected if not specified)
+-- @param [wrap_pattern], boolean (wrap around at pattern edges - default is true)
+-- @return number
 
-function xTrack.previous_sequencer_track(wrap_pattern)
-  TRACE("xTrack.previous_sequencer_track(wrap_pattern)",wrap_pattern)
+function xTrack.get_previous_sequencer_track(track_idx,wrap_pattern)
+  TRACE("xTrack.get_previous_sequencer_track(track_idx,wrap_pattern)",track_idx,wrap_pattern)
 
-  local track_index = rns.selected_track_index
+  track_idx = track_idx or rns.selected_track_index
+  wrap_pattern = wrap_pattern or true
   local matched = false
 
   repeat
-    track_index = track_index-1
-    --local track = rns.tracks[track_index]
-    if (track_index == 0) then
+    track_idx = track_idx-1
+    if (track_idx == 0) then
       if wrap_pattern then
-        track_index = xTrack.get_master_track_index()
+        track_idx = xTrack.get_master_track_index()
       else
         return false
       end
     end
-    local track_type = xTrack.determine_track_type(track_index)
+    local track_type = xTrack.determine_track_type(track_idx)
     if (track_type == renoise.Track.TRACK_TYPE_SEQUENCER) then
       matched = true
     end
   until matched
 
-  rns.selected_track_index = track_index
-  return true
+  return track_idx
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Jump to the next track - see xTrack.get_next_track()
+-- @param [track_idx], start from this track (use selected if not specified)
+-- @param [wrap_pattern], boolean (wrap around at pattern edges - default is true)
+
+function xTrack.jump_to_next_track(track_idx,wrap_pattern)
+  rns.selected_track_index = xTrack.get_next_track(track_idx,wrap_pattern)
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Return the next track 
+-- @param [track_idx], start from this track (use selected if not specified)
+-- @param [wrap_pattern], boolean (wrap around at pattern edges - default is true)
+-- @return boolean, true when able to navigate 
+
+function xTrack.get_next_track(track_idx,wrap_pattern)
+  TRACE("xTrack.get_next_track(track_idx,wrap_pattern)",track_idx,wrap_pattern)
+
+  track_idx = track_idx or rns.selected_track_index 
+  wrap_pattern = wrap_pattern or true
+
+  track_idx = track_idx + 1
+  if (track_idx > #rns.tracks) then 
+    if wrap_pattern then 
+      track_idx = 1
+    else
+      track_idx = #rns.tracks
+    end
+  end 
+
+  return track_idx
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Jump to the next sequencer track - see xTrack.get_next_sequencer_track()
+-- @param [track_idx], start from this track (use selected if not specified)
+-- @param [wrap_pattern], boolean (wrap around at pattern edges - default is true)
+
+function xTrack.jump_to_previous_track(track_idx,wrap_pattern)
+  rns.selected_track_index = xTrack.get_previous_track(track_idx,wrap_pattern)
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Return the previous track 
+-- @param [track_idx], start from this track (use selected if not specified)
+-- @param [wrap_pattern], boolean (wrap around at pattern edges - default is true)
+-- @return boolean, true when able to navigate 
+
+function xTrack.get_previous_track(track_idx,wrap_pattern)
+  TRACE("xTrack.get_previous_track(track_idx,wrap_pattern)",track_idx,wrap_pattern)
+
+  track_idx = track_idx or rns.selected_track_index 
+  wrap_pattern = wrap_pattern or true
+
+  track_idx = track_idx - 1
+  if (track_idx < 1) then 
+    if wrap_pattern then 
+      track_idx = #rns.tracks
+    else
+      track_idx = 1
+    end
+  end 
+
+  return track_idx
 
 end
 
