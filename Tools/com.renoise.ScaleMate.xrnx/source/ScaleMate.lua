@@ -36,6 +36,8 @@ function ScaleMate:__init(...)
     self:attach_to_song()
   end)
 
+  self:attach_to_song()
+
 end
 
 ---------------------------------------------------------------------------------------------------
