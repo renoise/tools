@@ -1,13 +1,31 @@
 # ScaleMate
 
-Provides easy control of scales and keys for the selected instrument.
+## Description
 
-## Features
+ScaleMate offers quick access to the built-in instrument scales in Renoise, organized by the number of notes.
 
-* A large panel listing all the available scales and keys
-* Click or MIDI map any button to update the instrument setting
-* Is able to (live-)record scale/key-switching commands to the pattern
+If the user-interface is visible, the currently set scale and key are shown there. Push a button to select. Alternatively, use the available keyboard shortcuts / MIDI mappings.
 
+Whenever you select a scale or key, you can tell ScaleMate to write this into the pattern (technically, a MIDI command). This also works while recording, and allows you to switch scales on the fly.
 
+## Bonus info: scales and keys
 
+Scales are a live trigger option that affect instruments in Renoise. Scales don't affect already-recorded notes unless the instrument contains an active phrase. 
+However, when a scale is selected, and you are rehearsing or recording an instrument, the scale is applied in realtime.
 
+The commands being written to the pattern are the same as the specified by the Renoise MIDI implementation chart: (http://tutorials.renoise.com/wiki/MIDI#MIDI_Messages)
+
+**CC#14 (Scale Key)** - Determine the root key for the scale  
+**CC#15 (Scale Mode)** - Apply a harmonic scale to the preset  
+
+## Changelog
+
+### 0.2 
+- Added: scale key
+- Bug fixes
+
+### 0.11 + 0.12
+- Bug fixes
+
+### 0.1
+- "managed to put this together in a little hacking session last night"
