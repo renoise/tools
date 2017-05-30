@@ -2,10 +2,10 @@
 <RenoiseScriptingTool doc_version="0">
   <ApiVersion>5</ApiVersion>
   <Id>com.renoise.ScaleMate</Id>
-  <Version>0.12</Version>
+  <Version>0.2</Version>
   <Author>danoise [bjorn.nesby@gmail.com]</Author>
   <Name>ScaleMate</Name>
   <Category>Midi</Category>
-  <Description>A tool that brings basic MIDI record-arming to Renoise</Description>
+  <Description>ScaleMate provides easy control/recording of the instrument scale and key. The tool can be launched from Tools > ScaleMate, and adds a number of keyboard shortcuts and MIDI mappings</Description>
   <Homepage></Homepage>
 </RenoiseScriptingTool>
