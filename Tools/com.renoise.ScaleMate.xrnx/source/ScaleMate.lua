@@ -26,15 +26,15 @@ function ScaleMate:__init(...)
     midi_prefix = args.midi_prefix,
   }
 
+  -- while true, don't output to pattern
+  self.suppress_write = true 
+
   --== initialize ==--
 
   renoise.tool().app_new_document_observable:add_notifier(function()
-    print(">>> app_new_document_observable")
     rns = renoise.song()
     self:attach_to_song()
   end)
-
-  --self:attach_to_song()
 
 end
 
@@ -70,7 +70,11 @@ function ScaleMate:set_key(val)
    LOG("*** Could not resolve instrument")
   end 
 
-  instr.trigger_options.scale_key = name
+  instr.trigger_options.scale_key = val
+
+  if self.prefs.write_to_pattern.value then
+    self:write_key()
+  end
 
 end
 
@@ -82,23 +86,54 @@ end
 function ScaleMate:write_scale()
   TRACE("ScaleMate:write_scale()")
   
+  if self.suppress_write then return end
+  
   local track = rns.selected_track 
-  print("track.type",track.type)
   if (track.type ~= renoise.Track.TRACK_TYPE_SEQUENCER) then 
-    local err_msg = "*** Not able to write current scale to pattern - wrong track type."
+    local err_msg = "*** Unable to write scale mode to a non-sequencer type."
     renoise.app():show_status(err_msg)
     LOG(err_msg)
     return 
   end 
 
+  local instr = rns.selected_instrument 
+  local line = rns.selected_line 
+  local cmd = xMidiCommand{
+    instrument_index = rns.selected_instrument_index,
+    message_type = xMidiCommand.TYPE.CONTROLLER_CHANGE,
+    number_value = 15,
+    amount_value = xScale.get_scale_index_by_name(instr.trigger_options.scale_mode)-1,
+  }
+  local expand = true -- show panning if hidden
+  xLinePattern.set_midi_command(track,line,cmd,expand)
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Update pattern (cursor position) with selected scale
+-- If not able to produce output (e.g. wrong track type), then display an error message in 
+-- the status bar / scripting console
+
+function ScaleMate:write_key()
+  TRACE("ScaleMate:write_key()")
+  
+  if self.suppress_write then return end
+
+  local track = rns.selected_track 
+  if (track.type ~= renoise.Track.TRACK_TYPE_SEQUENCER) then 
+    local err_msg = "*** Unable to write scale key to a non-sequencer type."
+    renoise.app():show_status(err_msg)
+    LOG(err_msg)
+    return 
+  end 
 
   local instr = rns.selected_instrument 
   local line = rns.selected_line 
   local cmd = xMidiCommand{
-      instrument_index = rns.selected_instrument_index,
-      message_type = xMidiCommand.TYPE.CONTROLLER_CHANGE,
-      number_value = 15,
-      amount_value = xScale.get_scale_index_by_name(instr.trigger_options.scale_mode)-1,
+    instrument_index = rns.selected_instrument_index,
+    message_type = xMidiCommand.TYPE.CONTROLLER_CHANGE,
+    number_value = 14,
+    amount_value = instr.trigger_options.scale_key-1,
   }
   local expand = true -- show panning if hidden
   xLinePattern.set_midi_command(track,line,cmd,expand)
@@ -117,42 +152,50 @@ function ScaleMate:clear_pattern_track()
   local index_to = patt.number_of_lines
   local lines = ptrack:lines_in_range(index_from, index_to)
   for k,line in ipairs(lines) do
-    local cmd = xLinePattern.get_midi_command(track,line)
-    if cmd then 
-      xLinePattern.clear_midi_command(track,line)
-    end 
+    if not line.is_empty then 
+      local cmd = xLinePattern.get_midi_command(track,line)
+      if cmd then 
+        xLinePattern.clear_midi_command(track,line)
+      end 
+    end
   end
 
+end
+
+---------------------------------------------------------------------------------------------------
+
+function ScaleMate:instrument_notifier()
+  TRACE(">>> ScaleMate:instrument_notifier")
+  self:attach_to_instrument()
+end
+
+---------------------------------------------------------------------------------------------------
+
+function ScaleMate:scale_key_notifier()
+  TRACE(">>> ScaleMate:scale_key_notifier")
+  -- temporarily suppress output while updating UI 
+  self.suppress_write = true
+  self.ui:update()
+  self.suppress_write = false
 end
 
 ---------------------------------------------------------------------------------------------------
 
 function ScaleMate:attach_to_song()
   TRACE("ScaleMate:attach_to_song()")
-
-  local instr_notifier = function()
-    print(">>> instr_notifier")
-    --self.ui:update()
-    self:attach_to_instrument()
-  end
-
-  cObservable.attach(rns.selected_instrument_index_observable,instr_notifier)
+  local obs = rns.selected_instrument_index_observable
+  cObservable.attach(obs,self,self.instrument_notifier)
   self:attach_to_instrument()
-
-  --self.ui:update()
-
 end
 
 ---------------------------------------------------------------------------------------------------
 
 function ScaleMate:attach_to_instrument()
   TRACE("ScaleMate:attach_to_instrument()")
-
-  local scale_notifier = function()
-    print(">>> scale_notifier")
-    self.ui:update()
-  end
-
-  cObservable.attach(rns.selected_instrument.trigger_options.scale_mode_observable,scale_notifier)
-
+  local obs = nil
+  obs = rns.selected_instrument.trigger_options.scale_mode_observable
+  cObservable.attach(obs,self,self.scale_key_notifier)
+  obs = rns.selected_instrument.trigger_options.scale_key_observable
+  cObservable.attach(obs,self,self.scale_key_notifier)
+  self:scale_key_notifier()
 end
