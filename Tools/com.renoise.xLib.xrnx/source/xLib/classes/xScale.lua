@@ -1,14 +1,14 @@
---[[============================================================================
+--[[===============================================================================================
 xScale
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
 Methods for working with notes & harmonic scales
-.
-#
 
 ]]
+
+--=================================================================================================
 
 class 'xScale'
 
@@ -83,19 +83,21 @@ xScale.WHITE_KEYS = {
   96,98,100,101,103,105,107,
   108,110,112,113,115,117,119}
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- [Static] Restrict notes to a specific scale and key 
 -- @param note_value (0-119), notes outside this range are returned as-is 
 -- @param scale_idx_or_name (int/string), the scale to apply (xScale.SCALES) 
--- @param scale_key (int), 1=C, 2=C#, 3=D, ...
+-- @param [scale_key] (int), 1=C, 2=C#, 3=D, ... (default is C)
 
 function xScale.restrict_to_scale(note_value,scale_idx_or_name,scale_key)
   TRACE("xScale.restrict_to_scale(note_value,scale_idx_or_name,scale_key)",note_value,scale_idx_or_name,scale_key)
 
+  -- don't modify empty notes/note-offs 
   if (note_value > 119) then
     return note_value
   end
 
+  -- scale key defaults to C
   if not scale_key then
     scale_key = 1
   end
@@ -113,9 +115,9 @@ function xScale.restrict_to_scale(note_value,scale_idx_or_name,scale_key)
     return note_value 
   end
 
-  local key = note_value%12
 
   -- scale key means shifting the keys
+  --[[
   local keys = table.rcopy(scale.keys)
   if (scale_key > 1) then
     local tmp = scale_key-1
@@ -126,6 +128,10 @@ function xScale.restrict_to_scale(note_value,scale_idx_or_name,scale_key)
       tmp = tmp - 1
     end
   end
+  ]]
+
+  local keys = xScale.get_shifted_keys(scale,scale_key)
+  local key = note_value%12
 
   local transpose = 0
   local tmp_key
@@ -145,8 +151,34 @@ function xScale.restrict_to_scale(note_value,scale_idx_or_name,scale_key)
 
 end
 
---------------------------------------------------------------------------------
--- [Scale] get a specific scale by its name 
+---------------------------------------------------------------------------------------------------
+-- Shift the keys 
+-- @param scale (table), one of xScale.SCALES 
+-- @param [scale_key] (int), 1=C, 2=C#, 3=D, ...
+
+function xScale.get_shifted_keys(scale,key)
+  TRACE("xScale.get_shifted_keys(scale,key)",scale,key)
+
+  assert(type(scale)=="table")
+  assert(type(key)=="number")
+
+  local keys = table.rcopy(scale.keys)
+  if (key > 1) then
+    local tmp = key-1
+    while (tmp > 0) do
+      local tmp_val = keys[#keys]
+      table.insert(keys,1,tmp_val)
+      table.remove(keys,#keys)
+      tmp = tmp - 1
+    end
+  end
+
+  return keys
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Get a specific scale by its name 
 -- TODO use SCALE_NAMES for faster lookup 
 -- @param name (string)
 -- @return table (one of xScale.SCALES) or nil
@@ -161,8 +193,8 @@ function xScale.get_scale_by_name(name)
 
 end
 
---------------------------------------------------------------------------------
--- [Scale] get a specific scale by its name 
+---------------------------------------------------------------------------------------------------
+-- [Static] Get a specific scale by its name 
 -- TODO use SCALE_NAMES for faster lookup 
 -- @param name (string)
 -- @return table (one of xScale.SCALES) or nil
@@ -178,8 +210,8 @@ function xScale.get_scale_index_by_name(name)
 
 end
 
---------------------------------------------------------------------------------
--- [Scale] get scales with a specific number of keys
+---------------------------------------------------------------------------------------------------
+-- [Static] Get scales with a specific number of keys
 -- @param count (number)
 -- @return table of xScale.SCALES or nil
 
@@ -196,7 +228,9 @@ function xScale.get_scales_with_count(count)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Get currently active scale mode for the selected instrument
+-- @return string 
 
 function xScale.get_selected_scale()
   TRACE("xScale.get_selected_scale()")
@@ -208,7 +242,9 @@ function xScale.get_selected_scale()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- [Static] Get currently active scale key for the selected instrument
+-- @return number/int 
 
 function xScale.get_selected_key()
   TRACE("xScale.get_selected_key()")
