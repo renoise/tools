@@ -22,6 +22,9 @@ if (renoise.API_VERSION > 4) then
   xScale.NEAPOLITAN_MINOR = "Neapolitan Minor"
 end
 
+-- Available scale keys
+xScale.KEYS = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"}
+
 -- List of available scales in Renoise 
 xScale.SCALES = {
   { name="None", keys={1,1,1,1,1,1,1,1,1,1,1,1}, count=12, },
