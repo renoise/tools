@@ -9,6 +9,14 @@ User interface for ScaleMate
 
 --=================================================================================================
 
+local PANEL_W = 270
+local SCALE_ON = {0xFF,0xFF,0xFF}
+local SCALE_OFF = {0,0,0}
+local KEY_WHITE       = {0xFA,0xFA,0xFA}
+local KEY_WHITE_SCALE = {0xF3,0xC4,0xB1}
+local KEY_BLACK       = {0x30,0x30,0x30}
+local KEY_BLACK_SCALE = {0x8F,0x4C,0x30}
+
 class 'ScaleMate_UI'
 
 ---------------------------------------------------------------------------------------------------
@@ -39,17 +47,17 @@ function ScaleMate_UI:__init(...)
 end
 
 ---------------------------------------------------------------------------------------------------
+-- Emulate basic pattern navigation while dialog has focus
 
 function ScaleMate_UI:key_handler(key)
   TRACE("ScaleMate_UI:key_handler(key)",key)
 
-  --print("keyhandler",self,key)
   local handled = xCursorPos.handle_key(key)
-  print(">>> handled",handled)
 
 end 
 
 ---------------------------------------------------------------------------------------------------
+-- Show the dialog (build if needed)
 
 function ScaleMate_UI:show()
   TRACE("ScaleMate_UI:show()")
@@ -76,8 +84,104 @@ end
 function ScaleMate_UI:build()
   TRACE("ScaleMate_UI:build()")
   
+  local KEY_W = PANEL_W/12+3
+  local KEY_H = 30
+
   local vb = self.vb
   local vb_content = vb:column{
+    vb:column{
+      margin = 3,
+      spacing = -3,
+      vb:row{
+        spacing = -3,
+        width = PANEL_W,
+        vb:button{
+          id = "scalemate_piano_1",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_2",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_3",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_4",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_5",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_6",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_7",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_8",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_9",
+          active = false,
+          color = {0,0,0},
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_10",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_11",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+        vb:button{
+          id = "scalemate_piano_12",
+          active = false,
+          width = KEY_W,
+          height = KEY_H,
+        },
+      },
+      vb:switch{
+        id = "scalemate_key_switcher",
+        width = PANEL_W,
+        active = false,
+        items = {
+          "C","C#","D","D#","E","F","F#","G","G#","A","A#","B",
+        },
+        notifier = function(idx)
+          self.owner:set_key(idx)
+        end
+      },
+      
+    },
     vb:row{
       style = "plain",
       vb:column{
@@ -107,8 +211,7 @@ function ScaleMate_UI:build()
           self.owner:clear_pattern_track()
         end
       }
-    }
-    
+    },
   }
 
   self.vb_content = vb_content
@@ -186,6 +289,7 @@ function ScaleMate_UI:update()
   end 
 
   self:update_scales()
+  self:update_keys()
 
 end
 
@@ -194,10 +298,10 @@ end
 function ScaleMate_UI:update_scales()
   TRACE("ScaleMate_UI:update_scales()")
 
-  local sel_scale_name = xScale.get_selected_scale() or ""
+  local sel_scale_name = xScale.get_selected_scale() 
 
   for k,v in pairs(self.vb_scale_buttons) do 
-    v.color = (sel_scale_name == k) and {0xFF,0xFF,0xFF} or {0,0,0}
+    v.color = (sel_scale_name == k) and SCALE_ON or SCALE_OFF
   end 
 
   for k,v in pairs(self.vb_scale_labels) do 
@@ -206,3 +310,38 @@ function ScaleMate_UI:update_scales()
 
 end 
 
+---------------------------------------------------------------------------------------------------
+
+function ScaleMate_UI:update_keys()
+  TRACE("ScaleMate_UI:update_keys()")
+
+  local scale_name = xScale.get_selected_scale() 
+  local scale_key = xScale.get_selected_key() 
+  local vb = self.vb
+
+  local vb_key_switcher = vb.views["scalemate_key_switcher"]
+  if vb_key_switcher then 
+    vb_key_switcher.active = (scale_name ~= "None") and true or false
+    vb_key_switcher.value = (scale_name == "None") and 1 or scale_key
+  end
+
+  local scale = xScale.get_scale_by_name(scale_name)
+  local scale_keys = scale.keys 
+  if (scale_key ~= "None") then 
+    scale_keys = xScale.get_shifted_keys(scale,scale_key)
+  end 
+
+  local white_keys = {1,3,5,6,8,10,12}
+  for k = 1,12 do 
+    local vb_key = vb.views["scalemate_piano_"..k]
+    if vb_key then 
+      local is_white = table.find(white_keys,k)
+      if is_white then 
+        vb_key.color = (scale_keys[k]==1) and KEY_WHITE_SCALE or KEY_WHITE
+      else 
+        vb_key.color = (scale_keys[k]==1) and KEY_BLACK_SCALE or KEY_BLACK
+      end 
+    end 
+  end 
+
+end
