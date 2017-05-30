@@ -78,14 +78,14 @@ renoise.tool():add_keybinding {
 
 for k,v in ipairs(xScale.SCALES) do 
   renoise.tool():add_keybinding {
-    name = "Global:"..TOOL_NAME..(":Set Scale Mode (%s)"):format(v.name),
+    name = "Global:"..TOOL_NAME..(":Set Scale Mode (%.2d - %s)"):format(k-1,v.name),
     invoke = function(repeated)
       if (not repeated) then 
         app:set_scale(v.name)
       end
     end
   }
-  midi_mapping = MIDI_PREFIX..("Set Scale Mode (%s) [Trigger]"):format(v.name)
+  midi_mapping = MIDI_PREFIX..("Set Scale Mode (%.2d - %s) [Trigger]"):format(k-1,v.name)
   renoise.tool():add_midi_mapping{
     name = midi_mapping,
     invoke = function(message)     
@@ -95,6 +95,27 @@ for k,v in ipairs(xScale.SCALES) do
     end
   }
 end 
+
+for k = 1,12 do
+  renoise.tool():add_keybinding {
+    name = "Global:"..TOOL_NAME..(":Set Scale Key (%.2d - %s)"):format(k-1,xScale.KEYS[k]),
+    invoke = function(repeated)
+      if (not repeated) then 
+        app:set_key(k)
+      end
+    end
+  }
+  midi_mapping = MIDI_PREFIX..("Set Scale Key (%.2d - %s) [Trigger]"):format(k-1,xScale.KEYS[k])
+  renoise.tool():add_midi_mapping{
+    name = midi_mapping,
+    invoke = function(message)     
+      if app and message:is_trigger() then
+        app:set_key(k)
+      end
+    end
+  }
+
+end
 
 --== write-to-pattern ==--
 
@@ -120,14 +141,14 @@ renoise.tool():add_midi_mapping{
 --== clear commands ==--
 
 renoise.tool():add_keybinding {
-  name = "Global:"..TOOL_NAME..":Clear Commands (Track)",
+  name = "Global:"..TOOL_NAME..":Clear Commands (Track in Pattern)",
   invoke = function(repeated)
     if (not repeated) then 
       app:clear_pattern_track()
     end
   end
 }
-midi_mapping = MIDI_PREFIX.."Clear Commands (Track) [Trigger]"
+midi_mapping = MIDI_PREFIX.."Clear Commands (Track in Pattern) [Trigger]"
 renoise.tool():add_midi_mapping{
   name = midi_mapping,
   invoke = function(message)     
