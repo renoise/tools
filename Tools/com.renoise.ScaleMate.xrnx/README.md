@@ -18,6 +18,16 @@ The commands being written to the pattern are the same as the specified by the R
 **CC#14 (Scale Key)** - Determine the root key for the scale  
 **CC#15 (Scale Mode)** - Apply a harmonic scale to the preset  
 
+## Download
+
+Get the most recent stable version from the Renoise tool page:  
+http://www.renoise.com/tools/scalemate
+
+## Bugs and Support
+
+Found a bug and want to report it? Tool-related discussion is located here:    
+http://forum.renoise.com/index.php/topic/49787-new-tool-31-scalemate/
+
 ## Changelog
 
 ### 0.2 
