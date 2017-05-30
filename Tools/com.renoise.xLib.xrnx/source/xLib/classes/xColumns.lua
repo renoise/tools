@@ -142,7 +142,7 @@ function xColumns.next_note_column(wrap_pattern,wrap_track,track_index)
     if (col_idx > track.visible_note_columns) then
       col_idx = 1
       if not wrap_track then
-        xTrack.next_sequencer_track(wrap_pattern)
+        xTrack.jump_to_next_sequencer_track(wrap_pattern)
       end
     end
 
@@ -177,7 +177,7 @@ function xColumns.previous_note_column(wrap_pattern,wrap_track,track_index)
     col_idx = col_idx-1
     if (col_idx < 1) then
       if not wrap_track then
-        if xTrack.previous_sequencer_track(wrap_pattern) then
+        if xTrack.jump_to_previous_sequencer_track(wrap_pattern) then
           col_idx = rns.selected_track.visible_note_columns
         end
       else
