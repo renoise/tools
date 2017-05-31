@@ -416,28 +416,27 @@ end
 -- @param track renoise.Track
 -- @param line renoise.PatternLine
 -- @param cmd xMidiCommand
--- @param [expand] boolean, expand to show panning column. Default is true
--- @param [retain] boolean, retain existing commands, push to side. Default is true
+-- @param [expand] boolean, show target panning/effect-column (default is true)
+-- @param [replace] boolean, replace existing commands (default is false - push to side)
 
-function xLinePattern.set_midi_command(track,line,cmd,expand,retain)
-  TRACE("xLinePattern.set_midi_command(track,line,cmd,expand,retain)",track,line,cmd,expand,retain)
+function xLinePattern.set_midi_command(track,line,cmd,expand,replace)
+  TRACE("xLinePattern.set_midi_command(track,line,cmd,expand,replace)",track,line,cmd,expand,replace)
 
   assert(type(track)=="Track","Expected renoise.Track as argument")
   assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
   assert(type(cmd)=="xMidiCommand","Expected xMidiCommand as argument")
 
   expand = expand or true
-  retain = retain or true
+  replace = replace or false
 
   local note_col = line.note_columns[track.visible_note_columns]
   local fx_col = line.effect_columns[1]
 
   -- if there is an existing non-MIDI command, push it to the side 
-  -- (insert in last available effect column)
-  if retain and not fx_col.is_empty then 
+  -- (insert in next available effect column)
+  if not replace and not fx_col.is_empty then 
     local xcmd = xLinePattern.get_midi_command(track,line) 
     if not xcmd then 
-
       -- only non-numeric effects are pushed to side
       local fx_num_val = xEffectColumn.amount_string_to_value(fx_col.number_string)
       if not fx_num_val then 
@@ -447,7 +446,8 @@ function xLinePattern.set_midi_command(track,line,cmd,expand,retain)
             tmp_fx_col.number_value = fx_col.number_value
             tmp_fx_col.amount_value = fx_col.amount_value
             fx_col:clear()
-            if (k > track.visible_effect_columns) then
+            -- make column visible if needed 
+            if expand and (k > track.visible_effect_columns) then
               track.visible_effect_columns = k
             end
             break
@@ -455,7 +455,6 @@ function xLinePattern.set_midi_command(track,line,cmd,expand,retain)
         end 
       end 
     end 
-
   end
 
   note_col.instrument_value = cmd.instrument_index-1
@@ -463,8 +462,13 @@ function xLinePattern.set_midi_command(track,line,cmd,expand,retain)
   fx_col.number_value = cmd.number_value
   fx_col.amount_value = cmd.amount_value
 
-  if expand and not track.panning_column_visible then 
-    track.panning_column_visible = true
+  if expand then
+    if not track.panning_column_visible then 
+      track.panning_column_visible = true
+    end
+    if (track.visible_effect_columns == 0) then
+      track.visible_effect_columns = 1
+    end
   end 
 
 end
