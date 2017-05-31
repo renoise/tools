@@ -9,6 +9,7 @@ User interface for ScaleMate
 
 --=================================================================================================
 
+local WHITE_KEYS = {1,3,5,6,8,10,12}
 local PANEL_W = 270
 local SCALE_ON = {0xFF,0xFF,0xFF}
 local SCALE_OFF = {0,0,0}
@@ -86,89 +87,28 @@ function ScaleMate_UI:build()
   
   local KEY_W = PANEL_W/12+3
   local KEY_H = 30
-
   local vb = self.vb
+
+  local vb_keys = vb:row{
+      spacing = -3,
+  }
+  for k = 1,12 do
+    vb_keys:add_child(vb:button{
+      id = "scalemate_piano_"..k,
+      active = false,
+      width = KEY_W,
+      height = KEY_H,
+      notifier = function()
+        self.owner:set_key(k)
+      end
+    })
+  end
+
   local vb_content = vb:column{
     vb:column{
       margin = 3,
       spacing = -3,
-      vb:row{
-        spacing = -3,
-        width = PANEL_W,
-        vb:button{
-          id = "scalemate_piano_1",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_2",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_3",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_4",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_5",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_6",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_7",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_8",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_9",
-          active = false,
-          color = {0,0,0},
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_10",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_11",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-        vb:button{
-          id = "scalemate_piano_12",
-          active = false,
-          width = KEY_W,
-          height = KEY_H,
-        },
-      },
+      vb_keys,
       vb:switch{
         id = "scalemate_key_switcher",
         width = PANEL_W,
@@ -178,7 +118,6 @@ function ScaleMate_UI:build()
           self.owner:set_key(idx)
         end
       },
-      
     },
     vb:row{
       style = "plain",
@@ -329,16 +268,16 @@ function ScaleMate_UI:update_keys()
     scale_keys = xScale.get_shifted_keys(scale,scale_key)
   end 
 
-  local white_keys = {1,3,5,6,8,10,12}
   for k = 1,12 do 
     local vb_key = vb.views["scalemate_piano_"..k]
     if vb_key then 
-      local is_white = table.find(white_keys,k)
+      local is_white = table.find(WHITE_KEYS,k)
       if is_white then 
         vb_key.color = (scale_keys[k]==1) and KEY_WHITE_SCALE or KEY_WHITE
       else 
         vb_key.color = (scale_keys[k]==1) and KEY_BLACK_SCALE or KEY_BLACK
       end 
+      vb_key.active = (scale_name ~= "None") and true or false
     end 
   end 
 
