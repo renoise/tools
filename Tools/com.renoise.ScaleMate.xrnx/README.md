@@ -30,6 +30,9 @@ http://forum.renoise.com/index.php/topic/49787-new-tool-31-scalemate/
 
 ## Changelog
 
+### 0.23
+- Fixed: allow overwriting existing MIDI command (but still warn when doing so)
+
 ### 0.22
 - Fixed: bug in keyhandler (pattern-navigation)
 - Added: retain existing (non-MIDI) commands (pushed to the side)
