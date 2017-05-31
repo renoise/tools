@@ -81,6 +81,30 @@ function ScaleMate:set_key(val)
 end
 
 ---------------------------------------------------------------------------------------------------
+-- Perform a few checks before writing
+-- @return boolean, true when we are able to write output 
+
+function ScaleMate:pre_write_check(track,line)
+  TRACE("ScaleMate:pre_write_check(track,line)",track,line)
+
+  if self.suppress_write then 
+    return false
+  end
+
+  if (track.type ~= renoise.Track.TRACK_TYPE_SEQUENCER) then 
+    return false,"*** Error: unable to write scale mode to a non-sequencer track"
+  end 
+
+  if xLinePattern.get_midi_command(track,line) then 
+    return false, "*** Warning: the selected line already contains a MIDI command"
+                .." (hint: use a different line and/or track)"
+  end 
+
+  return true
+
+end
+
+---------------------------------------------------------------------------------------------------
 -- Update pattern (cursor position) with selected scale
 -- If not able to produce output (e.g. wrong track type), then display an error message in 
 -- the status bar / scripting console
@@ -88,18 +112,19 @@ end
 function ScaleMate:write_scale()
   TRACE("ScaleMate:write_scale()")
   
-  if self.suppress_write then return end
-  
   local track = rns.selected_track 
-  if (track.type ~= renoise.Track.TRACK_TYPE_SEQUENCER) then 
-    local err_msg = "*** Unable to write scale mode to a non-sequencer type."
-    renoise.app():show_status(err_msg)
-    LOG(err_msg)
+  local line = rns.selected_line 
+  
+  local checked,err = self:pre_write_check(track,line)
+  if not checked then 
+    if err then 
+      renoise.app():show_status(err)
+      LOG(err)  
+    end
     return 
   end 
 
   local instr = rns.selected_instrument 
-  local line = rns.selected_line 
   local cmd = xMidiCommand{
     instrument_index = rns.selected_instrument_index,
     message_type = xMidiCommand.TYPE.CONTROLLER_CHANGE,
@@ -118,18 +143,19 @@ end
 function ScaleMate:write_key()
   TRACE("ScaleMate:write_key()")
   
-  if self.suppress_write then return end
-
   local track = rns.selected_track 
-  if (track.type ~= renoise.Track.TRACK_TYPE_SEQUENCER) then 
-    local err_msg = "*** Unable to write scale key to a non-sequencer type."
-    renoise.app():show_status(err_msg)
-    LOG(err_msg)
+  local line = rns.selected_line 
+
+  local checked,err = self:pre_write_check(track,line)
+  if not checked then 
+    if err then 
+      renoise.app():show_status(err)
+      LOG(err)  
+    end
     return 
   end 
-
+  
   local instr = rns.selected_instrument 
-  local line = rns.selected_line 
   local cmd = xMidiCommand{
     instrument_index = rns.selected_instrument_index,
     message_type = xMidiCommand.TYPE.CONTROLLER_CHANGE,
