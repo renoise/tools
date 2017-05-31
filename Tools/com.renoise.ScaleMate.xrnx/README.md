@@ -30,6 +30,18 @@ http://forum.renoise.com/index.php/topic/49787-new-tool-31-scalemate/
 
 ## Changelog
 
+### 0.22
+- Fixed: bug in keyhandler (pattern-navigation)
+- Added: retain existing (non-MIDI) commands (pushed to the side)
+- Added: warning when overwriting existing MIDI command
+- Added: allow piano key buttons to set key
+
+### 0.21
+- Fixed: unresponsive UI when initially installing tool
+- Fixed: use hidden checkbox to track clicks on scale labels
+- Added: additional keyboard shortcuts/midi mappings
+- Added: emulated pattern navigation from dialog (custom keyhandler)
+
 ### 0.2 
 - Added: scale key
 - Bug fixes
