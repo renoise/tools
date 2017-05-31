@@ -59,6 +59,7 @@ end
 function xPatternPos.jump_to_next_line()
   TRACE("xPatternPos.jump_to_next_line()")
   local pos = xPatternPos.get_next_line()
+  print("pos",pos)
   rns.selected_sequence_index = pos.sequence
   rns.selected_line_index = pos.line
 end
@@ -187,9 +188,7 @@ function xPatternPos.get_next_line()
         local new_patt = rns.patterns[new_patt_index]
         line_index = new_patt.number_of_lines
       else
-        local new_patt_index = rns.sequencer.pattern_sequence[seq_index]
-        local new_patt = rns.patterns[new_patt_index]
-        line_index = line_index - patt.number_of_lines + val
+        line_index = 1
       end
     else
       line_index = 1
