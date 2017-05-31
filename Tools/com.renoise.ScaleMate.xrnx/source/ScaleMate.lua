@@ -83,6 +83,7 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Perform a few checks before writing
 -- @return boolean, true when we are able to write output 
+-- @return string, message to show to user
 
 function ScaleMate:pre_write_check(track,line)
   TRACE("ScaleMate:pre_write_check(track,line)",track,line)
@@ -96,8 +97,8 @@ function ScaleMate:pre_write_check(track,line)
   end 
 
   if xLinePattern.get_midi_command(track,line) then 
-    return false, "*** Warning: the selected line already contains a MIDI command"
-                .." (hint: use a different line and/or track)"
+    return true, "*** Warning: the selected line already contains a MIDI command"
+                .." (hint: use a different line and/or track to avoid overwriting)"
   end 
 
   return true
@@ -116,11 +117,11 @@ function ScaleMate:write_scale()
   local line = rns.selected_line 
   
   local checked,err = self:pre_write_check(track,line)
+  if err then 
+    renoise.app():show_status(err)
+    LOG(err)  
+  end  
   if not checked then 
-    if err then 
-      renoise.app():show_status(err)
-      LOG(err)  
-    end
     return 
   end 
 
