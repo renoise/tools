@@ -375,8 +375,7 @@ function xLinePattern.get_effect_column_command(track,line,fx_type,notecol_idx,v
 end 
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Get midi command from line
--- (look in last note-column, panning + first effect column)
+-- [Static] Get midi command from line: look in last note-column, panning + first effect column
 -- @return xMidiCommand or nil if not found
 
 function xLinePattern.get_midi_command(track,line)
@@ -387,6 +386,16 @@ function xLinePattern.get_midi_command(track,line)
 
   local note_col = line.note_columns[track.visible_note_columns]
   local fx_col = line.effect_columns[1]
+
+  if note_col.is_empty or fx_col.is_empty then 
+    return 
+  end 
+
+  -- command number/value needs to be plain numeric 
+  local fx_num_val = xEffectColumn.amount_string_to_value(fx_col.number_string)
+  if not fx_num_val then 
+    return 
+  end 
 
   if (note_col.instrument_value < 255) 
     and (note_col.panning_string:sub(1,1) == "M")
@@ -403,21 +412,51 @@ function xLinePattern.get_midi_command(track,line)
 end
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Set midi command (write to pattern)
+-- [Static] Set midi command: write to last note column, first effect column
 -- @param track renoise.Track
 -- @param line renoise.PatternLine
 -- @param cmd xMidiCommand
--- @param [expand] boolean, expand to show panning column 
+-- @param [expand] boolean, expand to show panning column. Default is true
+-- @param [retain] boolean, retain existing commands, push to side. Default is true
 
-function xLinePattern.set_midi_command(track,line,cmd,expand)
-  TRACE("xLinePattern.set_midi_command(track,line,cmd,expand)",track,line,cmd,expand)
+function xLinePattern.set_midi_command(track,line,cmd,expand,retain)
+  TRACE("xLinePattern.set_midi_command(track,line,cmd,expand,retain)",track,line,cmd,expand,retain)
 
   assert(type(track)=="Track","Expected renoise.Track as argument")
   assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
   assert(type(cmd)=="xMidiCommand","Expected xMidiCommand as argument")
 
+  expand = expand or true
+  retain = retain or true
+
   local note_col = line.note_columns[track.visible_note_columns]
   local fx_col = line.effect_columns[1]
+
+  -- if there is an existing non-MIDI command, push it to the side 
+  -- (insert in last available effect column)
+  if retain and not fx_col.is_empty then 
+    local xcmd = xLinePattern.get_midi_command(track,line) 
+    if not xcmd then 
+
+      -- only non-numeric effects are pushed to side
+      local fx_num_val = xEffectColumn.amount_string_to_value(fx_col.number_string)
+      if not fx_num_val then 
+        for k = 2, xLinePattern.MAX_EFFECT_COLUMNS do
+          local tmp_fx_col = line.effect_columns[k]
+          if tmp_fx_col.is_empty then 
+            tmp_fx_col.number_value = fx_col.number_value
+            tmp_fx_col.amount_value = fx_col.amount_value
+            fx_col:clear()
+            if (k > track.visible_effect_columns) then
+              track.visible_effect_columns = k
+            end
+            break
+          end 
+        end 
+      end 
+    end 
+
+  end
 
   note_col.instrument_value = cmd.instrument_index-1
   note_col.panning_string = ("M%d"):format(cmd.message_type)
