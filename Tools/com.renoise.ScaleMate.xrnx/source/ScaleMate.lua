@@ -106,8 +106,7 @@ function ScaleMate:write_scale()
     number_value = 15,
     amount_value = xScale.get_scale_index_by_name(instr.trigger_options.scale_mode)-1,
   }
-  local expand = true -- show panning if hidden
-  xLinePattern.set_midi_command(track,line,cmd,expand)
+  xLinePattern.set_midi_command(track,line,cmd)
 
 end
 
@@ -137,8 +136,7 @@ function ScaleMate:write_key()
     number_value = 14,
     amount_value = instr.trigger_options.scale_key-1,
   }
-  local expand = true -- show panning if hidden
-  xLinePattern.set_midi_command(track,line,cmd,expand)
+  xLinePattern.set_midi_command(track,line,cmd)
 
 end
 
