@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 -- Duplex.Application.Matrix
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -12,7 +12,7 @@ Take control of the pattern matrix in Renoise
 
 --]]
 
---==============================================================================
+--=================================================================================================
 
 -- constants
 
@@ -33,7 +33,7 @@ local SEQUENCE_MODE_NORMAL = 1
 local SEQUENCE_MODE_INDEX = 2
 
 
---==============================================================================
+--=================================================================================================
 
 class 'Matrix' (Application)
 
@@ -133,6 +133,10 @@ Matrix.available_mappings = {
                 .."\nControl value: ",
     orientation = ORIENTATION.VERTICAL,
   },
+  trigger_labels = {
+    description = "Matrix: Pattern-sequence labels (pattern names)",
+    orientation = ORIENTATION.VERTICAL,
+  },
   next_seq_page = {
     description = "Matrix: display next sequence page"
   },
@@ -181,7 +185,7 @@ Matrix.default_palette = {
 
 }
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- Constructor method
 -- @param (VarArg)
@@ -205,7 +209,7 @@ function Matrix:__init(...)
   --- (int) the currently playing page
   self._play_page = nil  
 
-  --- (int) current edit page
+  --- (int) current edit page (pattern sequence)
   self._edit_page = nil  
 
   --- (int) the total number of sequence pages
@@ -236,13 +240,17 @@ function Matrix:__init(...)
   self._update_slots_requested = false
   self._update_tracks_requested = false
   self._mute_notifier_disabled = false
+  self._update_labels_requested = false
+
+  --- (table) currently attached notifiers 
+  self._pattern_name_notifiers = {}
 
   Application.__init(self,...)
   --self:list_mappings_and_options(Matrix)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- update slots visual appeareance 
 
@@ -322,7 +330,7 @@ function Matrix:_update_slots()
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- inherited from Application
 -- @see Duplex.Application.start_app
@@ -341,9 +349,7 @@ function Matrix:start_app()
 end
 
 
---------------------------------------------------------------------------------
-
---- inherited from Application
+---------------------------------------------------------------------------------------------------
 -- @see Duplex.Application.on_idle
 
 function Matrix:on_idle()
@@ -354,20 +360,23 @@ function Matrix:on_idle()
   end
 
   -- updated tracks/slots?
-  if (self._update_tracks_requested) then
+  if self._update_tracks_requested then
     -- note: _update_slots_requested is true as well
-    TRACE("Matrix:on_idle ** update track count")
     self._update_tracks_requested = false
     self:_update_track_page_count()
     --self:_update_track_navigation()
   end
-  -- 
-  if (self._update_slots_requested) then
-    TRACE("Matrix:on_idle ** update slots/page count")
+
+  if self._update_slots_requested then
     self._update_slots_requested = false
     self:_update_slots()
     self:_update_seq_page_count()
   end
+
+  if self._update_labels_requested then 
+    self._update_labels_requested = false
+    self:_update_labels()
+  end 
 
   -- update range?
   local rng = rns.transport.loop_sequence_range
@@ -428,9 +437,7 @@ function Matrix:on_idle()
   end
 end
 
---------------------------------------------------------------------------------
-
---- inherited from Application
+---------------------------------------------------------------------------------------------------
 -- @see Duplex.Application.on_new_document
 
 function Matrix:on_new_document()
@@ -442,11 +449,8 @@ function Matrix:on_new_document()
 
 end
 
---------------------------------------------------------------------------------
--- private methods
---------------------------------------------------------------------------------
-
---- check if we need to change page, but update only when following play-pos
+---------------------------------------------------------------------------------------------------
+-- check if we need to change page, but update only when following play-pos
 -- called when page changes and when "follow_player" is enabled
 
 function Matrix:_check_page_change() 
@@ -456,7 +460,7 @@ function Matrix:_check_page_change()
   if(rns.transport.follow_player)then
     if(self._play_page~=self._edit_page)then
       self._edit_page = self._play_page
-      self:_update_seq_navigation()
+      self:_update_seq_navigation()      
       self:_update_range()
       self:_update_slots()
     end
@@ -464,9 +468,8 @@ function Matrix:_check_page_change()
 
 end
 
---------------------------------------------------------------------------------
-
---- update track navigator,
+---------------------------------------------------------------------------------------------------
+-- Update track navigator,
 -- on new song, and when tracks have been changed
 
 function Matrix:_update_track_navigation() 
@@ -490,9 +493,11 @@ function Matrix:_update_track_navigation()
 
 end
 
---------------------------------------------------------------------------------
-
---- update_seq_navigation
+---------------------------------------------------------------------------------------------------
+-- Invoked when the visible part of the sequence has changed 
+-- * update sequence navigation (prev/next)
+-- * attach to patterns (track changes to names)
+-- * display pattern names 
 
 function Matrix:_update_seq_navigation()
   TRACE("Matrix:_update_seq_navigation()")
@@ -515,11 +520,13 @@ function Matrix:_update_seq_navigation()
     end
   end
 
+  self:_attach_to_patterns()
+  self._update_labels_requested = true
+
 end
 
---------------------------------------------------------------------------------
-
---- has_next_seq_page
+---------------------------------------------------------------------------------------------------
+-- has_next_seq_page
 -- @return bool
 
 function Matrix:_has_next_seq_page()
@@ -527,9 +534,8 @@ function Matrix:_has_next_seq_page()
   return has_next
 end
 
---------------------------------------------------------------------------------
-
---- has_prev_seq_page
+---------------------------------------------------------------------------------------------------
+-- has_prev_seq_page
 -- @return bool
 
 function Matrix:_has_prev_seq_page()
@@ -537,9 +543,8 @@ function Matrix:_has_prev_seq_page()
   return has_prev
 end
 
---------------------------------------------------------------------------------
-
---- has_next_track_page
+---------------------------------------------------------------------------------------------------
+-- has_next_track_page
 -- @return bool
 
 function Matrix:_has_next_track_page()
@@ -547,9 +552,8 @@ function Matrix:_has_next_track_page()
   return has_next
 end
 
---------------------------------------------------------------------------------
-
---- has_prev_track_page
+---------------------------------------------------------------------------------------------------
+-- has_prev_track_page
 -- @return bool
 
 function Matrix:_has_prev_track_page()
@@ -557,9 +561,8 @@ function Matrix:_has_prev_track_page()
   return has_prev
 end
 
---------------------------------------------------------------------------------
-
---- update_seq_page_count
+---------------------------------------------------------------------------------------------------
+-- update_seq_page_count
 
 function Matrix:_update_seq_page_count()
   TRACE("Matrix:_update_seq_page_count()")
@@ -570,9 +573,8 @@ function Matrix:_update_seq_page_count()
 
 end
 
---------------------------------------------------------------------------------
-
---- update_track_page_count
+---------------------------------------------------------------------------------------------------
+-- update_track_page_count
 
 function Matrix:_update_track_page_count()
   TRACE("Matrix:_update_track_page_count()")
@@ -583,9 +585,8 @@ function Matrix:_update_track_page_count()
 
 end
 
---------------------------------------------------------------------------------
-
---- update range in sequence trigger
+---------------------------------------------------------------------------------------------------
+-- Update range in sequence trigger
 
 function Matrix:_update_range()
 
@@ -621,9 +622,31 @@ function Matrix:_update_range()
   end
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- Update trigger labels 
 
---- update index in sequence trigger
+function Matrix:_update_labels()
+  TRACE("Matrix:_update_labels()")
+
+  if not self._controls.trigger_labels then return end
+  local seq_idx = self._edit_page*self._height
+  for k = 1,self._height do
+    local label = self._controls.trigger_labels[k]    
+    local seq_idx = k+seq_idx
+    if (seq_idx > #rns.sequencer.pattern_sequence)then
+      label:set_text("N/A")
+    else 
+      local patt_idx = rns.sequencer:pattern(seq_idx)
+      local patt_name = rns.patterns[patt_idx].name
+      label:set_text(patt_name)
+    end
+
+  end
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Update index in sequence trigger + labels with pattern-names
 -- called when starting/stopping playback, changing page
 -- @param idx (integer) the index, 0 - song-end (use current position if undefined)
 
@@ -665,7 +688,7 @@ function Matrix:_update_position(idx)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- retrigger the current pattern
 
@@ -679,7 +702,7 @@ function Matrix:_retrigger_pattern()
   end
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- set the current trigger mode, depending on options
 
@@ -694,7 +717,7 @@ function Matrix:_set_trigger_mode()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- get the currently playing page
 -- @return int
@@ -712,7 +735,7 @@ function Matrix:_get_play_page()
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- get the currently edited page
 -- @return int
@@ -730,7 +753,7 @@ function Matrix:_get_edit_page()
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- when following the active track in Renoise, we call this method
 -- it will check if we are inside the current page, and update if not
@@ -757,7 +780,7 @@ function Matrix:_follow_track()
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- figure out the active "track page" based on the supplied track index
 -- @param track_idx, renoise track number
@@ -770,7 +793,7 @@ function Matrix:_get_track_page(track_idx)
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- get track page width
 -- @return int
@@ -782,7 +805,7 @@ function Matrix:_get_track_page_width()
 
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 --- inherited from Application
 -- @see Duplex.Application._build_app
@@ -791,13 +814,13 @@ end
 function Matrix:_build_app()
   TRACE("Matrix:_build_app()")
 
+  local control_map = self.display.device.control_map
+
   -- determine matrix size by looking at the control-map
   if (self.mappings.matrix.group_name) then
-    local control_map = self.display.device.control_map
     self._width = control_map:count_columns(self.mappings.matrix.group_name)
     self._height = control_map:count_rows(self.mappings.matrix.group_name)
   elseif (self.mappings.triggers.group_name) then
-    local control_map = self.display.device.control_map
     self._width = control_map:count_columns(self.mappings.triggers.group_name)
     self._height = control_map:count_rows(self.mappings.triggers.group_name)
   end
@@ -823,6 +846,7 @@ function Matrix:_build_app()
         self:_update_slots()
         self:_update_range()
         self:_update_seq_navigation()
+
         if(self._edit_page~=self._play_page) then
           self:_update_position()
         end
@@ -844,6 +868,7 @@ function Matrix:_build_app()
         self:_update_slots()
         self:_update_range()
         self:_update_seq_navigation()
+        
         if(self._edit_page~=self._play_page) then
           self:_update_position()
         end
@@ -1049,6 +1074,31 @@ function Matrix:_build_app()
 
   end
 
+  -- pattern-sequence labels 
+  if (self.mappings.trigger_labels.group_name) then
+
+    local map = self.mappings.trigger_labels
+    local num_labels = #control_map.groups[map.group_name]
+    
+    if (num_labels ~= self._height) then 
+      local msg = "Could not start Matrix application:"
+                .."'trigger_labels' needs to have same size as 'matrix'"
+      renoise.app():show_warning(msg)
+      return false
+    end 
+
+    self._controls.trigger_labels = {}
+
+    for k = 1,num_labels do 
+      local c = UILabel(self)
+      c.group_name = map.group_name
+      --c.tooltip = map.description
+      c:set_pos(k)
+      self._controls.trigger_labels[k] = c
+    end 
+
+  end
+
   -- grid buttons
   if (self.mappings.matrix.group_name) then
     self._controls._buttons = {}
@@ -1110,9 +1160,42 @@ function Matrix:_build_app()
 end
 
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- Schedule update when pattern name has changed 
 
---- add notifiers to relevant parts of the song
+function Matrix:_pattern_name_notifier()
+  TRACE("Matrix:_pattern_name_notifier()")
+  self._update_labels_requested = true
+end
+
+---------------------------------------------------------------------------------------------------
+-- Attach to visible patterns 
+
+function Matrix:_attach_to_patterns()
+  TRACE("Matrix:_attach_to_patterns()")
+
+  for k,v in ipairs(self._pattern_name_notifiers) do
+    cObservable.detach(v,self,self._pattern_name_notifier)
+  end
+
+  self._pattern_name_notifiers = {}
+
+  local seq_idx = self._edit_page*self._height
+  for k = 1,self._height do
+    local seq_idx = k+seq_idx
+    if (seq_idx < #rns.sequencer.pattern_sequence) then
+      local patt_idx = rns.sequencer:pattern(seq_idx)
+      local patt = rns.patterns[patt_idx]
+      local obs = patt.name_observable
+      cObservable.attach(obs,self,self._pattern_name_notifier)
+      table.insert(self._pattern_name_notifiers,obs)
+    end
+  end 
+
+end 
+
+---------------------------------------------------------------------------------------------------
+-- Add notifiers to relevant parts of the song
 
 function Matrix:_attach_to_song()
   TRACE("Matrix:_attach_to_song()")
