@@ -11,10 +11,11 @@ Duplex Matrix takes control of the pattern matrix in Renoise. See this [video de
 | Name       | Description   |
 | -----------|---------------|  
 |`matrix`|Matrix: Press to toggle muted state<br>Hold to focus this track/pattern<br>Control value: |  
-|`prev_track_page`|Matrix: display previous track page|  
 |`next_seq_page`|Matrix: display next sequence page|  
-|`prev_seq_page`|Matrix: display previous sequence page|  
 |`next_track_page`|Matrix: display next track page|  
+|`prev_seq_page`|Matrix: display previous sequence page|  
+|`prev_track_page`|Matrix: display previous track page|  
+|`trigger_labels`|Matrix: Pattern-sequence labels (pattern names)|  
 |`triggers`|Matrix: Pattern-sequence triggers<br>Press and release to trigger pattern<br>Press multiple buttons to define loop<br>Press and hold to toggle loop<br>Control value: |  
 
 ## Default options 
@@ -23,12 +24,12 @@ Duplex Matrix takes control of the pattern matrix in Renoise. See this [video de
 
 | Name          | Description   |
 | ------------- |---------------|  
-|`switch_mode`|What to do when switching from one pattern to another|  
-|`page_size`|Specify the step size when using paged navigation|  
-|`sequence_mode`|Determines how pattern triggers work: <br>Select 'Position only' for controllers that does not<br>support the release event. Select 'Position & Loop'<br>if your controller supports the release event, and you<br>want to be able to control the looped range|  
-|`follow_track`|Align with the selected track in Renoise|  
 |`bounds_mode`|What to do when a position outside the song is triggered|  
+|`follow_track`|Align with the selected track in Renoise|  
+|`page_size`|Specify the step size when using paged navigation|  
 |`play_mode`|What to do when playback is started (or re-started)|  
+|`sequence_mode`|Determines how pattern triggers work: <br>Select 'Position only' for controllers that does not<br>support the release event. Select 'Position & Loop'<br>if your controller supports the release event, and you<br>want to be able to control the looped range|  
+|`switch_mode`|What to do when switching from one pattern to another|  
 
 ## Default palette 
   

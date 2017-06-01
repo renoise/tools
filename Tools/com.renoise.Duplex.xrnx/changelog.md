@@ -1,5 +1,11 @@
 # Duplex Changelog
 
+## 1.05 
+- Fixed: error when interpreting XYPad arguments #101
+- Tweak: Navigator - improved carry-over-loop implementation
+- Added: Matrix - new mapping, 'trigger_labels', to show pattern names in sequence
+- Added: Matrix demo config, demonstrating all features
+
 ## 1.04
 - Added: StepSequencer - allow transposing while playing / holding down button
 - Added: StepSequencer - cycle layout mapping (implemented in Launchpad config)
