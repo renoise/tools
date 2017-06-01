@@ -1,0 +1,163 @@
+<Device>
+  <Name>Matrix</Name>
+  <Author>danoise</Author>
+  <Description>Example control-map for the Matrix application</Description>
+	<Parameters>
+		<Column>
+			<Row>
+				<Group name="Controls" orientation="horizontal">
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+				</Group>
+			</Row>
+			<Row>
+				<Group name="Matrix" columns="14">
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+					<Param type="button" maximum="127" minimum="0"/>
+
+
+				</Group>
+				<Group name="Triggers" orientation="vertical">
+					<Param value="G#-1" type="button"	maximum="127" minimum="0"/>
+					<Param value="C-1" type="button" 	maximum="127" minimum="0"/>
+					<Param value="E-2" type="button" 	maximum="127" minimum="0"/>
+					<Param value="G#3" type="button" 	maximum="127" minimum="0"/>
+					<Param value="C-5" type="button" 	maximum="127" minimum="0"/>
+					<Param value="E-6" type="button" 	maximum="127" minimum="0"/>
+					<Param value="G#7" type="button" 	maximum="127" minimum="0"/>
+					<Param value="C-9" type="button" 	maximum="127" minimum="0"/>
+				</Group>
+				<Group name="TriggerLabels" orientation="vertical">
+					<Param type="label" text="1" size="4" aspect="0.24" />
+					<Param type="label" text="2" size="4" aspect="0.24" />
+					<Param type="label" text="3" size="4" aspect="0.24" />
+					<Param type="label" text="4" size="4" aspect="0.24" />
+					<Param type="label" text="5" size="4" aspect="0.24" />
+					<Param type="label" text="6" size="4" aspect="0.24" />
+					<Param type="label" text="7" size="4" aspect="0.24" />
+					<Param type="label" text="8" size="4" aspect="0.24" />
+				</Group>
+			</Row>
+		</Column>
+	</Parameters>
+
+</Device>
