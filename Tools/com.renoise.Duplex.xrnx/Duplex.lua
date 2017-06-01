@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 --- The Duplex Library
-============================================================================]]--
+===============================================================================================]]--
 
 --[[--
 
@@ -10,7 +10,7 @@
 
 rns = nil
 _trace_filters = nil
---_trace_filters = {"^StepSequencer*"}
+--_trace_filters = {"^Matrix*"}
 --_trace_filters = {"^StateController*"}
 --_trace_filters = {"^Recorder*","^UISlider*"}
 --_trace_filters = {".*"}
@@ -20,6 +20,7 @@ _xlibroot = "xLib/classes/"
 
 require (_clibroot.."cLib")
 require (_clibroot.."cDebug")
+require (_clibroot.."cObservable")
 require (_clibroot.."cColor")
 require (_clibroot.."cScheduler")
 require (_clibroot.."cProcessSlicer")
