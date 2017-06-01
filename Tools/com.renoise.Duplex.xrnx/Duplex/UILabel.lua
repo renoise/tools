@@ -22,7 +22,7 @@ class 'UILabel' (UIComponent)
 function UILabel:__init(app,map)
   TRACE("UILabel:__init()",app,map)
 
-  self._text = ""
+  self._text = nil
 
 	UIComponent.__init(self,app,map)
 
