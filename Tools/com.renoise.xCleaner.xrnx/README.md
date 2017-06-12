@@ -36,3 +36,16 @@ Launch the tool by right-clicking an instrument in the instruments list (-> xCle
 
 TODO
 
+## Changelog
+
+### 1.01
+
+- detect/remove leading/trailing silence
+- bug fixes
+
+### 1.0
+
+- initial release
+
+
+
