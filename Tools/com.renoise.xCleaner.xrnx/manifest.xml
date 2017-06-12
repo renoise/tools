@@ -3,7 +3,7 @@
   <ApiVersion>5</ApiVersion>
   <AutoUpgraded>true</AutoUpgraded>
   <Id>com.renoise.xCleaner</Id>
-  <Version>1.0</Version>
+  <Version>1.01</Version>
   <Author>danoise [bjorn.nesby@gmail.com]</Author>
   <Name>xCleaner</Name>
   <Category>Instrument</Category>
