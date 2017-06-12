@@ -219,6 +219,7 @@ function xSample.convert_sample(instr,sample_idx,bit_depth,channel_action,range)
 
   local num_channels = (channel_action == xSample.SAMPLE_CONVERT.STEREO) and 2 or 1
   local num_frames = (range) and (range.end_frame-range.start_frame+1) or buffer.number_of_frames
+  --print(">>> num_frames,number_of_frames",num_frames,buffer.number_of_frames)
 
   local new_sample = instr:insert_sample_at(sample_idx+1)
   local new_buffer = new_sample.sample_buffer
@@ -252,8 +253,11 @@ function xSample.convert_sample(instr,sample_idx,bit_depth,channel_action,range)
   
   -- change sample 
   local f = nil
+  local new_f_idx = 1
+  local from_idx = range.start_frame
+  local to_idx = range.start_frame+num_frames-1
   new_buffer:prepare_sample_data_changes()
-  for f_idx = range.start_frame,num_frames do
+  for f_idx = from_idx,to_idx do
 
     if(channel_action == xSample.SAMPLE_CONVERT.MONO_MIX) then
       -- mix stereo to mono signal
@@ -261,12 +265,14 @@ function xSample.convert_sample(instr,sample_idx,bit_depth,channel_action,range)
     else
       -- copy from one channel to target channel(s)
       f = buffer:sample_data(channel_idx,f_idx)
-      new_buffer:set_sample_data(1,f_idx,f)
+      new_buffer:set_sample_data(1,new_f_idx,f)
       if (num_channels == 2) then
         f = buffer:sample_data(channel_idx,f_idx)
-        new_buffer:set_sample_data(2,f_idx,f)
+        new_buffer:set_sample_data(2,new_f_idx,f)
       end
     end
+
+    new_f_idx = new_f_idx+1
 
   end
   new_buffer:finalize_sample_data_changes()
@@ -327,6 +333,69 @@ function xSample.sample_buffer_is_silent(buffer,channels)
   end
 
   return true
+
+end
+
+----------------------------------------------------------------------------------------------------
+-- check if the sample buffer contains leading or trailing silence
+-- @param buffer (renoise.SampleBuffer)
+-- @param channels (xSample.SAMPLE_CHANNELS)
+-- @param [threshold] (number), values below this level is considered silence (default is 0)
+-- @return table
+--  start_frame 
+--  end_frame 
+
+function xSample.detect_leading_trailing_silence(buffer,channels,threshold)
+  TRACE("xSample.detect_leading_trailing_silence(buffer,channels,threshold)",buffer,channels,threshold)
+
+  if not buffer.has_sample_data then
+    LOG("*** xSample.detect_leading_trailing_silence - no sample data")
+    return 
+  end
+
+  if not threshold then 
+    threshold = 0
+  end
+
+  local frames = buffer.number_of_frames
+  local last_frame_value = nil
+  local first_frame_with_signal = nil
+  local first_silent_frame_after_signal = nil
+
+  local compare_fn = function(frame,val) 
+    local abs_val = math.abs(val)
+    if (abs_val > threshold) then 
+      if not first_frame_with_signal then 
+        first_frame_with_signal = frame 
+        --print("first_frame_with_signal",frame,abs_val)
+      end 
+      first_silent_frame_after_signal = nil
+    else
+      if (last_frame_value and last_frame_value > threshold) then 
+        first_silent_frame_after_signal = frame
+        --print("first_silent_frame_after_signal",frame,abs_val)
+      end 
+    end 
+    last_frame_value = abs_val
+  end
+
+  if (channels == xSample.SAMPLE_CHANNELS.BOTH) then
+    for f = 1, frames do
+      -- use averaged value 
+      local val = (buffer:sample_data(1,f) + buffer:sample_data(2,f)) / 2
+      compare_fn(f,val)
+    end
+  elseif (channels == xSample.SAMPLE_CHANNELS.LEFT) then
+    for f = 1, frames do
+      compare_fn(f,buffer:sample_data(1,f))
+    end
+  elseif (channels == xSample.SAMPLE_CHANNELS.RIGHT) then
+    for f = 1, frames do
+      compare_fn(f,buffer:sample_data(2,f))
+    end
+  end
+
+  return first_frame_with_signal,first_silent_frame_after_signal
 
 end
 
