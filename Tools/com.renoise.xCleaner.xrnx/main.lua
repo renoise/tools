@@ -19,6 +19,7 @@ require (_clibroot.."cDebug")
 require (_clibroot.."cReflection")
 require (_clibroot.."cProcessSlicer")
 require (_clibroot.."cString")
+require (_clibroot.."cTable")
 
 require (_xlibroot.."xLib")
 require (_xlibroot.."xPhrase")
@@ -46,6 +47,9 @@ options:add_property("samplename_add_note",renoise.Document.ObservableBoolean(tr
 options:add_property("check_unreferenced",renoise.Document.ObservableBoolean(true))
 options:add_property("find_issues",renoise.Document.ObservableBoolean(true))
 options:add_property("skip_empty_samples",renoise.Document.ObservableBoolean(true))
+options:add_property("detect_leading_trailing_silence",renoise.Document.ObservableBoolean(true))
+options:add_property("detect_silence_threshold",renoise.Document.ObservableNumber(math.db2lin(-48)))
+options:add_property("trim_leading_silence",renoise.Document.ObservableBoolean(true))
 
 renoise.tool().preferences = options
 
