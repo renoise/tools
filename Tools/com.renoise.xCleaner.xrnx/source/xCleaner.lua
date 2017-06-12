@@ -33,19 +33,14 @@ xCleaner.SAMPLENAME = {
 
 -- (bool)
 xCleaner.check_unreferenced = true
-
 -- (bool)
 xCleaner.find_issues = true
-
 -- (bool)
 xCleaner.find_actual_bit_depth = false
-
 -- (bool)
 xCleaner.find_channel_issues = false
-
 -- (bool)
 xCleaner.find_excess_data = false
-
 -- (bool) 
 xCleaner.skip_empty_samples = true
 
@@ -271,7 +266,6 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
   if (tab_idx == 1) then
 
 
-    --local xsample = xCleaner.get_data_item(data,"index",item_idx-1)
     local xsample = vVector.match_by_key_value(data,"index",item_idx)
 
     local sample = instr.samples[item_idx]
@@ -352,7 +346,12 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
     --print("PRE channel_action,bit_depth,xsample.excess_data",channel_action,bit_depth,xsample.excess_data)
 
     -- do we have something to fix? 
-    if channel_action or bit_depth or xsample.excess_data then
+    if channel_action 
+      or bit_depth 
+      or xsample.excess_data 
+      or xsample.leading_silence 
+      or xsample.trailing_silence
+    then
       
       local buffer = sample.sample_buffer
       if not buffer.has_sample_data then
@@ -369,15 +368,29 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
         bit_depth = xsample.bit_depth
       end
 
+      -- new length (trim excess/leading or trailing)
       local range = {
         start_frame = 1,
         end_frame = buffer.number_of_frames
       }
+
+      -- only remove leading silence when not looped 
+      if xsample.leading_silence
+        and options.trim_leading_silence.value
+        and sample.loop_mode == renoise.Sample.LOOP_MODE_OFF
+      then 
+        range.start_frame = xsample.leading_silence
+      end 
+      if xsample.trailing_silence then
+        range.end_frame = xsample.trailing_silence      
+      end 
+
+      -- excess data (overrides trailing silence)
       if xsample.excess_data then
         range.end_frame = sample.loop_end
       end
 
-      --print("POST instr,item_idx,bit_depth,channel_action,range",instr,item_idx,bit_depth,channel_action,range)
+      TRACE("POST instr,item_idx,bit_depth,channel_action,range",instr,item_idx,bit_depth,channel_action,range)
       sample = xSample.convert_sample(instr,item_idx,bit_depth,channel_action,range)
 
       -- hard panning: adjust on sample level
@@ -389,6 +402,8 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
       
       local issues_fixed = nil
       self:collect_sample_info(instr,xsample,item_idx)
+      xsample.excess_data = false
+      xsample.excess_data = false
       xsample.excess_data = false
       xsample.summary,issues_fixed = cString.strip_line(xsample.summary,"\^ISSUE:")
       if update_callback then
@@ -623,6 +638,41 @@ function xCleaner:collect_sample_info(instr,item,sample_idx)
         num_channels_actual = 2
       end
       item.channel_info = channel_info
+
+      -- detect_leading_trailing_silence 
+      if (item.channel_info ~= xSample.SAMPLE_INFO.SILENT) then 
+        --local buffer = sample.sample_buffer
+        local channels = (num_channels_actual == 2) 
+          and xSample.SAMPLE_CHANNELS.BOTH
+          or xSample.SAMPLE_CHANNELS.LEFT -- aka MONO
+        local threshold = options.detect_silence_threshold.value
+        local leading,trailing = xSample.detect_leading_trailing_silence(buffer,channels,threshold)
+        print(">>> leading,trailing PRE",sample.name,leading,trailing)        
+        if leading or trailing then 
+          -- if loop is enabled, only include the trailing part 
+          -- after the loop end point 
+          if (sample.loop_mode ~= renoise.Sample.LOOP_MODE_OFF) then
+            leading = 0
+            print(">>> loop detected - leading set to start")
+            if trailing and (sample.loop_end > trailing) then
+              trailing = sample.loop_end
+              print(">>> moved trailing silence to match loop end point",trailing)
+            end
+          end
+          -- raise as issue when leading/trailing is not equal         
+          -- to the first/last frame in the sample 
+          if leading and (leading > 1) then
+            item.leading_silence = leading
+          end
+          if trailing and (trailing < buffer.number_of_frames) then
+            item.trailing_silence = trailing
+          end
+          if item.leading_silence or item.trailing_silence then 
+            item.summary = ("%sISSUE: Has leading or trailing silence\n"):format(item.summary)
+          end 
+          print(">>> leading,trailing POST",sample.name,item.leading_silence,item.trailing_silence)
+        end
+      end 
     end
   end
   item.num_channels = num_channels
@@ -666,6 +716,7 @@ function xCleaner:collect_sample_info(instr,item,sample_idx)
       end
     end
   end
+  
 
   if not xCleaner.find_issues then
     item.summary = ("%sTIP: Enable issue scanning to learn if we can perform optimizations on this sample\n"):format(item.summary)
@@ -834,10 +885,10 @@ function xCleaner:gather_effects()
     if not t[k].checked then
       local str_samples = (#t[k].sample_links > 0) and 
         ("samples: %s"):format(table.concat(
-          cLib.match_table_key(t[k].sample_links,"name"),",")) or ""
+          cTable.match_key(t[k].sample_links,"name"),",")) or ""
       local str_devices = (#t[k].device_links_in > 0) and 
         ("fx-chains: %s"):format(table.concat(
-          cLib.match_table_key(t[k].device_links_in,"name"),",")) or ""
+          cTable.match_key(t[k].device_links_in,"name"),",")) or ""
       t[k].summary = ("%sKEEP: Referenced by %s %s\n"):format(
           t[k].summary,str_samples,str_devices)
     else
