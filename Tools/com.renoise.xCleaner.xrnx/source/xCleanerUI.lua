@@ -247,6 +247,45 @@ function xCleanerUI:build()
                 text = "Detect channel issues (increases scanning time!)",
               },
             },
+            vb:row{
+              vb:checkbox{
+                bind = options.detect_leading_trailing_silence,
+              },
+              vb:text{
+                text = "Detect leading/trailing silence",
+              },
+            },
+            vb:row{
+              vb:space{
+                width = 20,
+              },
+              vb:row{
+                spacing = -3,
+                style="plain",
+                vb:valuefield{
+                  min = 0,
+                  max = 1,
+                  width = 40,
+                  bind = options.detect_silence_threshold,                
+                  tostring = function(val)
+                    return ("%d"):format(math.lin2db(val))
+                  end,
+                  tonumber = function(val)
+                    return math.db2lin(val)
+                  end,
+                },
+              },
+              vb:text{
+                text = "Threshold (db)",
+              },
+              vb:checkbox{
+                bind = options.trim_leading_silence,
+              },
+              vb:text{
+                text = "Trim leading",
+              },              
+            },
+
           },
         },
 
@@ -389,9 +428,10 @@ function xCleanerUI:build_fx_table()
       {key = "checked", col_width=20, col_type=vTable.CELLTYPE.CHECKBOX, notifier=fxchain_select},
       {key = "show_summary", col_width=30, col_type=vTable.CELLTYPE.BUTTON, pressed=fxchain_show},
       {key = "index", col_width=25, col_type=vTable.CELLTYPE.TEXT, align="center", formatting="%02d"},
-      {key = "name",  col_width="auto", col_type=vTable.CELLTYPE.TEXT},
+      {key = "name",  col_width="auto", col_type=vTable.CELLTYPE.TEXT, notifier=fxchain_show},
     },
     header_defs = {
+      show  = {data = ""},
       checked = {data = false,  col_type=vTable.CELLTYPE.CHECKBOX, notifier=fxchain_select_all},
       show_summary = {data = "Info", align="center"},
       index   = {data = "#", align="center"},
@@ -421,6 +461,7 @@ function xCleanerUI:build_mod_table()
   end
 
   local modset_select = function(cell,checked)
+    print(">>> modset_select",cell,checked)
     local item,item_index = cell.owner.dataprovider:get(cell.item_id)
     item.checked = checked
     self:update_tab_labels()
@@ -446,9 +487,10 @@ function xCleanerUI:build_mod_table()
       {key = "checked", col_width=20, col_type=vTable.CELLTYPE.CHECKBOX, notifier=modset_select},
       {key = "show_summary", col_width=30, col_type=vTable.CELLTYPE.BUTTON, pressed=modset_show},
       {key = "index", col_width=25, col_type=vTable.CELLTYPE.TEXT, align="center", formatting="%02d"},
-      {key = "name",  col_width="auto", col_type=vTable.CELLTYPE.TEXT},
+      {key = "name",  col_width="auto", col_type=vTable.CELLTYPE.TEXT, notifier=modset_show},
     },
     header_defs = {
+      show  = {data = ""},
       checked = {data = false,  col_type=vTable.CELLTYPE.CHECKBOX, notifier=modset_select_all},
       show_summary = {data = "Info", align="center"},
       index = {data = "#",   align="center"},
@@ -540,7 +582,7 @@ function xCleanerUI:build_samples_table()
       {key = "checked", col_width=20, col_type=vTable.CELLTYPE.CHECKBOX, notifier=checkbox_handler},
       {key = "show_summary", col_width=30, col_type=vTable.CELLTYPE.BUTTON, pressed=select_sample_handler},
       {key = "index", col_width=25, col_type=vTable.CELLTYPE.TEXT, align="center", formatting="%02X", transform=zero_indexed },
-      {key = "name",  col_width="auto", col_type=vTable.CELLTYPE.TEXT},
+      {key = "name",  col_width="auto", col_type=vTable.CELLTYPE.TEXT, notifier=select_sample_handler},
       {key = "bit_depth_display",col_width=30, col_type=vTable.CELLTYPE.TEXT, align="center"},
       {key = "num_channels_display",col_width=25, col_type=vTable.CELLTYPE.TEXT, align="center"},
       {key = "sample_rate", col_width=40, col_type=vTable.CELLTYPE.TEXT},
@@ -989,7 +1031,7 @@ function xCleanerUI:fix_selected_item()
     return
   end
 
-  self._x.fix_issue(instr,tab_idx,data,item_idx,update_callback)
+  self._x:fix_issue(instr,tab_idx,data,item_idx,update_callback)
 
 end
 
