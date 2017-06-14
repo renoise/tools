@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>Noodletrap</Name>
   <Id>com.renoise.Noodletrap</Id>
-  <Version>0.975</Version>
+  <Version>0.98</Version>
   <ApiVersion>5</ApiVersion>
   <Author>danoise (bjorn@renoise.com)</Author>
   <Category>Recording</Category>
