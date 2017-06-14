@@ -128,11 +128,6 @@ function xStreamBuffer:__init(xpos)
   self.automation_playmode = property(self.get_automation_playmode,self.set_automation_playmode)
   self.automation_playmode_observable = renoise.Document.ObservableNumber(xStreamBuffer.PLAYMODE.LINEAR)
 
-  --== events ==--
-
-  --- fired after wipe_futures() got called 
-  --self.on_buffer_wiped = renoise.Document.ObservableBang()
-
   --== internal ==--
 
   -- > Note: all buffers are accessed with the 'xinc', counting from 0 
@@ -317,7 +312,6 @@ function xStreamBuffer:wipe_futures()
   end
   self.highest_xinc = xinc-1
   self.scheduled = {}
-  --self.on_buffer_wiped:bang()
   TRACE(">>> xStreamBuffer:wipe_futures - highest_xinc",self.highest_xinc)
 end
 
