@@ -243,7 +243,6 @@ end
 function xNoteColumn:set_delay_value(val)
   self._delay_value = val
   self._delay_string = xNoteColumn.delay_value_to_string(val,"..") 
-  print("set_delay_value",val,"string",self._delay_string)
 end
 
 function xNoteColumn:get_delay_string()
@@ -253,7 +252,6 @@ end
 function xNoteColumn:set_delay_string(str)
   self._delay_string = str
   self._delay_value = xNoteColumn.delay_string_to_value(str)
-  print("set_delay_string",str,"value",self._delay_value)
 end
 
 ---------------------------------------------------------------------------------------------------
