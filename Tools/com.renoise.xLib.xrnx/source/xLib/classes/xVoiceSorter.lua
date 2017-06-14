@@ -216,7 +216,7 @@ function xVoiceSorter:sort(ptrack_or_phrase,selection,trk_idx,seq_idx)
 
   -- check which columns to merge into the result
   -- (unselected columns on either side)
-  local low_col,high_col = cLib.get_table_bounds(voice_runs)
+  local low_col,high_col = cTable.bounds(voice_runs)
   local num_sorted_cols = #table.keys(self.temp_runs)
   local unsorted_cols = {}
   local sorted_count = 0
@@ -343,7 +343,7 @@ function xVoiceSorter:sort_by_note(line_runs,line_idx)
     local found_room,col_idx,upwards = self:find_note_column(notecol.note_value,line_idx,num_lines)
 
     if found_room then
-      cLib.expand_table(self.temp_runs,col_idx)
+      cTable.expand(self.temp_runs,col_idx)
       table.insert(self.temp_runs[col_idx],voice.voice_run)
       self:set_high_low_column(col_idx,notecol.note_value,notecol.note_value)
     else
@@ -395,7 +395,7 @@ function xVoiceSorter:find_note_column(note_value,line_idx,num_lines)
     return false
   end
 
-  local low_col,high_col = cLib.get_table_bounds(self.temp_runs)
+  local low_col,high_col = cTable.bounds(self.temp_runs)
 
   -- mark column, while maintaining previous marks
   local do_mark_column = function(col_idx)
@@ -755,7 +755,7 @@ function xVoiceSorter:insert_note_run(col_idx,voice_run,line_idx)
   ]]
 
   -- assign to new column
-  cLib.expand_table(self.temp_runs,col_idx)
+  cTable.expand(self.temp_runs,col_idx)
   table.insert(self.temp_runs[col_idx],voice_run)
   self:set_high_low_column(col_idx,nil,nil,nil,line_idx+1)
 
@@ -789,7 +789,7 @@ function xVoiceSorter:sort_unique(line_runs,line_idx)
         instrument_value = notecol.instrument_value
       })
     else
-      cLib.expand_table(self.temp_runs,col_idx)
+      cTable.expand(self.temp_runs,col_idx)
       table.insert(self.temp_runs[col_idx],voice.voice_run)
       -- update the map with the instrument number - this will 
       -- cause the next find_unique_column() to be more precise
@@ -898,7 +898,7 @@ function xVoiceSorter:sort_compact(line_runs,line_idx)
     if not column_exist then
       self:insert_temp_column(col_idx,voice.voice_run)
     else
-      cLib.expand_table(self.temp_runs,col_idx)
+      cTable.expand(self.temp_runs,col_idx)
       table.insert(self.temp_runs[col_idx],voice.voice_run)
     end
   end  

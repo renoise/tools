@@ -314,7 +314,7 @@ function PhraseMateSmartDialog:update_searchfield()
     or PhraseMate.OUTPUT_SOURCE.SELECTED
 
   if use_exported then
-    self.searchfield.items = cLib.match_table_key(self.exported_phrases,"name")
+    self.searchfield.items = cTable.match_key(self.exported_phrases,"name")
   else
     self.searchfield.items = phrase_list
   end

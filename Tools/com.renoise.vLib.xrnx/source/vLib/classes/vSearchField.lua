@@ -217,7 +217,7 @@ function vSearchField:match_item()
     end
     self._vb_text.text = str_matches
     self._matched_items = matched
-    self:display_items(cLib.match_table_key(self._matched_items,"value"))
+    self:display_items(cTable.match_key(self._matched_items,"value"))
   end
   
   self._suppress_notifier = true

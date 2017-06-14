@@ -375,19 +375,19 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
             if voice_run and begin_voice_run 
               and not voice_run.number_of_lines
             then
-              local low,high = cLib.get_table_bounds(voice_run)
+              local low,high = cTable.bounds(voice_run)
               voice_run.number_of_lines = k-low
             end
 
-            cLib.expand_table(self.voice_runs,col_idx)
+            cTable.expand(self.voice_runs,col_idx)
             run_index = #self.voice_runs[col_idx] + (begin_voice_run and 1 or 0)
-            cLib.expand_table(self.voice_runs,col_idx,run_index)
+            cTable.expand(self.voice_runs,col_idx,run_index)
 
             voice_run = self.voice_runs[col_idx][run_index]
             voice_run[line_idx] = xNoteColumn.do_read(notecol)
 
             if stop_voice_run then
-              local low,high = cLib.get_table_bounds(voice_run)
+              local low,high = cTable.bounds(voice_run)
               local num_lines = high-low
               voice_run.number_of_lines = num_lines
 
@@ -447,10 +447,10 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
           -- register unique notes as they are encountered
           if include_as_unique then
             if note_val and instr_idx then
-              cLib.expand_table(self.unique_notes,note_val,instr_idx-1)
+              cTable.expand(self.unique_notes,note_val,instr_idx-1)
               self.unique_notes[note_val][instr_idx-1] = true
             elseif note_val then
-              cLib.expand_table(self.unique_notes,note_val)
+              cTable.expand(self.unique_notes,note_val)
             end
           end
 
@@ -460,7 +460,7 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
 
   end
 
-  self.low_column,self.high_column = cLib.get_table_bounds(self.voice_runs)
+  self.low_column,self.high_column = cTable.bounds(self.voice_runs)
 
   -- post-process
 
@@ -477,7 +477,7 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
           end
         else
           -- always-always assign 'number_of_lines' to voice-runs
-          local low_line,high_line = cLib.get_table_bounds(run)
+          local low_line,high_line = cTable.bounds(run)
           if not (run.number_of_lines) then
             local voice = self.voice_columns[col_idx]
             if voice then -- still open
@@ -519,7 +519,7 @@ function xVoiceRunner:collect(ptrack_or_phrase,collect_mode,selection,trk_idx,se
   if self.compact_columns 
     and (collect_mode ~= xVoiceRunner.COLLECT_MODE.CURSOR)   
   then
-    cLib.compact_table(self.voice_runs)
+    cTable.compact(self.voice_runs)
   end
 
 end
@@ -544,7 +544,7 @@ function xVoiceRunner:collect_at_cursor()
   })
 
   if in_range[col_idx] then
-    local low_line_idx,_ = cLib.get_table_bounds(in_range[col_idx])
+    local low_line_idx,_ = cTable.bounds(in_range[col_idx])
     return in_range[col_idx][low_line_idx]
   end
 
@@ -570,10 +570,10 @@ function xVoiceRunner:collect_above_cursor()
   })
 
   if in_range[col_idx] then
-    local low,high = cLib.get_table_bounds(in_range[col_idx])
+    local low,high = cTable.bounds(in_range[col_idx])
     for k = high,low,-1 do
       if in_range[col_idx][k] then
-        local low_line,high_line = cLib.get_table_bounds(in_range[col_idx][k])
+        local low_line,high_line = cTable.bounds(in_range[col_idx][k])
         if (line_idx > low_line) then
           return in_range[col_idx][k]
         end
@@ -583,7 +583,7 @@ function xVoiceRunner:collect_above_cursor()
 
   if self.wrap_around_jump then
     if self.voice_runs[col_idx] then
-      local low,high = cLib.get_table_bounds(self.voice_runs[col_idx])
+      local low,high = cTable.bounds(self.voice_runs[col_idx])
       return self.voice_runs[col_idx][high]
     end
   end
@@ -615,10 +615,10 @@ function xVoiceRunner:collect_below_cursor()
   })
 
   if in_range[col_idx] then
-    local low,high = cLib.get_table_bounds(in_range[col_idx])
+    local low,high = cTable.bounds(in_range[col_idx])
     for k = low,high do
       if in_range[col_idx][k] then
-        local low_line,high_line = cLib.get_table_bounds(in_range[col_idx][k])
+        local low_line,high_line = cTable.bounds(in_range[col_idx][k])
         if (line_idx < low_line) then
           return in_range[col_idx][k]
         end
@@ -628,7 +628,7 @@ function xVoiceRunner:collect_below_cursor()
 
   if self.wrap_around_jump then
     if self.voice_runs[col_idx] then
-      local low,high = cLib.get_table_bounds(self.voice_runs[col_idx])
+      local low,high = cTable.bounds(self.voice_runs[col_idx])
       return self.voice_runs[col_idx][low]
     end
   end
@@ -869,7 +869,7 @@ end
 function xVoiceRunner.shorten_run(voice_run,num_lines)
   TRACE("xVoiceRunner.shorten_run(voice_run,num_lines)",voice_run,num_lines)
 
-  local low,high = cLib.get_table_bounds(voice_run)
+  local low,high = cTable.bounds(voice_run)
   for k,v in pairs(voice_run) do
     if (type(k)=="number") then
       if (k > (low+num_lines-1)) then
@@ -923,7 +923,7 @@ function xVoiceRunner:write(ptrack_or_phrase,selection,trk_idx)
         notecol:clear()
         for run_idx,run in pairs(run_col) do
           if run[line_idx] then
-            local low,high = cLib.get_table_bounds(run)
+            local low,high = cTable.bounds(run)
             local xnotecol = xNoteColumn(run[line_idx])
             xnotecol:do_write(notecol)
             if self.create_noteoffs then
@@ -968,7 +968,7 @@ function xVoiceRunner:write(ptrack_or_phrase,selection,trk_idx)
 
   end
 
-  local low_col,high_col = cLib.get_table_bounds(self.voice_runs)
+  local low_col,high_col = cTable.bounds(self.voice_runs)
 
   -- figure out # visible columns (expand when needed)
   local track_or_phrase
@@ -1008,7 +1008,7 @@ end
 function xVoiceRunner.get_voice_run_selection(vrun,trk_idx,col_idx)
   TRACE("xVoiceRunner.get_voice_run_selection(vrun,trk_idx,col_idx)",vrun,trk_idx,col_idx)
 
-  local low,high = cLib.get_table_bounds(vrun)
+  local low,high = cTable.bounds(vrun)
   local end_line = low + vrun.number_of_lines - 1
 
   end_line = ((vrun.implied_noteoff and not vrun.actual_noteoff_col)
@@ -1088,7 +1088,7 @@ function xVoiceRunner.in_range(voice_runs,line_start,line_end,args)
   end
 
   local do_include_run = function(col_idx,run_idx)
-    cLib.expand_table(rslt,col_idx)
+    cTable.expand(rslt,col_idx)
     rslt[col_idx][run_idx] = voice_runs[col_idx][run_idx]
     matched_columns[col_idx] = true 
   end
@@ -1150,7 +1150,7 @@ function xVoiceRunner.get_runs_on_line(voice_runs,line_idx)
   local line_runs = {}
   for col_idx,run_col in pairs(voice_runs) do
     for run_idx,run in pairs(run_col) do
-      local low_line,high_line = cLib.get_table_bounds(run)
+      local low_line,high_line = cTable.bounds(run)
       if (low_line == line_idx) then
         local voice = xVoiceRunner.create_voice(run,col_idx,run_idx,low_line)
         table.insert(line_runs,voice) 
@@ -1197,7 +1197,7 @@ end
 function xVoiceRunner.get_initial_notecol(voice_run)
   TRACE("xVoiceRunner.get_initial_notecol(voice_run)",voice_run)
 
-  local low_line,high_line = cLib.get_table_bounds(voice_run)
+  local low_line,high_line = cTable.bounds(voice_run)
   return voice_run[low_line],low_line
 
 end
@@ -1215,7 +1215,7 @@ function xVoiceRunner.get_open_run(run_col,line_start)
 
   local matched = false
   for run_idx,run in pairs(run_col) do
-    local low,high = cLib.get_table_bounds(run)
+    local low,high = cTable.bounds(run)
     local end_line = low+run.number_of_lines-1
     if (low < line_start) and (end_line >= line_start) then
       return run_idx
@@ -1238,7 +1238,7 @@ function xVoiceRunner.get_higher_notes_in_column(run_col,note_val)
   local matches = {}
   if not table.is_empty(run_col) then
     for run_idx,voice_run in pairs(run_col) do
-      local low_line,high_line = cLib.get_table_bounds(voice_run)
+      local low_line,high_line = cTable.bounds(voice_run)
       if (voice_run[low_line].note_value > note_val) then
         table.insert(matches,{
           run_idx = run_idx,
@@ -1268,7 +1268,7 @@ function xVoiceRunner.get_most_recent_run_index(run_col,line_idx)
   local is_empty = table.is_empty(run_col)
   if not is_empty then
     for run_idx,run in pairs(run_col) do
-      local low,high = cLib.get_table_bounds(run)
+      local low,high = cTable.bounds(run)
       if high then
         for k = 1,math.min(line_idx,high) do
           if run[k] then
@@ -1343,7 +1343,7 @@ function xVoiceRunner.get_column_start_end_line(run_col)
 
   local start_line,end_line = 513,0
   for run_idx,run in pairs(run_col) do
-    local low,high = cLib.get_table_bounds(run_col[run_idx])
+    local low,high = cTable.bounds(run_col[run_idx])
     end_line = math.max(end_line,high) 
     start_line = math.min(start_line,low) 
   end
@@ -1361,7 +1361,7 @@ end
 function xVoiceRunner.get_final_notecol_info(voice_run,respect_visibility,vol_visible,pan_visible)
   TRACE("xVoiceRunner.get_final_notecol_info(voice_run,respect_visibility,vol_visible,pan_visible)",voice_run,respect_visibility,vol_visible,pan_visible)
 
-  local low,high = cLib.get_table_bounds(voice_run)
+  local low,high = cTable.bounds(voice_run)
   return xVoiceRunner.get_notecol_info(voice_run[high],respect_visibility,vol_visible,pan_visible)
 
 end

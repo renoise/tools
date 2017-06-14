@@ -116,7 +116,7 @@ function PhraseMateUI:__init(...)
 
   vDialog.__init(self,...)
 
-  self.phrase_props = cLib.match_table_key(xPhrase.DOC_PROPS,"title")
+  self.phrase_props = cTable.match_key(xPhrase.DOC_PROPS,"title")
 
   -- notifiers ------------------------
 

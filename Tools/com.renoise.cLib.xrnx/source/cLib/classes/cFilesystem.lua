@@ -405,7 +405,7 @@ end
 ---------------------------------------------------------------------------------------------------
 -- add file extension (if it hasn't already got it)
 -- @param file_path (string)
--- @param extension (string)
+-- @param extension (string), e.g. "bmp"
 -- @return string
 
 function cFilesystem.file_add_extension(file_path,extension)
@@ -427,7 +427,7 @@ end
 ---------------------------------------------------------------------------------------------------
 -- remove file extension (if present and matching)
 -- @param file_path (string)
--- @param extension (string)
+-- @param extension (string), e.g. "bmp"
 -- @return string
 
 function cFilesystem.file_strip_extension(file_path,extension)
