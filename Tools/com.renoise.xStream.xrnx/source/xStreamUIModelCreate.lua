@@ -1,6 +1,6 @@
---[[============================================================================
+--[[===============================================================================================
 xStreamUIModelCreate
-============================================================================]]--
+===============================================================================================]]--
 
 --[[
 
@@ -8,11 +8,13 @@ Supporting UI class for xStream
 
 ]]
 
---==============================================================================
+--=================================================================================================
 
 local PANEL_W = xStreamUI.FULL_PANEL_W
 
 class 'xStreamUIModelCreate' (vDialogWizard)
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 function xStreamUIModelCreate:__init(ui)
   TRACE("xStreamUIModelCreate:__init(ui)",ui)
@@ -26,10 +28,11 @@ function xStreamUIModelCreate:__init(ui)
 
 end
 
---------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
 -- (overridden method)
 
 function xStreamUIModelCreate:show()
+  TRACE("xStreamUIModelCreate:show()")
 
   vDialogWizard.show(self)
 
@@ -39,7 +42,7 @@ function xStreamUIModelCreate:show()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- (overridden method)
 -- @return renoise.Views.Rack
 
@@ -160,7 +163,7 @@ function xStreamUIModelCreate:create_dialog()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIModelCreate:update_dialog()
   TRACE("xStreamUIModelCreate:update_dialog()")
@@ -209,7 +212,7 @@ function xStreamUIModelCreate:update_dialog()
 end
 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- (overridden method)
 
 function xStreamUIModelCreate:show_prev_page()
@@ -222,7 +225,7 @@ function xStreamUIModelCreate:show_prev_page()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 -- (overridden method)
 
 function xStreamUIModelCreate:show_next_page()
@@ -249,25 +252,28 @@ function xStreamUIModelCreate:show_next_page()
         return
       else
         -- we are done - 
-        local passed,err = self.xstream.process.models:create(view_name.text)
-        if not passed and err then
+        local model,err = self.xstream.models:create(view_name.text)
+        if not model and err then
           renoise.app():show_warning(err)
           return
         end 
+        local model_idx = self.xstream.models:get_model_index_by_name(model.name)
+        --print(">>> select model_idx",model_idx)
+        self.xstream.selected_model_index = model_idx
         self.dialog:close()
         self.dialog = nil
       end
     elseif (self.dialog_option == 2) then -- paste string
       -- check for syntax errors
-      local view_textfield = vb.views["xStreamNewModelDialogDefinition"]
-      local model = xStreamModel(self.xstream)
+      local model,member = self:create_model()
+      local view_textfield = vb.views["xStreamNewModelDialogDefinition"]      
       local passed,err = model:load_from_string(view_textfield.text)
       if not passed and err then
         renoise.app():show_warning(err)
         model = nil
         return
       else
-        self:add_save_and_close(model)
+        self:add_save_and_close(model,member)
       end
     elseif (self.dialog_option == 3) then -- locate file
       self.dialog:close()
@@ -281,50 +287,70 @@ function xStreamUIModelCreate:show_next_page()
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- Create model, using the currently selected member index 
 
-function xStreamUIModelCreate:navigate_to_model()
+function xStreamUIModelCreate:create_model()
+  TRACE("xStreamUIModelCreate:create_model()")
 
-  local file_path = renoise.app():prompt_for_filename_to_read({"*.lua"},"Open model definition")
-  --print("file_path",file_path)
-  if (file_path ~= "") then
-    -- attempt to load model
-    local model = xStreamModel(self.xstream)
-    local passed,err = model:load_definition(file_path)
-    --print("passed,err",passed,err)
-    if not passed and err then
-      renoise.app():show_warning(err)
-      return
-    end
-    model.file_path = xStreamModel.get_normalized_file_path(model.name)
-    if not self:validate_model_name(model.name) then
-      renoise.app():show_warning("Error: a model already exists with this name")
-      return
-    end
-    self:add_save_and_close(model)
-  end
+  local member = self.xstream.stack:allocate_member()
+  return xStreamModel(member.buffer,self.xstream.voicemgr,self.xstream.output_message),member
 
 end
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+-- Load (import) a model from an external location
 
-function xStreamUIModelCreate:add_save_and_close(model)
+function xStreamUIModelCreate:navigate_to_model()
+  TRACE("xStreamUIModelCreate:navigate_to_model()")
 
-  self.xstream.process.models:add(model)
+  local file_path = renoise.app():prompt_for_filename_to_read({"*.lua"},"Open model definition")
+  --print("file_path",file_path)
+  if (file_path == "") then
+    return
+  end
+
+  -- attempt to load model
+  local model,member = self:create_model()
+  local passed,err = model:load_definition(file_path)
+  --print("passed,err",passed,err)
+  if not passed and err then
+    renoise.app():show_warning(err)
+    return
+  end
+  model.file_path = xStreamModel.get_normalized_file_path(model.name)
+  if not self:validate_model_name(model.name) then
+    renoise.app():show_warning("Error: a model already exists with this name")
+    return
+  end
+  self:add_save_and_close(model,member)
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Add model to our repository 
+
+function xStreamUIModelCreate:add_save_and_close(model,member)
+  TRACE("xStreamUIModelCreate:add_save_and_close(model,member)")
+
+  self.xstream.models:add(model,member.member_index)
   local got_saved,err = model:save()
   if not got_saved and err then
     renoise.app():show_warning(err)
   end
-  self.xstream.selected_model_index = #self.xstream.process.models.models
+  local model_idx = self.xstream.models:get_model_index_by_name(model.name)
+  --print(">>> select model_idx",model_idx)
+  self.xstream.selected_model_index = model_idx
   self.dialog:close()
   self.dialog = nil
 
 end
 
 
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 function xStreamUIModelCreate:validate_model_name(str_name)
+  TRACE("xStreamUIModelCreate:validate_model_name(str_name)")
 
   local str_name_validate = xStreamModel.get_suggested_name(str_name)
   --print("str_name,str_name_validate",str_name,str_name_validate)

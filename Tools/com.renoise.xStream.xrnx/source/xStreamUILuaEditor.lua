@@ -32,6 +32,7 @@ xStreamUILuaEditor.WELCOME_MSG = [[
 --------------------------------------------------------------------------------------------------
 
 function xStreamUILuaEditor:__init(xstream,vb)
+  TRACE("xStreamUILuaEditor:__init(xstream,vb)",xstream,vb)
 
   assert(type(xstream)=="xStream")
   assert(type(vb)=="ViewBuilder")
@@ -53,23 +54,16 @@ function xStreamUILuaEditor:__init(xstream,vb)
   -- bool, suppress editor notifications 
   self.suppress_editor_notifier = false
 
+  --== notifiers ==--
+
   self.prefs.editor_visible_lines:add_notifier(function()
-    TRACE("xStreamUI - self.editor_visible_lines_observable fired...")
+    TRACE("xStreamUILuaEditor - self.editor_visible_lines_observable fired...")
     self.xstream.ui.update_editor_requested = true
   end)
 
-  self.xstream.process.buffer.callback_status_observable:add_notifier(function()    
-    TRACE("xStreamUILuaEditor - callback_status_observable fired...")
-    local str_err = self.xstream.process.buffer.callback_status_observable.value
-    local view = self.vb.views["xStreamCallbackStatus"]
-    if (str_err == "") then
-      view.text = "Syntax OK"
-      view.tooltip = ""
-    else
-      view.text = "⚠ Syntax Error"
-      view.tooltip = str_err
-    end 
-  end)
+  --== initialize ==--
+
+  self:attach_to_process()
 
 end
 
@@ -104,6 +98,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function xStreamUILuaEditor:build()
+  TRACE("xStreamUILuaEditor:build()")
 
   local vb = self.vb
 
@@ -200,40 +195,120 @@ function xStreamUILuaEditor:build()
 end    
 
 --------------------------------------------------------------------------------
+
+function xStreamUILuaEditor:attach_to_process()
+  TRACE("xStreamUILuaEditor:attach_to_process()")
+
+  self.xstream.stack.selected_member_index_observable:add_notifier(function()
+    --print(">>> attach_to_process - selected_member_index fired...")
+    
+    local member = self.xstream.stack:get_selected_member()
+    --print(">>> attach_to_process - member",member)
+    if member then
+      member.buffer.callback_status_observable:add_notifier(function()    
+        --print("xStreamUILuaEditor - callback_status_observable fired...")
+        self:update_callback_status()
+      end)
+    end
+
+    self:update_callback_status()
+
+  end)
+
+end
+
+--------------------------------------------------------------------------------
+
+function xStreamUILuaEditor:update_callback_status()
+  TRACE("xStreamUILuaEditor:update_callback_status()")
+
+  local member = self.xstream.stack:get_selected_member()
+  local str_err = ""
+  if member then 
+    str_err = member.buffer.callback_status_observable.value
+  end
+  local view = self.vb.views["xStreamCallbackStatus"]
+  if (str_err == "") then
+    view.text = "✔ Syntax OK"
+    view.tooltip = ""
+  else
+    view.text = "⚠ Syntax Error"
+    view.tooltip = str_err
+  end 
+end
+
+--------------------------------------------------------------------------------
 -- apply editor text to the relevant callback/data/event
 
 function xStreamUILuaEditor:apply_editor_content()
   TRACE("xStreamUILuaEditor:apply_editor_content()")
 
-  local model = self.xstream.selected_model
-  if model then
+  --local model = self.xstream.selected_model
+  local member = self.xstream.stack:get_selected_member()  
+  if member and member.model then
     --print("xStreamUI:on_idle - callback modified")
     local view = self.vb.views["xStreamCallbackEditor"]
     local cb_type,cb_key,cb_subtype_or_tab,cb_arg_name = xStream.parse_callback_type(self.editor_view)
     local trimmed_text = cString.trim(view.text)
-    local status_obs = self.xstream.process.buffer.callback_status_observable
+    local status_obs = member.buffer.callback_status_observable
     if (cb_type == "main") then
-      model.callback_str = trimmed_text
+      member.model.callback_str = trimmed_text
     elseif (cb_type == "data") then
-      local def = table.rcopy(model.data_initial)
+      local def = table.rcopy(member.model.data_initial)
       def[cb_key] = trimmed_text
-      local str_status = model:parse_data(def)
+      local str_status = member.model:parse_data(def)
       --print("str_status",str_status)
       status_obs.value = str_status
     elseif (cb_type == "events") then
-      local def = table.rcopy(model.events)
+      local def = table.rcopy(member.model.events)
       local cb_name = cb_arg_name and cb_subtype_or_tab.."."..cb_arg_name or cb_subtype_or_tab
       def[cb_key.."."..cb_name] = trimmed_text
       --print("apply content",cb_key.."."..cb_name)
-      local str_status = model:parse_events(def)
+      local str_status = member.model:parse_events(def)
       status_obs.value = str_status
     end
-    model.modified = true
+    member.model.modified = true
 
   end
 
 end
 
+--------------------------------------------------------------------------------
+
+function xStreamUILuaEditor:rename_callback(new_name)
+  TRACE("xStreamUILuaEditor:rename_callback(new_name)",new_name)
+
+  local model = self.xstream.selected_model
+  if not model then
+    return
+  end
+
+  local cb_type,cb_key,cb_subtype = xStream.parse_callback_type(self.editor_view)
+
+  if (cb_type ~= xStreamModel.CB_TYPE.DATA) then
+    return
+  end
+
+  if not new_name then
+    new_name = vPrompt.prompt_for_string(cb_subtype or cb_key,
+      "Enter a new name","Rename callback")
+    if not new_name then
+      return true
+    end
+  end
+
+  -- events contain two parts
+  local old_name = cb_subtype and cb_key.."."..cb_subtype or cb_key
+
+  local passed,err = model:rename_callback(old_name,new_name,cb_type)
+  if not passed then
+    return false,err
+  end
+
+  self.editor_view = cb_type.."."..new_name
+  self.xstream.ui.user_modified_callback = true
+
+end
 
 --------------------------------------------------------------------------------
 

@@ -22,6 +22,7 @@ xStreamUserData.USERDATA_ROOT = xStreamUserData.DEFAULT_ROOT
 -- userdata subfolders (fixed)
 xStreamUserData.FAVORITES_FILE_PATH = "favorites.xml"
 xStreamUserData.MODELS_FOLDER       = "models/"
+xStreamUserData.STACKS_FOLDER       = "stacks/"
 xStreamUserData.PRESET_BANK_FOLDER  = "presets/"
 
 ---------------------------------------------------------------------------------------------------

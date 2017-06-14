@@ -22,8 +22,8 @@ xStreamUIPresetPanel.CONTROLS = {
   "xStreamPresetBankRemove",
   "xStreamFavoritePreset",
   "xStreamUpdatePreset",
-  "xStreamPresetSelector",
-  "xStreamPresetsToggle",
+  "xStreamModelPresetselector",
+  "xStreamModelPresetsToggle",
 }
 
 xStreamUIPresetPanel.PRESET_RECALL_W = xStreamUI.PRESET_PANEL_W - 80
@@ -72,7 +72,7 @@ function xStreamUIPresetPanel:set_visible(val)
   TRACE("xStreamUIPresetPanel:set_visible(val)",val)
 
   local view_browser = self.vb.views["xStreamArgPresetContainer"]
-  local view_arrow = self.vb.views["xStreamPresetsToggle"]
+  local view_arrow = self.vb.views["xStreamModelPresetsToggle"]
 
   view_browser.visible = val
   view_arrow.text = val and xStreamUI.ARROW_UP or xStreamUI.ARROW_DOWN
@@ -95,7 +95,7 @@ function xStreamUIPresetPanel:build_panel()
     vb:row{
       vb:button{
         text=xStreamUI.ARROW_DOWN,
-        id = "xStreamPresetsToggle",
+        id = "xStreamModelPresetsToggle",
         tooltip = "Toggle visibility of preset list",
         width = xStreamUI.BITMAP_BUTTON_W,
         height = xStreamUI.BITMAP_BUTTON_H,
@@ -110,7 +110,7 @@ function xStreamUIPresetPanel:build_panel()
       },
       ]]
       vb:popup{
-        items = {xStreamPresets.DEFAULT_BANK_NAME},
+        items = {xStreamModelPresets.DEFAULT_BANK_NAME},
         tooltip = "Choose between available preset banks",
         id = "xStreamPresetBankSelector",
         width = xStreamUI.PRESET_PANEL_W - 86, 
@@ -153,10 +153,15 @@ function xStreamUIPresetPanel:build_panel()
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
             local model = self.xstream.selected_model
-            local success = model:add_preset_bank()
+            local str_name = xStreamModel.get_new_preset_bank_name()
+            str_name = vPrompt.prompt_for_string(str_name,
+              "Enter a name for the preset bank","Add Preset Bank")
+            local success,err = model:add_preset_bank(str_name)
             if success then
               model.selected_preset_bank_index = #model.preset_banks
               model.selected_preset_bank.modified = true
+            elseif err then 
+              renoise.app():show_warning(err)
             end
           end,
         },
@@ -222,12 +227,12 @@ function xStreamUIPresetPanel:build_panel()
         ]]
         vb:popup{
           items = {},
-          id = "xStreamPresetSelector",
+          id = "xStreamModelPresetselector",
           tooltip = "Choose between available presets",
           width = xStreamUI.PRESET_PANEL_W-86,
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function(idx)
-            self.xstream.process:set_selected_preset_index(idx-1)
+            self.xstream.stack:set_selected_preset_index(idx-1)
           end
         },
         vb:space{
@@ -397,7 +402,7 @@ function xStreamUIPresetPanel:build_list()
         width = xStreamUI.BITMAP_BUTTON_W,
         height = xStreamUI.BITMAP_BUTTON_H,
         notifier = function()
-          self.xstream.process:schedule_item(model.name,k)
+          self.xstream.stack:schedule_item(model.name,k)
         end,
       },
       vb:button{
@@ -478,7 +483,7 @@ function xStreamUIPresetPanel:update_selector()
   TRACE("xStreamUIPresetPanel:update_selector()")
 
   local model = self.xstream.selected_model
-  local view_popup = self.vb.views["xStreamPresetSelector"]
+  local view_popup = self.vb.views["xStreamModelPresetselector"]
 
   if model then
     local preset_bank = model.selected_preset_bank
@@ -619,7 +624,7 @@ function xStreamUIPresetPanel:update_controls()
 
   if favorite_idx then
     --print("update_preset_controls - favorite_idx",favorite_idx)
-    self.selected_favorite_index = favorite_idx
+    self.ui.selected_favorite_index = favorite_idx
   end
 
 end

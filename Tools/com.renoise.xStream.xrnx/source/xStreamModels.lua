@@ -3,11 +3,9 @@ xStreamModels
 ===============================================================================================]]--
 --[[
 
-This class handles models for an xStream process 
+This class handles models for xStream 
 
-#
-
-TODO this is the place for implementing stacked models. xStreamModelStack? 
+When a model is instantiated, register it using add(). This will make the application able to propagate changes between instances
 
 ]]
 
@@ -18,161 +16,43 @@ class 'xStreamModels'
 ---------------------------------------------------------------------------------------------------
 -- constructor
 
-function xStreamModels:__init(process)
-  TRACE("xStreamModels:__init(process)",process)
+function xStreamModels:__init(stack)
+  TRACE("xStreamModels:__init(stack)",stack)
 
-  assert(type(process) == "xStreamProcess", "Wrong type of parameter")
+  assert(type(stack) == "xStreamStack")
 
-  --- xStream - still required by model. Otherwise would use just process..
-  self.xstream = process.xstream
+  --- xStream - still required by model. Otherwise would use just stack..
+  self.xstream = stack.xstream
 
-  --- xStreamProcess
-  self.process = process
+  --- xStreamStack
+  self.process = stack
 
   --- xStreamPrefs, current settings
   self.prefs = renoise.tool().preferences
 
-  --- table<xStreamModel>, registered models 
+  --- table<string>, unique names of all available models 
+  self.available_models = {}
+  self.available_models_changed_observable = renoise.Document.ObservableBang()
+
+  --- table, registered models 
+  -- {
+  --  model:xStreamModel
+  --  member_index:number
+  -- }
   self.models = {}
 
-  --- table<int>, receive notification when models are added/removed
-  -- the table itself contains just the model indices
-  self.models_observable = renoise.Document.ObservableNumberList()
-
-  --- int, the model index, 1-#models or 0 when none are available
-  self.selected_model_index = property(self.get_selected_model_index,self.set_selected_model_index)
-  self.selected_model_index_observable = renoise.Document.ObservableNumber(0)
-
-  --- xStreamModel, read-only - nil when none are available
-  self.selected_model = nil
+  --- ObservableBang, fired as models are un/registered
+  self.models_changed_observable = renoise.Document.ObservableBang()
 
 end
 
----------------------------------------------------------------------------------------------------
--- Get/set
----------------------------------------------------------------------------------------------------
-
-function xStreamModels:get_selected_model_index()
-  return self.selected_model_index_observable.value
-end
-
-function xStreamModels:set_selected_model_index(idx)
-  TRACE("xStreamModels:set_selected_model_index(idx)",idx)
-
-  --[[
-  if (#self.models == 0) then
-    error("there are no available models")
-  end
-  ]]
-
-  if (idx > #self.models) then
-    error(("selected_model_index needs to be less than %d"):format(#self.models))
-  end
-
-  if (idx == self.selected_model_index_observable.value) then
-    return
-  end
-  
-  -- remove notifiers
-  if self.selected_model then
-    self.selected_model:detach_from_song()
-  end
-
-  -- update value
-  self.selected_model = (idx > 0) and self.models[idx] or nil
-  if self.selected_model then
-    self.selected_model:attach_to_song()
-  end
-  --print("set_selected_model_index - selected_model_index =",idx)
-  self.selected_model_index_observable.value = idx
-
-  -- attach notifiers -------------------------------------
-
-  local args_observable_notifier = function()
-    TRACE("xStreamModels - args.args_observable_notifier fired...")
-    self.selected_model.modified = true
-  end
-
-  local preset_index_notifier = function()
-    TRACE("xStreamModels - preset_bank.selected_preset_index_observable fired...")
-    local preset_idx = self.selected_model.selected_preset_bank.selected_preset_index
-    self.selected_model.selected_preset_bank:recall_preset(preset_idx)
-  end
-
-  local preset_observable_notifier = function()
-    TRACE("xStreamModels - preset_bank.presets_observable fired...")
-    if self.selected_model:is_default_bank() then
-      self.selected_model.modified = true
-    end
-  end
-
-  local presets_modified_notifier = function()
-    TRACE("xStreamModels - selected_preset_bank.modified_observable fired...")
-    if self.selected_model.selected_preset_bank.modified then
-      self.xstream.preset_bank_export_requested = true
-    end
-  end
-
-  local preset_bank_notifier = function()
-    TRACE("xStreamModels - selected_preset_bank_index_observable fired..")
-    local preset_bank = self.selected_model.selected_preset_bank
-    cObservable.attach(preset_bank.presets_observable,preset_observable_notifier)
-    cObservable.attach(preset_bank.modified_observable,presets_modified_notifier)
-    cObservable.attach(preset_bank.selected_preset_index_observable,preset_index_notifier)
-  end
-
-  if self.selected_model then
-    cObservable.attach(self.selected_model.args.args_observable,args_observable_notifier)
-    cObservable.attach(self.selected_model.selected_preset_bank_index_observable,preset_bank_notifier)
-    preset_bank_notifier()
-    self.selected_model.args:fire_startup_arguments()
-  end
-
-
-
-end
 
 ---------------------------------------------------------------------------------------------------
 -- Class methods 
 ---------------------------------------------------------------------------------------------------
--- Activate the launch model
-
-function xStreamModels:select_launch_model()
-  TRACE("xStreamModels:select_launch_model()")
-
-  for k,v in ipairs(self.models) do
-    if (v.file_path == self.prefs.launch_model.value) then
-      self.selected_model_index = k
-    end
-  end
-
-end
-
----------------------------------------------------------------------------------------------------
--- @param model_name (string)
--- @return int (index) or nil
--- @return xStreamModel or nil
-
-function xStreamModels:get_by_name(model_name)
-  --TRACE("xStreamModels:get_by_name(model_name)",model_name)
-
-  if not self.models then
-    return 
-  end
-
-  for k,v in ipairs(self.models) do
-    if (v.name == model_name) then
-      return k,v
-    end
-  end
-
-end
-
-
----------------------------------------------------------------------------------------------------
--- Create new model from scratch
+-- Create new model from scratch 
 -- @param str_name (string)
--- @return bool, true when model got created
+-- @return xStreamModel, when model got created
 -- @return string, error message on failure
 
 function xStreamModels:create(str_name)
@@ -180,7 +60,9 @@ function xStreamModels:create(str_name)
 
   assert(type(str_name) == "string")
 
-  local model = xStreamModel(self.process)
+  local member = self.xstream.stack:allocate_member()
+
+  local model = xStreamModel(member.buffer,self.xstream.voicemgr,self.xstream.output_message)
   model.name = str_name
 
   local str_name_validate = xStreamModel.get_suggested_name(str_name)
@@ -191,7 +73,7 @@ function xStreamModels:create(str_name)
 
   model.modified = true
   model.name = str_name
-  model.file_path = ("%s%s.lua"):format(self:get_models_path(),str_name)
+  model.file_path = ("%s%s.lua"):format(xStreamModel.ROOT_PATH,str_name)
   model:parse_definition({
     callback = [[-------------------------------------------------------------------------------
 -- Empty configuration
@@ -203,87 +85,167 @@ function xStreamModels:create(str_name)
 ]],
   })
 
-  self:add(model)
-  self.selected_model_index = #self.models
-  
+  self:add(model,member.member_index)
+
+  -- immediately save the   
   local got_saved,err = model:save()
   if not got_saved and err then
     return false,err
   end
 
-  return true
+  return model
 
 end
 
 ---------------------------------------------------------------------------------------------------
+-- Register a model 
 
-function xStreamModels:add(model)
-  TRACE("xStreamModels:add(model)")
+function xStreamModels:add(model,member_idx)
+  TRACE("xStreamModels:add(model,member_idx)",model,member_idx)
 
-  table.insert(self.models,model)
-  self.models_observable:insert(#self.models)
+  assert(type(model)=="xStreamModel")
+  assert(type(member_idx)=="number")
+
+  table.insert(self.models,{
+    model = model,
+    member_index = member_idx
+  })
+  model:attach_to_song()
+
+  self.models_changed_observable:bang()
+
+  if not table.find(self.available_models,model.name) then 
+    table.insert(self.available_models,model.name)
+    self.available_models_changed_observable:bang()
+  end 
+
+  model.args:fire_startup_arguments()
 
 end
 
 ---------------------------------------------------------------------------------------------------
--- Remove all models
+-- Remove all previously registered models
 
 function xStreamModels:remove_all()
   TRACE("xStreamModels:remove_all()")
 
-  for k,_ in ripairs(self.models) do
-    self:remove_model(k)
+  for k,v in ripairs(self.models) do
+    self:remove(v.model.name)
   end 
 
-  self.selected_model_index = 0
-
 end
 
 ---------------------------------------------------------------------------------------------------
--- Remove specific model from list
--- @param model_idx (int)
+-- apply callback for each model
+-- @param model_name (string), match models with this name 
+-- @param [member_idx] (number) leave out to match all instances 
+-- @param callback (function)
+-- @return table<xStreamModel>
 
-function xStreamModels:remove_model(model_idx)
-  TRACE("xStreamModels:remove_model(model_idx)",model_idx)
+function xStreamModels:with_models(model_name,member_idx,callback)
+  TRACE("xStreamModels:with_models(model_name,member_idx,callback)",model_name,member_idx,callback)
 
-  table.remove(self.models,model_idx)
-  self.models_observable:remove(model_idx)
-
-  if (self.selected_model_index == model_idx) then
-    --print("remove_model - selected_model_index = 0")
-    self.selected_model_index = 0
+  for k,v in ipairs(self.models) do
+    if member_idx then 
+      if (v.model.name == model_name) and (v.member_index == member_idx) then
+        callback(k,v.model)
+      end
+    else
+      if (v.model.name == model_name) then
+        callback(k,v.model)
+      end
+    end
   end
 
+end 
+
+---------------------------------------------------------------------------------------------------
+-- Remove previously registed model 
+-- @param model_name (string)
+-- @param [member_idx] (number) leave out to remove all instances 
+
+function xStreamModels:remove(model_name,member_idx)
+  TRACE("xStreamModels:remove(model_name,member_idx)",model_name,member_idx)
+
+  assert(type(model_name)=="string")
+
+  self:with_models(model_name,member_idx,function(idx,model)
+    model:detach_from_song()
+    table.remove(self.models,idx)
+    self.models_changed_observable:bang()  
+  end)
+
 end
 
 ---------------------------------------------------------------------------------------------------
--- Delete from disk, the remove from list
+-- Retrieve model index from available_models
+-- @return number or nil
+
+function xStreamModels:get_model_index_by_name(model_name)
+  TRACE("xStreamModels:get_model_index_by_name(model_name)",model_name)
+
+  return table.find(self.available_models,model_name)
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- @return bool, true when model was renamed 
+-- @return string, error message when failed
+
+function xStreamModels:rename_model(old_name,new_name)
+  TRACE("xStreamModels:rename_model(old_name,new_name)",old_name,new_name)
+
+  local model_idx = self:get_model_index_by_name(old_name)
+  if not model_idx then 
+    return false, "Could not retrieve model"
+  end 
+
+  self:with_models(old_name,nil,function(idx,model)
+    --print("with_models - idx,model ",idx,model)
+    --print("about to rename ",model.name)
+    model:rename(new_name)
+  end)
+
+  self.available_models[model_idx] = new_name 
+  self.available_models_changed_observable:bang()
+
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Delete from disk, unregister and remove from available models
 -- @param model_idx (int)
 -- @return bool, true when we deleted the file
 -- @return string, error message when failed
 
-function xStreamModels:delete_model(model_idx)
-  TRACE("xStreamModels:delete_model(model_idx)",model_idx)
+function xStreamModels:delete_model(model_name)
+  TRACE("xStreamModels:delete_model(model_name)",model_name)
 
-  local model = self.models[model_idx]
-  --print("model",model,"model.file_path",model.file_path)
-  local success,err = os.remove(model.file_path)
+  local model_idx = self:get_model_index_by_name(model_name)
+  local model_fpath = xStreamModel.get_normalized_file_path(model_name)
+  --print(">>> model_idx",model_idx)
+  --print(">>> model_fpath",model_fpath)
+
+  local success,err = os.remove(model_fpath)
   if not success then
     return false,err
   end
 
-  self:remove_model(model_idx)
+  -- leaving out member index to target all instances
+  self:remove(model_name)
+
+  table.remove(self.available_models,model_idx)
+  self.available_models_changed_observable:bang()
 
   return true
 
 end
 
 ---------------------------------------------------------------------------------------------------
--- Load all models (files ending with .lua) in a given folder
--- log potential errors during parsing
+-- Index all models (files ending with .lua) in a given folder
 
-function xStreamModels:load_all(str_path)
-  TRACE("xStreamModels:load_all(str_path)",str_path)
+function xStreamModels:scan_for_available(str_path)
+  TRACE("xStreamModels:scan_for_available(str_path)",str_path)
 
   assert(type(str_path)=="string","Expected string as argument")
 
@@ -294,17 +256,10 @@ function xStreamModels:load_all(str_path)
 
   local log_msg = ""
   for _, filename in pairs(os.filenames(str_path, "*.lua")) do
-    local model = xStreamModel(self.process)
-    local model_file_path = str_path..filename
-    local passed,err = model:load_definition(model_file_path)
-    --print("passed,err",passed,err)
-    if not passed then
-      log_msg = log_msg .. err .. "\n"
-    else
-      --print("Add model",filename)
-      self:add(model)
-    end
+    local name_no_ext = cFilesystem.file_strip_extension(filename,"lua")
+    table.insert(self.available_models,name_no_ext)
   end
+  self.available_models_changed_observable:bang()
 
   if (log_msg ~= "") then
      LOG(log_msg.."*** WARNING One or more models failed to load during startup")
@@ -313,27 +268,13 @@ function xStreamModels:load_all(str_path)
 end
 
 ---------------------------------------------------------------------------------------------------
--- @param no_asterisk (bool), don't add asterisk to modified models
+-- Retrieve available_models as a regular table 
 -- return table<string>
 
-function xStreamModels:get_names(no_asterisk)
-  TRACE("xStreamModels:get_names(no_asterisk)",no_asterisk)
+function xStreamModels:get_available()
+  TRACE("xStreamModels:get_available()")
 
-  local t = {}
-  for _,v in ipairs(self.models) do
-    if no_asterisk then
-      table.insert(t,v.name)
-    else
-      table.insert(t,v.modified and v.name.."*" or v.name)
-    end
-  end
-  return t
+  return table.copy(self.available_models)
 
 end
 
----------------------------------------------------------------------------------------------------
--- [Static] Get path to models root 
-
-function xStreamModels.get_models_path()
-  return xStreamUserData.USERDATA_ROOT .. xStreamUserData.MODELS_FOLDER
-end

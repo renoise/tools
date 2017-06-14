@@ -69,7 +69,7 @@ function xStreamUIFavorites:__init(xstream,midi_prefix)
 
   self.favorite_views = {}
 
-  self.scheduled_favorite_index = nil
+  self._scheduled_favorite_index = nil
 
   self.selected_index = property(self.get_selected_index,self.set_selected_index)
   self.selected_index_observable = renoise.Document.ObservableNumber(0)
@@ -212,15 +212,6 @@ function xStreamUIFavorites:build()
 
   ---------------------------------------------------------
 
-  self.xstream.process.scheduled_favorite_index_observable:add_notifier(function()    
-    TRACE("xStreamUIFavorites - scheduled_favorite_index_observable fired...",self.xstream.scheduled_favorite_index)
-    if (self.xstream.process.scheduled_favorite_index == 0) then
-      self:update_button(self.scheduled_favorite_index)
-      self.scheduled_favorite_index = nil
-    else
-      self.scheduled_favorite_index = self.xstream.process.scheduled_favorite_index
-    end
-  end)
 
   local build_handler = function()
     TRACE("xStreamUIFavorites - favorites/grid_rows/grid_columns_observable fired...")
@@ -607,6 +598,21 @@ end
 
 --------------------------------------------------------------------------------
 
+function xStreamUIFavorites:update_scheduled_button()
+  TRACE("xStreamUIFavorites:update_scheduled_button()")
+
+  local member = self.xstream.stack:get_selected_member()
+  if (member.scheduled_favorite_index == 0) then
+    self:update_button(self._scheduled_favorite_index)
+    self._scheduled_favorite_index = nil
+  else
+    self._scheduled_favorite_index = member.scheduled_favorite_index
+  end
+
+end
+
+--------------------------------------------------------------------------------
+
 function xStreamUIFavorites:update_buttons()
   TRACE("xStreamUIFavorites:update_buttons()")
 
@@ -644,7 +650,7 @@ function xStreamUIFavorites:update_button(idx,brightness)
   if not (type(favorite)=="xStreamFavorite") then
     str_txt = xStreamUIFavorites.EMPTY_FAVORITE_TXT
   else
-    local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
+    local model_idx,model = self.xstream.models:get_by_name(favorite.model_name)
     if not model then
       -- Display as 
       -- N/A: Model Name (soft wrapped)
@@ -654,7 +660,7 @@ function xStreamUIFavorites:update_button(idx,brightness)
       color = cColor.value_to_color_table(model.color)
       local str_launch_mode = xStreamFavorites.LAUNCH_MODES_SHORT[favorite.launch_mode]
       local is_automatic = (favorite.launch_mode == xStreamFavorites.LAUNCH_MODE.AUTOMATIC)
-      local is_default_bank = (favorite.preset_bank_name == xStreamPresets.DEFAULT_BANK_NAME)
+      local is_default_bank = (favorite.preset_bank_name == xStreamModelPresets.DEFAULT_BANK_NAME)
       local preset_bank_index = model:get_preset_bank_by_name(favorite.preset_bank_name)
       local preset_bank = model.preset_banks[preset_bank_index]
       if favorite.preset_index and (favorite.preset_index ~= 0) then
@@ -816,7 +822,7 @@ function xStreamUIFavorites:update_edit_model_selector()
     return
   end
 
-  local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
+  local model_idx,model = self.xstream.models:get_by_name(favorite.model_name)
   if not model then
     model_status.text = xStreamUIFavorites.EDIT_RACK_WARNING
     model_status.tooltip = "This model is not available"
@@ -852,7 +858,7 @@ function xStreamUIFavorites:update_bank_selector()
     bank_selector.active = true
   end
 
-  local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
+  local model_idx,model = self.xstream.models:get_by_name(favorite.model_name)
   if not model then
     bank_status.text = xStreamUIFavorites.EDIT_RACK_WARNING
     bank_selector.items = {xStreamUIFavorites.NO_PRESET_BANKS_AVAILABLE}
@@ -891,7 +897,7 @@ function xStreamUIFavorites:update_preset_selector()
 
     preset_selector.active = true
 
-    local model_idx,model = self.xstream.process.models:get_by_name(favorite.model_name)
+    local model_idx,model = self.xstream.models:get_by_name(favorite.model_name)
 
     if model then
       local preset_bank_index = model:get_preset_bank_by_name(favorite.preset_bank_name)
@@ -1000,7 +1006,7 @@ end
 -- @param model_names (table)
 
 function xStreamUIFavorites:update_model_selector(model_names)
-  TRACE("xStreamUIFavorites:update_model_selector(model_names)",model_names)
+  --TRACE("xStreamUIFavorites:update_model_selector(model_names)",model_names)
 
   assert(type(model_names)=="table","Expected 'model_names' to be a table")
 
@@ -1036,9 +1042,9 @@ function xStreamUIFavorites:on_idle()
 
   local blink_state = (math.floor(os.clock()*4)%2 == 0) 
   if (blink_state ~= self.blink_state) then
-    if self.scheduled_favorite_index then
+    if self._scheduled_favorite_index then
       self:update_button(
-        self.scheduled_favorite_index, (not blink_state) and xStreamUI.DIMMED_AMOUNT)
+        self._scheduled_favorite_index, (not blink_state) and xStreamUI.DIMMED_AMOUNT)
     end
   end
 
@@ -1063,7 +1069,7 @@ function xStreamUIFavorites:on_idle()
 
   for k,v in ripairs(self.flash_favorite_buttons) do
     if (v.clocked < os.clock() - xStreamUI.FLASH_TIME) then
-      if (v.index ~= self.scheduled_favorite_index) then
+      if (v.index ~= self._scheduled_favorite_index) then
         self:update_button(v.index)
       end
       table.remove(self.flash_favorite_buttons,k)

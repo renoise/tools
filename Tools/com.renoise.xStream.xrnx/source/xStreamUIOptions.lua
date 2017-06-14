@@ -34,6 +34,7 @@ function xStreamUIOptions:__init(xstream)
   self.title = "xStream options"
 
   self.update_model_requested = false
+  self.update_input_tab_requested = false
 
   self.selected_tab_index = 1
 
@@ -47,17 +48,6 @@ function xStreamUIOptions:__init(xstream)
     self:on_idle()
   end)
 
-  self.xstream.process.models.selected_model_index_observable:add_notifier(function()    
-    if self.prefs.launch_selected_model.value then
-      if (self.xstream.selected_model_index > 0) then
-        --local model = self.xstream.models[self.xstream.selected_model_index]
-        local model = self.xstream.selected_model
-        self.prefs.launch_model.value = model.file_path
-      end
-      self.update_model_requested = true
-    end
-  end)
-
   self.prefs.launch_selected_model:add_notifier(function()
     self.update_model_requested = true
   end)
@@ -69,21 +59,14 @@ function xStreamUIOptions:__init(xstream)
     end 
   end)
 
-  self.xstream.process.models.models_observable:add_notifier(function()
+  self.xstream.models.models_changed_observable:add_notifier(function()
     self.update_model_requested = true
   end)
 
   self:show_tab(self.selected_tab_index)
 
-  -- prevent device editing while inactive
-  self.xstream.process.active_observable:add_notifier(function()
-    if self.vtable_midi_inputs then
-      self.vtable_midi_inputs.active = self.xstream.process.active
-    end
-    if self.vtable_midi_outputs then
-      self.vtable_midi_outputs.active = self.xstream.process.active
-    end
-  end)
+  self:attach_to_process()
+
 
 end
 
@@ -92,6 +75,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:show()
+  TRACE("xStreamUIOptions:show()")
 
   vDialog.show(self)
 
@@ -133,6 +117,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:create_dialog()
+  TRACE("xStreamUIOptions:create_dialog()")
 
   local STREAMING_TXT_W = 120
   local STREAMING_CTRL_W = 100
@@ -174,7 +159,15 @@ function xStreamUIOptions:create_dialog()
             bind = self.prefs.autostart,
           },
           vb:text{
-            text="Autostart tool when Renoise launches",
+            text="Auto-start tool when Renoise launches",
+          },
+        },
+        vb:row{
+          vb:checkbox{
+            bind = self.prefs.persist_state,
+          },
+          vb:text{
+            text="Auto-save/recall stacked models",
           },
         },
         vb:row{
@@ -188,9 +181,9 @@ function xStreamUIOptions:create_dialog()
             items = {xStreamUI.NO_MODEL_SELECTED},
             id = "xStreamImplLaunchModel",
             notifier = function(idx)
-              local model = self.xstream.process.models.models[idx-1]
-              if model then
-                self.prefs.launch_model.value = model.file_path
+              local model_name = self.xstream.models.available_models[idx-1]
+              if model_name then
+                self.prefs.launch_model.value = model_name
               end
             end,
           },
@@ -598,7 +591,7 @@ function xStreamUIOptions:create_dialog()
   vb.views["xStreamPrefsMidiOutputRack"]:add_child(vtable.view)
   self.vtable_midi_outputs = vtable
 
-  self:update_input_tab()
+  self.update_input_tab_requested = true
 
   return vb_tab_content
 
@@ -607,6 +600,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:is_same_userfolder(old_path,new_path)
+  TRACE("xStreamUIOptions:is_same_userfolder(old_path,new_path)",old_path,new_path)
 
   if (old_path == new_path) then 
     local msg = "This is already the active userdata folder. "
@@ -622,6 +616,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:do_userfolder_migration(old_path,new_path)
+  TRACE("xStreamUIOptions:do_userfolder_migration(old_path,new_path)",old_path,new_path)
 
   if not self:is_same_userfolder(old_path,new_path) then
     local msg = "Do you want to migrate/copy existing userdata to the selected folder?"
@@ -638,6 +633,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:do_userfolder_reset()
+  TRACE("xStreamUIOptions:do_userfolder_reset()")
 
   local old_path = self.prefs.user_folder.value
   local new_path = xStreamUserData.DEFAULT_ROOT
@@ -661,7 +657,7 @@ function xStreamUIOptions:update_model_selector(model_names)
 
   local model_popup = self.vb.views["xStreamImplLaunchModel"]
   if model_popup then
-    local model_names = self.xstream.process.models:get_names(true)
+    local model_names = self.xstream.models:get_available(true)
     table.insert(model_names,1,xStreamUI.NO_MODEL_SELECTED)
     model_popup.items = model_names
     model_popup.active = not self.prefs.launch_selected_model.value
@@ -669,7 +665,7 @@ function xStreamUIOptions:update_model_selector(model_names)
       model_popup.value = (self.xstream.selected_model_index == 0) 
         and 1 or self.xstream.selected_model_index+1
     else
-      for k,v in ipairs(self.xstream.process.models.models) do
+      for k,v in ipairs(self.xstream.models.models) do
         if (v.file_path == self.xstream.launch_model) then
           model_popup.value = k
         end
@@ -682,13 +678,18 @@ end
 
 function xStreamUIOptions:on_idle()
   
+  if not self:dialog_is_visible() then
+    return
+  end
+  
   if self.update_model_requested then
     self.update_model_requested = false
     self:update_model_selector()
   end
 
-  if not self:dialog_is_visible() then
-    return
+  if self.update_input_tab_requested then 
+    self.update_input_tab_requested = false
+    self:update_input_tab()
   end
 
   -- display some stats 
@@ -700,8 +701,8 @@ function xStreamUIOptions:on_idle()
       ..("\nLines Travelled: %d"):format(xs.xpos.xinc)
       ..("\nWriteahead: %d lines"):format(xStreamPos.determine_writeahead())
       ..("\nSelected model: %s"):format(xs.selected_model and xs.selected_model.name or "N/A") 
-      ..("\nStream active: %s"):format(cLib.serialize_object(xs.process.active))
-      ..("\nStream muted: %s"):format(cLib.serialize_object(xs.process.muted)) 
+      ..("\nStream active: %s"):format(cLib.serialize_object(xs.stack.active))
+      ..("\nStream muted: %s"):format(cLib.serialize_object(xs.stack.muted)) 
     view.text = str_stat
   end
 
@@ -710,6 +711,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:update_input_tab()
+  TRACE("xStreamUIOptions:update_input_tab()")
 
   -- midi inputs --
 
@@ -753,6 +755,7 @@ end
 -- @return int or nil
 
 function xStreamUIOptions:match_in_list(list,value)
+  TRACE("xStreamUIOptions:match_in_list(list,value)",list,value)
 
   local matched = false
   for k = 1, #list do
@@ -760,6 +763,29 @@ function xStreamUIOptions:match_in_list(list,value)
       return k
     end
   end
+
+end
+
+----------------------------------------------------------------------------------------------------
+
+function xStreamUIOptions:attach_to_process()
+  TRACE("xStreamUIOptions:attach_to_process()")
+
+  local process = self.xstream.stack
+
+  process.selected_model_index_observable:add_notifier(function()    
+    if self.prefs.launch_selected_model.value then
+      if (process.selected_model_index > 0) then
+        local model = process.selected_model
+        if model then
+          self.prefs.launch_model.value = model.name
+        else
+          LOG("*** Could not resolve model ")
+        end
+      end
+      self.update_model_requested = true
+    end
+  end)
 
 end
 

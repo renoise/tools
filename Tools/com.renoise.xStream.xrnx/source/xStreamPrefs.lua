@@ -38,6 +38,7 @@ function xStreamPrefs:__init()
   self:add_property("launch_model", renoise.Document.ObservableString(""))
   self:add_property("launch_selected_model", renoise.Document.ObservableBoolean(true))
   self:add_property("user_folder", renoise.Document.ObservableString(xStreamUserData.USERDATA_ROOT))
+  self:add_property("persist_state", renoise.Document.ObservableBoolean(true))
 
   -- input
   self:add_property("midi_multibyte_enabled", renoise.Document.ObservableBoolean(false))
@@ -59,6 +60,7 @@ function xStreamPrefs:__init()
   self:add_property("model_browser_visible", renoise.Document.ObservableBoolean(false))
   self:add_property("presets_visible", renoise.Document.ObservableBoolean(false))
   self:add_property("show_editor", renoise.Document.ObservableBoolean(true))
+  self:add_property("show_stack", renoise.Document.ObservableBoolean(false))
   self:add_property("tool_options_visible", renoise.Document.ObservableBoolean(false))
   self:add_property("compact_mode", renoise.Document.ObservableBoolean(false))
 

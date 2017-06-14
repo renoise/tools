@@ -100,7 +100,7 @@ end
 function xStreamFavorites:toggle_item(model_name,preset_index,preset_bank_name)
   TRACE("xStreamFavorites:toggle_item(model_name,preset_index,preset_bank_name)",model_name,preset_index,preset_bank_name)
 
-  preset_bank_name = preset_bank_name or xStreamPresets.DEFAULT_BANK_NAME
+  preset_bank_name = preset_bank_name or xStreamModelPresets.DEFAULT_BANK_NAME
 
   -- off
   local matched = false
@@ -364,7 +364,7 @@ function xStreamFavorites:get(model_name,preset_index,preset_bank_name)
   end
 
   if not preset_bank_name then
-    preset_bank_name = xStreamPresets.DEFAULT_BANK_NAME
+    preset_bank_name = xStreamModelPresets.DEFAULT_BANK_NAME
   end
 
   for k,v in ipairs(self.items) do
@@ -491,7 +491,7 @@ function xStreamFavorites:launch(idx)
     return
   end
 
-  local _,model = self.xstream.process.models:get_by_name(favorite.model_name)
+  local _,model = self.xstream.models:get_by_name(favorite.model_name)
   if not model then
     status_msg = ("*** xStream #%.2d [Trigger] - could not launch, model not found"):format(idx)
     --print("status_msg",status_msg)
@@ -502,7 +502,7 @@ function xStreamFavorites:launch(idx)
 
   if (favorite.launch_mode == xStreamFavorites.LAUNCH_MODE.AUTOMATIC) then
     if rns.transport.playing then
-      self.xstream.process:schedule_item(favorite.model_name,favorite.preset_index,favorite.preset_bank_name)
+      self.xstream.stack:schedule_item(favorite.model_name,favorite.preset_index,favorite.preset_bank_name)
       status_msg = "*** xStream #%.2d [Trigger] - %s %.2d:%s - Automatic → STREAMING"
     else
       if not rns.selection_in_pattern then
@@ -515,8 +515,8 @@ function xStreamFavorites:launch(idx)
     end
   elseif (favorite.launch_mode == xStreamFavorites.LAUNCH_MODE.STREAMING) then
     if rns.transport.playing then
-      self.xstream.process.scheduling = (favorite.schedule_mode) and favorite.schedule_mode or self.xstream.process.scheduling
-      self.xstream.process:schedule_item(favorite.model_name,favorite.preset_index,favorite.preset_bank_name)
+      self.xstream.stack.scheduling = (favorite.schedule_mode) and favorite.schedule_mode or self.xstream.stack.scheduling
+      self.xstream.stack:schedule_item(favorite.model_name,favorite.preset_index,favorite.preset_bank_name)
       status_msg = "*** xStream #%.2d [Trigger] - %s %.2d:%s → STREAMING"
     else
       self.xstream:focus_to_favorite(idx)
@@ -540,11 +540,11 @@ function xStreamFavorites:launch(idx)
   if apply_to_track then
     apply_to_track = true
     self.xstream:focus_to_favorite(idx)
-    self.xstream.process:fill_track()
+    self.xstream.stack:fill_track()
   elseif apply_to_selection then
     self.xstream:focus_to_favorite(idx)
     local locally = (favorite.apply_mode == xStreamFavorites.APPLY_MODE.SELECTION)
-    self.xstream.process:fill_selection(locally)
+    self.xstream.stack:fill_selection(locally)
   end
 
 end
