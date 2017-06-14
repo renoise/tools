@@ -1,34 +1,38 @@
 --[[===============================================================================================
-xStreamPresets
+xStreamModelPresets
 ===============================================================================================]]--
 --[[
 
-	This class manages argument-presets 
+This class manages argument-presets 
 
-  The default bank is always the first one, and saved along with the model
-  when exporting the model definition. Other banks are automatically 
-  maintained as external XML files, residing in the ./presets subfolder
+The default bank is always the first one, and saved along with the model
+when exporting the model definition. Other banks are automatically 
+maintained as external XML files, residing in the ./presets subfolder
 
-  ## Integration with favorites
+## Integration with favorites
 
-  If/when you favorite a preset, external banks will feature the bank name 
-  as part of the favorite entry. When loading the favorites, such entries
-  will automatically load the given preset bank.
-
+If/when you favorite a preset, external banks will feature the bank name 
+as part of the favorite entry. When loading the favorites, such entries
+will automatically load the given preset bank.
 
 ]]
 
 --=================================================================================================
 
-class 'xStreamPresets'
+class 'xStreamModelPresets'
 
-xStreamPresets.DEFAULT_BANK_NAME = "Default bank"
+xStreamModelPresets.DEFAULT_BANK_NAME = "Default bank"
+xStreamModelPresets.FOLDER_NAME = "presets/"
+xStreamModelPresets.ROOT_PATH = renoise.tool().bundle_path .. xStreamModelPresets.FOLDER_NAME
 
 ---------------------------------------------------------------------------------------------------
 
-function xStreamPresets:__init(model)
+function xStreamModelPresets:__init(model)
+  TRACE("xStreamModelPresets:__init(model)",model)
 
-  -- xStreamPresets, owner
+  assert(type(model)=="xStreamModel")
+
+  -- xStreamModelPresets, owner
   self.model = model
 
   -- table<table>, the actual entries
@@ -39,7 +43,7 @@ function xStreamPresets:__init(model)
 
   -- string, name of this preset bank (needs to be valid filename)
 	self.name = property(self.get_name,self.set_name)
-  self.name_observable = renoise.Document.ObservableString(xStreamPresets.DEFAULT_BANK_NAME)
+  self.name_observable = renoise.Document.ObservableString(xStreamModelPresets.DEFAULT_BANK_NAME)
 
   -- DocumentObservableBang, fires when eligible for export
   self.modified = property(self.get_modified,self.set_modified)
@@ -61,34 +65,34 @@ end
 -- Get/set methods
 ---------------------------------------------------------------------------------------------------
 
-function xStreamPresets:get_name()
+function xStreamModelPresets:get_name()
   return self.name_observable.value
 end
 
-function xStreamPresets:set_name(val)
+function xStreamModelPresets:set_name(val)
   self.name_observable.value = val
 end
 
 ---------------------------------------------------------------------------------------------------
 
-function xStreamPresets:get_modified()
+function xStreamModelPresets:get_modified()
   return self._modified
 end
 
-function xStreamPresets:set_modified()
+function xStreamModelPresets:set_modified()
   self._modified = true
   self.modified_observable:bang()
 end
 
 ---------------------------------------------------------------------------------------------------
 
-function xStreamPresets:get_selected_preset_index()
-  TRACE("xStreamPresets:get_selected_preset_index()")
+function xStreamModelPresets:get_selected_preset_index()
+  TRACE("xStreamModelPresets:get_selected_preset_index()")
   return self.selected_preset_index_observable.value
 end
 
-function xStreamPresets:set_selected_preset_index(idx)
-  TRACE("xStreamPresets:set_selected_preset_index(idx)",idx)
+function xStreamModelPresets:set_selected_preset_index(idx)
+  TRACE("xStreamModelPresets:set_selected_preset_index(idx)",idx)
 
   if (#self.presets == 0) then
     idx = 0
@@ -107,8 +111,8 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Select the previous preset 
 
-function xStreamPresets:select_previous()
-  TRACE("xStreamPresets:select_previous()")
+function xStreamModelPresets:select_previous()
+  TRACE("xStreamModelPresets:select_previous()")
   local idx = self.selected_preset_index
   if (idx > 1) then 
     self.selected_preset_index = idx - 1
@@ -118,8 +122,8 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Select the next preset 
 
-function xStreamPresets:select_next()
-  TRACE("xStreamPresets:select_next()")
+function xStreamModelPresets:select_next()
+  TRACE("xStreamModelPresets:select_next()")
   local idx = self.selected_preset_index
   if (idx < #self.presets) then 
     self.selected_preset_index = idx + 1
@@ -132,8 +136,8 @@ end
 -- @return bool, true when preset was added
 -- @return err, message when preset was not added 
 
-function xStreamPresets:add_preset(t)
-  TRACE("xStreamPresets:add_preset(t)",t)
+function xStreamModelPresets:add_preset(t)
+  TRACE("xStreamModelPresets:add_preset(t)",t)
 
   if (#self.model.args.args == 0) then
     return false, "Please add one or more arguments to the model - otherwise, a preset have no values to represent!"
@@ -171,8 +175,8 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function xStreamPresets:remove_all_presets()
-  TRACE("xStreamPresets:remove_all_presets()")
+function xStreamModelPresets:remove_all_presets()
+  TRACE("xStreamModelPresets:remove_all_presets()")
 
   for k,v in ripairs(self.presets) do
     self:remove_preset(k)
@@ -183,8 +187,8 @@ end
 ---------------------------------------------------------------------------------------------------
 -- @param idx (int)
 
-function xStreamPresets:remove_preset(idx)
-  TRACE("xStreamPresets:remove_preset(idx)",idx)
+function xStreamModelPresets:remove_preset(idx)
+  TRACE("xStreamModelPresets:remove_preset(idx)",idx)
 
   local preset = self.presets[idx]
   if not preset then
@@ -196,8 +200,7 @@ function xStreamPresets:remove_preset(idx)
   table.remove(self.preset_names,idx)
   self.presets_observable:remove(idx)
 
-  -- remove from favorites
-  self.model.process.xstream.favorites:remove_by_name_index(self.model.name,idx,self.name)
+  -- TODO remove from favorites
 
   if (idx == self.selected_preset_index) then
     self.selected_preset_index = 0
@@ -211,7 +214,7 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function xStreamPresets:swap_index(idx1,idx2)
+function xStreamModelPresets:swap_index(idx1,idx2)
 
   if (idx1 < 1 and idx2 > 1) then
     return false,"Cannot swap entries - either index is too low"
@@ -236,8 +239,8 @@ end
 -- update a preset with the current set of values
 -- @param idx (int)
 
-function xStreamPresets:update_preset(idx)
-  TRACE("xStreamPresets:update_preset(idx)",idx)
+function xStreamModelPresets:update_preset(idx)
+  TRACE("xStreamModelPresets:update_preset(idx)",idx)
 
   local preset = self.presets[idx]
   if not preset then
@@ -258,8 +261,8 @@ end
 -- get preset "display name" - for use in lists, selectors etc.
 -- @return string 
 
-function xStreamPresets:get_preset_display_name(idx)
-  TRACE("xStreamPresets:get_preset_display_name(idx)",idx)
+function xStreamModelPresets:get_preset_display_name(idx)
+  TRACE("xStreamModelPresets:get_preset_display_name(idx)",idx)
 
   if (idx < 1) or (idx > #self.presets) then
     return ""
@@ -280,8 +283,8 @@ end
 -- @return bool, true when all arguments were recalled
 -- @return string, message listing failed arguments or nil if no preset
 
-function xStreamPresets:recall_preset(idx)
-  TRACE("xStreamPresets:recall_preset(idx)",idx)
+function xStreamModelPresets:recall_preset(idx)
+  TRACE("xStreamModelPresets:recall_preset(idx)",idx)
 
   local preset = self.presets[idx]
   if not preset then
@@ -319,8 +322,8 @@ end
 -- @return bool, true when succeeded or user aborted, false when failed
 -- @return string, error message when failed
 
-function xStreamPresets:rename(str_name)
-  TRACE("xStreamPresets:rename(str_name)",str_name)
+function xStreamModelPresets:rename(str_name)
+  TRACE("xStreamModelPresets:rename(str_name)",str_name)
 
   if not str_name then
     str_name = vPrompt.prompt_for_string(self.name,
@@ -335,7 +338,7 @@ function xStreamPresets:rename(str_name)
   end
 
   local str_from = self:path_to_xml(self.name)
-  if (self.name ~= xStreamPresets.DEFAULT_BANK_NAME) then
+  if (self.name ~= xStreamModelPresets.DEFAULT_BANK_NAME) then
     local str_to = self:path_to_xml(str_name)
     if io.exists(str_from) then
       if io.exists(str_to) then
@@ -352,15 +355,18 @@ function xStreamPresets:rename(str_name)
   self.name = str_name
 
   -- favorites might be affected
+  -- TODO handle this through name_observable
+  --[[
   local preset_bank_name = self.model.selected_preset_bank.name
-  local favorites = self.model.process.xstream.favorites:get_by_preset_bank(old_name)
+  local favorites = self.model.stack.xstream.favorites:get_by_preset_bank(old_name)
   if (#favorites > 0) then
     for k,v in ipairs(favorites) do
-      self.model.process.xstream.favorites.items[v].preset_bank_name = self.name
+      self.model.stack.xstream.favorites.items[v].preset_bank_name = self.name
     end
-    self.model.process.xstream.favorites.update_buttons_requested = true
-    self.model.process.xstream.favorites.modified = true
+    self.model.stack.xstream.favorites.update_buttons_requested = true
+    self.model.stack.xstream.favorites.modified = true
   end
+  ]]
 
   return true
 
@@ -372,8 +378,8 @@ end
 -- @return bool, true when successful
 -- @return string, error message when failed
 
-function xStreamPresets:rename_preset(idx,str_name)
-  TRACE("xStreamPresets:rename_preset(idx,str_name)",idx,str_name)
+function xStreamModelPresets:rename_preset(idx,str_name)
+  TRACE("xStreamModelPresets:rename_preset(idx,str_name)",idx,str_name)
 
   if (idx < 1) or (idx > #self.presets) then
     return false,"Can't rename preset - index is too low or high"
@@ -399,8 +405,8 @@ end
 ---------------------------------------------------------------------------------------------------
 -- Import presets from xml file, preserving existing presets
 
-function xStreamPresets:merge()
-  TRACE("xStreamPresets:merge()")
+function xStreamModelPresets:merge()
+  TRACE("xStreamModelPresets:merge()")
 
   local clear_existing = false
   self:import(clear_existing)
@@ -414,8 +420,8 @@ end
 -- @return bool, true when import was (at least partially) successful
 -- @return string, error message when failed
 
-function xStreamPresets:import(file_path,clear_existing)
-  TRACE("xStreamPresets:import(file_path,clear_existing)",file_path,clear_existing)
+function xStreamModelPresets:import(file_path,clear_existing)
+  TRACE("xStreamModelPresets:import(file_path,clear_existing)",file_path,clear_existing)
 
   if not file_path then
     local ext = {"*.xml"}
@@ -456,7 +462,7 @@ function xStreamPresets:import(file_path,clear_existing)
   local arg_names = self.model.args:get_names()
 
   for _,v in ipairs(rslt.kids) do
-    if (v.name == "xStreamPresets") then
+    if (v.name == "xStreamModelPresets") then
       for __,v2 in ipairs(v.kids) do
         if (v2.name == "Presets") then
           for k3,v3 in ipairs(v2.kids) do
@@ -468,7 +474,7 @@ function xStreamPresets:import(file_path,clear_existing)
                   -- name is a special entry
                   preset_name = v4.kids[1] and v4.kids[1].value
                 else
-                  local arg_name = xStreamPresets.parse_xml_arg_name(v4.name)
+                  local arg_name = xStreamModelPresets.parse_xml_arg_name(v4.name)
                   local arg_index = table.find(arg_names,arg_name)
                   if arg_index then
                     -- make sure we cast to right type, 
@@ -504,17 +510,17 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function xStreamPresets:path_to_xml(str_name)
-  TRACE("xStreamPresets:path_to_xml(str_name)",str_name)
+function xStreamModelPresets:path_to_xml(str_name)
+  TRACE("xStreamModelPresets:path_to_xml(str_name)",str_name)
   assert(type(str_name)=="string")
   return ("%s/%s.xml"):format(self:path_to_xml_folder(),str_name)
 end
 
 ---------------------------------------------------------------------------------------------------
 
-function xStreamPresets:path_to_xml_folder()
-  TRACE("xStreamPresets:path_to_xml_folder()")
-  local preset_bank_folder = xStreamPresets.get_preset_bank_path()
+function xStreamModelPresets:path_to_xml_folder()
+  TRACE("xStreamModelPresets:path_to_xml_folder()")
+  local preset_bank_folder = xStreamModelPresets.ROOT_PATH
   return ("%s%s"):format(preset_bank_folder,self.model.name)
 end
 
@@ -523,10 +529,10 @@ end
 -- @return bool, true when saved
 -- @return string, error message when failed
 
-function xStreamPresets:save()
-  TRACE("xStreamPresets:save()")
+function xStreamModelPresets:save()
+  TRACE("xStreamModelPresets:save()")
 
-  if (self.name == xStreamPresets.DEFAULT_BANK_NAME) then
+  if (self.name == xStreamModelPresets.DEFAULT_BANK_NAME) then
     return
   end
 
@@ -546,8 +552,8 @@ end
 -- @param file_path (string), provide a name (prompt user if not defined)
 -- @return bool, true when export was successful
 
-function xStreamPresets:export(file_path)
-  TRACE("xStreamPresets:export(file_path)",file_path)
+function xStreamModelPresets:export(file_path)
+  TRACE("xStreamModelPresets:export(file_path)",file_path)
 
   if not file_path then
     local ext = "xml"
@@ -559,7 +565,7 @@ function xStreamPresets:export(file_path)
   end
 
   -- create XML document
-  local doc = renoise.Document.create("xStreamPresets"){}
+  local doc = renoise.Document.create("xStreamModelPresets"){}
 	local doc_list = renoise.Document.DocumentList()
   doc:add_property("Presets",doc_list)
 
@@ -567,7 +573,7 @@ function xStreamPresets:export(file_path)
     local node = renoise.Document.create("xStreamPreset"){}
     for k2,v2 in pairs(v) do
       --print("add_property",k2,v2)
-      local safe_name = xStreamPresets.store_xml_arg_name(k2)
+      local safe_name = xStreamModelPresets.store_xml_arg_name(k2)
       --print(">>> safe_name",safe_name)
       node:add_property(safe_name,v2)
     end
@@ -588,9 +594,9 @@ end
 ---------------------------------------------------------------------------------------------------
 -- remove our xml file 
 
-function xStreamPresets:remove_xml()
+function xStreamModelPresets:remove_xml()
 
-  if (self.name == xStreamPresets.DEFAULT_BANK_NAME) then
+  if (self.name == xStreamModelPresets.DEFAULT_BANK_NAME) then
     return
   end
 
@@ -608,21 +614,14 @@ end
 -- [Static] Function to make argument names safe for XML 
 -- (they can contain dots)
 
-function xStreamPresets.store_xml_arg_name(val)
+function xStreamModelPresets.store_xml_arg_name(val)
   return val:gsub("%p","_dot_")
 end
 
 ---------------------------------------------------------------------------------------------------
 -- [Static] Function to load 'safe' argument name from XML
 
-function xStreamPresets.parse_xml_arg_name(val)
+function xStreamModelPresets.parse_xml_arg_name(val)
   return val:gsub("_dot_",".")
-end
-
----------------------------------------------------------------------------------------------------
--- [Static] Retrieve root path for preset banks 
-
-function xStreamPresets.get_preset_bank_path()
-  return xStreamUserData.USERDATA_ROOT..xStreamUserData.PRESET_BANK_FOLDER
 end
 
