@@ -698,8 +698,7 @@ end
 -- @param start_running (bool)
 
 function Browser:set_configuration(configuration, start_running)
-  TRACE("Browser:set_configuration:", configuration and 
-    configuration.name or "None")
+  TRACE("Browser:set_configuration:", configuration and configuration.name or "None")
   
   start_running = start_running or false
 

@@ -235,7 +235,15 @@ function Options:_create_content_view()
             renoise.app():open_url("http://forum.renoise.com/index.php?/topic/27886-duplex-beta-versions/")
           end,
         },
-
+        --[[
+        vb:button{
+          text = "Strip TRACE statements",
+          width = 170,
+          notifier = function()
+            cDebug.remove_trace_statements()
+          end
+        }
+        ]]
       },
     },
     

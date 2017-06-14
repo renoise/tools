@@ -202,8 +202,7 @@ end
 -- @param no_multibyte (bool) temporarily disable multibyte support
 
 function MidiDevice:midi_callback(message,no_multibyte)
-  TRACE(("MidiDevice: %s received MIDI %X %X %X"):format(
-    self.port_in, message[1], message[2], message[3]))
+  TRACE(("MidiDevice: %s received MIDI %X %X %X"):format(self.port_in, message[1], message[2], message[3]))
 
   if (self.dump_midi) then
     LOG(("MidiDevice: %s received MIDI %X %X %X"):format(

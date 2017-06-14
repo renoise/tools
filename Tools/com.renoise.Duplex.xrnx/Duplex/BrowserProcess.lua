@@ -104,8 +104,7 @@ end
 -- @return (bool) true when instantiated
 
 function BrowserProcess:instantiate(configuration)
-  TRACE("BrowserProcess:instantiate:", 
-    configuration.device.display_name, configuration.name)
+  TRACE("BrowserProcess:instantiate:", configuration.device.display_name, configuration.name)
 
   assert(not self:instantiated(), "Internal Error. Please report: " .. 
     "browser process already instantiated")
