@@ -25,11 +25,14 @@ _vlibroot = 'source/vLib/classes/'
 _xlibroot = "source/xLib/classes/"
 
 require (_clibroot.."cLib")
+require (_clibroot.."cTable")
 require (_clibroot.."cDebug")
 require (_clibroot.."cFilesystem")
+
 require (_vlibroot..'vLib')
 require (_vlibroot..'vDialog')
 require (_vlibroot..'vTable')
+
 require (_xlibroot.."xLib")
 
 require ('source/TestRunner')
