@@ -48,6 +48,7 @@ xLine.EMPTY_XLINE = {
 -- @param args (table)
 
 function xLine:__init(args)
+  TRACE("xLine:__init(args)",args)
 
   --- xLinePattern
   self.pattern_line = nil
@@ -55,16 +56,18 @@ function xLine:__init(args)
   --- xLineAutomation
   self.automation = nil
 
-  -- initialize -----------------------
+  --== initialize ==--
+
+  -- de-reference if using table as initializer
+  if (type(args) == "table") then
+    args = table.rcopy(args)
+  end
 
   if args.note_columns or args.effect_columns then
     self.pattern_line = xLinePattern(args.note_columns,args.effect_columns)
-
     -- these tables are used 'outside' the class to access/set values,
-    -- will need a call to apply_descriptor() afterwards
     self.note_columns = self.pattern_line.note_columns
     self.effect_columns = self.pattern_line.effect_columns
-
   end
 
   if args.automation then
@@ -72,7 +75,6 @@ function xLine:__init(args)
   end
 
 end
-
 
 ---------------------------------------------------------------------------------------------------
 -- [Class] Write to pattern/phrase/automation - all defined types of data 
@@ -82,7 +84,6 @@ end
 -- @param phrase (renoise.InstrumentPhrase)
 -- @param ptrack_auto (renoise.PatternTrackAutomation)
 -- @param patt_num_lines (int), length of the playpos pattern 
--- @param tokens (table<string>)
 -- @param include_hidden (bool)
 -- @param expand_columns (bool)
 -- @param clear_undefined (bool)
@@ -94,7 +95,6 @@ function xLine:do_write(
   phrase,
   ptrack_auto,
   patt_num_lines,
-  tokens,
   include_hidden,
   expand_columns,
   clear_undefined)
@@ -108,7 +108,6 @@ function xLine:do_write(
       line,
       track_idx,
       phrase,
-      tokens,
       include_hidden,
       expand_columns,
       clear_undefined)
@@ -140,6 +139,7 @@ end
 -- @param phrase (renoise.InstrumentPhrase)
 
 function xLine:clear_pattern_line(sequence,line,track_idx,phrase)
+  TRACE("xLine:clear_pattern_line(sequence,line,track_idx,phrase)",sequence,line,track_idx,phrase)
 
   local rns_line
   if track_idx then
@@ -272,6 +272,7 @@ end
 -- @return rns_ptrack (renoise.PatternTrack)
 
 function xLine.resolve_pattern_line(sequence,line,track_idx)
+  TRACE("xLine.resolve_pattern_line(sequence,line,track_idx)",sequence,line,track_idx)
 
   local patt_idx = rns.sequencer:pattern(sequence)
   local rns_patt = rns.patterns[patt_idx] 
@@ -293,6 +294,7 @@ end
 -- @return rns_line (renoise.PatternLine)
 
 function xLine.resolve_phrase_line(line,phrase)
+  TRACE("xLine.resolve_phrase_line(line,phrase)",line,phrase)
 
   assert(phrase,"The specied phrase does not exist")
   local rns_line = phrase:line(line)
@@ -301,30 +303,6 @@ function xLine.resolve_phrase_line(line,phrase)
   return rns_line
 
 end
-
----------------------------------------------------------------------------------------------------
--- [Static] Convert descriptors into class instances (empty tables are left as-is)
--- @param xline (xLine or table) will create xLine instance if table 
--- @return xLine 
-
-function xLine.apply_descriptor(xline)
-  --TRACE("xLine.apply_descriptor(xline)",xline)
-
-  if (type(xline) == "table") then -- entire xline redefined
-    xline = xLine(xline)
-  elseif (type(xline) == "xLine") then -- check xLine content
-    xline.pattern_line:apply_descriptor(xline.note_columns,xline.effect_columns)
-    if not table.is_empty(xline.automation) then
-      xline.automation = xLineAutomation(xline.automation)
-    end
-  else
-    error("Unexpected xline type")
-  end
-
-  return xline
-
-end
-
 
 ---------------------------------------------------------------------------------------------------
 
