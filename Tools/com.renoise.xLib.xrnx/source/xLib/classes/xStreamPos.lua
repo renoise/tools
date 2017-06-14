@@ -85,7 +85,7 @@ function xStreamPos:__init()
 end
 
 ---------------------------------------------------------------------------------------------------
--- Start streaming - preferable to calling renoise transport.start()
+-- [Class] Start streaming - preferable to calling renoise transport.start()
 -- @param playmode, renoise.Transport.PLAYMODE
 
 function xStreamPos:start(playmode)
@@ -93,17 +93,17 @@ function xStreamPos:start(playmode)
 
   self:reset()
 
+  rns.transport:start(playmode)
+
   if self.callback_fn then
     self.callback_fn()
   end
 
-  rns.transport:start(playmode)
-
 end
 
 ---------------------------------------------------------------------------------------------------
--- [Class] Initialize position - called as a last resort, when current position is deemed 
--- unreliable due to 'crazy navigation' 
+-- [Class] Initialize position - 
+-- also called when current position is deemed unreliable due to 'crazy navigation' 
 
 function xStreamPos:reset()
   TRACE("xStreamPos:reset()")
