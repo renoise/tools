@@ -11,9 +11,18 @@ vPrompt
 class 'vPrompt'
 
 
+vPrompt.generic_button_width = 80
+vPrompt.generic_button_height = 26
+
+
 --- "pseudo-modal" dialogs are registered here 
--- to avoid launching multiple times
+-- {
+--    dialog
+--    view
+--    vb 
+-- }
 vPrompt.color_prompt = {}
+vPrompt.custom_prompt = {}
 
 -------------------------------------------------------------------------------
 -- @param str_default (string), suggested value
@@ -246,3 +255,51 @@ function vPrompt.prompt_for_color(callback,active_color,palette)
 
 end
 
+-------------------------------------------------------------------------------
+-- pseudo-modal custom prompt: will re-use an already opened dialog
+-- @param callback (function)
+-- @param content_view (renoise.Views.Rack)
+
+function vPrompt.show_custom_prompt(title,content_view,key_handler)
+  TRACE("vPrompt.show_custom_prompt(title,content_view,key_handler)",title,content_view,key_handler)
+
+  --print(">>> content_view",type(content_view))
+  assert(type(title)=="string")
+  assert(type(content_view)=="Rack")
+
+  local vb = renoise.ViewBuilder()
+
+  -- check for existing dialog and re-use
+  if vPrompt.custom_prompt.dialog and vPrompt.custom_prompt.dialog.visible then  
+    vb = vPrompt.custom_prompt.vb
+    vPrompt.custom_prompt.dialog:show()
+  else
+    if vPrompt.custom_prompt.dialog and vPrompt.custom_prompt.view then
+      vb = vPrompt.custom_prompt.vb
+      content_view = vPrompt.custom_prompt.view
+    else
+      content_view = content_view
+    end
+
+    vPrompt.custom_prompt = {
+      dialog = renoise.app():show_custom_dialog(
+        title, content_view, key_handler),
+      view = content_view,
+      vb = vb,
+    }
+  end
+  
+end
+
+-------------------------------------------------------------------------------
+-- close an already opened dialog
+
+function vPrompt.close_custom_prompt()
+  TRACE("vPrompt.close_custom_prompt()")
+
+  -- check for existing dialog and re-use
+  if vPrompt.custom_prompt.dialog and vPrompt.custom_prompt.dialog.visible then  
+    vPrompt.custom_prompt.dialog:close()
+  end
+
+end
