@@ -461,7 +461,7 @@ function xCleanerUI:build_mod_table()
   end
 
   local modset_select = function(cell,checked)
-    print(">>> modset_select",cell,checked)
+    --print(">>> modset_select",cell,checked)
     local item,item_index = cell.owner.dataprovider:get(cell.item_id)
     item.checked = checked
     self:update_tab_labels()

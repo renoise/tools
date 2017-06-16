@@ -647,16 +647,16 @@ function xCleaner:collect_sample_info(instr,item,sample_idx)
           or xSample.SAMPLE_CHANNELS.LEFT -- aka MONO
         local threshold = options.detect_silence_threshold.value
         local leading,trailing = xSample.detect_leading_trailing_silence(buffer,channels,threshold)
-        print(">>> leading,trailing PRE",sample.name,leading,trailing)        
+        --print(">>> leading,trailing PRE",sample.name,leading,trailing)        
         if leading or trailing then 
           -- if loop is enabled, only include the trailing part 
           -- after the loop end point 
           if (sample.loop_mode ~= renoise.Sample.LOOP_MODE_OFF) then
             leading = 0
-            print(">>> loop detected - leading set to start")
+            --print(">>> loop detected - leading set to start")
             if trailing and (sample.loop_end > trailing) then
               trailing = sample.loop_end
-              print(">>> moved trailing silence to match loop end point",trailing)
+              --print(">>> moved trailing silence to match loop end point",trailing)
             end
           end
           -- raise as issue when leading/trailing is not equal         
@@ -670,7 +670,7 @@ function xCleaner:collect_sample_info(instr,item,sample_idx)
           if item.leading_silence or item.trailing_silence then 
             item.summary = ("%sISSUE: Has leading or trailing silence\n"):format(item.summary)
           end 
-          print(">>> leading,trailing POST",sample.name,item.leading_silence,item.trailing_silence)
+          --print(">>> leading,trailing POST",sample.name,item.leading_silence,item.trailing_silence)
         end
       end 
     end
