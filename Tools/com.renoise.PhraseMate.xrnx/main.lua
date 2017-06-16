@@ -29,6 +29,7 @@ _trace_filters = nil
 
 _clibroot = 'source/cLib/classes/'
 require (_clibroot..'cLib')
+require (_clibroot..'cTable')
 require (_clibroot..'cDebug')
 require (_clibroot..'cDocument')
 require (_clibroot.."cConfig")
@@ -235,14 +236,14 @@ renoise.tool():add_keybinding {
   end
 }
 
--- output : apply_phrase_to_selection
+-- output : apply_to_selection
 
 renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Write Phrase to Selection In Pattern [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
       start()
-      cLib.invoke_task_logged(PhraseMate.apply_phrase_to_selection,phrasemate)
+      cLib.invoke_task_logged(PhraseMate.apply_to_selection,phrasemate)
     end
   end
 }
@@ -250,7 +251,7 @@ renoise.tool():add_menu_entry {
   name = "--- Pattern Editor:PhraseMate:Write Phrase to Selection In Pattern",
   invoke = function()
     start() 
-    cLib.invoke_task(PhraseMate.apply_phrase_to_selection,phrasemate)
+    cLib.invoke_task(PhraseMate.apply_to_selection,phrasemate)
   end
 } 
 renoise.tool():add_keybinding {
@@ -258,19 +259,19 @@ renoise.tool():add_keybinding {
   invoke = function(repeated)
     if not repeated then 
       start()
-      cLib.invoke_task(PhraseMate.apply_phrase_to_selection,phrasemate)
+      cLib.invoke_task(PhraseMate.apply_to_selection,phrasemate)
     end
   end
 }
 
--- output : apply_phrase_to_track
+-- output : apply_to_track
 
 renoise.tool():add_midi_mapping{
   name = "Tools:PhraseMate:Write Phrase to Track [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
       start()
-      cLib.invoke_task_logged(PhraseMate.apply_phrase_to_track,phrasemate)
+      cLib.invoke_task_logged(PhraseMate.apply_to_track,phrasemate)
     end
   end
 }
@@ -278,7 +279,7 @@ renoise.tool():add_menu_entry {
   name = "Pattern Editor:PhraseMate:Write Phrase to Track",
   invoke = function()
     start() 
-    cLib.invoke_task(PhraseMate.apply_phrase_to_track,phrasemate)
+    cLib.invoke_task(PhraseMate.apply_to_track,phrasemate)
   end
 } 
 
@@ -287,7 +288,7 @@ renoise.tool():add_keybinding {
   invoke = function(repeated)
     if not repeated then
       start() 
-      cLib.invoke_task(PhraseMate.apply_phrase_to_track,phrasemate)
+      cLib.invoke_task(PhraseMate.apply_to_track,phrasemate)
     end
   end
 }
