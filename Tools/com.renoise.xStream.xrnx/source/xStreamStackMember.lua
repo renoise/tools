@@ -330,6 +330,11 @@ function xStreamStackMember:_attach_to_model()
     self.xstream.stack_export_requested = true
   end 
 
+  local rebuffer_notifier = function()
+    print("xStreamStackMember:_attach_to_model - rebuffer_notifier fired...")
+    self.xstream.stack:rebuffer_linked_members(self.member_index)
+  end 
+
   local compiled_notifier = function()
     TRACE("xStreamStackMember:_attach_to_model - compiled_notifier fired...")
     self.buffer.callback = self.model.sandbox.callback
@@ -359,6 +364,7 @@ function xStreamStackMember:_attach_to_model()
   end
 
   cObservable.attach(self.model.name_observable,name_notifier)
+  cObservable.attach(self.model.on_rebuffer,rebuffer_notifier)
   cObservable.attach(self.model.compiled_observable,compiled_notifier)
   cObservable.attach(self.model.selected_preset_bank_index_observable,preset_bank_notifier)
   preset_bank_notifier()
@@ -417,11 +423,12 @@ function xStreamStackMember:apply_to_range(from_line,to_line,pos,xinc)
 
 end
 
+
 ---------------------------------------------------------------------------------------------------
 -- Produce output - can be called periodically
 
 function xStreamStackMember:write_buffer_output()
-  TRACE("xStreamStackMember:write_buffer_output()")
+  TRACE("xStreamStackMember:write_buffer_output()",self.model_name)
   if self.buffer.active then
     local xpos = self.xstream.xpos
     if self._scheduled_xinc then
