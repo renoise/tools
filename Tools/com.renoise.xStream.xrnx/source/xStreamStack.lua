@@ -254,7 +254,6 @@ function xStreamStack:set_selected_model_index(idx)
 
   -- already the active model 
   if (idx == self.selected_model_index_observable.value) then
-    LOG("*** xStreamStack - setting model index was ignored (already active):",idx)
     return
   end
   
@@ -408,7 +407,7 @@ end
 -- @param arg (number/boolean/string/table) value to pass 
 
 function xStreamStack:handle_event(event_key,arg)
-  TRACE("xStreamStack:handle_event(event_key,arg)",event_key,arg)
+  print("xStreamStack:handle_event(event_key,arg)",event_key,arg)
 
   for member in self:members_iter() do
     member.model:handle_event(event_key,arg)
@@ -416,6 +415,24 @@ function xStreamStack:handle_event(event_key,arg)
 
 end
 
+---------------------------------------------------------------------------------------------------
+-- Make members that are linked to the specified one produce new output 
+
+function xStreamStack:rebuffer_linked_members(member_idx)
+  print("xStreamStack:rebuffer_linked_members(member_idx)",member_idx)
+
+  local look_for = xStreamStackMember.INPUT.MODEL_A-member_idx+1
+  for member in self:members_iter() do
+    print("member.input",member.input,look_for)
+    if (member.input == look_for) 
+      and (member.index > member_idx)
+    then 
+      print(">>> found member that was linked to provided one",member.member_index,member.model_name)
+      member.model.buffer:immediate_output()
+    end
+  end
+
+end
 
 ---------------------------------------------------------------------------------------------------
 -- Final step - after loading, before starting 
@@ -736,10 +753,10 @@ function xStreamStack:resolve_input(member_idx)
       -- set track to member track-index and return its buffer
       member.buffer.read_track_index = target_member.buffer.read_track_index
       member.buffer.input_callback = function(xinc)
-        print(">>> buffer.input_callback - xinc",xinc)
+        --print(">>> buffer.input_callback - xinc",xinc)
         --print(">>> buffer.input_callback - target_member.member_index",target_member.member_index)
         local xline = target_member.buffer:get_output(xinc)
-        print(">>> buffer.input_callback - xline",xline)
+        --print(">>> buffer.input_callback - xline",xline)
         return xLine(xline) 
       end
     end
