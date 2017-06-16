@@ -553,8 +553,8 @@ end
 -- (used with time-critical situations, such as un/muting or changing arguments that are 
 -- set to 'impacts_buffer=true')
 
-function xStreamBuffer:immediate_output()
-  TRACE("xStreamBuffer:immediate_output()")
+function xStreamBuffer:immediate_output(get_input)
+  TRACE("xStreamBuffer:immediate_output(get_input)",get_input)
 
   self:wipe_futures()
 
@@ -563,7 +563,14 @@ function xStreamBuffer:immediate_output()
   local pos = xSongPos.create(self.xpos.pos)
   xSongPos.increase_by_lines(1,pos)
 
-  TRACE("*** xStreamBuffer:immediate output")
+  -- request this model to fetch fresh content before output 
+  -- (e.g. when an earlier/stacked model has just finished it's own output)
+  if get_input then 
+    self.input_buffer = {}
+    self:_obtain_and_store_input(xinc,pos)
+  end 
+
+  --print("*** xStreamBuffer:immediate output")
   self:write_output(pos,xinc,1,live_mode)
 
 end
@@ -701,7 +708,7 @@ function xStreamBuffer:write_line(xline,pos,phrase,patt_num_lines)
     end
   end
 
-  TRACE(">>> xStreamBuffer:write_line - self.write_track_index",self.write_track_index,"pos",pos,xline)
+  --print(">>> xStreamBuffer:write_line - self.write_track_index",self.write_track_index,"pos",pos,xline)
 
   local success,err = pcall(function()
     xline:do_write(

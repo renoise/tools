@@ -425,10 +425,10 @@ function xStreamStack:rebuffer_linked_members(member_idx)
   for member in self:members_iter() do
     print("member.input",member.input,look_for)
     if (member.input == look_for) 
-      and (member.index > member_idx)
+      and (member.member_index > member_idx)
     then 
       print(">>> found member that was linked to provided one",member.member_index,member.model_name)
-      member.model.buffer:immediate_output()
+      member.model.buffer:immediate_output(true)
     end
   end
 
