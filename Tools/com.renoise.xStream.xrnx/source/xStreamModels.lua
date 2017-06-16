@@ -203,12 +203,16 @@ function xStreamModels:rename_model(old_name,new_name)
   self:with_models(old_name,nil,function(idx,model)
     --print("with_models - idx,model ",idx,model)
     --print("about to rename ",model.name)
-    model:rename(new_name)
+    local success,err = model:rename(new_name)
+    if not success then 
+      return false,err
+    end 
   end)
 
   self.available_models[model_idx] = new_name 
   self.available_models_changed_observable:bang()
 
+  return true 
 
 end
 
