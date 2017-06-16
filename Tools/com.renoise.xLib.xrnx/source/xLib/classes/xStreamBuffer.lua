@@ -284,21 +284,6 @@ function xStreamBuffer:_obtain_and_store_input(xinc,pos)
 end
 
 ---------------------------------------------------------------------------------------------------
--- Wipe all data behind our current position. 
--- Invoked as new output is produced, and the old content becomes obsolete
-
-function xStreamBuffer:_wipe_past()
-  TRACE("xStreamBuffer:_wipe_past()")
-  local prev_xinc = self.xpos.xinc - 1
-  for i = prev_xinc,self.lowest_xinc,-1 do
-    self.output_buffer[i] = nil
-    self.input_buffer[i] = nil
-    self.scheduled[i] = nil
-  end
-  self.lowest_xinc = prev_xinc
-end
-
----------------------------------------------------------------------------------------------------
 -- Forget all output ahead of our current write-position - 
 -- call when fresh content needs to be produced in the next cycle
 
@@ -358,7 +343,7 @@ end
 -- @param xinc (number), the buffer position 
 
 function xStreamBuffer:schedule_line(xline,xinc)
-  TRACE("xStreamBuffer:schedule_line(xline)")
+  TRACE("xStreamBuffer:schedule_line(xline,xinc)",xline,xinc)
 
   self.scheduled[xinc] = xLine(xline)
 
@@ -455,7 +440,6 @@ function xStreamBuffer:unmute()
   TRACE("xStreamBuffer:unmute()")
 
   self.mute_xinc = nil
-  self:wipe_futures()
   self:immediate_output()
 
 end
@@ -478,7 +462,7 @@ function xStreamBuffer:_create_content(xinc,pos)
     success,err = pcall(function()
       xline = self.callback(xinc,xline,pos)
     end)
-    TRACE(">>> xStreamBuffer - processed callback - xinc,pos,success,err",xinc,pos,success,err)
+    --print(">>> xStreamBuffer - processed callback - xinc,pos,success,err",xinc,pos,success,err)
     if not success and err then
       LOG("*** Error: please review the callback function - "..err)
       self.callback_status_observable.value = err
@@ -502,10 +486,10 @@ function xStreamBuffer:_create_content(xinc,pos)
     end
   end 
 
--- add the resulting line to our output buffer, 
--- it will be used again in later iterations...
   if xline then 
-    self:_set_output(xinc,xline)
+    self.output_buffer[xinc] = xline
+    self.highest_xinc = math.max(xinc,self.highest_xinc)
+    TRACE(">>> xStreamBuffer._create_content - self.highest_xinc",self.highest_xinc)
   end
 
 end
@@ -535,24 +519,6 @@ function xStreamBuffer:get_output(xinc)
   end
 
   return xline
-
-end
-
----------------------------------------------------------------------------------------------------
--- Set output for a given position
--- @param xinc (int)
--- @param xline (xLine or table) the content to insert 
-
-function xStreamBuffer:_set_output(xinc,xline)
-  TRACE("xStreamBuffer:_set_output(xinc,xline)",xinc,xline)
-
-  assert(type(xinc)=="number")
-  assert(type(xline)=="xLine",("Expected xLine, got %s"):format(type(xline)))
-
-  self.output_buffer[xinc] = xline
-  self.highest_xinc = math.max(xinc,self.highest_xinc)
-
-  TRACE(">>> xStreamBuffer._set_output - self.highest_xinc",self.highest_xinc)
 
 end
 
@@ -590,6 +556,8 @@ end
 function xStreamBuffer:immediate_output()
   TRACE("xStreamBuffer:immediate_output()")
 
+  self:wipe_futures()
+
   local live_mode = rns.transport.playing
   local xinc = self:_get_immediate_xinc() 
   local pos = xSongPos.create(self.xpos.pos)
@@ -625,9 +593,18 @@ function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
   end
 
   -- purge old content from buffers
-  self:_wipe_past()
+  local prev_xinc = self.xpos.xinc - 1
+  for i = prev_xinc,self.lowest_xinc,-1 do
+    self.output_buffer[i] = nil
+    self.input_buffer[i] = nil
+    self.scheduled[i] = nil
+    --print(">>> purged buffers @",i)
+  end
+  self.lowest_xinc = prev_xinc
 
   -- generate new content as needed
+  -- remember the highest_xinc, so we can write the right amount of lines 
+  local tmp_highest_xinc = self.highest_xinc
   local tmp_pos = xSongPos.create(pos) 
   for i = 0,num_lines do
     if not self.output_buffer[i+xinc] 
@@ -638,10 +615,19 @@ function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
     xSongPos.increase_by_lines(1,tmp_pos)
   end
 
-  local tmp_pos = rns.transport.edit_pos
+  local tmp_pos = rns.transport.playback_pos
+  tmp_pos.line = pos.line
   local patt_num_lines = xPatternSequencer.get_number_of_lines(pos.sequence)
 
-  for i = 0,num_lines-1 do
+  -- write the newly generated content 
+  -- (skip lines that were already written)
+  local start_idx = math.min(num_lines-1,num_lines-(self.highest_xinc-tmp_highest_xinc))
+  --print("xStreamBuffer:write_output - start_idx",start_idx,"num_lines",num_lines,"tmp_highest_xinc",tmp_highest_xinc,"self.highest_xinc",self.highest_xinc)
+  -- start index can be a negative number when streaming just started 
+  -- (due to self.highest_xinc being assigned a value of -1)
+  start_idx = math.max(0,start_idx)
+
+  for i = start_idx,num_lines-1 do
 
     tmp_pos.sequence = pos.sequence
     tmp_pos.line = pos.line+i
@@ -655,9 +641,11 @@ function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
 
     local cached_line = tmp_pos.line
     if rns.transport.loop_block_enabled then
+      -- TODO don't perform this check when playback is beyond the block-loop
+      -- (we have manully jumped past the loop point, using e.g. page-down)
       tmp_pos.line = xSongPos.enforce_block_boundary("increase",pos,i)
       if (cached_line ~= tmp_pos.line) then 
-        TRACE("xStreamBuffer:write_output - exceeded a block-loop")
+        --print("xStreamBuffer:write_output - exceeded a block-loop",cached_line,tmp_pos.line)
         self:write_output(tmp_pos,xinc+i,num_lines-i)
         return
       end
@@ -667,13 +655,9 @@ function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
     if (self.write_track_index == 0) then 
       LOG("*** skip output - no write_track_index has been defined")
     else
-      if live_mode and (tmp_pos.line+1 == rns.transport.playback_pos.line) then
-        -- skip current line when live streaming
-      else
-        local phrase = nil
-        local xline = self:get_output(xinc+i)      
-        self:write_line(xline,tmp_pos,phrase,patt_num_lines)
-      end    
+      local phrase = nil
+      local xline = self:get_output(xinc+i)      
+      self:write_line(xline,tmp_pos,phrase,patt_num_lines)
     end
 
   end
