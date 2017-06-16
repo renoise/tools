@@ -36,7 +36,7 @@ callback = [[
 if table.is_empty(data.column_states) then --
   data.column_states = data.get_column_states()
 end
-local track = rns.tracks[track_index]
+local track = rns.tracks[read_track_index]
 local col_count = track.visible_note_columns
 for k = 1,col_count do
   local mute_state = track:column_is_muted(k)
