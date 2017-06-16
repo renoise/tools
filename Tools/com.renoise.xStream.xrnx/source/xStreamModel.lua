@@ -109,6 +109,9 @@ function xStreamModel:__init(buffer,voicemgr,output_message)
   --- table<function>
   self.events_compiled = {}
 
+  --- ObservableBang, to produce new output when model is part of a stack
+  self.on_rebuffer = renoise.Document.ObservableBang()
+
   --- configure sandbox
   -- (add basic variables and a few utility methods)
 
@@ -527,6 +530,7 @@ function xStreamModel:handle_event(event_key,arg)
       LOG("*** Error while handling event",err)
     end
   end
+
 end
 
 
@@ -1224,6 +1228,8 @@ end
 
 ----------------------------------------------------------------------------------------------------
 -- NB: Invoke via xStreamModels:rename_model() to rename other instances too 
+-- @return bool, true when renamed 
+-- @return string, error message when failed 
 
 function xStreamModel:rename(str_name)
   TRACE("xStreamModel:rename(str_name)",str_name)
