@@ -92,7 +92,7 @@ return function(trigger_type)
   then
     return 0
   else
-    local xplaypos = xplaypos()  
+    local xplaypos = xpos.playpos()  
     return (args.schedule == xStreamPos.SCHEDULE.LINE)
       and math.floor(xplaypos.fraction * 255) or 0
   end
@@ -104,7 +104,7 @@ events = {
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
 ------------------------------------------------------------------------------
 print(">>> events.voice.triggered",xvoicemgr.triggered_index)
-local voice = xvoices[arg.index]
+local voice = xvoicemgr.voices[arg.index]
 local pos,scheduled_xinc = xpos:get_scheduled_pos(args.schedule)
 xbuffer:schedule_note_column({
   note_value = voice.values[1],
@@ -123,7 +123,7 @@ xvoicemgr.voice_limit = args.voice_limit]],
 -- @param arg (table) {type = xVoiceManager.EVENTS, index = int}
 ------------------------------------------------------------------------------
 print(">>> events.voice.released",xvoicemgr.released_index)
-local voice = xvoices[arg.index]
+local voice = xvoicemgr.voices[arg.index]
 local pos,scheduled_xinc = xpos:get_scheduled_pos(args.schedule)
 local xline = xbuffer:read_from_pattern(scheduled_xinc)
 local note_col = xline.note_columns[voice.note_column_index]
@@ -138,7 +138,7 @@ end]],
 -- respond to MIDI 'pitch_bend' messages
 -- @param xmsg, the xMidiMessage we have received
 ------------------------------------------------------------------------------
-local visible_note_columns = rns.tracks[track_index].visible_note_columns
+local visible_note_columns = rns.tracks[read_track_index].visible_note_columns
 xbuffer:schedule_note_column({
   instrument_value = rns.selected_instrument_index,
   panning_string = "M1",
@@ -159,7 +159,7 @@ callback = [[
 -- do that, check out the 'VoiceMgr - Realtime' model instead. 
 -------------------------------------------------------------------------------
 if args.clear_active then
-  for k,v in ipairs(xvoices) do
+  for k,v in ipairs(xvoicemgr.voices) do
     xline.note_columns[v.note_column_index] = {}
   end
 end
