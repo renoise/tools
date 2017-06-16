@@ -227,12 +227,10 @@ function xStreamArg:notifier()
   local arg_name = "args."..self.full_name
   self.model:handle_event(arg_name,self.value)
 
-  -- finally, when/if the argument requires the 
-  -- buffer to be recalculated 
   if self.properties.impacts_buffer then
-    self.model.buffer:wipe_futures()
     self.model.buffer:immediate_output()
-
+    -- do the same for other (stacked) models   
+    self.model.on_rebuffer:bang()
   end
 
 end
