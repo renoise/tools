@@ -63,10 +63,7 @@ function xStream:__init(...)
 
   --- bool, when true we automatically save favorites/presets
   self.autosave_enabled = false
-
-  --- bool, when we started streaming from position later than 
-  self.await_refresh_fn = false 
-  
+ 
   --- xStreamPos
   self.xpos = xStreamPos()  
 
@@ -248,20 +245,12 @@ function xStream:__init(...)
 
   self.xpos:reset()
 
-  self.xpos.callback_fn = function()
-    --print(">>> xpos.callback_fn")
-    if self.await_refresh_fn then 
-      self.await_refresh_fn = false
-      LOG("*** skip output - awaiting refresh_fn...")
-      return 
-    end 
+  self.xpos.callback_observable:add_notifier(function()
     self.stack:output()
-  end
-  self.xpos.refresh_fn = function()
-    --print(">>> xpos.refresh_fn")
-    self.await_refresh_fn = false
+  end)
+  self.xpos.refresh_observable:add_notifier(function()
     self.stack:refresh()
-  end
+  end)
 
 end
 
@@ -341,15 +330,6 @@ function xStream:start_and_play()
   if not rns.transport.playing then
     rns.transport.playback_pos = rns.transport.edit_pos
   end
-
-  -- decide if refresh_fn will be invoked as a result
-  -- (when not first line) and wait with output until then...
-  if not rns.transport.playing and 
-    (rns.transport.edit_pos.line > 1)
-  then 
-    --print(">>> await refresh_fn")
-    --self.await_refresh_fn = true
-  end 
   
   self:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
 end
@@ -428,7 +408,7 @@ function xStream:save_state()
     -- save current stack
     local rslt = self.stack:get_definition()
     rslt.version = xStream.API_VERSION
-    rprint(rslt)
+    --rprint(rslt)
     xSongSettings.store(rslt,xStream.TOKEN_START,xStream.TOKEN_END)
   
   end
