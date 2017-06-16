@@ -216,8 +216,8 @@ function xStreamUIModelToolbar:build()
             if not str_name then
               return 
             end
-            local success,err = self.xstream.models:rename_model(model.name,str_name)          
-            if not success then
+            local success,err = self.xstream.models:rename_model(model.name,str_name)
+            if not success and err then
               renoise.app():show_warning(err)
             else
               --self:update()
