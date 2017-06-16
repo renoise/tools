@@ -17,17 +17,16 @@ options = {
 callback = [[
 -------------------------------------------------------------------------------
 -- Scheduling output: 
--- Most models are generating/transforming pattern data on a line-by-line
--- basis, but it's possible to schedule things to happen at a later time too,
--- by using the schedule_line/note_column/effect_column() methods.
+-- Demonstrates how you can schedule content to appear a later point in time
+-- In the example, all notes and effects are scheduled on the first line 
 -------------------------------------------------------------------------------
 
--- scheduling happens on the very first line - this model doesn't 
--- do anything beyond that point ... 
+if (xinc == 0) then -- do the scheduling on first line
 
-if (xinc == 0) then  
-
-  -- schedule three note columns for line #00:
+  -- schedule three note columns
+  -- NB: these will not be output during realtime streaming, as the 
+  -- playback is then already at this line. Pressing "TRK" will however
+  -- write them to the pattern (offline processing)
   
   xbuffer:schedule_line({
     note_columns = {
