@@ -29,6 +29,19 @@ arguments = {
       ["description"] = "",
       ["linked"] = false,
       ["locked"] = false,
+      ["name"] = "phrase_idx",
+      ["properties"] = {
+          ["display_as"] = "integer",
+          ["max"] = 100,
+          ["min"] = 0,
+          ["zero_based"] = false,
+      },
+      ["value"] = 0,
+  },
+  {
+      ["description"] = "",
+      ["linked"] = false,
+      ["locked"] = false,
       ["name"] = "lock_to",
       ["properties"] = {
           ["display_as"] = "popup",
@@ -56,7 +69,7 @@ arguments = {
           ["min"] = 1,
           ["zero_based"] = false,
       },
-      ["value"] = 2,
+      ["value"] = 1,
   },
   {
       ["description"] = "",
@@ -71,7 +84,7 @@ arguments = {
           ["min"] = 0,
           ["zero_based"] = false,
       },
-      ["value"] = 2,
+      ["value"] = 0,
   },
 },
 presets = {
@@ -268,6 +281,10 @@ if (#xvoices > 0) then
       volume_value = voice.values[2],
       instrument_value = rns.selected_instrument_index-1,
     }
+    xline.effect_columns[1] = {
+      number_string = "0Z",
+      amount_value = args.phrase_idx,
+    }
   else
     -- clear inbetween output
     xline.note_columns[note_col_idx] = {}
@@ -275,6 +292,5 @@ if (#xvoices > 0) then
 else
   xline.note_columns[note_col_idx] = {}
 end
-
 ]],
 }
