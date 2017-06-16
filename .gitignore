@@ -60,3 +60,5 @@ Tools/com.renoise.vLibBoilerPlate.xrnx/source/vLib
 Tools/com.renoise.xLib.xrnx/source/vLib
 Tools/com.renoise.cLib.xrnx/source/vLib
 Tools/com.renoise.vLib.xrnx/source/cLib
+Tools/com.renoise.ScaleMate.xrnx/source/cLib
+Tools/com.renoise.ScaleMate.xrnx/source/xLib
