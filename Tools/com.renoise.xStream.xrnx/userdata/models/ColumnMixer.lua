@@ -14,7 +14,7 @@ arguments = {
           ["max"] = 128,
           ["min"] = 0,
       },
-      ["value"] = 61.116893203883,
+      ["value"] = 95.843417475728,
   },
   {
       ["description"] = "Use Renoise key-velocity to control overall volume",
@@ -36,7 +36,7 @@ arguments = {
           ["max"] = 128,
           ["min"] = 0,
       },
-      ["value"] = 80.627572815534,
+      ["value"] = 44.032,
   },
   {
       ["description"] = "",
@@ -48,7 +48,7 @@ arguments = {
           ["max"] = 128,
           ["min"] = 0,
       },
-      ["value"] = 99.06454368932,
+      ["value"] = 108.44458252427,
   },
   {
       ["description"] = "",
@@ -60,7 +60,7 @@ arguments = {
           ["max"] = 128,
           ["min"] = 0,
       },
-      ["value"] = 113.40551456311,
+      ["value"] = 34.62213592233,
   },
   {
       ["description"] = "",
@@ -469,12 +469,18 @@ return function(col_idx,target)
   local col = xline.note_columns[col_idx]
   local val = args[target]["col"..col_idx]
   
-  -- apply the keyboard velocity to overall volume? 
-  if (target == "volume")
-    and args.misc.use_key_velocity 
-    and rns.transport.keyboard_velocity_enabled 
-  then 
-    val = val * rns.transport.keyboard_velocity / 0x80
+  if (target == "volume") then
+
+    -- apply the keyboard velocity to overall volume? 
+    if args.misc.use_key_velocity 
+      and rns.transport.keyboard_velocity_enabled 
+    then 
+      val = val * rns.transport.keyboard_velocity / 0x80
+    end
+    
+    -- apply to the existing volume amount
+    val = val * col.volume_value / 0x80
+    
   end
   
   local recent = data.recent[target][col_idx]
@@ -548,6 +554,7 @@ for col_idx = 1,track.visible_note_columns do
   data.do_output(col_idx,"volume") 
   data.do_output(col_idx,"panning") 
 end
+
 
 ]],
 }
