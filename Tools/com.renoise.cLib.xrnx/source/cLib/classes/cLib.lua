@@ -93,7 +93,7 @@ function cLib.pack(...)
   local t = {}
   for i = 1,n do
     local v = select(i, ...)
-    t[i] = (v == nil) and NIL or v
+    t[i] = (v == nil) and {} or v
   end
   return t
 end
