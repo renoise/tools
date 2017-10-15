@@ -83,19 +83,11 @@ function cLib.unpack_args(...)
 end
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Vararg packer with `nil` placeholder
--- See http://lua-users.org/wiki/VarargTheSecondClassCitizen
 -- @param ... (vararg)
--- @return table 
+-- @return table or nil
 
-function cLib.pack(...)
-  local n = select('#', ...)
-  local t = {}
-  for i = 1,n do
-    local v = select(i, ...)
-    t[i] = (v == nil) and {} or v
-  end
-  return t
+function cLib.pack_args(...)
+  return (#arg >0) and arg or nil
 end
 
 ---------------------------------------------------------------------------------------------------
