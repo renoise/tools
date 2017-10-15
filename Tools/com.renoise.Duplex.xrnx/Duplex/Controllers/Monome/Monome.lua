@@ -22,7 +22,7 @@ function Monome:__init(name, message_stream,prefix,address,port_in,port_out)
   self.MONOMESERIAL = 2
 
   -- set the default communication protocol 
-  self.comm_protocol = self.MONOMESERIAL
+  self.comm_protocol = self.SERIALOSC
 
   -- enable/disable device tilt sensors on startup
   -- e.g. {true,false,true} to enable 1st and 3rd sensor
