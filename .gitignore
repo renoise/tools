@@ -62,3 +62,6 @@ Tools/com.renoise.cLib.xrnx/source/vLib
 Tools/com.renoise.vLib.xrnx/source/cLib
 Tools/com.renoise.ScaleMate.xrnx/source/cLib
 Tools/com.renoise.ScaleMate.xrnx/source/xLib
+Tools/com.renoise.SelectionShaper.xrnx/source/cLib
+Tools/com.renoise.SelectionShaper.xrnx/source/vLib
+Tools/com.renoise.SelectionShaper.xrnx/source/xLib
