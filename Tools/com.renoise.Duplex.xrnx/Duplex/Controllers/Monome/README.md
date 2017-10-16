@@ -45,7 +45,15 @@ You can paste the above into a text file and save it, and then put the file into
 
 The exact location of this path depends on the operating system and version. 
 
-**Windows 8**  
+**Linux**
+~/.config/serialosc
+
+**MacOS**
+~/Library/Preferences/org.monome.serialosc
+
+**Windows**
+C:\Users\<user name>\AppData\Local\Monome\serialosc
+
 C:\Windows\SysWOW64\config\systemprofile\AppData\Local\Monome\serialosc\
 
 **Windows XP**  
