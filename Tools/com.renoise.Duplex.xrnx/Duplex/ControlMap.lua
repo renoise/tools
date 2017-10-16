@@ -698,7 +698,7 @@ function ControlMap:get_osc_params(osc_str)
           end
 
           --print("*** applying regular expression",param.xarg.regex_patt)
-          regex_matches = cLib.pack(string.match(osc_str,param.xarg.regex_patt))
+          regex_matches = cLib.pack_args(string.match(osc_str,param.xarg.regex_patt))
           --print("regex_matches",rprint(regex_matches))
           if table.is_empty(regex_matches) then
             --print("*** wildcard detected, but not matched",str_attr)
