@@ -1,19 +1,17 @@
---[[===============================================================================================
+--[[============================================================================
 xStreamModel
-===============================================================================================]]--
+============================================================================]]--
 --[[
 
 	xStreamModel takes care of loading, saving and parsing xStream models
 
 ]]
 
---=================================================================================================
+--==============================================================================
 
 class 'xStreamModel'
 
 xStreamModel.DEFAULT_NAME = "Untitled model"
-xStreamModel.FOLDER_NAME = "models/"
-xStreamModel.ROOT_PATH = renoise.tool().bundle_path..xStreamModel.FOLDER_NAME
 
 -- available callback types
 xStreamModel.CB_TYPE = {
@@ -26,287 +24,100 @@ xStreamModel.DEFAULT_DATA_STR = [[-- specify an initial value for the variable
 return %s
 ]]
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- constructor
--- @param buffer (xStreamBuffer)
--- @param voicemgr (xVoiceManager)
--- @param output_message (function) callback, intended for real-time preview/playback
---  ()
+-- @param xstream (xStream)
 
-function xStreamModel:__init(buffer,voicemgr,output_message)
-  TRACE("xStreamModel:__init(buffer,voicemgr,output_message)",buffer,voicemgr,output_message)
+function xStreamModel:__init(process)
+  TRACE("xStreamModel:__init(process)",process)
 
-  assert(type(buffer) == "xStreamBuffer",type(buffer))
-  assert(type(voicemgr) == "xVoiceManager",type(voicemgr))
-  assert(type(output_message) == "function",type(output_message))
+  assert(type(process) == "xStreamProcess", "Wrong type of parameter")
 
-  --- xStreamBuffer
-  self.buffer = buffer
+  -- xStreamProcess
+  self.process = process
 
   --- xStreamPrefs, current settings
   self.prefs = renoise.tool().preferences
 
-  --- string, file location (if saved to, loaded from disk...)
+  -- string, file location (if saved to, loaded from disk...)
   self.file_path = nil
 
-  --- string 
+  -- string 
   self.name = property(self.get_name,self.set_name)
   self.name_observable = renoise.Document.ObservableString("")
 
-  --- number, valid 8-bit RGB representation (0xRRGGBB)
+  -- number, valid 8-bit RGB representation (0xRRGGBB)
   self.color = property(self.get_color,self.set_color)
   self.color_observable = renoise.Document.ObservableNumber(0)
 
-  --- string, text representation of the function 
+  -- string, text representation of the function 
   self.callback_str = property(self.get_callback_str,self.set_callback_str)
   --self.callback_str_observable = renoise.Document.ObservableString("")
 
-  --- bool, true when the callback is not blank space / comments
+  -- bool, true when the callback is not blank space / comments
   -- (use this to skip processing when not needed...)
   self.callback_contains_code = false
 
-  --- signal when code was succesfully compiled 
+  -- signal when code was succesfully compiled 
   self.compiled_observable = renoise.Document.ObservableBang()
 
-  --- boolean, true when the model definition has been changed
-  -- due to changed callback, arguments, name, color ...
+  -- boolean, true when the model definition has been changed
   self.modified = property(self.get_modified,self.set_modified)
   self.modified_observable = renoise.Document.ObservableBoolean(false)
 
-  --- xStreamArgs, describing the available arguments
+  -- xStreamArgs, describing the available arguments
   self.args = nil
 
-  --- table<xStreamModelPresets>, list of active preset banks
+  -- table<xStreamPresets>, list of active preset banks
   self.preset_banks = {}
 
-  --- ObservableNumberList, notifier fired when banks are added/removed 
+  -- ObservableNumberList, notifier fired when banks are added/removed 
   self.preset_banks_observable = renoise.Document.ObservableNumberList()
 
-  self.selected_preset_index = property(self.get_preset_index,self.set_preset_index)
-
-  --- int, index of selected preset bank (0 = none)
+  -- int, index of selected preset bank (0 = none)
   self.selected_preset_bank_index = property(self.get_preset_bank_index,self.set_preset_bank_index)
   self.selected_preset_bank_index_observable = renoise.Document.ObservableNumber(0)
 
-  -- xStreamModelPresets, reference to selected preset bank (set via index)
+  -- xStreamPresets, reference to selected preset bank (set via index)
   self.selected_preset_bank = property(self.get_selected_preset_bank)
 
-  --- table<vararg>, variables, can be any basic type 
+  -- table<vararg>, variables, can be any basic type 
   self.data = {}
 
-  --- ObservableBang, when data change somehow (remove, delete, rename...)
+  -- ObservableBang, when data change somehow (remove, delete, rename...)
   self.data_observable = renoise.Document.ObservableBang()
 
-  --- string, userdata definition - revert when stopping/exporting
+  -- string, userdata definition - revert when stopping/exporting
   self.data_initial = nil
 
-  --- table<xMidiMessage.TYPE=function>, event handlers
+  -- table<xMidiMessage.TYPE=function>, event handlers
   self.events = {}
 
-  --- ObservableBang, when events change somehow (remove, delete, rename...)
+  -- ObservableBang, when events change somehow (remove, delete, rename...)
   self.events_observable = renoise.Document.ObservableBang()
 
-  --- table<function>
+  -- table<function>
   self.events_compiled = {}
 
-  --- ObservableBang, to produce new output when model is part of a stack
-  self.on_rebuffer = renoise.Document.ObservableBang()
+  -- table<string> limit to these tokens during output
+  -- (derived from the code specified in the callback)
+  self.output_tokens = {}
 
   --- configure sandbox
   -- (add basic variables and a few utility methods)
 
   self.sandbox = cSandbox()
-
-  --== notifiers ==--
-
-  local preset_observable_notifier = function()
-    TRACE(">>> xStreamModel - preset_bank.presets_observable fired...")
-    if self:is_default_bank() then
-      self.modified = true
-    end
-  end
-
-  self.selected_preset_bank_index_observable:add_notifier(function()
-    local preset_bank = self.selected_preset_bank
-    cObservable.attach(preset_bank.presets_observable,preset_observable_notifier)
-  end)
-
-  --== initialize ==--
-
-  self:configure_sandbox()
-
-  self.sandbox.modified_observable:add_notifier(function()
-    self.modified = true
-  end)
-
-  self:add_preset_bank(xStreamModelPresets.DEFAULT_BANK_NAME)
-  self.selected_preset_bank_index = 1
-
-end
-
----------------------------------------------------------------------------------------------------
--- Get/set methods
----------------------------------------------------------------------------------------------------
-
-function xStreamModel:get_name()
-  if (self.name_observable.value == "") then
-    return xStreamModel.DEFAULT_NAME
-  end
-  return self.name_observable.value
-end
-
-function xStreamModel:set_name(val)
-  if (self.name_observable.value ~= val) then
-    self.name_observable.value = val
-    self.modified = true
-  end  
-end
-
----------------------------------------------------------------------------------------------------
-
-function xStreamModel:get_color()
-  return self.color_observable.value
-end
-
-function xStreamModel:set_color(val)
-  --print("val",val,"type",type(val))
-  if (self.color_observable.value ~= val) then
-    self.color_observable.value = val
-    self.modified = true
-  end
-end
-
----------------------------------------------------------------------------------------------------
-
-function xStreamModel:get_callback_str()
-  --TRACE("xStreamModel:get_callback_str - ",self.callback_str_observable.value)
-  return self.sandbox.callback_str_observable.value
-end
-
-function xStreamModel:set_callback_str(str_fn)
-  TRACE("xStreamModel:set_callback_str - ",#str_fn)
-
-  local modified = (str_fn ~= self.sandbox.callback_str) 
-  if modified then
-    self.modified = modified 
-  end
-  --print("self.modified",self.modified,self.name)
-
-  -- check if the callback contain any code at all? 
-  self.callback_contains_code = cSandbox.contains_code(str_fn)
-
-  -- live syntax check
-  -- (a bit 'funny'' to set the buffer status from here, but...)
-  local passed,err = self.sandbox:test_syntax(str_fn)
-  self.buffer.callback_status_observable.value = passed and "" or err
-  if err then
-    LOG(err)
-    return
-  end 
-
-  self.sandbox.callback_str_observable.value = str_fn
-
-  local passed,err = self.sandbox:compile()
-  if not passed then 
-    self.buffer.callback_status_observable.value = err  
-    LOG(err)
-    return
-  end
-  -- process is listening for this  
-  self.compiled_observable:bang()
-
-end
-
----------------------------------------------------------------------------------------------------
-
-function xStreamModel:get_modified()
-  return self.modified_observable.value
-end
-
-function xStreamModel:set_modified(val)
-  self.modified_observable.value = val
-end
-
----------------------------------------------------------------------------------------------------
-
-function xStreamModel:get_preset_index()
-
-  if not self.selected_preset_bank then
-    return 0
-  end
-  return self.selected_preset_bank.selected_preset_index
-end
-
-function xStreamModel:set_preset_index(val)
-
-  if (self.selected_preset_bank_index == 0) then
-    LOG("*** Can't set preset index - no bank selected")
-    return
-  end 
-
-  if (val > #self.selected_preset_bank.presets) then
-    LOG("*** Can't set preset index - out of range")
-    return
-  end
-
-  self.selected_preset_bank.selected_preset_index = val
-
-end
-
----------------------------------------------------------------------------------------------------
-
-function xStreamModel:get_preset_bank_index()
-  return self.selected_preset_bank_index_observable.value
-end
-
-function xStreamModel:set_preset_bank_index(idx)
-  if not self.preset_banks[idx] then
-    LOG("*** Attempted to set out-of-range value for preset bank index")
-    return
-  end
-  self.selected_preset_bank_index_observable.value = idx
-
-  -- attach_to_preset_bank
-  local obs = self.selected_preset_bank.modified_observable
-  cObservable.attach(obs,self,self.handle_preset_changes)
-
-end
-
----------------------------------------------------------------------------------------------------
-
-function xStreamModel:get_selected_preset_bank()
-  return self.preset_banks[self.selected_preset_bank_index]
-end
-
----------------------------------------------------------------------------------------------------
-
-function xStreamModel:get_preset_bank_by_name(str_name)
-  return table.find(self:get_preset_bank_names(),str_name)
-end
-
----------------------------------------------------------------------------------------------------
--- Class methods
----------------------------------------------------------------------------------------------------
--- reset to initial state
-
-function xStreamModel:reset()
-  TRACE("xStreamModel:reset()")
-
-  self:parse_data(self.data_initial)
-  self.modified = false
-
-end
-
----------------------------------------------------------------------------------------------------
-
-function xStreamModel:configure_sandbox()
-  TRACE("xStreamModel:configure_sandbox()")
-
   self.sandbox.compile_at_once = true
   self.sandbox.str_prefix = [[
     xinc = select(1, ...)
     xline = select(2, ...)
     xpos = select(3, ...)
+
+    local get_lfo = function(lfo_instance)
+      if lfo_instance then
+        return lfo_instance(0, 255, 1, nil, nil, nil, xinc)
+      end
+    end
 
   ]]
   self.sandbox.str_suffix = [[
@@ -383,67 +194,56 @@ function xStreamModel:configure_sandbox()
     -- buffer 
 
     ["clear_undefined"] = {
-      access = function(env) return self.buffer.clear_undefined end,
-      assign = function(env,v) self.buffer.clear_undefined = v end,
+      access = function(env) return self.process.buffer.clear_undefined end,
+      assign = function(env,v) self.process.buffer.clear_undefined = v end,
     },
     ["expand_columns"] = {
-      access = function(env) return self.buffer.expand_columns end,
-      assign = function(env,v) self.buffer.expand_columns = v end,
+      access = function(env) return self.process.buffer.expand_columns end,
+      assign = function(env,v) self.process.buffer.expand_columns = v end,
     },
     ["include_hidden"] = {
-      access = function(env) return self.buffer.include_hidden end,
-      assign = function(env,v) self.buffer.include_hidden = v end,
+      access = function(env) return self.process.buffer.include_hidden end,
+      assign = function(env,v) self.process.buffer.include_hidden = v end,
     },
     ["automation_playmode"] = {
-      access = function(env) return self.buffer.automation_playmode end,
-      assign = function(env,v) self.buffer.automation_playmode = v end,
+      access = function(env) return self.process.buffer.automation_playmode end,
+      assign = function(env,v) self.process.buffer.automation_playmode = v end,
     },
-    ["read_track"] = {
-      access = function(env) return 
-        rns.tracks[self.buffer.read_track_index]  
-          and rns.tracks[self.buffer.read_track_index] 
-          or rns.selected_track -- provide fallback
-      end,
-    },
-    ["write_track"] = {
-      access = function(env) return 
-        rns.tracks[self.buffer.write_track_index]  
-          and rns.tracks[self.buffer.write_track_index] 
-          or rns.selected_track -- provide fallback
-      end,
-    },
-    ["read_track_index"] = {
-      access = function(env) return self.buffer.read_track_index end,
-    },
-    ["write_track_index"] = {
-      access = function(env) return self.buffer.write_track_index end,
+    ["track_index"] = {
+      access = function(env) return self.process.buffer.track_index end,
     },
     ["mute_mode"] = {
-      access = function(env) return self.buffer.mute_mode end,
+      access = function(env) return self.process.buffer.mute_mode end,
     },
+    
+    -- process props
+    
     ["output_mode"] = {
-      access = function(env) return self.output_mode end,
+      access = function(env) return self.process.output_mode end,
     },
 
     -- class instances
 
-    --["xmodel"] = {
-    --  access = function(env) return self end,
-    --},
-    ["xbuffer"] = {
-      access = function(env) return self.buffer end,
+    ["xmodel"] = {
+      access = function(env) return self end,
     },
-    --["xplaypos"] = {
-    --  access = function(env) return self.stack.xpos.playpos end,
-    --},
-    --["xstream"] = {
-    --  access = function(env) return self.stack.xstream end,
-    --},
+    ["xplaypos"] = {
+      access = function(env) return self.process.xpos.playpos end,
+    },
+    ["xbuffer"] = {
+      access = function(env) return self.process.buffer end,
+    },
+    ["xstream"] = {
+      access = function(env) return self.process.xstream end,
+    },
+    ["xvoices"] = {
+      access = function(env) return self.process.xstream.voicemgr.voices end,
+    },
     ["xvoicemgr"] = {
-      access = function(env) return self.voicemgr end,
+      access = function(env) return self.process.xstream.voicemgr end,
     },
     ["output_message"] = {
-      access = function(env) return self.output_message end,
+      access = function(env) return self.process.xstream.output_message end,
     },
 
     -- classes 
@@ -510,32 +310,147 @@ function xStreamModel:configure_sandbox()
 
   self.sandbox.properties = props_table
 
+  -- initialize -----------------------
+
+  self.sandbox.modified_observable:add_notifier(function()
+    self.modified = true
+  end)
+
+  self:add_preset_bank(xStreamPresets.DEFAULT_BANK_NAME)
+  self.selected_preset_bank_index = 1
+
 end
 
----------------------------------------------------------------------------------------------------
--- Handle incoming MIDI/voice-manager/argument events - 
--- @param event_key (string), e.g. "midi.note_on" or "args.instr_idx"
--- @param arg (number/boolean/string/table) value to pass 
+-------------------------------------------------------------------------------
+-- Get/set methods
+-------------------------------------------------------------------------------
 
-function xStreamModel:handle_event(event_key,arg)
-  TRACE("xStreamModel:handle_event(event_key,arg)",event_key,arg)
-
-  local handler = self.events_compiled[event_key]
-  if handler then
-    --print("about to handle event",event_key,arg,self.name)
-    local passed,err = pcall(function()
-      handler(arg)
-    end)
-    if not passed then
-      LOG("*** Error while handling event",err)
-    end
+function xStreamModel:get_name()
+  if (self.name_observable.value == "") then
+    return xStreamModel.DEFAULT_NAME
   end
+  return self.name_observable.value
+end
+
+function xStreamModel:set_name(str)
+  self.name_observable.value = str
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:get_color()
+  return self.color_observable.value
+end
+
+function xStreamModel:set_color(val)
+  --print("val",val,"type",type(val))
+  if (self.color_observable.value ~= val) then
+    self.color_observable.value = val
+    self.modified = true
+  end
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:get_callback_str()
+  --TRACE("xStreamModel:get_callback_str - ",self.callback_str_observable.value)
+  return self.sandbox.callback_str_observable.value
+end
+
+function xStreamModel:set_callback_str(str_fn)
+  TRACE("xStreamModel:set_callback_str - ",#str_fn)
+
+  local modified = (str_fn ~= self.sandbox.callback_str) 
+  if modified then
+    self.modified = modified 
+  end
+  --print("self.modified",self.modified,self.name)
+
+  -- check if the callback contain any code at all? 
+  self.callback_contains_code = cSandbox.contains_code(str_fn)
+
+  -- live syntax check
+  -- (a bit 'funny'' to set the buffer status from here, but...)
+  local passed,err = self.sandbox:test_syntax(str_fn)
+  self.process.buffer.callback_status_observable.value = passed and "" or err
+  if err then
+    LOG(err)
+    return
+  end 
+
+  self.sandbox.callback_str_observable.value = str_fn
+
+  -- extract tokens for the output stage
+  self:extract_tokens(xStreamModel.CB_TYPE.MAIN)
+
+  local passed,err = self.sandbox:compile()
+  if not passed then 
+    self.process.buffer.callback_status_observable.value = err  
+    LOG(err)
+    return
+  end
+  -- process is listening for this  
+  self.compiled_observable:bang()
 
 end
 
+-------------------------------------------------------------------------------
 
----------------------------------------------------------------------------------------------------
--- Load external model definition - will validate the function in a sandbox
+function xStreamModel:get_modified()
+  return self.modified_observable.value
+end
+
+function xStreamModel:set_modified(val)
+  self.modified_observable.value = val
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:get_preset_bank_index()
+  return self.selected_preset_bank_index_observable.value
+end
+
+function xStreamModel:set_preset_bank_index(idx)
+  if not self.preset_banks[idx] then
+    LOG("*** Attempted to set out-of-range value for preset bank index")
+    return
+  end
+  self.selected_preset_bank_index_observable.value = idx
+
+  -- attach_to_preset_bank
+  local obs = self.selected_preset_bank.modified_observable
+  cObservable.attach(obs,self,self.handle_preset_changes)
+
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:get_selected_preset_bank()
+  return self.preset_banks[self.selected_preset_bank_index]
+end
+
+-------------------------------------------------------------------------------
+
+function xStreamModel:get_preset_bank_by_name(str_name)
+  return table.find(self:get_preset_bank_names(),str_name)
+end
+
+-------------------------------------------------------------------------------
+-- Class methods
+-------------------------------------------------------------------------------
+-- reset to initial state
+
+function xStreamModel:reset()
+  TRACE("xStreamModel:reset()")
+
+  self:parse_data(self.data_initial)
+  self.modified = false
+
+end
+
+-------------------------------------------------------------------------------
+
+-- load external model definition - will validate the function in a sandbox
 -- @param file_path (string), prompt for file if not defined
 -- @return bool, true when model was succesfully loaded
 -- @return err, string containing error message
@@ -592,8 +507,8 @@ function xStreamModel:load_definition(file_path)
 
 end
 
----------------------------------------------------------------------------------------------------
--- Same as 'load_definition', but passing a string instead of file
+-------------------------------------------------------------------------------
+-- same as 'load_definition', but passing a string instead of file
 -- @param str_def (string)
 -- @return bool, true when model got loaded
 -- @return string, error message on failure
@@ -634,7 +549,7 @@ function xStreamModel:load_from_string(str_def)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- @param def (table) definition table
 -- return bool, true when model was succesfully loaded
 -- return err, string containing error message
@@ -665,7 +580,7 @@ function xStreamModel:parse_definition(def)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- parse model options (color etc.)
 
 function xStreamModel:parse_options(options_def)
@@ -683,7 +598,7 @@ function xStreamModel:parse_options(options_def)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- create arguments
 
 function xStreamModel:parse_arguments(args_def)
@@ -703,14 +618,9 @@ function xStreamModel:parse_arguments(args_def)
     end
   end
 
-  self.args.args_observable:add_notifier(function()
-   --">>> xStreamModel - args.args_observable fired... ")
-    self.modified = true
-  end)
-
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- model presets: clear existing, add new ones...
 
 function xStreamModel:parse_presets(preset_def)
@@ -727,7 +637,7 @@ function xStreamModel:parse_presets(preset_def)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- @param data_def (table), new userdata definitions 
 -- @return string, containing potential error message 
 
@@ -774,7 +684,7 @@ function xStreamModel:parse_data(data_def)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- rename event (update main callback)
 -- @param old_name (string)
 -- @param new_name (string)
@@ -816,7 +726,7 @@ function xStreamModel:rename_callback(old_name,new_name,cb_type)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- rename occurrences of provided token in all callbacks (main,data,events)
 -- @param old_name (string)
 -- @param new_name (string)
@@ -850,7 +760,7 @@ function xStreamModel:rename_token(old_name,new_name,cb_type)
     self.parse_data(self.data_initial)
     self.modified = true
   end
-  
+
   local events_modified = false
   for k,v in ipairs(self.events) do
     str_old = v
@@ -871,7 +781,7 @@ function xStreamModel:rename_token(old_name,new_name,cb_type)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- rename event (update main callback)
 -- @param cb_type (xStreamModel.CB_TYPE)
 -- @param cb_key (string), e.g. "midi.note_off"
@@ -895,7 +805,7 @@ function xStreamModel:remove_callback(cb_type,cb_key)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- define initial data from current value 
 -- @param str_name (string)
 --[[
@@ -916,7 +826,7 @@ function xStreamModel:add_initial_data(str_name)
 end
 ]]
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Register a new data entry
 -- @param str_name (string)
 
@@ -936,7 +846,7 @@ function xStreamModel:add_data(str_name,str_fn)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- @param str_name (string), event key - e.g. "midi.note_on" or "args.tab.arg"
 -- @param str_fn (string) the function as text
 
@@ -986,7 +896,7 @@ function xStreamModel:add_event(str_name,str_fn)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- parse and refresh event handlers
 -- @param event_def (table)
 
@@ -1060,11 +970,56 @@ local val = select(1,...)
     end
   end
 
+  self:extract_tokens(xStreamModel.CB_TYPE.EVENTS)
+  --print(">>> parse_events - self.events",str_status,rprint(self.events))
+
   return str_status
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-- extract functions (tokens), result is used in the output stage
+-- to determine which sub-columns should be visible
+-- @param cb_type (xStreamModel.CB_TYPE)
+
+function xStreamModel:extract_tokens(cb_type)
+  TRACE("xStreamModel:extract_tokens(cb_type)",cb_type)
+
+  local rslt = {}
+  for k,v in ipairs(self.output_tokens) do
+    rslt[v] = true
+  end
+
+  -- combined note/effect-column tokens
+  local all_tokens = {
+    "note_value","note_string", 
+    "instrument_value","instrument_string",
+    "volume_value","volume_string",
+    "panning_value","panning_string",
+    "delay_value","delay_string",
+    "number_value","number_string",
+    "amount_value","amount_string",
+  }
+
+  local callbacks = {}
+  table.insert(callbacks,self.sandbox.callback_str)
+  for k,v in pairs(self.events) do
+    table.insert(callbacks,v)
+  end
+  for _,str_fn in ipairs(callbacks) do
+    for __,token in ipairs(all_tokens) do
+      if string.find(str_fn,token) then
+        rslt[token] = true
+      end
+    end
+  end
+  --print("extract_tokens - rslt POST ",self.name,rprint(rslt),rprint(table.keys(rslt)))
+
+  self.output_tokens = table.keys(rslt)
+
+end
+
+-------------------------------------------------------------------------------
 -- remove previously registered notifier 
 -- @param key (string), name of 
 
@@ -1079,7 +1034,7 @@ function xStreamModel:remove_event_notifier(key)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- return the model (arguments, callback) as valid lua string
 
 function xStreamModel:serialize()
@@ -1120,7 +1075,7 @@ function xStreamModel:serialize()
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- refresh - (re-)load model from disk
 -- @return bool, true when refreshed
 -- @return string, error message when problem was encountered
@@ -1150,7 +1105,7 @@ function xStreamModel:refresh()
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- save model (prompt for file path if not already defined)
 -- @param as_copy (bool), when invoked by 'save_as'
 -- @return bool, true when saved
@@ -1202,13 +1157,14 @@ function xStreamModel:save(as_copy)
     self.file_path = file_path
     self.name = name
     self.modified = false
+    --self.callback_str_source = self.sandbox.callback_str
   end
 
   return true
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- "save model as"
 -- @return bool, true when saved
 -- @return string, error message when problem was encountered
@@ -1226,13 +1182,17 @@ function xStreamModel:save_as()
 
 end
 
-----------------------------------------------------------------------------------------------------
--- NB: Invoke via xStreamModels:rename_model() to rename other instances too 
--- @return bool, true when renamed 
--- @return string, error message when failed 
+--------------------------------------------------------------------------------
+-- rename model 
 
-function xStreamModel:rename(str_name)
-  TRACE("xStreamModel:rename(str_name)",str_name)
+function xStreamModel:rename()
+  TRACE("xStreamModel:rename()")
+
+  local str_name,_ = vPrompt.prompt_for_string(self.name,
+    "Enter a new name","Rename Model")
+  if not str_name then
+    return true
+  end
 
   local str_from = self.file_path
   local folder,filename,ext = cFilesystem.get_path_parts(str_from)
@@ -1255,6 +1215,9 @@ function xStreamModel:rename(str_name)
     end
   end
 
+  -- update favorites to reflect new name
+  self.process.xstream.favorites:rename_model(self.name,str_name)
+
   self.name = str_name
   self.file_path = str_to
 
@@ -1262,7 +1225,7 @@ function xStreamModel:rename(str_name)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xStreamModel:reveal_location()
   TRACE("xStreamModel:reveal_location()")
@@ -1273,7 +1236,7 @@ function xStreamModel:reveal_location()
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- prompt for file path
 -- @param str_title (string), title for file browser dialog
 -- @return string or nil (file-path, complete path plus name)
@@ -1297,23 +1260,18 @@ function xStreamModel.prompt_for_location(str_title)
 end
 
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- invoked when song or model has changed
 
 function xStreamModel:attach_to_song()
   TRACE("xStreamModel:attach_to_song()")
-
-  if not self.args then 
-    LOG("*** Warning: trying to attach model without arguments (no definition was loaded?)")
-    return 
-  end 
 
   self:parse_events()
   self.args:attach_to_song()
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xStreamModel:handle_preset_changes()
   TRACE("handle_preset_changes")
@@ -1322,7 +1280,7 @@ function xStreamModel:handle_preset_changes()
   end
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- invoked when song or model has changed
 
 function xStreamModel:detach_from_song()
@@ -1339,7 +1297,7 @@ function xStreamModel:detach_from_song()
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- perform periodic updates
 
 function xStreamModel:on_idle()
@@ -1349,14 +1307,14 @@ function xStreamModel:on_idle()
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- load all preset banks available to us
 -- if problems occur, they are logged...
 
 function xStreamModel:load_preset_banks()
   TRACE("xStreamModel:load_preset_banks()")
 
-  local preset_bank_folder = xStreamModelPresets.ROOT_PATH
+  local preset_bank_folder = xStreamPresets.get_preset_bank_path()
   local str_folder = preset_bank_folder..self.name.."/"
   --print("str_folder",str_folder)
   if io.exists(str_folder) then
@@ -1373,7 +1331,7 @@ function xStreamModel:load_preset_banks()
 end
 
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- load preset bank from our 'special' folder
 -- @param str_name (string), the name of the bank
 -- @return bool, true when loaded
@@ -1382,7 +1340,7 @@ end
 function xStreamModel:load_preset_bank(str_name)
   TRACE("xStreamModel:load_preset_bank(str_name)",str_name)
 
-  local preset_bank = xStreamModelPresets(self)  
+  local preset_bank = xStreamPresets(self)
   preset_bank.name = str_name
   local file_path = preset_bank:path_to_xml(str_name)
   --print("file_path",file_path)
@@ -1403,7 +1361,7 @@ function xStreamModel:load_preset_bank(str_name)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- @param str_name (string), prompt user if not defined
 -- @return bool, true when created
 -- @return string, error message
@@ -1411,15 +1369,27 @@ end
 function xStreamModel:add_preset_bank(str_name)
   TRACE("xStreamModel:add_preset_bank(str_name)",str_name)
 
-  if not type(str_name)=="string" then 
-    return false, "Please provide a name"
-  end 
+  if not str_name then
 
-  if not cFilesystem.validate_filename(str_name) then
-    return false, "Please avoid using special characters in the name"
+    -- supply a unique preset bank name (filename)
+    local preset_bank_folder = xStreamPresets.get_preset_bank_path()
+    local preset_folder = ("%s%s/Untitled.xml"):format(preset_bank_folder,self.name)
+    local str_path = cFilesystem.ensure_unique_filename(preset_folder)
+    str_name = cFilesystem.get_raw_filename(str_path)
+
+    str_name = vPrompt.prompt_for_string(str_name,
+      "Enter a name for the preset bank","Add Preset Bank")
+    if not str_name then
+      return false
+    end
+    if not cFilesystem.validate_filename(str_name) then
+      local err = "Please avoid using special characters in the name"
+      renoise.app():show_warning(err)
+      return false
+    end
   end
 
-  local preset_bank = xStreamModelPresets(self)
+  local preset_bank = xStreamPresets(self)
   preset_bank.name = str_name
   table.insert(self.preset_banks,preset_bank)
   self.preset_banks_observable:insert(#self.preset_banks)
@@ -1428,7 +1398,7 @@ function xStreamModel:add_preset_bank(str_name)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xStreamModel:remove_preset_bank(idx)
   TRACE("xStreamModel:remove_preset_bank(idx)",idx)
@@ -1453,18 +1423,15 @@ function xStreamModel:remove_preset_bank(idx)
   self.preset_banks_observable:remove(idx)
 
   -- favorites might be affected
-  -- TODO handle this through observable
-  --[[
-  local favorites = self.stack.xstream.favorites:get_by_preset_bank(old_name)
+  local favorites = self.process.xstream.favorites:get_by_preset_bank(old_name)
   if (#favorites > 0) then
-    self.stack.xstream.favorites.update_requested = true
+    self.process.xstream.favorites.update_requested = true
   end
-  ]]
 
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- retrieve preset from current bank by index
 -- return table or nil
 
@@ -1483,7 +1450,7 @@ function xStreamModel:get_preset_by_index(idx)
 end
 
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- return table<string>
 
 function xStreamModel:get_preset_bank_names()
@@ -1497,22 +1464,16 @@ function xStreamModel:get_preset_bank_names()
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xStreamModel:is_default_bank()
   TRACE("xStreamModel:is_default_bank()")
 
-  return (self.selected_preset_bank.name == xStreamModelPresets.DEFAULT_BANK_NAME)
+  return (self.selected_preset_bank.name == xStreamPresets.DEFAULT_BANK_NAME)
 
 end
 
-----------------------------------------------------------------------------------------------------
-
-function xStreamModel:__tostring()
-  return type(self) 
-end
-
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- ensure that the name is unique (e.g. when creating new models)
 -- @param str_name (string)
 -- @return string
@@ -1527,7 +1488,7 @@ function xStreamModel.get_suggested_name(str_name)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- produce a valid, unique data/event key (name)
 -- @param str_name (string), preferred name
 -- @param cb_type (string, "events" or "data")
@@ -1585,35 +1546,23 @@ function xStreamModel:get_suggested_callback_name(str_name,cb_type)
 
 end
 
----------------------------------------------------------------------------------------------------
--- Obtain a unique, valid (file-)name for a preset bank
--- @return strinf 
 
-function xStreamModel.get_new_preset_bank_name()
-  local preset_bank_folder = xStreamModelPresets.ROOT_PATH
-  local preset_folder = ("%s%s/Untitled.xml"):format(preset_bank_folder,model.name)
-  local str_path = cFilesystem.ensure_unique_filename(preset_folder)
-  return cFilesystem.get_raw_filename(str_path)
-end 
-
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- return the path to the internal models 
 -- @param str_name (string)
 
 function xStreamModel.get_normalized_file_path(str_name)
-  TRACE("xStreamModel.get_normalized_file_path(str_name)",str_name)
-  local models_folder = xStreamModel.ROOT_PATH
+  local models_folder = xStreamModels.get_models_path()
   return ("%s%s.lua"):format(models_folder,str_name)
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- look for certain "things" to confirm that this is a valid definition
 -- before actually parsing the string
 -- @param str_def (string)
 -- @return bool
 
 function xStreamModel.looks_like_definition(str_def)
-  TRACE("xStreamModel.looks_like_definition(str_def)",str_def)
 
   local pre = '\[?\"?'
   local post = '\]?\"?[%s]*=[%s]*{'

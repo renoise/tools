@@ -80,17 +80,6 @@ xStreamArg.STRING_DISPLAYS = {
   xStreamArg.DISPLAY_AS.TEXTFIELD,
 }
 
-xStreamArg.SERIALIZABLE = {
-  "full_name",
-  "value",
-  "props",
-  "description",
-  "bind_str",
-  "poll_str",
-  "linked",
-  "locked",
-}
-
 ---------------------------------------------------------------------------------------------------
 -- constructor
 -- @param args (table), 
@@ -210,13 +199,11 @@ end
 function xStreamArg:notifier()
   TRACE("xStreamArg:notifier()")
 
-  if self.linked then
-    --print(">>> update linked arguments")
+  if self.linked then -- update linked arguments 
     self.model.args:set_linked(self)
   end
 
-  if self.bind then 
-    --print(">>> update renoise")
+  if self.bind then -- update renoise
     self:bind_notifier(self.observable.value)
   end
 
@@ -224,13 +211,12 @@ function xStreamArg:notifier()
   -- doing this before recomputing the buffer
   -- will allow the model to respond to a changed 
   -- state before recomputing 
-  local arg_name = "args."..self.full_name
-  self.model:handle_event(arg_name,self.value)
+  self.model.process:handle_arg_events(self.full_name,self.value)
 
+  -- finally, when/if the argument requires the 
+  -- buffer to be recalculated 
   if self.properties.impacts_buffer then
-    self.model.buffer:immediate_output()
-    -- do the same for other (stacked) models   
-    self.model.on_rebuffer:bang()
+    self.model.process:recompute()
   end
 
 end
@@ -400,55 +386,6 @@ function xStreamArg:clamp_value(val)
   end
   return val
 end
-
----------------------------------------------------------------------------------------------------
-
-function xStreamArg:get_definition()
-  TRACE("xStreamArg:get_definition()")
-
-  local def = {}
-
-  local props = {}
-  if self.properties then
-    -- remove default values from properties
-    props = table.rcopy(self.properties_initial)
-    if (props.impacts_buffer == true) then
-      props.impacts_buffer = nil
-    end
-    if (props.fire_on_start == true) then
-      props.fire_on_start = nil
-    end
-  end
-
-  --[[
-  table.insert(args,{
-    name = self.full_name,
-    value = self.value,
-    properties = props,
-    description = self.description,
-    bind = self.bind_str,
-    poll = self.poll_str,
-    linked = self.linked,
-    locked = self.locked,
-  })
-  ]]
-
-  local ignored = {
-    "props", 
-  }
-
-  for k,v in ipairs(xStreamArg.SERIALIZABLE) do
-    if not table.find(ignored,k) then
-      def[v] = self[v]
-    end
-  end
-
-  def.props = props
-
-  return def
-
-end
-
 
 ---------------------------------------------------------------------------------------------------
 

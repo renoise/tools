@@ -330,7 +330,6 @@ end
 
 -------------------------------------------------------------------------------
 -- return argument by it's name/tab
--- TODO optimize by maintaining associative table 
 -- @param str_name (string)
 -- @param [str_tab_name] (string), optional
 
@@ -733,8 +732,6 @@ function xStreamArgs:serialize()
       end
     end
 
-    -- TODO use xStreamArg version 
-    -- (need identical property names - name/full_name etc.)
     table.insert(args,{
       name = arg.full_name,
       value = arg.value,

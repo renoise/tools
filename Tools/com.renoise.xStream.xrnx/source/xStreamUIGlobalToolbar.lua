@@ -86,7 +86,7 @@ function xStreamUIGlobalToolbar:build()
             },
           },
           vb:popup{ -- compact mode only: model selector
-            items = self.xstream.models:get_available(),
+            items = self.xstream.process.models:get_names(),
             id = "xStreamCompactModelSelector",
             width = xStreamUI.MODEL_SELECTOR_W,
             height = xStreamUI.BITMAP_BUTTON_H,
@@ -125,7 +125,14 @@ function xStreamUIGlobalToolbar:build()
             width = xStreamUI.TRANSPORT_BUTTON_W,
             height = xStreamUI.BITMAP_BUTTON_H,
             notifier = function()
-              self.xstream.stack.active = not self.xstream.stack.active
+              self.xstream.active = not self.xstream.active
+              --[[
+              if self.xstream.active then
+                self.xstream:stop()
+              else
+                self.xstream:start()
+              end
+              ]]
             end,
           },
           vb:button{
@@ -135,7 +142,7 @@ function xStreamUIGlobalToolbar:build()
             width = xStreamUI.TRANSPORT_BUTTON_W,
             height = xStreamUI.BITMAP_BUTTON_H,
             notifier = function()
-              self.xstream.stack.muted = not self.xstream.stack.muted
+              self.xstream.process.muted = not self.xstream.process.muted
             end,
           },
         },
@@ -151,7 +158,7 @@ function xStreamUIGlobalToolbar:build()
             id = "xStreamApplySequenceButton",
             height = xStreamUI.BITMAP_BUTTON_H,
             notifier = function()
-              self.xstream.stack:fill_sequence()
+              self.xstream.process:fill_sequence()
             end,
           },
           vb:space{
@@ -164,7 +171,7 @@ function xStreamUIGlobalToolbar:build()
             id = "xStreamApplyTrackButton",
             height = xStreamUI.BITMAP_BUTTON_H,
             notifier = function()
-              self.xstream.stack:fill_track()
+              self.xstream.process:fill_track()
             end,
           },
           vb:space{
@@ -176,7 +183,7 @@ function xStreamUIGlobalToolbar:build()
             id = "xStreamApplySelectionButton",
             height = xStreamUI.BITMAP_BUTTON_H,
             notifier = function()
-              self.xstream.stack:fill_selection(true)
+              self.xstream.process:fill_selection(true)
             end,
           },
           vb:button{
@@ -185,7 +192,7 @@ function xStreamUIGlobalToolbar:build()
             id = "xStreamApplySelectionLocallyButton",
             height = xStreamUI.BITMAP_BUTTON_H,
             notifier = function()
-              self.xstream.stack:fill_selection()
+              self.xstream.process:fill_selection()
             end,
           },       
           vb:space{
@@ -197,7 +204,7 @@ function xStreamUIGlobalToolbar:build()
             id = "xStreamApplyLineButton",
             height = xStreamUI.BITMAP_BUTTON_H,
             notifier = function()
-              self.xstream.stack:fill_line()
+              self.xstream.process:fill_line()
             end,
           },
           vb:button{
@@ -206,7 +213,7 @@ function xStreamUIGlobalToolbar:build()
             id = "xStreamApplyLineLocallyButton",
             height = xStreamUI.BITMAP_BUTTON_H,
             notifier = function()
-              self.xstream.stack:fill_line(true)
+              self.xstream.process:fill_line(true)
             end,
           },
         },
@@ -218,7 +225,7 @@ function xStreamUIGlobalToolbar:build()
           height = xStreamUI.BITMAP_BUTTON_H,
           width = xStreamUI.BITMAP_BUTTON_W,
           notifier = function()
-            self.xstream.ui.favorites_ui:show()
+            self.xstream.ui.favorites:show()
           end
         },
         vb:button{

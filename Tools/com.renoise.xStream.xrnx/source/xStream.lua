@@ -13,9 +13,6 @@ The main xStream class - where it all comes together.
 
 class 'xStream'
 
-xStream.API_VERSION = 1
-xStream.TOKEN_START = "-- begin xStream"
-xStream.TOKEN_END = "-- end xStream"
 
 -- options for internal/external MIDI output
 xStream.OUTPUT_OPTIONS = {
@@ -45,12 +42,12 @@ function xStream:__init(...)
   xStreamUserData.USERDATA_ROOT = self.prefs.user_folder.value
   self.prefs.user_folder:add_notifier(function()
     xStreamUserData.USERDATA_ROOT = self.prefs.user_folder.value
-    self:scan_for_models_and_stacks()
+    self:load_all_models()
   end)
 
   --- boolean, evaluate callbacks while playing
   self.active = property(self.get_active,self.set_active)
-  --self.active_observable = renoise.Document.ObservableBoolean(false)
+  self.active_observable = renoise.Document.ObservableBoolean(false)
 
   --- (bool) keep track of loop block state
   self.block_enabled = rns.transport.loop_block_enabled
@@ -63,41 +60,30 @@ function xStream:__init(...)
 
   --- bool, when true we automatically save favorites/presets
   self.autosave_enabled = false
- 
+  
   --- xStreamPos
   self.xpos = xStreamPos()  
 
-  -- xStreamStack
-  self.stack = xStreamStack(self)
-
-  self.stack.changed_observable:add_notifier(function()    
-    self.stack_export_requested = true
-  end)
-
-  --- xStreamModels
-  self.models = xStreamModels(self.stack)
+  -- xStreamProcess
+  self.process = xStreamProcess(self)
+  self.xpos.callback_fn = function()
+    self.process:output()
+  end
+  self.xpos.refresh_fn = function()
+    self.process:refresh()
+  end
 
   self.prefs.scheduling:add_notifier(function()
-    self.scheduling = self.prefs.scheduling.value
+    self.process.scheduling = self.prefs.scheduling.value
   end)
 
-  --- xStreamModel, the selected model for the selected stack member 
-  -- (when none is present, the whole interface should be mostly shut down...)
   self.selected_model = property(self.get_selected_model)
-
-  --- number, the selected model among the "available models" (0 = none)
   self.selected_model_index = property(self.get_selected_model_index,self.set_selected_model_index)
-
-  --- number, the selected member in the stack (0 = none)
-  self.selected_member_index = property(self.get_selected_member_index,self.set_selected_member_index)
-
-  --- xStreamModels
-  self.stacks = xStreamStacks(self)
 
   --- xStreamFavorites, favorited model+preset combinations
   self.favorites = xStreamFavorites(self)
   local favorites_notifier = function()    
-    --print("xStream - favorites.favorites/grid_columns/grid_rows/modified_observable fired..")
+    TRACE("xStream - favorites.favorites/grid_columns/grid_rows/modified_observable fired..")
     self.favorite_export_requested = true
   end
   self.favorites.favorites_observable:add_notifier(favorites_notifier)
@@ -121,12 +107,12 @@ function xStream:__init(...)
     end,
   }
   self.midi_io.midi_inputs_observable:add_notifier(function(arg)
-    --print("*** self.midi_io.midi_inputs_observable",#self.midi_io.midi_inputs_observable,rprint(self.midi_io.midi_inputs_observable))
+    TRACE("*** self.midi_io.midi_inputs_observable",#self.midi_io.midi_inputs_observable,rprint(self.midi_io.midi_inputs_observable))
     self.prefs.midi_inputs = self.midi_io.midi_inputs_observable
   end)
 
   self.midi_io.midi_outputs_observable:add_notifier(function(arg)
-    --print("*** self.midi_io.midi_outputs_observable",#self.midi_io.midi_inputs_observable,rprint(self.midi_io.midi_inputs_observable))
+    TRACE("*** self.midi_io.midi_outputs_observable",#self.midi_io.midi_inputs_observable,rprint(self.midi_io.midi_inputs_observable))
     self.prefs.midi_outputs = self.midi_io.midi_outputs_observable
   end)
   self.prefs.midi_multibyte_enabled:add_notifier(function()
@@ -147,15 +133,15 @@ function xStream:__init(...)
     column_allocation = true,
   }  
   self.voicemgr.released_observable:add_notifier(function(arg)
-    --print("*** voicemgr.released_observable fired...")
+    TRACE("*** voicemgr.released_observable fired...")
     self:handle_voice_events(xVoiceManager.EVENT.RELEASED)
   end)
   self.voicemgr.triggered_observable:add_notifier(function()
-    --print("*** voicemgr.triggered_observable fired...")
+    TRACE("*** voicemgr.triggered_observable fired...")
     self:handle_voice_events(xVoiceManager.EVENT.TRIGGERED)
   end)
   self.voicemgr.stolen_observable:add_notifier(function()
-    --print("*** voicemgr.stolen_observable fired...")
+    TRACE("*** voicemgr.stolen_observable fired...")
     self:handle_voice_events(xVoiceManager.EVENT.STOLEN)
   end)
 
@@ -165,15 +151,15 @@ function xStream:__init(...)
     osc_port = self.prefs.osc_client_port.value,
   }
   self.osc_client.osc_host_observable:add_notifier(function()
-    --print("*** osc_client.osc_host_observable fired...")
+    TRACE("*** osc_client.osc_host_observable fired...")
     self.prefs.osc_client_host.value = self.osc_client.osc_host_observable.value
   end)
   self.osc_client.osc_port_observable:add_notifier(function()
-    --print("*** osc_client.osc_port_observable fired...")
+    TRACE("*** osc_client.osc_port_observable fired...")
     self.prefs.osc_client_port.value = self.osc_client.osc_port_observable.value
   end)
   self.osc_client._test_failed_observable:add_notifier(function()
-    --print("*** osc_client._test_failed_observable fired...")
+    TRACE("*** osc_client._test_failed_observable fired...")
     -- TODO make user aware of the issue
   end)
 
@@ -184,13 +170,12 @@ function xStream:__init(...)
     midi_prefix = args.midi_prefix,
   }
   self.ui.show_editor = self.prefs.show_editor.value
-  self.ui.show_stack = self.prefs.show_stack.value
   self.ui.args_panel.visible = self.prefs.model_args_visible.value
   self.ui.presets.visible = self.prefs.presets_visible.value
-  self.ui.favorites_ui.pinned = self.prefs.favorites_pinned.value
+  self.ui.favorites.pinned = self.prefs.favorites_pinned.value
   self.ui.dialog_visible_observable:add_notifier(function()
-    --print("xStream  - ui.dialog_visible_observable fired...")
-    self:select_launch_model()
+    TRACE("xStream  - ui.dialog_visible_observable fired...")
+    self.process.models:select_launch_model()
     local file_path = self.favorites:get_path()
     local success,err = self.favorites:import(file_path)
     if not success and err then 
@@ -199,36 +184,16 @@ function xStream:__init(...)
     self.autosave_enabled = true
   end)
 
-  self.ui.show_stack_observable:add_notifier(function()
-    self.prefs.show_stack.value = self.ui.show_stack
-  end)
 
   --== tool notifications ==--
 
   renoise.tool().app_new_document_observable:add_notifier(function()
-    --print("xStream - app_new_document_observable fired...")
+    TRACE("xStream - app_new_document_observable fired...")
     self:attach_to_song()
-    if self.prefs.persist_state then 
-      local has_song_settings = xSongSettings.test(xStream.TOKEN_START,xStream.TOKEN_END)
-      if has_song_settings then
-        -- when current model is modified, 
-        -- prompt before recalling stack...
-        local choice = nil
-        if self.selected_model and self.selected_model.modified then 
-          local msg = "Do you want to recall the saved state from this song?"
-                    .."\nThe current model contains unsaved changes, "
-                    .."\nwhich will be lost if you press OK."
-          choice = renoise.app():show_custom_prompt("xStream: Recall Saved State",msg,{"OK","Cancel"})
-        end 
-        if (choice == "OK") then
-          self:load_song_settings()
-        end
-      end 
-    end 
   end)
 
   renoise.tool().app_release_document_observable:add_notifier(function()
-    --print("xStream - app_release_document_observable fired...")
+    TRACE("xStream - app_release_document_observable fired...")
     self:stop()
   end)
 
@@ -236,21 +201,14 @@ function xStream:__init(...)
     self:on_idle()
   end)
 
+
   --== initialize ==--
 
-  self.stack:initialize()
-  self:scan_for_models_and_stacks()
+  self:attach_to_song()
+
+  self:load_all_models()
 
   self.ui:update()
-
-  self.xpos:reset()
-
-  self.xpos.callback_observable:add_notifier(function()
-    self.stack:output()
-  end)
-  self.xpos.refresh_observable:add_notifier(function()
-    self.stack:refresh()
-  end)
 
 end
 
@@ -262,38 +220,28 @@ end
 
 function xStream:set_active(val)
   TRACE("xStream:set_active(val)",val)
-  self.stack.active = val
+  self.process.active = val
 end
 
 function xStream:get_active()
   TRACE("xStream:get_active()")
-  return self.stack.active
+  return self.process.active
 end
 
 ---------------------------------------------------------------------------------------------------
 
 function xStream:get_selected_model()
-  return self.stack.selected_model
+  return self.process.models.selected_model
 end
 
 ---------------------------------------------------------------------------------------------------
 
 function xStream:get_selected_model_index()
-  return self.stack.selected_model_index
+  return self.process.models.selected_model_index
 end
 
 function xStream:set_selected_model_index(val)
-  self.stack.selected_model_index = val
-end
-
----------------------------------------------------------------------------------------------------
-
-function xStream:get_selected_member_index()
-  return self.stack.selected_member_index
-end
-
-function xStream:set_selected_member_index(val)
-  self.stack.selected_member_index = val
+  self.process.models.selected_model_index = val
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -303,7 +251,7 @@ end
 
 function xStream:stop()
   TRACE("xStream:stop()")
-  self.stack:stop()
+  self.process:stop()
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -317,8 +265,7 @@ function xStream:start(playmode)
     playmode = renoise.Transport.PLAYMODE_CONTINUE_PATTERN
   end 
 
-
-  self.stack:start(playmode)
+  self.process:start(playmode)
   self.xpos:start(playmode)
 end
 
@@ -330,98 +277,22 @@ function xStream:start_and_play()
   if not rns.transport.playing then
     rns.transport.playback_pos = rns.transport.edit_pos
   end
-  
   self:start(renoise.Transport.PLAYMODE_RESTART_PATTERN)
 end
 
 ---------------------------------------------------------------------------------------------------
--- (Re)load data - triggered on startup and when userdata folder has changed
+-- (Re)load all models - triggered on startup and when userdata folder has changed
 
-function xStream:scan_for_models_and_stacks()
-  TRACE("xStream:scan_for_models_and_stacks()")
+function xStream:load_all_models()
+  TRACE("xStream:load_all_models()")
 
-  -- set static root paths 
-  xStreamModel.ROOT_PATH = xStreamUserData.USERDATA_ROOT..xStreamModel.FOLDER_NAME
-  xStreamStacks.ROOT_PATH = xStreamUserData.USERDATA_ROOT .. xStreamStacks.FOLDER_NAME
-  xStreamModelPresets.ROOT_PATH = xStreamUserData.USERDATA_ROOT..xStreamModelPresets.FOLDER_NAME
-
-  self.stack:reset()
-  self.models:remove_all()
-  self.models:scan_for_available(xStreamModel.ROOT_PATH)
-
-  self.stacks:remove_all()
-  self.stacks:scan_for_available(xStreamStacks.ROOT_PATH)
+  local models_path = xStreamModels.get_models_path()
+  
+  self.process:reset()
+  self.process.models:remove_all()
+  self.process.models:load_all(models_path)
 
 end 
-
----------------------------------------------------------------------------------------------------
--- Recall saved state (if present), otherwise activate the launch model
-
-function xStream:select_launch_model()
-  TRACE("xStream:select_launch_model()")
-
-  local has_saved_state = xSongSettings.test(xStream.TOKEN_START,xStream.TOKEN_END)
-  --print(">>> has_saved_state",has_saved_state)
-  if has_saved_state then 
-    self:recall_state()
-  else
-    --print(">>> self.prefs.launch_model.value",self.prefs.launch_model.value)
-    for k,v in ipairs(self.models.available_models) do
-      --print(">>> k,v",k,v)
-      if (v == self.prefs.launch_model.value) then
-        self.selected_model_index = k -- instantiate
-        self.selected_member_index = 1
-      end
-    end
-  end
-
-end
-
----------------------------------------------------------------------------------------------------
--- Recall state from song comments
-
-function xStream:recall_state()
-  TRACE("xStream:recall_state()")
-
-  local rslt = xSongSettings.retrieve(xStream.TOKEN_START,xStream.TOKEN_END)
-  --print(">>> recall_state - rslt...",rprint(rslt))
-  if rslt then 
-    self.stack:apply_definition(rslt)
-  end
-
-end
-
----------------------------------------------------------------------------------------------------
--- Save state in song comments
-
-function xStream:save_state()
-  TRACE("xStream:save_state()")
-
-  if not self.prefs.persist_state.value then
-    return
-  end
-
-  if not self.stack:contains_model() then
-    -- clear 
-    xSongSettings.clear(xStream.TOKEN_START,xStream.TOKEN_END)
-  else
-    -- save current stack
-    local rslt = self.stack:get_definition()
-    rslt.version = xStream.API_VERSION
-    --rprint(rslt)
-    xSongSettings.store(rslt,xStream.TOKEN_START,xStream.TOKEN_END)
-  
-  end
-
-end
-
----------------------------------------------------------------------------------------------------
--- Load/apply saved state
-
-function xStream:clear_state()
-  TRACE("xStream:clear_state()")
-end
-
 
 ---------------------------------------------------------------------------------------------------
 -- Bring focus to the relevant model/preset/bank, 
@@ -437,7 +308,7 @@ function xStream:focus_to_favorite(idx)
 
   self.favorites.last_selected_index = idx
 
-  local model_idx,model = self.models:get_by_name(selected.model_name)
+  local model_idx,model = self.process.models:get_by_name(selected.model_name)
   if model_idx then
     --print("about to set model index to",model_idx)
     self.selected_model_index = model_idx
@@ -497,11 +368,6 @@ function xStream:on_idle()
     if self.autosave_enabled then
       self.favorites:save()
     end
-  elseif self.stack_export_requested then
-    self.stack_export_requested = false 
-    if self.autosave_enabled then
-      self:save_state()
-    end    
   end
 
   -- track when blockloop changes (update scheduling)
@@ -509,7 +375,7 @@ function xStream:on_idle()
     --print("xStream - block_enabled changed...")
     self.block_enabled = rns.transport.loop_block_enabled
     if rns.transport.playing then
-      self.stack:compute_scheduling_pos()
+      self.process:compute_scheduling_pos()
     end
   end
 
@@ -525,12 +391,12 @@ function xStream:attach_to_song()
   self:stop()
 
   local selected_track_index_notifier = function()
-    --print("*** selected_track_index_notifier fired...")
-    self.stack.selected_track_index = rns.selected_track_index
+    TRACE("*** selected_track_index_notifier fired...")
+    self.process:set_track_index(rns.selected_track_index)
   end
 
   local playing_notifier = function()
-    --print("playing_notifier()")
+    TRACE("playing_notifier()")
 
     if not rns.transport.playing then 
       self:stop()
@@ -558,7 +424,7 @@ function xStream:attach_to_song()
   end
 
   local edit_notifier = function()
-    --print("edit_notifier()")
+    TRACE("edit_notifier()")
 
     if rns.transport.edit_mode then
       local dialog_visible = self.ui:dialog_is_visible() 
@@ -585,11 +451,9 @@ function xStream:attach_to_song()
   edit_notifier()
   selected_track_index_notifier()
 
-  --[[
   if self.selected_model then
     self.selected_model:attach_to_song()
   end
-  ]]
 
 end
 
@@ -600,7 +464,7 @@ end
 function xStream:handle_midi_input(xmsg)
   TRACE("xStream:handle_midi_input(xmsg)",xmsg,self)
 
-  if not self.stack.active then
+  if not self.process.active then
     LOG("Stream not active - ignore MIDI input")
     return
   end
@@ -620,7 +484,7 @@ function xStream:handle_midi_input(xmsg)
 
   -- pass to event handlers (if any)
   local event_key = "midi."..tostring(xmsg.message_type)
-  self.stack:handle_event(event_key,xmsg)
+  self.process:handle_event(event_key,xmsg)
 
 end
 
@@ -655,7 +519,7 @@ function xStream:handle_voice_events(evt)
 
   -- pass to event handlers (if any)
   local event_key = "voice."..evt
-  self.stack:handle_event(event_key,{
+  self.process:handle_event(event_key,{
     index = index,
     type = evt
   })
@@ -676,12 +540,6 @@ function xStream:output_message(xmsg,mode)
     return false
   end
 
-end
-
----------------------------------------------------------------------------------------------------
-
-function xStream:__tostring()
-  return type(self) 
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -708,6 +566,5 @@ function xStream.parse_callback_type(str_name)
   end
 
 end
-
 
 

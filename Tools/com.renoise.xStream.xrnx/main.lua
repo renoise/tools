@@ -14,8 +14,7 @@ com.renoise.xStream.xrnx (main.lua)
 rns = nil -- reference to renoise.song() 
 _trace_filters = nil -- don't show traces in console
 --_trace_filters = {".*"}
---_trace_filters = {"^xStreamBuffer*","^xStreamStack*","^xStreamProcess*"}
-_trace_filters = {"^>>> xStreamBuffer:write_line*","^xStreamStackMember*"}
+--_trace_filters = {"^xOscClient"}
 
 ---------------------------------------------------------------------------------------------------
 -- required files
@@ -33,7 +32,6 @@ require (_clibroot..'cObservable')
 require (_clibroot..'cReflection')
 require (_clibroot..'cParseXML')
 require (_clibroot..'cSandbox')
-require (_clibroot..'cTable')
 require (_clibroot..'cColor')
 
 require (_vlibroot..'vLib')
@@ -64,7 +62,6 @@ require (_xlibroot..'xPatternSequencer')
 require (_xlibroot..'xPlayPos')
 require (_xlibroot..'xScale')
 require (_xlibroot..'xSongPos')
-require (_xlibroot..'xSongSettings')
 require (_xlibroot..'xStreamPos')
 require (_xlibroot..'xStreamBuffer')
 require (_xlibroot..'xTransport')
@@ -78,11 +75,8 @@ require ('source/xStreamFavorite')
 require ('source/xStreamFavorites')
 require ('source/xStreamModel')
 require ('source/xStreamModels')
-require ('source/xStreamModelPresets')
---require ('source/xStreamProcess')
-require ('source/xStreamStack')
-require ('source/xStreamStacks')
-require ('source/xStreamStackMember')
+require ('source/xStreamProcess')
+require ('source/xStreamPresets')
 require ('source/xStreamPrefs')
 require ('source/xStreamUserData')
 require ('source/xStreamUILuaEditor')
@@ -91,7 +85,6 @@ require ('source/xStreamUIModelCreate')
 require ('source/xStreamUICallbackCreate')
 require ('source/xStreamUIGlobalToolbar')
 require ('source/xStreamUIModelToolbar')
-require ('source/xStreamUIStackToolbar')
 require ('source/xStreamUIOptions')
 require ('source/xStreamUIFavorites')
 require ('source/xStreamUIPresetPanel')
@@ -124,7 +117,7 @@ function show()
       midi_prefix = MIDI_PREFIX,
       tool_name = TOOL_NAME,
     }
-    xstream.stack.active_observable:add_notifier(function()
+    xstream.active_observable:add_notifier(function()
       TRACE("xStream main.lua - self.active_observable fired...")
       register_tool_menu()
     end)
@@ -166,8 +159,7 @@ end)
 
 ---------------------------------------------------------------------------------------------------
 -- keyboard/midi mappings
---[[
-  
+
 local key_mapping, midi_mapping = nil,nil
 
 --== "favorites" ==--
@@ -204,7 +196,7 @@ for i = 1,16 do
     name = midi_mapping,
     invoke = function() 
       if xstream then
-        xstream.stack:set_selected_preset_index(i)
+        xstream.process:set_selected_preset_index(i)
       end
     end
   }
@@ -215,12 +207,13 @@ for i = 1,16 do
     invoke = function(repeated) 
       if not repeated then
         if xstream then
-          xstream.stack:set_selected_preset_index(i)
+          xstream.process:set_selected_preset_index(i)
         end
       end
     end
   }
-
+--[[
+]]
   
 end
 
@@ -229,7 +222,7 @@ renoise.tool():add_midi_mapping{
   name = midi_mapping,
   invoke = function() 
     if xstream then
-      xstream.stack:select_next_preset()
+      xstream.process:select_next_preset()
     end
   end
 }
@@ -239,7 +232,7 @@ renoise.tool():add_keybinding{
   invoke = function(repeated) 
     if not repeated then
       if xstream then
-        xstream.stack:select_next_preset()
+        xstream.process:select_next_preset()
       end
     end
   end
@@ -250,7 +243,7 @@ renoise.tool():add_midi_mapping{
   name = midi_mapping,
   invoke = function() 
     if xstream then
-      xstream.stack:select_previous_preset()
+      xstream.process:select_previous_preset()
     end
   end
 }
@@ -260,7 +253,7 @@ renoise.tool():add_keybinding{
   invoke = function(repeated) 
     if not repeated then
       if xstream then
-        xstream.stack:select_previous_preset()
+        xstream.process:select_previous_preset()
       end
     end
   end
@@ -273,7 +266,7 @@ renoise.tool():add_midi_mapping{
   name = midi_mapping,
   invoke = function() 
     if xstream then
-      xstream.stack:fill_track()
+      xstream.process:fill_track()
     end
   end
 }
@@ -283,7 +276,7 @@ renoise.tool():add_keybinding{
   invoke = function(repeated) 
     if not repeated then
       if xstream then
-        xstream.stack:fill_track()
+        xstream.process:fill_track()
       end
     end
   end
@@ -294,7 +287,7 @@ renoise.tool():add_midi_mapping{
   name = midi_mapping,
   invoke = function() 
     if xstream then
-      xstream.stack:fill_selection(true)
+      xstream.process:fill_selection(true)
     end
   end
 }
@@ -304,7 +297,7 @@ renoise.tool():add_keybinding{
   invoke = function(repeated) 
     if not repeated then
       if xstream then
-        xstream.stack:fill_selection(true)
+        xstream.process:fill_selection(true)
       end
     end
   end
@@ -315,7 +308,7 @@ renoise.tool():add_midi_mapping{
   name = midi_mapping,
   invoke = function() 
     if xstream then
-      xstream.stack:fill_selection()
+      xstream.process:fill_selection()
     end
   end
 }
@@ -325,7 +318,7 @@ renoise.tool():add_keybinding{
   invoke = function(repeated) 
     if not repeated then
       if xstream then
-        xstream.stack:fill_selection()
+        xstream.process:fill_selection()
       end
     end
   end
@@ -336,7 +329,7 @@ renoise.tool():add_midi_mapping{
   name = midi_mapping,
   invoke = function() 
     if xstream then
-      xstream.stack:fill_line(true)
+      xstream.process:fill_line(true)
     end
   end
 }
@@ -346,7 +339,7 @@ renoise.tool():add_keybinding{
   invoke = function(repeated) 
     if not repeated then
       if xstream then
-        xstream.stack:fill_line(true)
+        xstream.process:fill_line(true)
       end
     end
   end
@@ -357,7 +350,7 @@ renoise.tool():add_midi_mapping{
   name = midi_mapping,
   invoke = function() 
     if xstream then
-      xstream.stack:fill_line()
+      xstream.process:fill_line()
     end
   end
 }
@@ -367,9 +360,8 @@ renoise.tool():add_keybinding{
   invoke = function(repeated) 
     if not repeated then
       if xstream then
-        xstream.stack:fill_line()
+        xstream.process:fill_line()
       end
     end
   end
 }
-]]
