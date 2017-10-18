@@ -844,8 +844,7 @@ function xStreamUIArgsPanel:update_visibility()
 
   for k,v in ipairs(self.arg_views) do
     local arg = args:get_arg_by_name(v.name,v.tab_name)
-    if not arg then 
-    else 
+    if arg then 
       if not self.xstream.selected_model then
         v.view.visible = false
       elseif self.editor_visible or not self.visible then 
