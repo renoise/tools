@@ -92,5 +92,15 @@ end
 
 function Message:__tostring()
   return type(self)
+    .."\n context:"..tostring(self.context)
+    .."\n xarg:"..cLib.serialize_table(self.xarg)
+    .."\n device:"..tostring(self.device)
+    .."\n value:"..tostring(self.value)
+    .."\n channel:"..tostring(self.channel)
+    .."\n is_note_off:"..tostring(self.is_note_off)
+    .."\n is_virtual:"..tostring(self.is_virtual)
+    .."\n midi_msgs:"..tostring(self.midi_msgs)
+    .."\n timestamp:"..tostring(self.timestamp)
+    .."\n held_event_fired:"..tostring(self.held_event_fired)
 end
 

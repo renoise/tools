@@ -41,6 +41,9 @@ The code is decently commented, includes a generic Midi.lua class that can be re
 
 ## Changelog
 
+0.96
+- Fix stray note-off issue
+
 0.95
 - Adds support for MIDI-CC Commands 
 
