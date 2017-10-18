@@ -844,28 +844,31 @@ function xStreamUIArgsPanel:update_visibility()
 
   for k,v in ipairs(self.arg_views) do
     local arg = args:get_arg_by_name(v.name,v.tab_name)
-    if not self.xstream.selected_model then
-      v.view.visible = false
-    elseif self.editor_visible or not self.visible then 
-      -- single argument display
-      v.view.visible = (k == args.selected_index) 
-    elseif (v.tab_name and (selected_tab_name ~= v.tab_name)) then
-      -- another tab
-      v.view.visible = false
-    else
-      v.view.visible = true
-    end
-    v.view_bop.visible = v.view.visible and 
-      arg:get_bop() and true or false
-
-    -- disable lock & link while in editor
-    v.view_link.active = not self.editor_visible
-    v.view_lock.active = not self.editor_visible
-
-    -- update link
-    v.view_link.mode = arg.linked and "transparent" or "body_color"
-    v.view_link.visible = v.view.visible and arg.tab_name and
-      (args:count_linkable(arg.name) > 1) or false
+    if not arg then 
+    else 
+      if not self.xstream.selected_model then
+        v.view.visible = false
+      elseif self.editor_visible or not self.visible then 
+        -- single argument display
+        v.view.visible = (k == args.selected_index) 
+      elseif (v.tab_name and (selected_tab_name ~= v.tab_name)) then
+        -- another tab
+        v.view.visible = false
+      else
+        v.view.visible = true
+      end
+      v.view_bop.visible = v.view.visible and 
+        arg:get_bop() and true or false
+  
+      -- disable lock & link while in editor
+      v.view_link.active = not self.editor_visible
+      v.view_lock.active = not self.editor_visible
+  
+      -- update link
+      v.view_link.mode = arg.linked and "transparent" or "body_color"
+      v.view_link.visible = v.view.visible and arg.tab_name and
+        (args:count_linkable(arg.name) > 1) or false
+    end 
   end
 
   if not self.vb_tabbed then
