@@ -59,31 +59,55 @@ function xLinePattern:__init(note_columns,effect_columns)
 
   -- initialize -----------------------
 
-  -- include only columns with content 
   if note_columns then
-    for k = 1, xLinePattern.MAX_NOTE_COLUMNS do
-      local note_col = note_columns[k]
-      local include = note_col
-      if note_col and type(note_col)=="table" then
-        include = not table.is_empty(note_col)
+    for _,v in ipairs(note_columns) do
+      self.note_columns:insert(v)
+    end
+  end
+
+  if effect_columns then
+    for _,v in ipairs(effect_columns) do
+      self.effect_columns:insert(v)
+    end
+  end
+
+  self:apply_descriptor(self.note_columns,self.effect_columns)
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- [Class] Convert descriptors into class instances (empty tables are left as-is)
+-- @param note_columns (xNoteColumn or table)
+-- @param effect_columns (xEffectColumn or table)
+
+function xLinePattern:apply_descriptor(note_columns,effect_columns)
+
+  if note_columns then
+    for k,note_col in ipairs(note_columns) do
+      if (type(note_col) == "table") and
+        not table.is_empty(note_col)
+      then
+        -- convert into xNoteColumn 
+        self.note_columns[k] = xNoteColumn(note_col)
       end
-      if include then
-        self.note_columns[k] = xNoteColumn(note_col) 
-      end
+    end
+    for i = #note_columns+1, #self.note_columns do
+      self.note_columns[i] = {}
     end
   end
   if effect_columns then
-    for k = 1, xLinePattern.MAX_NOTE_COLUMNS do
-      local fx_col = effect_columns[k]
-      local include = fx_col
-      if fx_col and type(fx_col)=="table" then
-        include = not table.is_empty(fx_col)
-      end
-      if include then
+    for k,fx_col in ipairs(effect_columns) do
+      if (type(fx_col) == "table") and 
+        not table.is_empty(fx_col)
+      then
+        -- convert into xEffectColumn
         self.effect_columns[k] = xEffectColumn(fx_col)
-      end    
-      
+      end
     end
+    for i = #effect_columns+1, #self.effect_columns do
+      self.effect_columns[i] = {}
+    end
+
   end
 
 end
@@ -94,11 +118,12 @@ end
 -- @param line (int)
 -- @param track_idx (int), when writing to pattern
 -- @param phrase (renoise.InstrumentPhrase), when writing to phrase
+-- @param tokens (table<string>) process these tokens ("note_value", etc)
 -- @param include_hidden (bool) apply to hidden columns as well
 -- @param expand_columns (bool) reveal columns as they are written to
 -- @param clear_undefined (bool) clear existing data when ours is nil
 
-function xLinePattern:do_write(sequence,line,track_idx,phrase,include_hidden,expand_columns,clear_undefined)
+function xLinePattern:do_write(sequence,line,track_idx,phrase,tokens,include_hidden,expand_columns,clear_undefined)
 
   local rns_line,patt_idx,rns_patt,rns_track,rns_ptrack
   local rns_track_or_phrase
@@ -113,8 +138,19 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,include_hidden,exp
   end
 
   local is_seq_track = (rns_track.type == renoise.Track.TRACK_TYPE_SEQUENCER)
+
   local visible_note_cols = rns_track_or_phrase.visible_note_columns
   local visible_fx_cols = rns_track_or_phrase.visible_effect_columns
+
+  -- figure out which sub-columns to display (VOL/PAN/DLY)
+  if is_seq_track and expand_columns and not table.is_empty(self.note_columns) then
+    rns_track_or_phrase.volume_column_visible = rns_track_or_phrase.volume_column_visible or 
+      (type(table.find(tokens,"volume_value") or table.find(tokens,"volume_string")) ~= 'nil')
+    rns_track_or_phrase.panning_column_visible = rns_track_or_phrase.panning_column_visible or
+      (type(table.find(tokens,"panning_value") or table.find(tokens,"panning_string")) ~= 'nil')
+    rns_track_or_phrase.delay_column_visible = rns_track_or_phrase.delay_column_visible or
+      (type(table.find(tokens,"delay_value") or table.find(tokens,"delay_string")) ~= 'nil')
+  end
   
   if is_seq_track then
     self:process_columns(rns_line.note_columns,
@@ -123,6 +159,7 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,include_hidden,exp
       include_hidden,
       expand_columns,
       visible_note_cols,
+      xNoteColumn.output_tokens,
       clear_undefined,
       xLinePattern.COLUMN_TYPES.NOTE_COLUMN)
   else
@@ -137,6 +174,7 @@ function xLinePattern:do_write(sequence,line,track_idx,phrase,include_hidden,exp
     include_hidden,
     expand_columns,
     visible_fx_cols,
+    xEffectColumn.output_tokens,
     clear_undefined,
     xLinePattern.COLUMN_TYPES.EFFECT_COLUMN)
 
@@ -150,6 +188,7 @@ end
 -- @param include_hidden (bool) apply to hidden columns as well
 -- @param expand_columns (bool) reveal columns as they are written to
 -- @param visible_cols (int) number of visible note/effect columns
+-- @param tokens (table<string>) process these tokens ("note_value", etc)
 -- @param clear_undefined (bool) clear existing data when ours is nil
 -- @param col_type (xLinePattern.COLUMN_TYPES)
 
@@ -160,6 +199,7 @@ function xLinePattern:process_columns(
   include_hidden,
   expand_columns,
   visible_cols,
+  tokens,
   clear_undefined,
   col_type)
 
@@ -188,80 +228,17 @@ function xLinePattern:process_columns(
         break
       end
 
-      if (col_type == xLinePattern.COLUMN_TYPES.NOTE_COLUMN) then
-        -- reveal sub-columns as they are written to (VOL/PAN/DLY)
-        local tokens_callback = expand_columns and function(token)
-          local tokens = {
-            ["volume_value"] = function()
-              if (rns_col.volume_value ~= xLinePattern.EMPTY_VALUE) then
-                rns_track_or_phrase.volume_column_visible = true
-              end
-            end,
-            ["volume_string"] = function()
-              if (rns_col.volume_string ~= xLinePattern.EMPTY_COLUMN_STRING) then
-                rns_track_or_phrase.volume_column_visible = true
-              end
-            end,
-            ["panning_value"] = function()
-              if (rns_col.panning_value ~= xLinePattern.EMPTY_VALUE) then
-                rns_track_or_phrase.panning_column_visible = true
-              end
-            end,
-            ["panning_string"] = function()
-              if (rns_col.panning_string ~= xLinePattern.EMPTY_COLUMN_STRING) then
-                rns_track_or_phrase.panning_column_visible = true
-              end
-            end,
-            ["delay_value"] = function()
-              if (rns_col.delay_value ~= 0) then
-                rns_track_or_phrase.delay_column_visible = true
-              end
-            end,
-            ["delay_string"] = function()
-              if (rns_col.delay_string ~= xNoteColumn.EMPTY_COLUMN_STRING) then
-                rns_track_or_phrase.delay_column_visible = true
-              end
-            end,
-            ["effect_number_value"] = function()
-              if (rns_col.effect_number_value ~= 0) then
-                rns_track_or_phrase.sample_effects_column_visible = true
-              end
-            end,
-            ["effect_number_string"] = function()
-              if (rns_col.effect_number_string ~= xLinePattern.EMPTY_STRING) then
-                rns_track_or_phrase.sample_effects_column_visible = true
-              end
-            end,
-            ["effect_amount_value"] = function()
-              if (rns_col.effect_amount_value ~= 0) then
-                rns_track_or_phrase.sample_effects_column_visible = true
-              end
-            end,
-            ["effect_amount_string"] = function()
-              if (rns_col.effect_amount_string ~= xLinePattern.EMPTY_STRING) then
-                rns_track_or_phrase.sample_effects_column_visible = true
-              end
-            end,
-          }
-          if tokens[token] then 
-            tokens[token]()
-          end 
-        end
-        if (type(col) == "table") then        
+      -- a table can be the result of a redefined column
+      if (type(col) == "table") then
+        if (col_type == xLinePattern.COLUMN_TYPES.NOTE_COLUMN) then
           col = xNoteColumn(col)
+        elseif (col_type == xLinePattern.COLUMN_TYPES.EFFECT_COLUMN) then
+          col = xEffectColumn(col)
         end
-        col:do_write(
-          rns_col,xNoteColumn.output_tokens,clear_undefined,tokens_callback)
-
-      elseif (col_type == xLinePattern.COLUMN_TYPES.EFFECT_COLUMN) then
-        if (type(col) == "table") then        
-          col = xEffectColumn(col) 
-        end        
-        col:do_write(
-          rns_col,xEffectColumn.output_tokens,clear_undefined)
-        
       end
 
+      col:do_write(
+        rns_col,tokens,clear_undefined)
     else
       if clear_undefined then
         rns_col:clear()
@@ -398,7 +375,8 @@ function xLinePattern.get_effect_column_command(track,line,fx_type,notecol_idx,v
 end 
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Get midi command from line: look in last note-column, panning + first effect column
+-- [Static] Get midi command from line
+-- (look in last note-column, panning + first effect column)
 -- @return xMidiCommand or nil if not found
 
 function xLinePattern.get_midi_command(track,line)
@@ -409,16 +387,6 @@ function xLinePattern.get_midi_command(track,line)
 
   local note_col = line.note_columns[track.visible_note_columns]
   local fx_col = line.effect_columns[1]
-
-  if note_col.is_empty or fx_col.is_empty then 
-    return 
-  end 
-
-  -- command number/value needs to be plain numeric 
-  local fx_num_val = xEffectColumn.amount_string_to_value(fx_col.number_string)
-  if not fx_num_val then 
-    return 
-  end 
 
   if (note_col.instrument_value < 255) 
     and (note_col.panning_string:sub(1,1) == "M")
@@ -435,94 +403,23 @@ function xLinePattern.get_midi_command(track,line)
 end
 
 ---------------------------------------------------------------------------------------------------
--- [Static] Set midi command: write to last note column, first effect column
+-- [Static] Set midi command (write to pattern)
 -- @param track renoise.Track
 -- @param line renoise.PatternLine
 -- @param cmd xMidiCommand
--- @param [expand] boolean, show target panning/effect-column (default is true)
--- @param [replace] boolean, replace existing commands (default is false - push to side)
-
-function xLinePattern.set_midi_command(track,line,cmd,expand,replace)
-  TRACE("xLinePattern.set_midi_command(track,line,cmd,expand,replace)",track,line,cmd,expand,replace)
-
-  assert(type(track)=="Track","Expected renoise.Track as argument")
-  assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
-  assert(type(cmd)=="xMidiCommand","Expected xMidiCommand as argument")
-
-  expand = expand or true
-  replace = replace or false
-
-  local note_col = line.note_columns[track.visible_note_columns]
-  local fx_col = line.effect_columns[1]
-
-  -- if there is an existing non-MIDI command, push it to the side 
-  -- (insert in next available effect column)
-  if not replace and not fx_col.is_empty then 
-    local xcmd = xLinePattern.get_midi_command(track,line) 
-    if not xcmd then 
-      -- only non-numeric effects are pushed to side
-      local fx_num_val = xEffectColumn.amount_string_to_value(fx_col.number_string)
-      if not fx_num_val then 
-        for k = 2, xLinePattern.MAX_EFFECT_COLUMNS do
-          local tmp_fx_col = line.effect_columns[k]
-          if tmp_fx_col.is_empty then 
-            tmp_fx_col.number_value = fx_col.number_value
-            tmp_fx_col.amount_value = fx_col.amount_value
-            fx_col:clear()
-            -- make column visible if needed 
-            if expand and (k > track.visible_effect_columns) then
-              track.visible_effect_columns = k
-            end
-            break
-          end 
-        end 
-      end 
-    end 
-  end
-
-  note_col.instrument_value = cmd.instrument_index-1
-  note_col.panning_string = ("M%d"):format(cmd.message_type)
-  fx_col.number_value = cmd.number_value
-  fx_col.amount_value = cmd.amount_value
-
-  if expand then
-    if not track.panning_column_visible then 
-      track.panning_column_visible = true
-    end
-    if (track.visible_effect_columns == 0) then
-      track.visible_effect_columns = 1
-    end
-  end 
-
-end
-
----------------------------------------------------------------------------------------------------
--- [Static] Clear previously set midi command. 
--- @param track renoise.Track
--- @param line renoise.PatternLine
-
-function xLinePattern.clear_midi_command(track,line)
-  TRACE("xLinePattern.clear_midi_command(track,line)",track,line)
+--[[
+function xLinePattern.set_midi_command(track,line,cmd)
 
   assert(type(track)=="Track","Expected renoise.Track as argument")
   assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
 
-  local note_col = line.note_columns[track.visible_note_columns]
-  local fx_col = line.effect_columns[1]
+  local note_col = line.note_columns[#track.visible_note_columns]
+  
+  -- TODO
 
-  note_col.panning_value = xLinePattern.EMPTY_VALUE
-  fx_col.number_value = 0
-  fx_col.amount_value = 0
-
-  -- remove instrument if last thing left
-  if (note_col.volume_value == xLinePattern.EMPTY_VALUE)
-    and (note_col.delay_value == 0)
-    and (note_col.note_value == 121)
-  then 
-    note_col.instrument_value = xLinePattern.EMPTY_VALUE
-  end
 
 end
+]]
 
 ---------------------------------------------------------------------------------------------------
 

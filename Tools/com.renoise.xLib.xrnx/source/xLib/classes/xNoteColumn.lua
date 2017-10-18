@@ -66,12 +66,11 @@ xNoteColumn.NOTE_ARRAY = {
   "C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"
 }
 
----------------------------------------------------------------------------------------------------
--- [Constructor] 
--- @param args (xNoteColumn or table), descriptor
+-------------------------------------------------------------------------------
+-- [Constructor] Accepts a table with properties as argument
+-- @param args (table), descriptor
 
 function xNoteColumn:__init(args)
-  TRACE("xNoteColumn:__init(args)",args)
 
   --- note_value [number, 0-119, 120=Off, 121=Empty]
   self.note_value = property(self.get_note_value,self.set_note_value)
@@ -140,11 +139,11 @@ function xNoteColumn:__init(args)
   self._effect_amount_string = nil
 
   
-  --== initialize (apply values) ==--
+  -- initialize (apply values) ----------------------------
 
-  for _,token in pairs(xNoteColumn.tokens) do
-    if (args[token]) then
-      self[token] = args[token]
+  for token,value in pairs(args) do
+    if (table.find(xNoteColumn.tokens,token)) then
+      self[token] = value
     end
   end
 
@@ -152,9 +151,9 @@ end
 
 
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Get/set methods
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:get_note_value()
   return self._note_value
@@ -174,7 +173,7 @@ function xNoteColumn:set_note_string(str)
   self._note_value = xNoteColumn.note_string_to_value(str)
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:get_instrument_value()
   return self._instrument_value
@@ -194,7 +193,7 @@ function xNoteColumn:set_instrument_string(str)
   self._instrument_value = xNoteColumn.instr_string_to_value(str)
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:get_volume_value()
   return self._volume_value
@@ -202,7 +201,7 @@ end
 
 function xNoteColumn:set_volume_value(val)
   self._volume_value = val
-  self._volume_string = xNoteColumn.column_value_to_string(val) 
+  self._volume_string = xNoteColumn.column_value_to_string(val,"..") 
 end
 
 function xNoteColumn:get_volume_string()
@@ -211,10 +210,10 @@ end
 
 function xNoteColumn:set_volume_string(str)
   self._volume_string = str
-  self._volume_value = xNoteColumn.column_string_to_value(str)
+  self._volume_value = xNoteColumn.column_string_to_value(str,xLinePattern.EMPTY_VALUE)
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:get_panning_value()
   return self._panning_value
@@ -222,7 +221,7 @@ end
 
 function xNoteColumn:set_panning_value(val)
   self._panning_value = val
-  self._panning_string = xNoteColumn.column_value_to_string(val) 
+  self._panning_string = xNoteColumn.column_value_to_string(val,"..") 
 end
 
 function xNoteColumn:get_panning_string()
@@ -231,10 +230,10 @@ end
 
 function xNoteColumn:set_panning_string(str)
   self._panning_string = str
-  self._panning_value = xNoteColumn.column_string_to_value(str)
+  self._panning_value = xNoteColumn.column_string_to_value(str,xLinePattern.EMPTY_VALUE)
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:get_delay_value()
   return self._delay_value
@@ -251,10 +250,10 @@ end
 
 function xNoteColumn:set_delay_string(str)
   self._delay_string = str
-  self._delay_value = xNoteColumn.delay_string_to_value(str)
+  self._delay_value = xNoteColumn.delay_string_to_value(str,xLinePattern.EMPTY_VALUE)
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:get_effect_number_value()
   return self._effect_number_value
@@ -274,7 +273,7 @@ function xNoteColumn:set_effect_number_string(str)
   self._effect_number_value = xEffectColumn.number_string_to_value(str)
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:get_effect_amount_value()
   return self._effect_amount_value
@@ -294,9 +293,9 @@ function xNoteColumn:set_effect_amount_string(str)
   self._effect_amount_value = xEffectColumn.amount_string_to_value(str)
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Converter methods (static implementation)
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- convert note_string into a numeric value
 -- @param str_val (string), for example "C#4" or "---"
 -- @return int (value, xNoteColumn.EMPTY_NOTE_VALUE when not matched)
@@ -338,7 +337,7 @@ function xNoteColumn.note_string_to_value(str_val)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn.note_value_to_string(val)
   TRACE("xNoteColumn.note_value_to_string(val)",val)
@@ -362,7 +361,7 @@ function xNoteColumn.note_value_to_string(val)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- @param str (string), e.g. ".." or "1F"
 -- @return int (0-255)
 
@@ -376,34 +375,35 @@ function xNoteColumn.instr_value_to_string(val)
   return (val == 255) and ".." or ("%.2X"):format(val)
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- @param str (string), e.g. ".." or "1F"
 -- @return int (0-255)
 
 function xNoteColumn.delay_string_to_value(str)
   TRACE("xNoteColumn.delay_string_to_value(str)",str)
-  return (str == "..") and 0 or tonumber("0x"..str)
+  return (str == "..") and 0 or tonumber(str)
 end
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- @param val (int), between 0-255
 -- @return string
 
 function xNoteColumn.delay_value_to_string(val)
   TRACE("xNoteColumn.delay_value_to_string(val)",val)
-  return (val == 0) and ".." or ("%.2X"):format(val)
+  return (val == 255) and ".." or ("%.2X"):format(val)
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- convert vol/panning into a numeric value
 -- (everything above 0x80 is interpreted as an fx command)
 -- @param str_val (string), for example "40", "G5" or ".."
+-- @param empty (int), the default empty value to return
 -- @return int
 
-function xNoteColumn.column_string_to_value(str_val)
-  TRACE("xNoteColumn.column_string_to_value(str_val)",str_val)
+function xNoteColumn.column_string_to_value(str_val,empty)
+  TRACE("xNoteColumn.column_string_to_value(str_val,empty)",str_val,empty)
 
-  if (str_val == xNoteColumn.EMPTY_COLUMN_STRING) then
-    return xLinePattern.EMPTY_VALUE
+  if (str_val == "..") then
+    return empty
   end
 
   local numeric = tonumber("0x"..str_val)
@@ -415,17 +415,17 @@ function xNoteColumn.column_string_to_value(str_val)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- convert instr/vol/panning into a numeric value
 -- @param val (int), 0-127, 255==Empty or 0-65535 when value is > 0x80
 -- @param empty (string), the default empty value to return
 -- @return value
 
-function xNoteColumn.column_value_to_string(val)
-  TRACE("xNoteColumn.column_value_to_string(val)",val)
+function xNoteColumn.column_value_to_string(val,empty)
+  TRACE("xNoteColumn.column_value_to_string(val,empty)",val,empty)
 
   if (val == xLinePattern.EMPTY_VALUE) then
-    return xNoteColumn.EMPTY_COLUMN_STRING
+    return empty
   end
 
   local numeric = val <= 0x80
@@ -437,7 +437,7 @@ function xNoteColumn.column_value_to_string(val)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- convert two-character effect string into a numeric value
 -- @param str_val (string), for example "G5"
 -- @return value or nil
@@ -455,7 +455,7 @@ function xNoteColumn.convert_fx_to_value(str_val)
 end
 
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- convert a numeric value into a two-character effect string
 -- @param val (int), for example 4615 ("I7") or 0x80
 -- @return string
@@ -469,9 +469,9 @@ function xNoteColumn.convert_fx_to_string(val)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Read method (static implementation)
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- @param note_col (renoise.NoteColumn)
 -- @param tokens (table), xStreamModel.tokens
 -- @return table 
@@ -491,16 +491,15 @@ function xNoteColumn.do_read(note_col,tokens)
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Write methods
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- @param note_col (renoise.NoteColumn), 
--- @param tokens (table), xStreamModel.output_tokens or subset thereof
+-- @param tokens (table), xStreamModel.output_tokens
 -- @param clear_undefined (bool) clear existing data when ours is nil
--- @param token_callback (function) use to show relevant subcolumn (VOL/PAN/DLY)
 
-function xNoteColumn:do_write(note_col,tokens,clear_undefined,token_callback)
-  TRACE("xNoteColumn.do_write(note_col,tokens,clear_undefined,token_callback)",note_col,tokens,clear_undefined,token_callback)
+function xNoteColumn:do_write(note_col,tokens,clear_undefined)
+  TRACE("xNoteColumn.do_write(note_col,tokens,clear_undefined)",note_col,tokens,clear_undefined)
 
   if not tokens then
     tokens = xNoteColumn.output_tokens
@@ -513,15 +512,13 @@ function xNoteColumn:do_write(note_col,tokens,clear_undefined,token_callback)
       end)
       if not success then
         LOG("WARNING: xNoteColumn - Trying to write invalid value to property:",token,self[token])
-      elseif token_callback then
-        token_callback(token)
       end
     end
   end
 
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:do_write_note_value(note_col,clear_undefined)
   if self.note_value then 
@@ -538,7 +535,7 @@ function xNoteColumn:do_write_note_string(note_col,clear_undefined)
   end
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:do_write_instrument_value(note_col,clear_undefined)
   if self.instrument_value then 
@@ -555,7 +552,7 @@ function xNoteColumn:do_write_instrument_string(note_col,clear_undefined)
   end
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:do_write_volume_value(note_col,clear_undefined)
   if self.volume_value then 
@@ -572,7 +569,7 @@ function xNoteColumn:do_write_volume_string(note_col,clear_undefined)
   end
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:do_write_panning_value(note_col,clear_undefined)
   if self.panning_value then 
@@ -589,7 +586,7 @@ function xNoteColumn:do_write_panning_string(note_col,clear_undefined)
   end
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:do_write_delay_value(note_col,clear_undefined)
   if self.delay_value then 
@@ -606,7 +603,7 @@ function xNoteColumn:do_write_delay_string(note_col,clear_undefined)
   end
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:do_write_effect_number_value(note_col,clear_undefined)
   if self.effect_number_value then 
@@ -623,7 +620,7 @@ function xNoteColumn:do_write_effect_number_string(note_col,clear_undefined)
   end
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:do_write_effect_amount_value(note_col,clear_undefined)
   if self.effect_amount_value then 
@@ -641,16 +638,16 @@ function xNoteColumn:do_write_effect_amount_string(note_col,clear_undefined)
   end
 end
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function xNoteColumn:__tostring()
 
   return type(self)
     ..", note="..tostring(self.note_string)
     ..", instrument="..tostring(self.instrument_string)
-    ..", volume="..tostring(self.volume_string)
+    ..", volume_string="..tostring(self.volume_string)
     ..", panning="..tostring(self.panning_string)
-    ..", delay=0x"..tostring(self.delay_string)
+    ..", delay="..tostring(self.delay_string)
     ..", effect_number="..tostring(self.effect_number_string)
     ..", effect_amount="..tostring(self.effect_amount_string)
 

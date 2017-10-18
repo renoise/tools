@@ -89,10 +89,8 @@ function xEffectColumn:__init(args)
   self.amount_string = property(self.get_amount_string,self.set_amount_string)
   self._amount_string = nil
 
-  --== initialize (apply values) ==--
-
-  for _,token in pairs(xEffectColumn.tokens) do
-    if (args[token]) then
+  for token,value in pairs(args) do
+    if (table.find(xEffectColumn.tokens,token)) then
       self[token] = args[token]
     end
   end
