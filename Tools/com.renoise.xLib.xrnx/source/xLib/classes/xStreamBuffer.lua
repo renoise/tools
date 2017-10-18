@@ -556,6 +556,8 @@ end
 function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
   TRACE("xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)",pos,xinc,num_lines,live_mode)
 
+  local start_time = os.clock()
+
   --print(">>> write output -- pos,xinc,num_lines",pos,xinc,num_lines)
 
   if not self.callback then
@@ -615,6 +617,10 @@ function xStreamBuffer:write_output(pos,xinc,num_lines,live_mode)
     end
 
   end
+
+  if not live_mode then
+    LOG(">>> xStreamBuffer: finished in", os.clock()-start_time,"s")
+  end  
 
 end
 
