@@ -890,19 +890,3 @@ function xStreamUIArgsPanel:update_visibility()
 
 end
 
----------------------------------------------------------------------------------------------------
--- maintain the arg_views table as arguments are removed
-
-function xStreamUIArgsPanel:purge_arg_views()
-  TRACE("xStreamUIArgsPanel:purge_arg_views()")
-
-  local args = self.xstream.selected_model.args
-  for k,v in ripairs(self.arg_views) do
-    local arg = args:get_arg_by_name(v.name,v.tab_name)
-    if not arg then
-      self.arg_views[k] = nil
-    end
-  end
-
-end
-
