@@ -176,7 +176,7 @@ function xStreamUILuaEditor:build()
           width = xStreamUI.BITMAP_BUTTON_W,
           height = xStreamUI.BITMAP_BUTTON_H,
           notifier = function()
-            local passed,err = self:rename_callback()
+            local passed,err = self.xstream.ui.model_toolbar:rename_callback()
             if err then
               renoise.app():show_warning(err)
             end
