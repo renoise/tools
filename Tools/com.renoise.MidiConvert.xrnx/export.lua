@@ -240,16 +240,16 @@ function export_build_data(plan)
               -- Note OFF
               if
                 not note_col.is_empty and
-                j > 0 and (DATA[i][j].pos_end == 0 or                
+                j > 0 and ((DATA[i][j] and DATA[i][j].pos_end == 0) or                
                 note_col.note_value == 120)
               then
                 DATA[i][j].pos_end = pos
                 DATA[i][j].delay_end = note_col.delay_value
                 DATA[i][j].tick_delay_end = tick_delay
               elseif
-                tick_cut ~= nil and
-                j > 0 and (DATA[i][j].pos_end == 0 or
-                note_col.note_value == 120)
+              tick_cut ~= nil and
+              j > 0 and ((DATA[i][j] and DATA[i][j].pos_end == 0) or
+              note_col.note_value == 120)
               then
                 DATA[i][j].pos_end = pos
                 DATA[i][j].delay_end = note_col.delay_value
@@ -290,7 +290,7 @@ function export_build_data(plan)
                   -- sequence_index = sequence_index,
                 }
                 if note_col.note_value ~= 121 then
-                j = table.count(DATA[i])
+                  j = table.count(DATA[i])
                 end
                 if tick_cut ~= nil then
                   DATA[i][j].pos_end = pos
