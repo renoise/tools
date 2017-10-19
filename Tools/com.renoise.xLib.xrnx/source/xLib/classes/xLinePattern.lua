@@ -462,8 +462,10 @@ end
 -- @param track renoise.Track
 -- @param line renoise.PatternLine
 -- @param cmd xMidiCommand
+-- @param [expand] boolean, show target panning/effect-column (default is true)
+-- @param [replace] boolean, replace existing commands (default is false - push to side)
 
-function xLinePattern.set_midi_command(track,line,cmd)
+function xLinePattern.set_midi_command(track,line,cmd,expand,replace)
 
   assert(type(track)=="Track","Expected renoise.Track as argument")
   assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
