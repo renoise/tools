@@ -34,6 +34,7 @@ local DATA_LPB = table.create()
 local DATA_TPL = table.create()
 local DATA_TICK_DELAY = table.create()
 local DATA_TICK_CUT = table.create()
+local DATA_CC = table.create()
 
 --------------------------------------------------------------------------------
 -- Helper functions
@@ -115,10 +116,13 @@ function export_build_data(plan)
 
   -- Setup data table
   for i=1,total_instruments do
-    DATA[i] = table.create()    
+    DATA[i] = table.create() -- notes 
+    DATA_CC[i] = table.create() -- midi commands 
   end
+
   local i = 255 -- instrument_value, 255 means empty
   local j = 0 -- e.g. DATA[i][j]
+  local p = 0 -- e.g. DATA_CC[i][p]
 
   -- # TRACKS
   for track_index=1,total_tracks do
@@ -190,24 +194,56 @@ function export_build_data(plan)
                 DATA_TPL[pos] = fx_col.amount_string
               elseif '0Q' == fx_col.number_string  then
                 -- 0Qxx, Delay all notes by xx ticks.
-                DATA_TICK_DELAY[pos] = fx_col.amount_string              
+                DATA_TICK_DELAY[pos] = fx_col.amount_string
               end
             end
           end
 
-          -- Notes data
           if
             tracks[track_index].type ~= renoise.Track.TRACK_TYPE_GROUP and
             tracks[track_index].type ~= renoise.Track.TRACK_TYPE_MASTER and
             tracks[track_index].type ~= renoise.Track.TRACK_TYPE_SEND
           then
+
+            -- Sequencer tracks
+
+            local note_col = current_pattern_track:line(line_index).note_columns[column_index]
+            local fx_col = current_pattern_track:line(line_index).effect_columns[1]
+            
+            -- Look for MIDI commands - can only be present once per line
+            -- TODO: only check the right-most note-column
+
+            -- Midi control messages (CC)
+            if ('M0' == note_col.panning_string) 
+              and note_col.instrument_value ~= 255
+            then
+              DATA_CC[i]:insert{
+                cc_pos = pos,
+                cc_number = fx_col.number_string,
+                cc_value = fx_col.amount_string,
+              }
+                
+              p = table.count(DATA_CC[i])
+              --[[
+              dbug("CC Message (#"..p..")"
+                .."\n # instrument_value: "..tostring(note_col.instrument_value)
+                .."\n # sequence_index: "..tostring(sequence_index)
+                .."\n # column_index: "..tostring(column_index)
+                .."\n # line_index: "..tostring(line_index)
+                .."\n .cc_pos: "..tostring(DATA_CC[i][p].cc_pos)
+                .."\n .cc_number: "..tostring(DATA_CC[i][p].cc_number)
+                .."\n .cc_number: "..tostring(DATA_CC[i][p].cc_value)
+              )
+              ]]
+            end                
+
+            -- Notes data
+            
             -- TODO:
             -- NNA and a more realistic note duration could, in theory,
             -- be calculated with the length of the sample and the instrument
             -- ADSR properties.
-            local midicc = false
-            local note_col = current_pattern_track:line(line_index).note_columns[column_index]
-            local fx_col = current_pattern_track:line(line_index).effect_columns[1]
+
             if
               not constrain_to_selected or
               constrain_to_selected and note_col.is_selected
@@ -224,7 +260,7 @@ function export_build_data(plan)
                 tick_delay = note_col.volume_string:sub(2)
               elseif note_col.volume_string:find('C') == 1 then
                 tick_cut = note_col.volume_string:sub(2)
-              end      
+              end
               -- Panning col
               if 0 <= note_col.panning_value and note_col.panning_value <= 128 then
                 panning = note_col.panning_value
@@ -233,46 +269,52 @@ function export_build_data(plan)
               elseif note_col.panning_string:find('C') == 1 then
                 tick_cut = note_col.panning_string:sub(2)
               end
-               -- Midi control messages
-              if 'M0' == note_col.panning_string then
-                midicc = true
-              end             
               -- Note OFF
               if
                 not note_col.is_empty and
-                j > 0 and ((DATA[i][j] and DATA[i][j].pos_end == 0) or                
-                note_col.note_value == 120)
+                j > 0 and DATA[i][j].pos_end == 0
               then
+                --[[
+                dbug("Note-OFF - tick_delay (#"..j..")"
+                  .."\n # instrument_value: "..tostring(note_col.instrument_value)
+                  .."\n # sequence_index: "..tostring(sequence_index)
+                  .."\n # column_index: "..tostring(column_index)
+                  .."\n # line_index: "..tostring(line_index)
+                  .."\n .pos_end: "..tostring(pos)
+                  .."\n .delay_end: "..tostring(note_col.delay_value)
+                  .."\n .tick_delay_end: "..tostring(tick_delay)
+                )
+                ]]
                 DATA[i][j].pos_end = pos
                 DATA[i][j].delay_end = note_col.delay_value
                 DATA[i][j].tick_delay_end = tick_delay
               elseif
-              tick_cut ~= nil and
-              j > 0 and ((DATA[i][j] and DATA[i][j].pos_end == 0) or
-              note_col.note_value == 120)
+                tick_cut ~= nil and
+                j > 0 and DATA[i][j].pos_end == 0
               then
+                --[[
+                dbug("Note-OFF - tick_cut (#"..j..")"
+                  .."\n # instrument_value: "..tostring(note_col.instrument_value)
+                  .."\n # sequence_index: "..tostring(sequence_index)
+                  .."\n # column_index: "..tostring(column_index)
+                  .."\n # line_index: "..tostring(line_index)
+                  .."\n .pos_end: "..tostring(pos)
+                  .."\n .delay_end: "..tostring(note_col.delay_value)
+                  .."\n .tick_delay_end: "..tostring(tick_cut)
+                )
+                ]]
                 DATA[i][j].pos_end = pos
                 DATA[i][j].delay_end = note_col.delay_value
                 DATA[i][j].tick_delay_end = tick_cut
               end
               -- Note ON
-              -- dbug(("note: '%d' instrument: '%d'"):format(note_col.note_value, note_col.instrument_value));
               if
-                note_col.instrument_value ~= 255 and
-                DATA[note_col.instrument_value + 1] ~= nil and
-                note_col.note_value ~= 121 or
-                midicc == true
+                note_col.instrument_value ~= 255 
+                and note_col.note_value < 120
+                and DATA[note_col.instrument_value + 1] ~= nil 
               then
-                local cc_number = 0
-                local cc_value = 0
-                local par = 0                
-                if midicc == true then
-                  par = pos
-                  cc_number = fx_col.number_string
-                  cc_value = fx_col.amount_string                  
-                end
                 i = note_col.instrument_value + 1 -- Lua vs C++
-                DATA[i]:insert {
+                DATA[i]:insert{
                   note = note_col.note_value,
                   pos_start = pos,
                   pos_end = 0,
@@ -281,21 +323,32 @@ function export_build_data(plan)
                   delay_end = 0,
                   tick_delay_end = 0,
                   volume = volume,
-                  par = par,                 
-                  cc_number = cc_number,
-                  cc_value = cc_value
                   -- panning = panning, -- TODO: Do something with panning var
                   -- track = track_index,
                   -- column = column_index,
                   -- sequence_index = sequence_index,
                 }
-                if note_col.note_value ~= 121 then
-                  j = table.count(DATA[i])
-                end
+                j = table.count(DATA[i])
                 if tick_cut ~= nil then
                   DATA[i][j].pos_end = pos
                   DATA[i][j].tick_delay_end = tick_cut
                 end
+                --[[
+                dbug("Note-ON (#"..j..")"
+                  .."\n # instrument_value: "..tostring(note_col.instrument_value)
+                  .."\n # sequence_index: "..tostring(sequence_index)
+                  .."\n # column_index: "..tostring(column_index)
+                  .."\n # line_index: "..tostring(line_index)
+                  .."\n .note: "..tostring(DATA[i][j].note)
+                  .."\n .pos_start: "..tostring(DATA[i][j].pos_start)
+                  .."\n .pos_end: "..tostring(DATA[i][j].pos_end)
+                  .."\n .delay_start: "..tostring(DATA[i][j].delay_start)
+                  .."\n .tick_delay_start: "..tostring(DATA[i][j].tick_delay_start)
+                  .."\n .delay_end: "..tostring(DATA[i][j].delay_end)
+                  .."\n .tick_delay_end: "..tostring(DATA[i][j].tick_delay_end)
+                  .."\n .volume: "..tostring(DATA[i][j].volume)
+                )
+                ]]
               end
             end
             -- Next
@@ -308,16 +361,17 @@ function export_build_data(plan)
 
         end -- LINES #
 
-        -- Insert terminating Note OFF
-        if j > 0 and DATA[i][j].pos_end == 0 then
-          DATA[i][j].pos_end = pattern_offset + pattern_length + RNS.transport.lpb
-        end
-
         -- Increment pattern counter
         k = k + 1
 
       end -- SEQUENCE #
 
+      -- Insert terminating Note OFF
+      if j > 0 and DATA[i][j].pos_end == 0 then
+        dbug("Process(build_data()) : Insert terminating Note-OFF")
+        DATA[i][j].pos_end = pattern_offset + pattern_length + RNS.transport.lpb
+      end
+      
       -- Yield every column to avoid timeout nag screens
       renoise.app():show_status(export_status_progress())
       if COROUTINE_MODE then coroutine.yield() end
@@ -403,38 +457,37 @@ end
 
 
 -- Note ON
-function _export_note_on(tn, sort_me, data, idx)
+function _export_note_on(tmap, sort_me, data, idx)
   -- Create MF2T message
   local pos_d = _export_pos_to_float(data.pos_start, data.delay_start,
     tonumber(data.tick_delay_start, 16), idx)
-  if pos_d ~= false and data.note ~= 121 then
-    local msg = "On ch=" .. MIDI_CHANNEL .. " n=" ..  data.note .. " v=" .. math.min(data.volume, 127)
-    sort_me:insert{pos_d, msg, tn}
+  if pos_d ~= false then
+    local msg = "On ch=" .. tmap.midi_channel .. " n=" ..  data.note .. " v=" .. math.min(data.volume, 127)
+    sort_me:insert{pos_d, msg, tmap.track_number}
   end
 end
 
 
 -- Note OFF
-function _export_note_off(tn, sort_me, data, idx)
+function _export_note_off(tmap, sort_me, data, idx)
   -- Create MF2T message
   local pos_d = _export_pos_to_float(data.pos_end, data.delay_end,
     tonumber(data.tick_delay_end, 16), idx)
-  if pos_d ~= false and pos_d > 0 and data.note ~= 121 then
-    local msg = "Off ch=" .. MIDI_CHANNEL .. " n=" ..  data.note .. " v=0"
-    sort_me:insert{pos_d, msg, tn}
+  if pos_d ~= false then
+    local msg = "Off ch=" .. tmap.midi_channel .. " n=" ..  data.note .. " v=0"
+    sort_me:insert{pos_d, msg, tmap.track_number}
   end
 end
 
--- MidiCC
-function _export_midi_cc(tn, sort_me, data, idx)
+-- Midi CC
+function _export_midi_cc(tmap, sort_me, param, idx)
   -- Create MF2T message
-  local pos_par = _export_pos_to_float(data.par, 0, 0, idx)  
-  if pos_par ~= false and pos_par > 0 then
-    local msg = "Par ch=" .. MIDI_CHANNEL .. " c=" ..  tonumber(data.cc_number,16) .. " v=" .. tonumber(data.cc_value,16)
-    sort_me:insert{pos_par, msg, tn}
+  local cc_pos = _export_pos_to_float(param.cc_pos, 0, 0, idx)  
+  if cc_pos ~= false and cc_pos > 0 then
+    local msg = "Par ch=" .. tmap.midi_channel .. " c=" ..  tonumber(param.cc_number,16) .. " v=" .. tonumber(param.cc_value,16)
+    sort_me:insert{cc_pos, msg, tmap.track_number}
   end
 end
-
 
 function export_midi()
 
@@ -444,7 +497,7 @@ function export_midi()
   midi:setBpm(RNS.transport.bpm); -- Initial BPM
 
   -- Debug
-  -- dbug(DATA)  
+  -- dbug(DATA)
   -- dbug(DATA_BPM)
   -- dbug(DATA_LPB)
   -- dbug(DATA_TPL)
@@ -452,6 +505,36 @@ function export_midi()
 
   -- reusable/mutable "sort_me" table
   local sort_me = table.create()
+
+  -- Yield every XX notes/messages to avoid timeout nag screens
+  local yield_every = 250
+  
+  -- Register MIDI tracks in the 'track_map'
+  -- index is renoise instr, value is {
+  --  track_number = MIDI track #
+  --  midi_channel = MIDI channel #
+  --  }
+  local track_map = {}
+  local registerTrack = function(instr_idx)
+    local tn = midi:newTrack()
+    -- Renoise Instrument Name as MIDI TrkName
+    midi:addMsg(tn,
+      '0 Meta TrkName "' ..
+      string.format("%02d", instr_idx - 1) .. ": " ..
+      string.gsub(RNS.instruments[instr_idx].name, '"', '') .. '"'
+    )
+    -- Renoise Instrument Name as MIDI InstrName
+    midi:addMsg(tn,
+      '0 Meta InstrName "' ..
+      string.format("%02d", instr_idx - 1) .. ": " ..
+      string.gsub(RNS.instruments[instr_idx].name, '"', '') .. '"'
+    )
+    track_map[instr_idx] = {
+      track_number = tn,
+      midi_channel = MIDI_CHANNEL,
+    }    
+    return track_map[instr_idx]
+  end
 
   -- Whenever we encounter a BPM change, write it to the MIDI tempo track
   local lpb = RNS.transport.lpb -- Initial LPB
@@ -477,34 +560,22 @@ function export_midi()
   sort_me:clear()
   for i=1,#DATA do
     if table.count(DATA[i]) > 0 then
-      local tn = midi:newTrack()
-      -- Renoise Instrument Name as MIDI TrkName
-      midi:addMsg(tn,
-        '0 Meta TrkName "' ..
-        string.format("%02d", i - 1) .. ": " ..
-        string.gsub(RNS.instruments[i].name, '"', '') .. '"'
-      )
-      -- Renoise Instrument Name as MIDI InstrName
-      midi:addMsg(tn,
-        '0 Meta InstrName "' ..
-        string.format("%02d", i - 1) .. ": " ..
-        string.gsub(RNS.instruments[i].name, '"', '') .. '"'
-      )
+
+      local tmap = registerTrack(i)
 
       -- reuse "sort_me" table:
-      -- [1] = Pos+Delay, [2] = Msg, [3] = Track number (tn)
-
+      -- [1] = Pos+Delay, [2] = Msg, [3] = Track number (tmap.track_number)
+      
       for j=1,#DATA[i] do
-        _export_note_on(tn, sort_me, DATA[i][j], idx)
-        _export_note_off(tn, sort_me, DATA[i][j], idx)
-        _export_midi_cc(tn, sort_me, DATA[i][j], idx)       
-        -- Yield every 250 notes to avoid timeout nag screens
-        if (j % 250 == 0) then
+        _export_note_on(tmap, sort_me, DATA[i][j], idx)
+        _export_note_off(tmap, sort_me, DATA[i][j], idx)
+        if (j % yield_every == 0) then
           renoise.app():show_status(export_status_progress())
           if COROUTINE_MODE then coroutine.yield() end
           dbug(("Process(midi()) Instr: %d; Note: %d."):format(i, j))
         end
       end
+      
       export_ch_rotator()
     end
     -- Yield every instrument to avoid timeout nag screens
@@ -513,6 +584,26 @@ function export_midi()
     dbug(("Process(midi()) Instr: %d."):format(i))
   end
 
+  -- Process MIDI-CC Messages
+  print("DATA_CC...",rprint(DATA_CC))  
+  for i=1,#DATA_CC do    
+    if table.count(DATA_CC[i]) > 0 then
+      local tmap = track_map[i] 
+      if not tmap then 
+        tmap = registerTrack(i)
+      end 
+      for p=1,#DATA_CC[i] do
+        print("got here",i,p)
+        _export_midi_cc(tmap, sort_me, DATA_CC[i][p], idx)     
+        if (p % yield_every == 0) then
+          renoise.app():show_status(export_status_progress())
+          if COROUTINE_MODE then coroutine.yield() end
+          dbug(("Process(midi()) Instr: %d; CC Message: %d."):format(i, p))
+        end
+      end
+    end
+  end
+  
   -- TODO:
   -- LBP procedure is flawed? for example:
   -- Note pos:1, LBP changed pos:3, LBP changed pos:5, Note pos:7
@@ -520,13 +611,12 @@ function export_midi()
   -- But, pos:3 will affect the timeline?
 
   -- reuse "sort_me" table:
-  -- [1] = MF2T Timestamp, [2] = Msg, [3] = Track number (tn)
+  -- [1] = MF2T Timestamp, [2] = Msg, [3] = Track number (tmap.track_number)
 
   idx = _export_max_pos(DATA_LPB) or 1
   for j=1,#sort_me do
     sort_me[j][1] = _export_float_to_time(sort_me[j][1], MIDI_DIVISION, idx)
-    -- Yield every 250 index to avoid timeout nag screens
-    if (j % 250 == 0) then
+    if (j % yield_every == 0) then
       renoise.app():show_status(export_status_progress())
       if COROUTINE_MODE then coroutine.yield() end
       dbug(("Process(midi()) _float_to time: %d."):format(j))
