@@ -36,6 +36,8 @@ local DATA_TICK_DELAY = table.create()
 local DATA_TICK_CUT = table.create()
 local DATA_CC = table.create()
 
+local LPB_LOOKUP_TABLE = table.create()
+
 --------------------------------------------------------------------------------
 -- Helper functions
 --------------------------------------------------------------------------------
@@ -93,6 +95,7 @@ function export_build_data(plan)
   MIDI_CHANNEL = 1
   DATA:clear(); DATA_BPM:clear(); DATA_LPB:clear(); DATA_TPL:clear()
   DATA_TICK_DELAY:clear(); DATA_TICK_CUT:clear()
+  LPB_LOOKUP_TABLE:clear();
 
   local instruments = RNS.instruments
   local tracks = RNS.tracks
@@ -271,10 +274,10 @@ function export_build_data(plan)
               end
               -- Note OFF
               if
-                not note_col.is_empty and
-                j > 0 and DATA[i][j].pos_end == 0
+                not note_col.is_empty 
+                and note_col.note_value < 121
+                and j > 0 and DATA[i][j].pos_end == 0
               then
-                --[[
                 dbug("Note-OFF - tick_delay (#"..j..")"
                   .."\n # instrument_value: "..tostring(note_col.instrument_value)
                   .."\n # sequence_index: "..tostring(sequence_index)
@@ -284,7 +287,6 @@ function export_build_data(plan)
                   .."\n .delay_end: "..tostring(note_col.delay_value)
                   .."\n .tick_delay_end: "..tostring(tick_delay)
                 )
-                ]]
                 DATA[i][j].pos_end = pos
                 DATA[i][j].delay_end = note_col.delay_value
                 DATA[i][j].tick_delay_end = tick_delay
@@ -292,7 +294,6 @@ function export_build_data(plan)
                 tick_cut ~= nil and
                 j > 0 and DATA[i][j].pos_end == 0
               then
-                --[[
                 dbug("Note-OFF - tick_cut (#"..j..")"
                   .."\n # instrument_value: "..tostring(note_col.instrument_value)
                   .."\n # sequence_index: "..tostring(sequence_index)
@@ -302,7 +303,6 @@ function export_build_data(plan)
                   .."\n .delay_end: "..tostring(note_col.delay_value)
                   .."\n .tick_delay_end: "..tostring(tick_cut)
                 )
-                ]]
                 DATA[i][j].pos_end = pos
                 DATA[i][j].delay_end = note_col.delay_value
                 DATA[i][j].tick_delay_end = tick_cut
@@ -333,7 +333,6 @@ function export_build_data(plan)
                   DATA[i][j].pos_end = pos
                   DATA[i][j].tick_delay_end = tick_cut
                 end
-                --[[
                 dbug("Note-ON (#"..j..")"
                   .."\n # instrument_value: "..tostring(note_col.instrument_value)
                   .."\n # sequence_index: "..tostring(sequence_index)
@@ -348,7 +347,6 @@ function export_build_data(plan)
                   .."\n .tick_delay_end: "..tostring(DATA[i][j].tick_delay_end)
                   .."\n .volume: "..tostring(DATA[i][j].volume)
                 )
-                ]]
               end
             end
             -- Next
@@ -438,6 +436,55 @@ function _export_pos_to_float(pos, delay, tick, idx)
   return pos + float
 end
 
+  -- Create 'LPB position' table, so we can more easily
+  -- figure out the absolute time of any given pos 
+function create_lpb_lookup_table()  
+  if not table.is_empty(DATA_LPB) then
+    local last_pos = 0
+    local last_key = 0
+    local keys = table.keys(DATA_LPB)
+    table.sort(keys)
+    for _,k in ipairs(keys) do
+      local v = tonumber(DATA_LPB[k],16)
+      local factor = v/4
+      local pos = last_pos + factor*(k-last_key)
+      LPB_LOOKUP_TABLE[k] = {
+        factor = factor,
+        abs_pos = pos,
+      }
+      last_pos = pos
+      last_key = k
+    end
+  end
+  print("LPB_LOOKUP_TABLE",rprint(LPB_LOOKUP_TABLE))
+end
+
+-- Convert pos to absolute pos that respect LPB changes...
+function _resolve_abs_pos(pos)
+  local lookup = nil
+  local lookup_idx = nil
+  -- Find previous tpl position
+  for idx=pos,1,-1 do
+    if LPB_LOOKUP_TABLE[idx] ~= nil then 
+      if (idx < pos) then
+        lookup = LPB_LOOKUP_TABLE[idx]
+        lookup_idx = idx
+      end 
+      if lookup then
+        break
+      end
+    end
+  end
+  if lookup then 
+    -- Return difference between matched and calculated pos.
+    local diff = lookup.factor * (pos-lookup_idx)
+    --print("*** pos,lookup_idx,diff,lookup...",pos,lookup_idx,diff,rprint(lookup))
+    return lookup.abs_pos + diff
+  else
+    -- Match not found, return provided position
+    return pos
+  end 
+end
 
 -- Return a MF2T timestamp
 function _export_float_to_time(float, division, idx)
@@ -497,18 +544,22 @@ function export_midi()
   midi:setBpm(RNS.transport.bpm); -- Initial BPM
 
   -- Debug
-  -- dbug(DATA)
-  -- dbug(DATA_BPM)
-  -- dbug(DATA_LPB)
-  -- dbug(DATA_TPL)
-  -- dbug(DATA_TICK_DELAY)
-
+  --dbug("DATA"); dbug(DATA)
+  --dbug("DATA_BPM"); dbug(DATA_BPM)
+  dbug("DATA_LPB"); dbug(DATA_LPB)
+  --dbug("DATA_TPL"); dbug(DATA_TPL)
+  --dbug("DATA_TICK_DELAY"); dbug(DATA_TICK_DELAY)
+  --dbug("DATA_CC..."); dbug(DATA_CC)  
+  
   -- reusable/mutable "sort_me" table
   local sort_me = table.create()
 
   -- Yield every XX notes/messages to avoid timeout nag screens
   local yield_every = 250
-  
+
+  -- Create lookup table from DATA_LPB
+  create_lpb_lookup_table()
+
   -- Register MIDI tracks in the 'track_map'
   -- index is renoise instr, value is {
   --  track_number = MIDI track #
@@ -548,7 +599,10 @@ function export_midi()
     if  bpm > 0 then
       -- TODO:
       -- Apply LPB changes here? See "LBP procedure is flawed?" note below...
-      local timestamp = export_pos_to_time(sort_me[i][1], 0, MIDI_DIVISION, lpb)
+
+      local abs_pos = _resolve_abs_pos(sort_me[i][1])
+      print("pos,abs_pos,",sort_me[i][1],abs_pos)
+      local timestamp = export_pos_to_time(abs_pos, 0, MIDI_DIVISION, lpb)
       if timestamp > 0 then
         midi:addMsg(1, timestamp .. " Tempo " .. bpm_to_tempo(bpm))
       end
@@ -585,7 +639,6 @@ function export_midi()
   end
 
   -- Process MIDI-CC Messages
-  print("DATA_CC...",rprint(DATA_CC))  
   for i=1,#DATA_CC do    
     if table.count(DATA_CC[i]) > 0 then
       local tmap = track_map[i] 
@@ -593,7 +646,6 @@ function export_midi()
         tmap = registerTrack(i)
       end 
       for p=1,#DATA_CC[i] do
-        print("got here",i,p)
         _export_midi_cc(tmap, sort_me, DATA_CC[i][p], idx)     
         if (p % yield_every == 0) then
           renoise.app():show_status(export_status_progress())
