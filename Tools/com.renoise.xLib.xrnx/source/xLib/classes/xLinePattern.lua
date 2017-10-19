@@ -433,6 +433,16 @@ function xLinePattern.get_midi_command(track,line)
   local note_col = line.note_columns[track.visible_note_columns]
   local fx_col = line.effect_columns[1]
 
+  if note_col.is_empty or fx_col.is_empty then 
+    return 
+  end 
+
+  -- command number/value needs to be plain numeric 
+  local fx_num_val = xEffectColumn.amount_string_to_value(fx_col.number_string)
+  if not fx_num_val then 
+    return 
+  end 
+
   if (note_col.instrument_value < 255) 
     and (note_col.panning_string:sub(1,1) == "M")
   then
@@ -452,19 +462,88 @@ end
 -- @param track renoise.Track
 -- @param line renoise.PatternLine
 -- @param cmd xMidiCommand
---[[
+
 function xLinePattern.set_midi_command(track,line,cmd)
 
   assert(type(track)=="Track","Expected renoise.Track as argument")
   assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
+  assert(type(cmd)=="xMidiCommand","Expected xMidiCommand as argument")
 
-  local note_col = line.note_columns[#track.visible_note_columns]
-  
-  -- TODO
+  expand = expand or true
+  replace = replace or false
 
+  local note_col = line.note_columns[track.visible_note_columns]
+  local fx_col = line.effect_columns[1]
+
+  -- if there is an existing non-MIDI command, push it to the side 
+  -- (insert in next available effect column)
+  if not replace and not fx_col.is_empty then 
+    local xcmd = xLinePattern.get_midi_command(track,line) 
+    if not xcmd then 
+      -- only non-numeric effects are pushed to side
+      local fx_num_val = xEffectColumn.amount_string_to_value(fx_col.number_string)
+      if not fx_num_val then 
+        for k = 2, xLinePattern.MAX_EFFECT_COLUMNS do
+          local tmp_fx_col = line.effect_columns[k]
+          if tmp_fx_col.is_empty then 
+            tmp_fx_col.number_value = fx_col.number_value
+            tmp_fx_col.amount_value = fx_col.amount_value
+            fx_col:clear()
+            -- make column visible if needed 
+            if expand and (k > track.visible_effect_columns) then
+              track.visible_effect_columns = k
+            end
+            break
+          end 
+        end 
+      end 
+    end 
+  end
+
+  note_col.instrument_value = cmd.instrument_index-1
+  note_col.panning_string = ("M%d"):format(cmd.message_type)
+  fx_col.number_value = cmd.number_value
+  fx_col.amount_value = cmd.amount_value
+
+  if expand then
+    if not track.panning_column_visible then 
+      track.panning_column_visible = true
+    end
+    if (track.visible_effect_columns == 0) then
+      track.visible_effect_columns = 1
+    end
+  end 
 
 end
-]]
+
+---------------------------------------------------------------------------------------------------
+-- [Static] Clear previously set midi command. 
+-- @param track renoise.Track
+-- @param line renoise.PatternLine
+
+function xLinePattern.clear_midi_command(track,line)
+  TRACE("xLinePattern.clear_midi_command(track,line)",track,line)
+
+  assert(type(track)=="Track","Expected renoise.Track as argument")
+  assert(type(line)=="PatternLine","Expected renoise.PatternLine as argument")
+
+  local note_col = line.note_columns[track.visible_note_columns]
+  local fx_col = line.effect_columns[1]
+
+  note_col.panning_value = xLinePattern.EMPTY_VALUE
+  fx_col.number_value = 0
+  fx_col.amount_value = 0
+
+  -- remove instrument if last thing left
+  if (note_col.volume_value == xLinePattern.EMPTY_VALUE)
+    and (note_col.delay_value == 0)
+    and (note_col.note_value == 121)
+  then 
+    note_col.instrument_value = xLinePattern.EMPTY_VALUE
+  end
+
+end
+
 
 ---------------------------------------------------------------------------------------------------
 
