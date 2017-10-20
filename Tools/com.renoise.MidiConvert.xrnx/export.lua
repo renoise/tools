@@ -213,12 +213,12 @@ function export_build_data(plan)
             local note_col = current_pattern_track:line(line_index).note_columns[column_index]
             local fx_col = current_pattern_track:line(line_index).effect_columns[1]
             
-            -- Look for MIDI commands - can only be present once per line
-            -- TODO: only check the right-most note-column
+            -- Look for MIDI commands in the right-most note-column
 
             -- Midi control messages (CC)
             if ('M0' == note_col.panning_string) 
-              and note_col.instrument_value ~= 255
+              and (column_index == total_note_columns)
+              and (note_col.instrument_value ~= 255)
             then
               DATA_CC[i]:insert{
                 cc_pos = pos,
@@ -442,66 +442,57 @@ function create_lpb_lookup_table()
   if not table.is_empty(DATA_LPB) then
     local last_pos = 0
     local last_key = 0
+    local last_factor = 1
     local keys = table.keys(DATA_LPB)
     table.sort(keys)
     for _,k in ipairs(keys) do
       local v = tonumber(DATA_LPB[k],16)
-      local factor = v/4
-      local pos = last_pos + factor*(k-last_key)
+      local factor = 4/v
+      local pos = last_pos + ((k-last_key) * last_factor)
       LPB_LOOKUP_TABLE[k] = {
         factor = factor,
         abs_pos = pos,
       }
       last_pos = pos
       last_key = k
+      last_factor = factor
     end
   end
-  print("LPB_LOOKUP_TABLE",rprint(LPB_LOOKUP_TABLE))
 end
 
--- Convert pos to absolute pos that respect LPB changes...
+-- Convert pos to absolute pos that respect LPB changes,
+-- using the lookup table to speed up things ..
 function _resolve_abs_pos(pos)
   local lookup = nil
   local lookup_idx = nil
-  -- Find previous tpl position
   for idx=pos,1,-1 do
     if LPB_LOOKUP_TABLE[idx] ~= nil then 
-      if (idx < pos) then
+      if (idx == pos) then 
+        -- Found exact match 
+        return LPB_LOOKUP_TABLE[idx].abs_pos
+      elseif (idx < pos) then
         lookup = LPB_LOOKUP_TABLE[idx]
         lookup_idx = idx
-      end 
-      if lookup then
         break
-      end
+      end 
     end
   end
   if lookup then 
-    -- Return difference between matched and calculated pos.
     local diff = lookup.factor * (pos-lookup_idx)
-    --print("*** pos,lookup_idx,diff,lookup...",pos,lookup_idx,diff,rprint(lookup))
     return lookup.abs_pos + diff
   else
-    -- Match not found, return provided position
+    -- No match, return position as-is
     return pos
   end 
 end
 
 -- Return a MF2T timestamp
 function _export_float_to_time(float, division, idx)
-  -- Find last known tick value
-  local lpb = RNS.transport.lpb
-  local tmp = math.floor(float + .5)
-  for i=idx,1,-1 do
-    if DATA_LPB[i] ~= nil and i <= tmp then
-      lpb = tonumber(DATA_LPB[i], 16)
-      break
-    end
-  end
-  -- Calculate time
+  local lpb = 4
+  local abs_pos = _resolve_abs_pos(float)      
   local time = (float - 1) * (division / lpb)
   return math.floor(time + .5) --Round
 end
-
 
 -- Note ON
 function _export_note_on(tmap, sort_me, data, idx)
@@ -546,7 +537,7 @@ function export_midi()
   -- Debug
   --dbug("DATA"); dbug(DATA)
   --dbug("DATA_BPM"); dbug(DATA_BPM)
-  dbug("DATA_LPB"); dbug(DATA_LPB)
+  --dbug("DATA_LPB"); dbug(DATA_LPB)
   --dbug("DATA_TPL"); dbug(DATA_TPL)
   --dbug("DATA_TICK_DELAY"); dbug(DATA_TICK_DELAY)
   --dbug("DATA_CC..."); dbug(DATA_CC)  
@@ -597,11 +588,7 @@ function export_midi()
   for i=1,#sort_me do
     local bpm = tonumber(sort_me[i][2], 16)
     if  bpm > 0 then
-      -- TODO:
-      -- Apply LPB changes here? See "LBP procedure is flawed?" note below...
-
       local abs_pos = _resolve_abs_pos(sort_me[i][1])
-      print("pos,abs_pos,",sort_me[i][1],abs_pos)
       local timestamp = export_pos_to_time(abs_pos, 0, MIDI_DIVISION, lpb)
       if timestamp > 0 then
         midi:addMsg(1, timestamp .. " Tempo " .. bpm_to_tempo(bpm))
@@ -610,16 +597,13 @@ function export_midi()
   end
 
   -- Create a new MIDI track for each Renoise Instrument
+  -- reuse "sort_me" table:
+  -- [1] = Pos+Delay, [2] = Msg, [3] = Track number (tmap.track_number)
   local idx = _export_max_pos(DATA_TPL) or 1
   sort_me:clear()
   for i=1,#DATA do
     if table.count(DATA[i]) > 0 then
-
       local tmap = registerTrack(i)
-
-      -- reuse "sort_me" table:
-      -- [1] = Pos+Delay, [2] = Msg, [3] = Track number (tmap.track_number)
-      
       for j=1,#DATA[i] do
         _export_note_on(tmap, sort_me, DATA[i][j], idx)
         _export_note_off(tmap, sort_me, DATA[i][j], idx)
@@ -629,7 +613,6 @@ function export_midi()
           dbug(("Process(midi()) Instr: %d; Note: %d."):format(i, j))
         end
       end
-      
       export_ch_rotator()
     end
     -- Yield every instrument to avoid timeout nag screens
@@ -655,12 +638,6 @@ function export_midi()
       end
     end
   end
-  
-  -- TODO:
-  -- LBP procedure is flawed? for example:
-  -- Note pos:1, LBP changed pos:3, LBP changed pos:5, Note pos:7
-  -- Current algorithm only uses last known LBP on pos:5
-  -- But, pos:3 will affect the timeline?
 
   -- reuse "sort_me" table:
   -- [1] = MF2T Timestamp, [2] = Msg, [3] = Track number (tmap.track_number)
