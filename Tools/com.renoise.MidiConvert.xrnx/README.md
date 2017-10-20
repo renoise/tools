@@ -42,7 +42,9 @@ The code is decently commented, includes a generic Midi.lua class that can be re
 ## Changelog
 
 0.96
-- Fix stray note-off issue
+- Proper support for Renoise LPB commands 
+- Allow MIDI-CC Commands without accompanying note
+- Allow notes spanning multiple patterns
 
 0.95
 - Adds support for MIDI-CC Commands 
