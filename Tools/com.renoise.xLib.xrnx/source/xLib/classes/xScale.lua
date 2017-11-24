@@ -118,38 +118,16 @@ function xScale.restrict_to_scale(note_value,scale_idx_or_name,scale_key)
     return note_value 
   end
 
-
-  -- scale key means shifting the keys
-  --[[
-  local keys = table.rcopy(scale.keys)
-  if (scale_key > 1) then
-    local tmp = scale_key-1
-    while (tmp > 0) do
-      local tmp_val = keys[#keys]
-      table.insert(keys,1,tmp_val)
-      table.remove(keys,#keys)
-      tmp = tmp - 1
-    end
-  end
-  ]]
-
   local keys = xScale.get_shifted_keys(scale,scale_key)
   local key = note_value%12
-
   local transpose = 0
-  local tmp_key
-  if (scale_key > 1) and (key == 1) and (keys[1] == 0) then
-    -- special case: if we have shifted the keys, the
-    -- first entry might be 0 - in this case, we look from
-    -- the last entry in the keys table
-    tmp_key = #keys-1
-  else
-    tmp_key = key+1
-  end
-  while (keys[tmp_key] == 0) do
-    tmp_key = tmp_key-1
+
+  -- always look back when key is empty   
+  while (keys[key+1] == 0) do
+    key = (key-1)%12
     transpose = transpose+1
   end
+
   return note_value - transpose
 
 end
