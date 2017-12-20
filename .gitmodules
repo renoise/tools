@@ -79,3 +79,21 @@
 [submodule "Tools/com.renoise.vLib.xrnx/source/cLib"]
 	path = Tools/com.renoise.vLib.xrnx/source/cLib
 	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.xRules.xrnx/source/cLib"]
+	path = Tools/com.renoise.xRules.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.xRules.xrnx/source/vLib"]
+	path = Tools/com.renoise.xRules.xrnx/source/vLib
+	url = https://github.com/renoise/vLib
+[submodule "Tools/com.renoise.xRules.xrnx/source/xLib"]
+	path = Tools/com.renoise.xRules.xrnx/source/xLib
+	url = https://github.com/renoise/xLib
+[submodule "Tools/com.renoise.xStream.xrnx/source/cLib"]
+	path = Tools/com.renoise.xStream.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.xStream.xrnx/source/vLib"]
+	path = Tools/com.renoise.xStream.xrnx/source/vLib
+	url = https://github.com/renoise/vLib
+[submodule "Tools/com.renoise.xStream.xrnx/source/xLib"]
+	path = Tools/com.renoise.xStream.xrnx/source/xLib
+	url = https://github.com/renoise/xLib
