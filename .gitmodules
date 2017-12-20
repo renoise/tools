@@ -1,0 +1,81 @@
+[submodule "Tools/com.renoise.xLib.xrnx/source/cLib"]
+	path = Tools/com.renoise.xLib.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.xLib.xrnx/source/vLib"]
+	path = Tools/com.renoise.xLib.xrnx/source/vLib
+	url = https://github.com/renoise/vLib
+[submodule "Tools/com.renoise.Duplex.xrnx/cLib"]
+	path = Tools/com.renoise.Duplex.xrnx/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.Duplex.xrnx/xLib"]
+	path = Tools/com.renoise.Duplex.xrnx/xLib
+	url = https://github.com/renoise/xLib
+[submodule "Tools/com.renoise.MidiPerformer.xrnx/source/cLib"]
+	path = Tools/com.renoise.MidiPerformer.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.MidiPerformer.xrnx/source/vLib"]
+	path = Tools/com.renoise.MidiPerformer.xrnx/source/vLib
+	url = https://github.com/renoise/vLib
+[submodule "Tools/com.renoise.MidiPerformer.xrnx/source/xLib"]
+	path = Tools/com.renoise.MidiPerformer.xrnx/source/xLib
+	url = https://github.com/renoise/xLib
+[submodule "Tools/com.renoise.Noodletrap.xrnx/classes/cLib"]
+	path = Tools/com.renoise.Noodletrap.xrnx/classes/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.Noodletrap.xrnx/classes/xLib"]
+	path = Tools/com.renoise.Noodletrap.xrnx/classes/xLib
+	url = https://github.com/renoise/xLib
+[submodule "Tools/com.renoise.PhraseMate.xrnx/source/cLib"]
+	path = Tools/com.renoise.PhraseMate.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.PhraseMate.xrnx/source/vLib"]
+	path = Tools/com.renoise.PhraseMate.xrnx/source/vLib
+	url = https://github.com/renoise/vLib
+[submodule "Tools/com.renoise.PhraseMate.xrnx/source/xLib"]
+	path = Tools/com.renoise.PhraseMate.xrnx/source/xLib
+	url = https://github.com/renoise/xLib
+[submodule "Tools/com.renoise.ScaleMate.xrnx/source/cLib"]
+	path = Tools/com.renoise.ScaleMate.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.ScaleMate.xrnx/source/xLib"]
+	path = Tools/com.renoise.ScaleMate.xrnx/source/xLib
+	url = https://github.com/renoise/xLib
+[submodule "Tools/com.renoise.SliceMate.xrnx/source/cLib"]
+	path = Tools/com.renoise.SliceMate.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.SliceMate.xrnx/source/vLib"]
+	path = Tools/com.renoise.SliceMate.xrnx/source/vLib
+	url = https://github.com/renoise/vLib
+[submodule "Tools/com.renoise.SliceMate.xrnx/source/xLib"]
+	path = Tools/com.renoise.SliceMate.xrnx/source/xLib
+	url = https://github.com/renoise/xLib
+[submodule "Tools/com.renoise.VoiceRunner.xrnx/source/xLib"]
+	path = Tools/com.renoise.VoiceRunner.xrnx/source/xLib
+	url = https://github.com/renoise/xLib
+[submodule "Tools/com.renoise.VoiceRunner.xrnx/source/vLib"]
+	path = Tools/com.renoise.VoiceRunner.xrnx/source/vLib
+	url = https://github.com/renoise/vLib
+[submodule "Tools/com.renoise.VoiceRunner.xrnx/source/cLib"]
+	path = Tools/com.renoise.VoiceRunner.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.xCleaner.xrnx/source/cLib"]
+	path = Tools/com.renoise.xCleaner.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.xCleaner.xrnx/source/vLib"]
+	path = Tools/com.renoise.xCleaner.xrnx/source/vLib
+	url = https://github.com/renoise/vLib
+[submodule "Tools/com.renoise.xCleaner.xrnx/source/xLib"]
+	path = Tools/com.renoise.xCleaner.xrnx/source/xLib
+	url = https://github.com/renoise/xLib
+[submodule "Tools/com.renoise.cLib.xrnx/source/vLib"]
+	path = Tools/com.renoise.cLib.xrnx/source/vLib
+	url = https://github.com/renoise/vLib
+[submodule "Tools/com.renoise.vLibBoilerPlate.xrnx/source/cLib"]
+	path = Tools/com.renoise.vLibBoilerPlate.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
+[submodule "Tools/com.renoise.vLibBoilerPlate.xrnx/source/vLib"]
+	path = Tools/com.renoise.vLibBoilerPlate.xrnx/source/vLib
+	url = https://github.com/renoise/vLib
+[submodule "Tools/com.renoise.vLib.xrnx/source/cLib"]
+	path = Tools/com.renoise.vLib.xrnx/source/cLib
+	url = https://github.com/renoise/cLib
