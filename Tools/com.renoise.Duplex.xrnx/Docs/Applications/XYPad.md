@@ -98,7 +98,7 @@ Tool discussion is located on the [Renoise forum](http://forum.renoise.com/index
   “managed” XYPads (no more need for manually specified id’s)
 
 0.98.15
-- Fixed: No longer looses focus when navigating to a new track
+- Fixed: No longer loses focus when navigating to a new track
 
 0.98 
 - First release 
