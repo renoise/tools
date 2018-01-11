@@ -297,7 +297,7 @@ renoise.tool().bundle_path
 renoise.tool().app_became_active_observable
   -> [renoise.Document.Observable object]
 
--- Invoked as soon as the application looses focus and another app
+-- Invoked as soon as the application loses focus and another app
 -- becomes the foreground window.
 renoise.tool().app_resigned_active_observable
   -> [renoise.Document.Observable object]
