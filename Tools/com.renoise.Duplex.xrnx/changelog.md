@@ -599,7 +599,7 @@ Launchpad/Matrix config
 * Fixed: choosing “cancel” when shutting down devices would throw an error
 * Fixed: proper access to document nodes (.value)
 -- Applications/XYPad.lua --
-* Fixed: No longer looses focus when navigating to a new track
+* Fixed: No longer loses focus when navigating to a new track
 -- Applications/Keyboard.lua --
 * New option: “Keyboard Mode”, choose which notes (if any) to trigger
 
