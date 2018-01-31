@@ -342,10 +342,10 @@ function VR:do_process(scope,sel,seq_idx,trk_idx)
     ptrack_or_phrase = rns.selected_phrase
     if not sel then
       --if (scope == VR.SCOPE.COLUMN_IN_PHRASE) then
-        --sel = xSelection.get_phrase()
+        --sel = xPhraseSelection.get_phrase()
       --else
       if (scope == VR.SCOPE.WHOLE_PHRASE) then
-        sel = xSelection.get_phrase()
+        sel = xPhraseSelection.get_phrase()
       end
     end
     if not ptrack_or_phrase then
@@ -358,10 +358,10 @@ function VR:do_process(scope,sel,seq_idx,trk_idx)
       if (scope == VR.SCOPE.WHOLE_PATTERN) then
         error("TODO")
       elseif (scope == VR.SCOPE.TRACK_IN_PATTERN) then
-        sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+        sel = xPatternSelection.get_pattern_track(seq_idx,trk_idx)
       elseif (scope == VR.SCOPE.COLUMN_IN_PATTERN) then
         local col_idx = rns.selected_note_column_index
-        sel = xSelection.get_pattern_column(seq_idx,trk_idx,col_idx)
+        sel = xPatternSelection.get_pattern_column(seq_idx,trk_idx,col_idx)
       end
     else
       trk_idx = sel.start_track
@@ -406,11 +406,11 @@ function VR:process_pattern_selection()
     return false,"Please create a selection in the pattern"
   end
 
-  if not xSelection.is_single_track(patt_sel) then
+  if not xPatternSelection.is_single_track(patt_sel) then
     return false,"Please restrict the selection to a single track"
   end
 
-  if not xSelection.includes_note_columns(patt_sel) then
+  if not xPatternSelection.includes_note_columns(patt_sel) then
     return false,"Sorting only works on note-columns"
   end
 
@@ -446,7 +446,7 @@ function VR:process_matrix_selection()
   -- TODO
 
   --[[
-  local matrix_sel,err = xSelection.get_matrix_selection()
+  local matrix_sel,err = xMatrixSelection.get_selection()
   if table.is_empty(matrix_sel) then
     return false,"No selection is defined in the matrix"
   end
@@ -579,7 +579,7 @@ function VR:process_group_in_pattern()
       self.xsorter:reset()
 
       --print("*** encountered sequencer track, process...",trk_idx)
-      local sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+      local sel = xPatternSelection.get_pattern_track(seq_idx,trk_idx)
       --print("*** encountered sequencer track, sel",rprint(sel))
 
       local rslt,err = self:do_process(VR.SCOPE.TRACK_IN_PATTERN,sel,seq_idx,trk_idx)
@@ -613,7 +613,7 @@ function VR:process_whole_pattern()
     if (track.type == renoise.Track.TRACK_TYPE_SEQUENCER) then
       self.runner:reset()
       self.xsorter:reset()
-      local sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+      local sel = xPatternSelection.get_pattern_track(seq_idx,trk_idx)
       local rslt,err = self:do_process(VR.SCOPE.TRACK_IN_PATTERN,sel,seq_idx,trk_idx)
       if not rslt then
         return false,err

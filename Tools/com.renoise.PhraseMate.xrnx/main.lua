@@ -46,7 +46,8 @@ require (_xlibroot..'xInstrument')
 require (_xlibroot..'xNoteColumn') 
 require (_xlibroot..'xPhraseManager')
 require (_xlibroot..'xScale')
-require (_xlibroot..'xSelection')
+require (_xlibroot..'xPhraseSelection')
+require (_xlibroot..'xMatrixSelection')
 
 _vlibroot = 'source/vLib/classes/'
 require (_vlibroot..'vLib')

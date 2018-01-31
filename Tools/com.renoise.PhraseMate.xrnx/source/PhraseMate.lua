@@ -743,7 +743,7 @@ end
 function PhraseMate:collect_from_pattern_selection()
   TRACE("PhraseMate:collect_from_pattern_selection()")
 
-  local patt_sel,err = xSelection.get_pattern_if_single_track()
+  local patt_sel,err = xPatternSelection.get_pattern_if_single_track()
   if not patt_sel then
     return false,err
   end
@@ -768,7 +768,7 @@ end
 function PhraseMate:collect_from_matrix_selection()
   TRACE("PhraseMate:collect_from_matrix_selection()")
 
-  local matrix_sel,err = xSelection.get_matrix_selection()
+  local matrix_sel,err = xMatrixSelection.get_selection()
   if table.is_empty(matrix_sel) then
     return false,"No selection is defined in the matrix"
   end
@@ -880,7 +880,7 @@ function PhraseMate:do_collect(seq_idx,trk_idx,patt_sel)
   end
 
   if not patt_sel then
-    patt_sel = xSelection.get_pattern_track(seq_idx,trk_idx)
+    patt_sel = xPatternSelection.get_pattern_track(seq_idx,trk_idx)
   end
 
   -- make sure ghost columns are initialized
@@ -1304,7 +1304,7 @@ end
 function PhraseMate:apply_to_selection()
   TRACE("PhraseMate:apply_to_selection()")
 
-  local sel,err = xSelection.get_pattern_if_single_track()
+  local sel,err = xPatternSelection.get_pattern_if_single_track()
   if not sel then
     return false,err
   end
