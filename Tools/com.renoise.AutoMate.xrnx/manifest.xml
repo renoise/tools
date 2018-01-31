@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <Name>AutoMate</Name>
+  <Id>com.renoise.AutoMate</Id>
+  <Version>0.55</Version>
+  <ApiVersion>5</ApiVersion>
+  <Author>danoise (bjorn@renoise.com)</Author>
+  <Category>Automation</Category>
+  <Description>AutoMate can copy/move automation between devices and parameters. Launch it from the Tools menu, or specify your own keyboard shortcuts (search for "AutoMate" in keyboard prefs).</Description>
+  <Homepage/>
+  <Platform/>
+  <Icon/>
+</RenoiseScriptingTool>
