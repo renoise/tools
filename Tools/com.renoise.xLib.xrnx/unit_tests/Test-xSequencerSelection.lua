@@ -1,16 +1,19 @@
 --[[===============================================================================================
-  Testcase for xSelection
+  Testcase for xSequencerSelection
 ===============================================================================================]]--
 
 _xlib_tests:insert({
-  name = "xSelection",
+  name = "xSequencerSelection",
   fn = function()
   
-    LOG(">>> xSelection: starting unit-test...")
+    LOG(">>> xSequencerSelection: starting unit-test...")
   
-    require (_xlibroot.."xSelection")
     require (_xlibroot.."xPatternSequencer")
-    _trace_filters = {"^xSelection"}
+    require (_xlibroot.."xSequencerSelection")
+    _trace_filters = {
+      "^xSequencerSelection*",
+      "^xSequencerSelection*",
+    }
       
     -----------------------------------------------------------------------------------------------
     -- prepare 
@@ -29,7 +32,7 @@ _xlib_tests:insert({
       
     end
 
-    local str_msg = "The xSelection test will modify the song - do you want to proceed?"
+    local str_msg = "The xSequencerSelection test will modify the song - do you want to proceed?"
     local choice = renoise.app():show_prompt("Unit test",str_msg,{"OK","Cancel"})
     if (choice == "OK") then
       prepare()
@@ -50,7 +53,7 @@ _xlib_tests:insert({
 
     -- select entire sequence
 
-    seq_range = xSelection.get_entire_sequence()
+    seq_range = xSequencerSelection.get_entire_range()
 
     assert(seq_range.start_sequence,1)
     assert(seq_range.start_line,1)
@@ -67,24 +70,24 @@ _xlib_tests:insert({
     
     -- check if given song-pos is within the selection 
 
-    within = xSelection.within_sequence_range(seq_range,{sequence = 1,line = 16})
+    within = xSequencerSelection.within_range(seq_range,{sequence = 1,line = 16})
     assert(not within,tostring(within))
 
-    within = xSelection.within_sequence_range(seq_range,{sequence = 1,line = 17})
+    within = xSequencerSelection.within_range(seq_range,{sequence = 1,line = 17})
     assert(within,tostring(within))
 
-    within = xSelection.within_sequence_range(seq_range,{sequence = 2,line = 48})
+    within = xSequencerSelection.within_range(seq_range,{sequence = 2,line = 48})
     assert(within,tostring(within))
     
-    within = xSelection.within_sequence_range(seq_range,{sequence = 2,line = 64})
+    within = xSequencerSelection.within_range(seq_range,{sequence = 2,line = 64})
     assert(not within,tostring(within))
     
     -- retrieve the line range from a specific sequence-index 
-    from_line,to_line = xSelection.get_lines_in_range(seq_range,1)
+    from_line,to_line = xSequencerSelection.pluck_from_range (seq_range,1)
     assert(from_line==17)
     assert(to_line==64)
     
-    from_line,to_line = xSelection.get_lines_in_range(seq_range,2)
+    from_line,to_line = xSequencerSelection.pluck_from_range (seq_range,2)
     assert(from_line==1)
     assert(to_line==48)
     
@@ -95,7 +98,7 @@ _xlib_tests:insert({
 
     
   
-    LOG(">>> xSelection: OK - passed all tests")
+    LOG(">>> xSequencerSelection: OK - passed all tests")
   
   end
   })
