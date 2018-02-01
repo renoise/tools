@@ -12,12 +12,12 @@ local waiting_to_show_dialog = true
 rns = nil
 prefs = nil
 _trace_filters = nil
---[[
 _trace_filters = {
   "^AutoMate*",
   "^xParameterAutomation*",
   "^xAudioDevice*",
 }
+          --[[
   "^xPatternSelection*",
   "^xSequencerSelection*",
   "xSongPos*"
@@ -115,6 +115,7 @@ renoise.tool():add_menu_entry {
 ---------------------------------------------------------------------------------------------------
 
 local route_to_status_bar = function(success,msg_or_err)
+  --print("route_to_status_bar",success,msg_or_err)
   if msg_or_err then 
     renoise.app():show_status("Message from AutoMate: "..tostring(msg_or_err))
     LOG(msg_or_err) -- log in console
@@ -122,11 +123,13 @@ local route_to_status_bar = function(success,msg_or_err)
 end
 
 -- helper method : create bindings for each scope
--- @param action (string, "Copy" | "Paste" | "Clear")
+-- @param action (string, e.g. "Copy")
 local add_scoped_bindings = function(action)
 
   local eval_action = function()
-    if (action == "Copy") then 
+    if (action == "Cut") then 
+      app:cut(route_to_status_bar)
+    elseif (action == "Copy") then 
       app:copy(route_to_status_bar)
     elseif (action == "Paste") then 
       app:paste(route_to_status_bar)
@@ -244,7 +247,7 @@ local add_scoped_bindings = function(action)
     invoke = function(repeated)
       if not repeated then 
         prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
-        prefs.selected_scope.value = xParameterAutomation.SCOPE.SELECTION_IN_PATTERN
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.SELECTION_IN_SEQUENCE
         eval_action()
       end
     end
@@ -254,7 +257,7 @@ local add_scoped_bindings = function(action)
     invoke = function(repeated)
       if not repeated then 
         prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
-        prefs.selected_scope.value = xParameterAutomation.SCOPE.SELECTION_IN_PATTERN
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.SELECTION_IN_SEQUENCE
         eval_action()
       end
     end
@@ -281,6 +284,7 @@ local add_scoped_bindings = function(action)
   }
 end  
 
+add_scoped_bindings("Cut")
 add_scoped_bindings("Copy")
 add_scoped_bindings("Paste")
 add_scoped_bindings("Clear")

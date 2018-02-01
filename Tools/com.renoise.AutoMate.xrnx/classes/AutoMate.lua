@@ -258,6 +258,7 @@ function AutoMate:attach_to_device()
         function()
           --print("*** AutoMate:is_automated_observable fired...")
           self._ui.update_params_requested = true
+          self._ui.update_devices_requested = true
         end
       )
     end
@@ -354,7 +355,6 @@ end
 function AutoMate:_resolve_parameter_from_idx(param_idx,device_idx,track_idx)
   TRACE("AutoMate:_resolve_parameter_from_idx(param_idx,device_idx,track_idx)",param_idx,device_idx,track_idx)
   local device = self:_resolve_device(device_idx)
-  print("device",device)
   if device then 
     if not param_idx then 
       for k,v in ipairs(device.parameters) do 
@@ -615,14 +615,12 @@ function AutoMate:copy(done_callback)
   local track_idx,device_idx,param_idx = self:_get_current_focus()
 
   local do_process_device = function()
-    print("do_process_device")
     clipboard = xAudioDevice.copy_automation(track_idx,device_idx,seq_range,scope,yield_at)
     local msg = clipboard and ("Copied automation (%d parameters)"):format(#clipboard.parameters) or nil
     invoke_done_callback(clipboard)
   end
 
   local do_process_parameter = function(param)
-    print("do_process_parameter",param)
     clipboard = xParameterAutomation.copy(param,seq_range,track_idx,device_idx,scope,yield_at)
     local msg = clipboard and ("Copied automation (%d points)"):format(#clipboard.points) or nil
     invoke_done_callback(clipboard,msg)
@@ -630,7 +628,8 @@ function AutoMate:copy(done_callback)
 
   if (prefs.selected_tab.value == AutoMatePrefs.TAB_DEVICES) then 
     local device = self:_resolve_device(device_idx,track_idx)
-    if not device or not xAudioDevice.is_automated(device) then 
+    -- can't check is_automated in headless mode (why?)
+    if not device then -- or not xAudioDevice.is_automated(device) then 
       invoke_done_callback(false,"The selected device isn't automated, nothing to copy...")
     else
       if (yield_at == xAudioDeviceAutomation.YIELD_AT.NONE) then
@@ -644,7 +643,6 @@ function AutoMate:copy(done_callback)
     end
   else--if (prefs.selected_tab.value == AutoMatePrefs.TAB_PARAMETERS) then 
     local param = self:_resolve_parameter_from_idx(param_idx,device_idx,track_idx)
-    print("param_idx",param_idx,param)
     if not param then 
       if done_callback then
         done_callback(false,"No parameter was found")
@@ -673,6 +671,7 @@ function AutoMate:paste(done_callback)
     --print("invoke_done_callback - success,msg_or_err",success,msg_or_err)
     self.processing = nil
     if success then 
+      msg_or_err = "Automation was pasted..."
       self.processing_changed_observable:bang()
     end
     if done_callback then 
@@ -708,7 +707,6 @@ function AutoMate:paste(done_callback)
 
   -- support passive operation
   local track_idx,device_idx,param_idx = self:_get_current_focus()
-  print(">>> track_idx,device_idx,param_idx",track_idx,device_idx,param_idx)
 
   -- verify device 
   if (device_tab_selected and device_idx==0) then
@@ -730,13 +728,11 @@ function AutoMate:paste(done_callback)
   end
   
   local do_process_device = function()
-    print("do_process_device")
     local success,err_msg = xAudioDevice.paste_automation(clipboard,track_idx,device_idx,seq_range,apply_mode,yield_at)
     invoke_done_callback(success,err_msg)
   end
 
   local do_process_parameter = function(param)
-    print("do_process_parameter",param)
     local success,err_msg = xParameterAutomation.paste(clipboard,apply_mode,param,seq_range,track_idx,yield_at)
     invoke_done_callback(success,err_msg)
   end
@@ -781,7 +777,6 @@ function AutoMate:clear(done_callback)
 
   -- support passive operation
   local track_idx,device_idx,param_idx = self:_get_current_focus()
-  print(">>> track_idx,device_idx,param_idx",track_idx,device_idx,param_idx)
   
   if (prefs.selected_tab.value == AutoMatePrefs.TAB_DEVICES) then 
     local device = self:_resolve_device(device_idx,track_idx)
@@ -791,7 +786,7 @@ function AutoMate:clear(done_callback)
   else--if (prefs.selected_tab.value == AutoMatePrefs.TAB_PARAMETERS) then 
     local param = self:_resolve_parameter_from_idx(param_idx,device_idx,track_idx)
     if param then
-      xParameterAutomation.clear(track_idx,param,seq_range)
+      xParameterAutomation.clear(param,seq_range,track_idx)
     end
   end
 
@@ -802,18 +797,22 @@ function AutoMate:clear(done_callback)
 end
 
 ---------------------------------------------------------------------------------------------------
--- cut the specified range 
--- technically, the combination of "copy" and "clear" actions
+-- cut the specified range (combination of "copy" and "clear" actions)
 
-function AutoMate:cut()
-  TRACE("AutoMate:cut()")
+function AutoMate:cut(done_callback)
+  TRACE("AutoMate:cut(done_callback)",done_callback)
 
   self:copy(function(success,msg_or_err)
     if success then 
-      self:clear()
-    end
-    if msg_or_err then 
-      renoise.app():show_message(msg_or_err)
+      self:clear(function(success,msg_or_err)
+        if done_callback then
+          done_callback(success,msg_or_err)
+        end
+      end)
+    else
+      if done_callback then
+        done_callback(success,msg_or_err)
+      end
     end
   end)
   

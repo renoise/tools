@@ -273,7 +273,6 @@ function AutoMateUI:_build_tabs()
       self.update_actions_requested = true
     end,
     --on_resize = function()
-    --  print("vtabs.on_resize")
     --end,
   }
 
@@ -448,10 +447,8 @@ function AutoMateUI:_build_device_table()
     --header_defs = {},
     --data = {},
     --on_scroll = function()
-    --  print("_device_vtable.on_scroll()")
     --end,
     --on_resize = function()
-    --  print("_device_vtable.on_resize()")
     --end,
       
   }
@@ -499,10 +496,8 @@ function AutoMateUI:_build_param_table()
     --header_defs = {},
     --data = {},
     --on_scroll = function()
-    --  print("_param_vtable.on_scroll()")
     --end,
     --on_resize = function()
-    --  print("_param_vtable.on_resize()")
     --end,
       
   }
