@@ -629,7 +629,7 @@ function AutoMate:copy(done_callback)
   end
 
   if (prefs.selected_tab.value == AutoMatePrefs.TAB_DEVICES) then 
-    local device = self:_resolve_device()
+    local device = self:_resolve_device(device_idx,track_idx)
     if not device or not xAudioDevice.is_automated(device) then 
       invoke_done_callback(false,"The selected device isn't automated, nothing to copy...")
     else
@@ -710,6 +710,13 @@ function AutoMate:paste(done_callback)
   local track_idx,device_idx,param_idx = self:_get_current_focus()
   print(">>> track_idx,device_idx,param_idx",track_idx,device_idx,param_idx)
 
+  -- verify device 
+  if (device_tab_selected and device_idx==0) then
+    invoke_done_callback(false,"Can't paste - no device has been selected")
+    return 
+  end
+
+
   -- determine our output-range (based on source scope)
   local seq_range = nil
   if (clipboard.scope == xParameterAutomation.SCOPE.WHOLE_SONG) then 
@@ -777,7 +784,7 @@ function AutoMate:clear(done_callback)
   print(">>> track_idx,device_idx,param_idx",track_idx,device_idx,param_idx)
   
   if (prefs.selected_tab.value == AutoMatePrefs.TAB_DEVICES) then 
-    local device = self:_resolve_device()
+    local device = self:_resolve_device(device_idx,track_idx)
     if device then
       xAudioDevice.clear_automation(track_idx,device,seq_range)
     end
