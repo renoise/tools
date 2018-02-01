@@ -109,3 +109,9 @@
 [submodule "Tools/com.renoise.AutoMate.xrnx/classes/xLib"]
 	path = Tools/com.renoise.AutoMate.xrnx/classes/xLib
 	url = https://github.com/renoise/xLib.git
+[submodule "Tools/com.renoise.AutoMate.xrnx/classes/cLib"]
+	path = Tools/com.renoise.AutoMate.xrnx/classes/cLib
+	url = https://github.com/renoise/cLib.git
+[submodule "Tools/com.renoise.AutoMate.xrnx/classes/vLib"]
+	path = Tools/com.renoise.AutoMate.xrnx/classes/vLib
+	url = https://github.com/renoise/vLib.git
