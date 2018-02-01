@@ -12,12 +12,12 @@ local waiting_to_show_dialog = true
 rns = nil
 prefs = nil
 _trace_filters = nil
+--[[
 _trace_filters = {
   "^AutoMate*",
   "^xParameterAutomation*",
-}
-      --[[
   "^xAudioDevice*",
+}
   "^xPatternSelection*",
   "^xSequencerSelection*",
   "xSongPos*"
@@ -121,149 +121,167 @@ local route_to_status_bar = function(success,msg_or_err)
   end
 end
 
--- COPY --
+-- helper method : create bindings for each scope
+-- @param action (string, "Copy" | "Paste" | "Clear")
+local add_scoped_bindings = function(action)
 
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Copy Automation (Selected Scope)",
-  invoke = function(repeated)
-    if not repeated then 
+  local eval_action = function()
+    if (action == "Copy") then 
       app:copy(route_to_status_bar)
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Copy Device Automation (Selected Scope)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
-      app:copy(route_to_status_bar)
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Copy Parameter Automation (Selected Scope)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
-      app:copy(route_to_status_bar)
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Copy Device Automation (Whole Pattern)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
-      prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_PATTERN
-      app:copy(route_to_status_bar)
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Copy Parameter Automation (Whole Pattern)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
-      prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_PATTERN
-      app:copy(route_to_status_bar)
-    end
-  end
-}
-
--- PASTE --
-
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Paste Automation (Selected Scope)",
-  invoke = function(repeated)
-    if not repeated then 
+    elseif (action == "Paste") then 
       app:paste(route_to_status_bar)
+    elseif (action == "Clear") then 
+      app:clear()
+    else 
+      error("Unexpected action")
     end
   end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Paste Device Automation (Selected Scope)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
-      app.paste(route_to_status_bar)
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Paste Parameter Automation (Selected Scope)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
-      app.paste(route_to_status_bar)
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Paste Device Automation (Whole Pattern)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
-      prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_PATTERN
-      app.paste(route_to_status_bar)
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Paste Parameter Automation (Whole Pattern)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
-      prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_PATTERN
-      app.paste(route_to_status_bar)
-    end
-  end
-}
 
--- CLEAR -- 
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Automation (Selected Scope)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Automation (Whole Song)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_SONG
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Automation (Whole Pattern)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_PATTERN
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Automation (Selection In Sequence)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.SELECTION_IN_SEQUENCE
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Automation (Selection In Pattern)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.SELECTION_IN_PATTERN
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Device Automation (Selected Scope)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Parameter Automation (Selected Scope)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Device Automation (Whole Song)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_SONG
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Parameter Automation (Whole Song)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_SONG
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Device Automation (Whole Pattern)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_PATTERN
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Parameter Automation (Whole Pattern)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_PATTERN
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Device Automation (Selection In Sequence)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.SELECTION_IN_PATTERN
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Parameter Automation (Selection In Sequence)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.SELECTION_IN_PATTERN
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Device Automation (Selection In Pattern)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.SELECTION_IN_PATTERN
+        eval_action()
+      end
+    end
+  }
+  renoise.tool():add_keybinding {
+    name = ("Global:AutoMate:%s Parameter Automation (Selection In Pattern)"):format(action),
+    invoke = function(repeated)
+      if not repeated then 
+        prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
+        prefs.selected_scope.value = xParameterAutomation.SCOPE.SELECTION_IN_PATTERN
+        eval_action()
+      end
+    end
+  }
+end  
 
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Clear Automation (Selected Scope)",
-  invoke = function(repeated)
-    if not repeated then 
-      app:clear()
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Clear Device Automation (Selected Scope)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
-      app:clear()
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Clear Parameter Automation (Selected Scope)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
-      app:clear()
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Clear Device Automation (Whole Pattern)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_DEVICES
-      prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_PATTERN
-      app:clear()
-    end
-  end
-}
-renoise.tool():add_keybinding {
-  name = "Global:AutoMate:Clear Parameter Automation (Whole Pattern)",
-  invoke = function(repeated)
-    if not repeated then 
-      prefs.selected_tab.value = AutoMatePrefs.TAB_PARAMETERS
-      prefs.selected_scope.value = xParameterAutomation.SCOPE.WHOLE_PATTERN
-      app:clear()
-    end
-  end
-}
+add_scoped_bindings("Copy")
+add_scoped_bindings("Paste")
+add_scoped_bindings("Clear")
+
