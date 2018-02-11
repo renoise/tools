@@ -12,12 +12,13 @@
 
 local MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
 local DIALOG_W = 205
+local BUTTON_H = 21
 local NULL_MARGIN = -3
 local CONTENT_W = DIALOG_W - (2*MARGIN)
 local ACTION_BT_W = CONTENT_W/3
 local LEFT_COL_W = CONTENT_W/4
 local RIGHT_COL_W = CONTENT_W-82
-local SCOPES_W = CONTENT_W-(MARGIN*3)
+local SCOPES_W = CONTENT_W-42
 local TABLE_W = CONTENT_W-2
 local TABLE_ROWS = 8
 local TABLE_ROW_H = 16
@@ -38,23 +39,26 @@ local SCOPE_NAMES = {
   "Selection in Pattern",
 }
 
+---------------------------------------------------------------------------------------------------
+-- Constructor method
 
-class 'AutoMateUI'
+class 'AutoMateUI' (vDialog)
 
 function AutoMateUI:__init(app)
-  TRACE("AutoMateUI:__init()")
+  TRACE("AutoMateUI:__init(app)",app)
 
-  --- (NTrap) instance of main class
+  --- initialize our super-class
+  vDialog.__init(self,{
+    waiting_to_show_dialog = prefs.autorun_enabled.value,
+    dialog_title = "AutoMate",
+    dialog_keyhandler = self.dialog_keyhandler
+  })
+  
+  --- (AutoMate) instance of main class
   self._app = app
 
-  --- (renoise.ViewBuilder) 
-  self._vb = renoise.ViewBuilder()
-
-  --- (renoise.Dialog) reference to the main dialog 
-  self._dialog = nil
-
   --- (renoise.Views.View) 
-  self._view = nil -- self:build()
+  self._view = nil 
 
   --- (boolean) true while app is performing a sliced process
   self._is_processing = property(self.get_is_processing)
@@ -70,63 +74,87 @@ function AutoMateUI:__init(app)
   self.update_devices_requested = false
   self.update_params_requested = false
   self.update_actions_requested = false
+  self.update_status_requested = false
   self.update_tabs_requested = false
   self.update_options_requested = false
 
-  -- observables
+  -- observables ----------------------
 
   self._app.clipboard_observable:add_notifier(self,function()
     --print("clipboard_observable fired...")
     self.update_actions_requested = true
   end)
 
-  self._app.processing_changed_observable:add_notifier(self,function()
-    --print("processing_changed_observable fired...")
+  self._app.status_observable:add_notifier(self,function()
+    --print("status_observable fired...")
     if self._app.active then
       if self._is_processing then
         -- update right away
         self:_update_active_state()
+        self:_update_status()
         self:_update_actions()
       else
         self.update_actions_requested = true
+        self.update_status_requested = true
         self.update_active_state_requested = true
       end        
     end
   end)
 
+  self._app.device_changed_observable:add_notifier(self,function()
+    --print(">>> device_changed_observable fired...")
+    self.update_devices_requested = true    
+    self.update_params_requested = true    
+    self.update_actions_requested = true     
+  end)
+
+  self._app.parameter_changed_observable:add_notifier(self,function()
+    --print(">>> parameter_changed_observable fired...")
+    self.update_params_requested = true    
+    self.update_actions_requested = true    
+  end)
+
+  self._app.track_changed_observable:add_notifier(self,function()
+    --print(">>> track_changed_observable fired...")
+    self.update_tracks_requested = true
+    self.update_devices_requested = true
+    self.update_params_requested = true
+  end)
+
+  renoise.tool().app_idle_observable:add_notifier(self,self.on_idle)
+  
+
 end
 
+---------------------------------------------------------------------------------------------------
+-- vDialog methods
+---------------------------------------------------------------------------------------------------
+
+function AutoMateUI:create_dialog()
+  TRACE("AutoMateUI:create_dialog()")
+
+  if not self._view then 
+    self._view = self:build()
+  end
+
+  return self._view
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- Getter/Setter methods
 ---------------------------------------------------------------------------------------------------
 --- @return boolean
 
 function AutoMateUI:get_is_processing()
-  return self._app.processing and true or false
+  return ((self._app.status_observable.value == AutoMate.STATUS.COPYING) 
+    or (self._app.status_observable.value == AutoMate.STATUS.PASTING)
+    or (self._app.status_observable.value == AutoMate.STATUS.GENERATING))
+      and true or false
 end
 
 ---------------------------------------------------------------------------------------------------
-
---- Show the dialog
-
-function AutoMateUI:show()
-  TRACE("AutoMateUI:show()")
-
-  if (not self._dialog or not self._dialog.visible) then
-
-    if not self._view then
-      self._view = self:build()
-    end
-    self._app:attach_to_song()
-
-    self._dialog = renoise.app():show_custom_dialog(
-      "AutoMate", self._view,function(dialog,key)
-        return self:_keyhandler(dialog,key)
-      end)
-
-    self._dialog:show()
-  end
-
-end
-
+-- Class methods 
 ---------------------------------------------------------------------------------------------------
 -- Keyhandler 
 --
@@ -139,13 +167,19 @@ end
 -- Left         : Shift scope backward
 -- Right        : Shift scope forward
 
-function AutoMateUI:_keyhandler(dialog,key)
-  TRACE("AutoMateUI:_keyhandler(dialog,key)",dialog,key)
+function AutoMateUI:dialog_keyhandler(dialog,key)
+  TRACE("AutoMateUI:dialog_keyhandler(dialog,key)",dialog,key)
   
   local key_was_handled = false
   local param_tab_selected = (prefs.selected_tab.value == AutoMatePrefs.TAB_PARAMETERS)
   --local device_tab_selected = (prefs.selected_tab.value == AutoMatePrefs.TAB_DEVICES)
 
+  local done_callback = function(success,msg_or_err)
+    if msg_or_err then 
+      renoise.app():show_status(msg_or_err)
+    end
+  end
+  
   if (key.modifiers == "") then 
     local switch = {
       ["up"] = function()
@@ -169,7 +203,7 @@ function AutoMateUI:_keyhandler(dialog,key)
         self._app:select_next_scope()
       end,
       ["del"] = function()
-        self._app:clear()
+        self._app:clear(done_callback)
       end,
     }
     if switch[key.name] then 
@@ -180,13 +214,13 @@ function AutoMateUI:_keyhandler(dialog,key)
   elseif (key.modifiers == "control") then
     local switch = {
       ["x"] = function()
-        self._app:cut()
+        self._app:cut(done_callback)
       end,
       ["c"] = function()
-        self._app:copy()
+        self._app:copy(done_callback)
       end,
       ["v"] = function()
-        self._app:paste()
+        self._app:paste(done_callback)
       end,
     }
     if switch[key.name] then 
@@ -204,28 +238,12 @@ function AutoMateUI:_keyhandler(dialog,key)
 end
 
 ---------------------------------------------------------------------------------------------------
-
---- Hide the dialog
-
-function AutoMateUI:hide()
-  TRACE("AutoMateUI:hide()")
-
-  if (self._dialog and self._dialog.visible) then
-    self._dialog:close()
-  end
-
-  self._dialog = nil
-
-end
-
----------------------------------------------------------------------------------------------------
-
 --- Build
 
 function AutoMateUI:build()
   TRACE("AutoMateUI:build()")
 
-  local vb = self._vb
+  local vb = self.vb
   local view = vb:column{
     id = 'app_rootnode',
     width = DIALOG_W,
@@ -235,7 +253,7 @@ function AutoMateUI:build()
       self:_build_tabs(),
       self:_build_scopes_panel(),
       self:_build_actions_panel(),
-      self:_build_processing_panel(),
+      self:_build_status_panel(),
     }
   }
 
@@ -247,7 +265,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function AutoMateUI:_build_tabs()
-  local vb = self._vb
+  local vb = self.vb
   self._vtabs = vTabs{
     vb = vb,
     id = "vTabs",
@@ -269,11 +287,10 @@ function AutoMateUI:_build_tabs()
     },
     notifier = function(elm)
       prefs.selected_tab.value = elm.index
-      self.update_tabs_requested = true
+      self:_update_tabs() -- avoid flicker
       self.update_actions_requested = true
     end,
-    --on_resize = function()
-    --end,
+
   }
 
   return self._vtabs.view
@@ -284,7 +301,7 @@ end
 
 function AutoMateUI:_build_tab_devices()
 
-  local vb = self._vb
+  local vb = self.vb
   return vb:column{
     id = 'app_tab_devices',
 
@@ -334,7 +351,7 @@ end
 
 function AutoMateUI:_build_tab_parameters()
 
-  local vb = self._vb
+  local vb = self.vb
   return vb:column{
     id = 'app_tab_parameters',
 
@@ -414,7 +431,7 @@ end
 
 function AutoMateUI:_build_device_table()
 
-  local vb = self._vb
+  local vb = self.vb
   self._device_vtable = vTable{
     --id = "app_vtable_params",
     vb = vb,
@@ -461,7 +478,7 @@ end
 
 function AutoMateUI:_build_param_table()
 
-  local vb = self._vb
+  local vb = self.vb
   self._param_vtable = vTable{
     --id = "app_vtable_params",
     vb = vb,
@@ -511,39 +528,43 @@ end
 
 function AutoMateUI:_build_scopes_panel()
     
-  local vb = self._vb
+  local vb = self.vb
   return vb:column{
     id = "app_scopes_panel",    
     style = "group",
     margin = MARGIN,
     vb:horizontal_aligner{
       mode = "justify",
-      vb:text{
-        text = "Available Scopes",
-        font = "bold",
+      vb:chooser{
+        id = "app_scopes_chooser",
+        bind = prefs.selected_scope,
+        items = SCOPE_NAMES,
+        width = SCOPES_W,
+        notifier = function()
+          self:_update_scopes()
+        end
       },
       vb:row{
         spacing = NULL_MARGIN,
         vb:button{
+          id = "app_scopes_flick_previous",
           text = "◂",
+          tooltip = "Flick to previous within scope",
           notifier = function()
             self._app:select_previous_scope()
           end,
         },
         vb:button{
+          id = "app_scopes_flick_next",
           text = "▸",
+          tooltip = "Flick to next within scope",
           notifier = function()
             self._app:select_next_scope()
           end,
         },
       }
     },
-    vb:chooser{
-      id = "app_scopes_chooser",
-      bind = prefs.selected_scope,
-      items = SCOPE_NAMES,
-      width = SCOPES_W,
-    }
+
   }
 
 end  
@@ -552,7 +573,17 @@ end
 
 function AutoMateUI:_build_actions_panel()
 
-  local vb = self._vb
+  local done_callback = function(success,msg_or_err)    
+    if msg_or_err then 
+      if success then 
+        renoise.app():show_status(msg_or_err)
+      else
+        renoise.app():show_warning(msg_or_err)
+      end
+    end
+  end
+
+  local vb = self.vb
   return vb:column{
     id = "app_actions_panel",
     vb:row{
@@ -561,7 +592,7 @@ function AutoMateUI:_build_actions_panel()
         text = "Cut",
         width = ACTION_BT_W,
         notifier = function()
-          self._app:cut()
+          self._app:cut(done_callback)
         end
       },
       vb:button{
@@ -569,7 +600,7 @@ function AutoMateUI:_build_actions_panel()
         text = "Copy",
         width = ACTION_BT_W,
         notifier = function()
-          self._app:copy()
+          self._app:copy(done_callback)
         end
       },
       vb:button{
@@ -577,7 +608,7 @@ function AutoMateUI:_build_actions_panel()
         text = "Paste",
         width = ACTION_BT_W,
         notifier = function()
-          self._app:paste()
+          self._app:paste(done_callback)
         end,
       },
     },
@@ -587,7 +618,7 @@ function AutoMateUI:_build_actions_panel()
         text = "Clear",
         width = ACTION_BT_W,
         notifier = function()
-          self._app:clear()
+          self._app:clear(done_callback)
         end
       },           
       vb:button{
@@ -600,33 +631,78 @@ function AutoMateUI:_build_actions_panel()
         text = "Swap",
         width = ACTION_BT_W,
       },
+    },
+    vb:space{
+      height = 3,
+    },
+    vb:row{
+      vb:button{
+        id = "app_action_generate",
+        text = "Generate",
+        width = ACTION_BT_W,
+        notifier = function()
+          self._app:show_generate_dialog(AutoMate.TARGET.DEVICE_PARAMETER)
+        end
+      },
+      vb:button{
+        id = "app_action_transform",
+        text = "Transform",
+        width = ACTION_BT_W,
+        notifier = function()
+          self._app:show_transform_dialog()
+        end
+      },
+      vb:row{
+        spacing = NULL_MARGIN,
+        vb:button{
+          id = "app_action_add_to_library",
+          text = "+",
+          tooltip = "Add to Library",
+          width = BUTTON_H,
+          notifier = function()
+            self._app:add_to_library()
+          end
+        },
+        vb:button{
+          text = "Library",
+          tooltip = "Use the Library to store and recall presets",
+          width = ACTION_BT_W-BUTTON_H,
+          notifier = function()
+            self._app:show_library()
+          end
+        },
+      }
     }
+  
   }
 
 end
 
 ---------------------------------------------------------------------------------------------------
 
-function AutoMateUI:_build_processing_panel()
+function AutoMateUI:_build_status_panel()
 
-  local vb = self._vb
+  local vb = self.vb
 
   return vb:column{
-    id = "app_processing_panel",
-    --style = "panel",
-    width = CONTENT_W-MARGIN,
+    width = CONTENT_W-2,
+    style = "group",
     vb:horizontal_aligner{      
       mode = "justify",
-      --width = CONTENT_W,
       width = "100%",
+      margin = 2,
       vb:text{
-        text = "Processing..."
+        id = "app_status_readout",
+        text = "Welcome to AutoMate",
       },
-      vb:button{
-        text = "Cancel",
-        notifier = function()
-          self._app.slicer:stop()
-        end
+      vb:row{
+        vb:button{
+          id = "app_status_cancel_processing",
+          text = "Cancel",
+          notifier = function()
+            self._app.slicer:stop()
+          end
+        },
       }
     }
   }
@@ -637,7 +713,7 @@ end
 
 function AutoMateUI:_build_options_panel()
 
-  local vb = self._vb
+  local vb = self.vb
 
   return vb:column{
     spacing = MARGIN,
@@ -661,6 +737,63 @@ function AutoMateUI:_build_options_panel()
         },
       },      
     },
+    --[[
+    vb:column{
+      margin = MARGIN,
+      style = "group",
+      width = "100%",
+      vb:text{
+        text = "Generate & Transform",
+        font = "bold",
+      },
+      vb:column{
+        vb:row{
+          vb:checkbox{
+            id = "app_options_realtime_checkbox",
+            notifier = function(val)
+
+            end
+          },
+          vb:text{
+            text = "Apply changes in real-time"
+          },
+        },
+      },
+    },
+    vb:column{
+      margin = MARGIN,
+      style = "group",
+      width = "100%",
+      vb:text{
+        text = "Paste Options",
+        font = "bold",
+      },
+      vb:column{
+        vb:row{
+          vb:checkbox{
+            id = "app_options_mix_paste",
+            notifier = function(val)
+
+            end
+          },
+          vb:text{
+            text = "Mix-Paste"
+          },
+        },
+        vb:row{
+          vb:checkbox{
+            id = "app_options_continuous_paste",
+            notifier = function(val)
+
+            end
+          },
+          vb:text{
+            text = "Continuous Paste"
+          },
+        },
+      },
+    },
+    ]]
     vb:column{
       margin = MARGIN,
       style = "group",
@@ -675,11 +808,11 @@ function AutoMateUI:_build_options_panel()
             id = "app_options_yield_checkbox",
             --value = false,
             notifier = function(val)
-              local vb = self._vb
+              local vb = self.vb
               if val then 
                 prefs.yield_at.value = vb.views["app_options_yield_popup"].value+1
               else
-                prefs.yield_at.value = xAudioDeviceAutomation.YIELD_AT.NONE
+                prefs.yield_at.value = xLib.YIELD_AT.NONE
               end
               self.update_options_requested = true
             end
@@ -719,6 +852,8 @@ function AutoMateUI:update()
   self:_update_actions()
   self:_update_options()
   self:_update_active_state()
+  self:_update_scopes()
+  self:_update_status()
 
 end
 
@@ -727,7 +862,7 @@ end
 function AutoMateUI:_update_tabs()
   TRACE("AutoMateUI:_update_tabs()")
   
-  local vb = self._vb
+  local vb = self.vb
   local is_options_tab = (prefs.selected_tab.value == AutoMatePrefs.TAB_OPTIONS) 
 
   vb.views["app_scopes_panel"].visible = not is_options_tab
@@ -753,8 +888,8 @@ function AutoMateUI:_update_tracks()
     table.insert(track_names,("%.2d:%s"):format(k,v.name))
   end
 
-  local ctrl_device_tab = self._vb.views["device_tab_track_select"]
-  local ctrl_param_tab = self._vb.views["param_tab_track_select"]
+  local ctrl_device_tab = self.vb.views["device_tab_track_select"]
+  local ctrl_param_tab = self.vb.views["param_tab_track_select"]
   ctrl_device_tab.items = track_names
   ctrl_param_tab.items = track_names
   ctrl_device_tab.value = self._app.selected_track_idx
@@ -775,11 +910,20 @@ function AutoMateUI:_update_devices()
   local trk = self._app:_resolve_track()
   assert(trk,"failed to resolve track")
 
+  -- get name + display name (if different)
+  local get_display_name = function(device)
+    if (device.name == device.display_name) then 
+      return device.name
+    else
+      return ("%s [%s]"):format(device.name,device.display_name)
+    end
+  end
+
   -- device selector (params tab)
-  local ctrl = self._vb.views["param_tab_device_select"]
+  local ctrl = self.vb.views["param_tab_device_select"]
   local device_names = {"None selected"}
   for k,v in ipairs(trk.devices) do 
-    table.insert(device_names,v.name)
+    table.insert(device_names,get_display_name(v))
   end
   ctrl.items = device_names
 
@@ -801,7 +945,7 @@ function AutoMateUI:_update_devices()
     
     table.insert(device_table_data,{
       index = k,
-      name = v.name,
+      name = get_display_name(v),
       status_bitmap = status_bitmap,
       __row_style = is_selected and ROW_STYLE_SELECTED or ROW_STYLE_NORMAL,
     })
@@ -873,7 +1017,7 @@ end
 function AutoMateUI:_update_actions()
   TRACE("AutoMateUI:_update_actions()")
 
-  local vb = self._vb
+  local vb = self.vb
 
   local cut_active = false
   local copy_active = false
@@ -881,6 +1025,10 @@ function AutoMateUI:_update_actions()
   local paste_active = false
   local move_active = false
   local swap_active = false
+  --
+  local transform_active = false 
+  local generate_active = false
+  local add_active = false
 
   local has_selected_device = self._app.selected_device_idx 
     and (self._app.selected_device_idx > 0)
@@ -889,25 +1037,30 @@ function AutoMateUI:_update_actions()
 
     local device = self._app:_resolve_device()  
     local param = self._app:_resolve_parameter()  
-  
+    local tab_is_parameter = (prefs.selected_tab.value == AutoMatePrefs.TAB_PARAMETERS)
     local param_is_automatable = (device and param and param.is_automatable) and true or false
-      --and not ( table.find(xAudioDevice.BYPASS_INCAPABLE,device.device_path)) 
-      
-    cut_active = param_is_automatable
-    copy_active = param_is_automatable
-    clear_active = param_is_automatable
-    --move_active = true
-    --swap_active = true
-    if not param_is_automatable then 
+    local param_is_automated = (device and param and param.is_automated) and true or false
+
+    cut_active = param_is_automatable and param_is_automated
+    copy_active = param_is_automatable and param_is_automated
+
+    if not param_is_automatable or not self._app._clipboard then 
       paste_active = false
     else
-      -- only paste when clipboard is compatible
       if (prefs.selected_tab.value == AutoMatePrefs.TAB_DEVICES) then 
-        paste_active = (type(self._app._clipboard)=="xAudioDeviceAutomation")
+        paste_active = type(self._app._clipboard.payload)=="xAudioDeviceAutomation"
       else--if (prefs.selected_tab.value == AutoMatePrefs.TAB_PARAMETERS) then 
-        paste_active = (type(self._app._clipboard)=="xParameterAutomation")
+        paste_active = type(self._app._clipboard.payload)=="xEnvelope"
       end
     end
+
+    clear_active = param_is_automatable and param_is_automated
+    generate_active = param_is_automatable and tab_is_parameter
+    --move_active = true
+    --swap_active = true
+    --transform_active = param_is_automatable and param_is_automated
+    add_active = self._app._clipboard and true or false
+
   end
 
   vb.views["app_action_cut"].active = cut_active
@@ -916,6 +1069,52 @@ function AutoMateUI:_update_actions()
   vb.views["app_action_paste"].active = paste_active
   vb.views["app_action_move"].active = move_active
   vb.views["app_action_swap"].active = swap_active
+  vb.views["app_action_generate"].active = generate_active
+  vb.views["app_action_transform"].active = transform_active
+  vb.views["app_action_add_to_library"].active = add_active
+
+end
+
+---------------------------------------------------------------------------------------------------
+
+function AutoMateUI:_update_status()
+  TRACE("AutoMateUI:_update_status()")
+
+  local vb = self.vb
+  local status_txt = vb.views["app_status_readout"]
+  local cancel_bt = vb.views["app_status_cancel_processing"]
+  cancel_bt.visible = false
+
+  local get_clip_summary = function()
+    if not self._app._clipboard then 
+      return "Clipboard is empty"
+    else 
+      local payload = self._app._clipboard.payload
+      if (type(payload)=="xAudioDeviceAutomation") then 
+        return ("Copied %d params"):format(#payload.parameters)
+      elseif (type(payload)=="xEnvelope") then 
+        return ("Copied %d points"):format(#payload.points)
+      end
+    end
+  end
+
+  if (self._app.status_observable.value == AutoMate.STATUS.READY) then 
+    status_txt.text = ""
+  elseif (self._app.status_observable.value == AutoMate.STATUS.COPYING) then 
+    status_txt.text = "Copying Automation..."
+    cancel_bt.visible = true
+  elseif (self._app.status_observable.value == AutoMate.STATUS.GENERATING) then 
+    status_txt.text = "Generating Envelope..."
+    cancel_bt.visible = true
+  elseif (self._app.status_observable.value == AutoMate.STATUS.PASTING) then 
+    status_txt.text = "Pasting Automation..."
+    cancel_bt.visible = true
+  elseif (self._app.status_observable.value == AutoMate.STATUS.DONE_COPYING) then 
+    status_txt.text = get_clip_summary()
+  elseif (self._app.status_observable.value == AutoMate.STATUS.DONE_PASTING) then 
+    status_txt.text = "Done Pasting."
+  end
+
 
 end
 
@@ -924,9 +1123,9 @@ end
 function AutoMateUI:_update_options()
   TRACE("AutoMateUI:_update_options()")
 
-  local vb = self._vb
+  local vb = self.vb
 
-  local yield_active = (prefs.yield_at.value ~= xAudioDeviceAutomation.YIELD_AT.NONE) 
+  local yield_active = (prefs.yield_at.value ~= xLib.YIELD_AT.NONE) 
   vb.views["app_options_yield_popup"].active = yield_active
   vb.views["app_options_yield_checkbox"].value = yield_active
 
@@ -940,11 +1139,11 @@ end
 --- Disable UI while performing (sliced) processing
 
 function AutoMateUI:_update_active_state()
+  TRACE("AutoMateUI:_update_active_state()")
 
-  local vb = self._vb
+  local vb = self.vb
   
   vb.views["app_scopes_chooser"].active = not self._is_processing
-  vb.views["app_processing_panel"].visible = self._is_processing
   
   self._vtabs.active = not self._is_processing
   self._device_vtable.active = not self._is_processing
@@ -953,9 +1152,29 @@ function AutoMateUI:_update_active_state()
 end
 
 ---------------------------------------------------------------------------------------------------
+
+function AutoMateUI:_update_scopes()
+  TRACE("AutoMateUI:_update_scopes()")
+
+  local vb = self.vb
+  local scope_is_song = (prefs.selected_scope.value == AutoMate.SCOPE.WHOLE_SONG)
+  local flick_prev = vb.views["app_scopes_flick_previous"]
+  local flick_next = vb.views["app_scopes_flick_next"]
+
+  flick_prev.active = not scope_is_song
+  flick_next.active = not scope_is_song
+
+end
+
+
+---------------------------------------------------------------------------------------------------
 --- handle idle notifications
 
 function AutoMateUI:on_idle()
+
+  if not self._app.active then 
+    return
+  end
 
   if self.update_requested then
     self.update_requested = false
@@ -980,6 +1199,11 @@ function AutoMateUI:on_idle()
   if self.update_actions_requested then
     self.update_actions_requested = false
     self:_update_actions()
+  end
+
+  if self.update_status_requested then
+    self.update_status_requested = false
+    self:_update_status()
   end
 
   if self.update_tabs_requested then
