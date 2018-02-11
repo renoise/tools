@@ -10,8 +10,8 @@ fn = function()
 
   LOG(">>> xOscDevice: starting unit-test...")
 
-  require (_clibroot.."cDocument")
-  require (_xlibroot.."xOscDevice")
+  --require (_clibroot.."cDocument")
+  cLib.require (_xlibroot.."xOscDevice")
   _trace_filters = {"^xOscDevice*"}
 
   -- construct from scratch

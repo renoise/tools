@@ -11,10 +11,10 @@ fn = function()
 
   LOG(">>> xVoiceManager: starting unit-test...")
 
-  require (_xlibroot.."xVoiceManager")
-  require (_xlibroot.."xMessage")
-  require (_xlibroot.."xMidiMessage")
-  require (_xlibroot.."xTrack")
+  cLib.require (_xlibroot.."xVoiceManager")
+  --require (_xlibroot.."xMessage")
+  --require (_xlibroot.."xMidiMessage")
+  --require (_xlibroot.."xTrack")
   _trace_filters = {"^xVoiceManager*"}
 
 

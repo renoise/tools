@@ -9,10 +9,10 @@ name = "xLine",
 fn = function()
 
   --require (_xlibroot.."xNoteColumn")
-  require (_xlibroot.."xLine")
-  require (_xlibroot.."xLinePattern")
-  require (_xlibroot.."xNoteColumn")
-  require (_xlibroot.."xEffectColumn")
+  cLib.require (_xlibroot.."xLine")
+  --require (_xlibroot.."xLinePattern")
+  --require (_xlibroot.."xNoteColumn")
+  --require (_xlibroot.."xEffectColumn")
   _trace_filters = {"^xLine*","^xLinePattern*","^xNoteColumn*","^xEffectColumn*"}
 
   LOG(">>> xLine: starting unit-test...")

@@ -8,8 +8,8 @@ _xlib_tests:insert({
   
     LOG(">>> xSequencerSelection: starting unit-test...")
   
-    require (_xlibroot.."xPatternSequencer")
-    require (_xlibroot.."xSequencerSelection")
+    cLib.require (_xlibroot.."xPatternSequencer")
+    cLib.require (_xlibroot.."xSequencerSelection")
     _trace_filters = {
       "^xSequencerSelection*",
       "^xSequencerSelection*",

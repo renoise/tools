@@ -8,8 +8,8 @@ _xlib_tests:insert({
 name = "xNoteColumn",
 fn = function()
 
-  require (_xlibroot.."xNoteColumn")
-  require (_xlibroot.."xLinePattern")
+  cLib.require (_xlibroot.."xNoteColumn")
+  --require (_xlibroot.."xLinePattern")
   _trace_filters = {"^xNoteColumn*"}
 
   LOG(">>> xNoteColumn: starting unit-test...")

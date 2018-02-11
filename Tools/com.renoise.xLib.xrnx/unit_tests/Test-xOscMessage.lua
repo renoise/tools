@@ -10,12 +10,12 @@ fn = function()
 
   LOG(">>> xOscMessage: starting unit-test...")
 
-  require (_clibroot.."cDocument")
-  require (_xlibroot.."xMessage")
-  require (_xlibroot.."xOscDevice")
-  require (_xlibroot.."xValue")
-  require (_xlibroot.."xOscValue")
-  require (_xlibroot.."xOscMessage")
+  --require (_clibroot.."cDocument")
+  --require (_xlibroot.."xMessage")
+  --require (_xlibroot.."xOscDevice")
+  --require (_xlibroot.."xValue")
+  cLib.require (_xlibroot.."xOscValue")
+  cLib.require (_xlibroot.."xOscMessage")
   _trace_filters = {"^xOscMessage*"}
 
   LOG("construct xOscMessage from scratch")

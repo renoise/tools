@@ -14,11 +14,11 @@ fn = function()
 
   -- initialize --
 
-  require (_clibroot.."cReflection")
-  require (_xlibroot.."xOscPattern")
-  require (_xlibroot.."xOscRouter")
-  require (_xlibroot.."xValue")
-  require (_xlibroot.."xOscValue")
+  --require (_clibroot.."cReflection")
+  cLib.require (_xlibroot.."xOscPattern")
+  --require (_xlibroot.."xOscRouter")
+  --require (_xlibroot.."xValue")
+  --require (_xlibroot.."xOscValue")
   _trace_filters = {"^xOscPattern*"}
 
   local osc_router = xOscRouter{

@@ -8,8 +8,8 @@ _xlib_tests:insert({
 name = "xSongSettings",
 fn = function()
 
-  require (_xlibroot.."xLine")
-  require (_xlibroot.."xSongSettings")
+  --require (_xlibroot.."xLine")
+  cLib.require (_xlibroot.."xSongSettings")
   _trace_filters = {"^xSongSettings*"}
 
   LOG(">>> xSongSettings: starting unit-test...")

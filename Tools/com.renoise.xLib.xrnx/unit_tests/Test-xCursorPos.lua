@@ -8,8 +8,8 @@ _xlib_tests:insert({
 name = "xCursorPos",
 fn = function()
 
-  require (_xlibroot.."xLine")
-  require (_xlibroot.."xCursorPos")
+  --require (_xlibroot.."xLine")
+  cLib.require (_xlibroot.."xCursorPos")
   _trace_filters = {"^xCursorPos*"}
 
   LOG(">>> xCursorPos: starting unit-test...")

@@ -10,11 +10,11 @@ _xlib_tests:insert({
   
     --require (_clibroot.."cDocument")
     --require (_xlibroot.."xMessage")
-    require (_xlibroot.."xTrack")
-    require (_xlibroot..'xAudioDevice')
-    require (_xlibroot.."xPatternSequencer")
-    require (_xlibroot.."xParameterAutomation")
-    require (_xlibroot.."xAudioDeviceAutomation")
+    --require (_xlibroot.."xTrack")
+    --require (_xlibroot..'xAudioDevice')
+    --require (_xlibroot.."xPatternSequencer")
+    --require (_xlibroot.."xParameterAutomation")
+    cLib.require (_xlibroot.."xAudioDeviceAutomation")
     _trace_filters = {"^xAudioDeviceAutomation","^xParameterAutomation"}
       
     -----------------------------------------------------------------------------------------------

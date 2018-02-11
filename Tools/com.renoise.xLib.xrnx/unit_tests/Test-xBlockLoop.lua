@@ -8,7 +8,7 @@ _xlib_tests:insert({
   name = "xBlockLoop",
   fn = function()
 
-    require (_xlibroot.."xBlockLoop")
+    cLib.require (_xlibroot.."xBlockLoop")
     _trace_filters = {"^xBlockLoop*"}
 
     LOG(">>> xBlockLoop: starting unit-test...")

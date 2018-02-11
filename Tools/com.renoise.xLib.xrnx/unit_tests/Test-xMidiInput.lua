@@ -16,9 +16,9 @@ _xlib_tests:insert({
 name = "xMidiInput",
 fn = function()
 
-  require (_xlibroot.."xMidiInput")
-  require (_xlibroot.."xMessage")
-  require (_xlibroot.."xMidiMessage")
+  cLib.require (_xlibroot.."xMidiInput")
+  --require (_xlibroot.."xMessage")
+  --require (_xlibroot.."xMidiMessage")
   _trace_filters = {"^xMidiInput*"}
 
   LOG(">>> xMidiInput: starting unit-test...")

@@ -10,9 +10,9 @@ fn = function()
 
   LOG(">>> xMidiMessage: starting unit-test...")
 
-  require (_clibroot.."cDocument")
-  require (_xlibroot.."xMessage")
-  require (_xlibroot.."xMidiMessage")
+  --require (_clibroot.."cDocument")
+  --require (_xlibroot.."xMessage")
+  cLib.require (_xlibroot.."xMidiMessage")
   _trace_filters = {"^xMidiMessage*"}
 
   --error("No tests defined...")

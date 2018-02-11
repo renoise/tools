@@ -10,9 +10,9 @@ fn = function()
 
   LOG(">>> xSongPos: starting unit-test...")
 
-  require (_xlibroot.."xSongPos")
-  require (_xlibroot.."xPatternSequencer")
-  require (_xlibroot.."xBlockLoop")
+  cLib.require (_xlibroot.."xSongPos")
+  --require (_xlibroot.."xPatternSequencer")
+  --require (_xlibroot.."xBlockLoop")
   _trace_filters = {"^xSongPos*"}
 
 

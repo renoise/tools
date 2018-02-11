@@ -10,7 +10,7 @@ _xlib_tests:insert({
 
         LOG(">>> xScale: starting unit-test...")
 
-        require (_xlibroot.."xScale")
+        cLib.require (_xlibroot.."xScale")
         _trace_filters = {"^xScale*"}
 
         -- local variables
