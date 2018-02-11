@@ -130,14 +130,14 @@ function TestRunner:build()
         end
       },
       vb:text{
-        text = "Name",
-        font = "bold",
-        width = NAME_W,
-      },
-      vb:text{
         text = "Run test",
         font = "bold",
         width = RUN_TEST_BT_W,
+      },
+      vb:text{
+        text = "Name",
+        font = "bold",
+        width = NAME_W,
       },
       vb:text{
         text = "Status",
@@ -153,16 +153,16 @@ function TestRunner:build()
         value = true,
         width = CB_W
       },
-      vb:text{
-        text = v.name,
-        width = NAME_W,
-      },
       vb:button{
         text = "Run tests",
         width = RUN_TEST_BT_W,
         notifier = function()
           self:execute_test(k,v)
         end
+      },
+      vb:text{
+        text = v.name,
+        width = NAME_W,
       },
       vb:checkbox{
         visible = false,
