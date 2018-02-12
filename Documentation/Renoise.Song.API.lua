@@ -1591,7 +1591,7 @@ renoise.song().instruments[].phrases[].lpb, _observable
   
 -- Shuffle groove amount for a phrase. 
 -- 0.0 = no shuffle (off), 1.0 = full shuffle 
-renoise.song().instruments[].phrase.shuffle_amount
+renoise.song().instruments[].phrase.shuffle
   -> [number, 0-1]
 
 -- Column visibility.
