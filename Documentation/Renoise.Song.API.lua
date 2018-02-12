@@ -516,6 +516,13 @@ renoise.song().transport.tpl, _observable
 -- Playback position.
 renoise.song().transport.playback_pos
   -> [renoise.SongPos object]
+-- Playback position of the pattern sequence.
+renoise.song().transport.playback_pos.sequence
+  -> [number]
+--Playback position of the line at the given pattern sequence.
+renoise.song().transport.playback_pos.line
+  -> [number]
+--Playback position of the line at the given the beat position.
 renoise.song().transport.playback_pos_beats
   -> [number, 0-song_end_beats]
 
