@@ -1593,8 +1593,6 @@ renoise.song().instruments[].phrases[].lpb, _observable
 -- 0.0 = no shuffle (off), 1.0 = full shuffle 
 renoise.song().instruments[].phrases[].shuffle
   -> [number, 0-1]
-renoise.song().selected_phrase.shuffle
-  -> [number, 0-1]
 
 -- Column visibility.
 renoise.song().instruments[].phrases[].instrument_column_visible, _observable
