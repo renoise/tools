@@ -41,23 +41,23 @@ require (_clibroot.."cPersistence")
 require (_clibroot.."cProcessSlicer")
 
 _vlibroot = "classes/vLib/classes/"
-require (_vlibroot..'vLib')
-require (_vlibroot.."vTabs")
-require (_vlibroot..'vTable')
-require (_vlibroot..'vDialog')
+cLib.require (_vlibroot..'vLib')
+cLib.require (_vlibroot.."vTabs")
+cLib.require (_vlibroot..'vTable')
+cLib.require (_vlibroot..'vDialog')
 
 _xlibroot = "classes/xLib/classes/"
-require (_xlibroot.."xLib")
-require (_xlibroot.."xTrack")
-require (_xlibroot.."xSongPos")
-require (_xlibroot.."xAudioDevice")
-require (_xlibroot.."xAudioDeviceAutomation")
-require (_xlibroot.."xEnvelope")
-require (_xlibroot.."xParameterAutomation")
-require (_xlibroot.."xPatternSequencer")
-require (_xlibroot.."xSequencerSelection")
-require (_xlibroot.."xPatternSelection")
-require (_xlibroot.."xBlockLoop")
+cLib.require (_xlibroot.."xLib")
+cLib.require (_xlibroot.."xTrack")
+cLib.require (_xlibroot.."xSongPos")
+cLib.require (_xlibroot.."xAudioDevice")
+cLib.require (_xlibroot.."xAudioDeviceAutomation")
+cLib.require (_xlibroot.."xEnvelope")
+cLib.require (_xlibroot.."xParameterAutomation")
+cLib.require (_xlibroot.."xPatternSequencer")
+cLib.require (_xlibroot.."xSequencerSelection")
+cLib.require (_xlibroot.."xPatternSelection")
+cLib.require (_xlibroot.."xBlockLoop")
 
 require "classes/AutoMate"
 require "classes/AutoMatePreset"

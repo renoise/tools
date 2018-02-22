@@ -29,11 +29,11 @@ require (_clibroot.."cTable")
 require (_clibroot.."cDebug")
 require (_clibroot.."cFilesystem")
 
-require (_vlibroot..'vLib')
-require (_vlibroot..'vDialog')
-require (_vlibroot..'vTable')
+cLib.require (_vlibroot..'vLib')
+cLib.require (_vlibroot..'vDialog')
+cLib.require (_vlibroot..'vTable')
 
-require (_xlibroot.."xLib")
+cLib.require (_xlibroot.."xLib")
 
 require ('source/TestRunner')
 

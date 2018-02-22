@@ -10,7 +10,7 @@ fn = function()
 
   LOG(">>> cReflection: starting unit-test...")
 
-  require (_clibroot.."cReflection")
+  cLib.require (_clibroot.."cReflection")
   _trace_filters = {"^cReflection*"}
 
   -- basename

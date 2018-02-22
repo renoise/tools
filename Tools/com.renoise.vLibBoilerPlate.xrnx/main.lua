@@ -23,9 +23,9 @@ _trace_filters = {".*"} -- trace everything
 require (_clibroot..'cLib')
 require (_clibroot..'cDebug')
 
-require (_vlibroot..'vLib')
-require (_vlibroot..'vDialog')
-require (_vlibroot..'vTable')
+cLib.require (_vlibroot..'vLib')
+cLib.require (_vlibroot..'vDialog')
+cLib.require (_vlibroot..'vTable')
 
 require ('source/vLibBoilerPlate_UI')
 require ('source/vLibBoilerPlate_Prefs')

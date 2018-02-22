@@ -8,7 +8,7 @@ _tests:insert({
 name = "cFilesystem",
 fn = function()
 
-  require (_clibroot.."cFilesystem")
+  cLib.require (_clibroot.."cFilesystem")
   _trace_filters = {"^cFilesystem*"}
 
   local absolute_path = renoise.tool().bundle_path .. "/cFilesystem_test/"

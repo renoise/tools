@@ -10,7 +10,7 @@ fn = function()
 
   LOG(">>> cNumber: starting unit-test...")
 
-  require (_clibroot.."cNumber")
+  cLib.require (_clibroot.."cNumber")
   _trace_filters = {"^cNumber*"}
 
   -- basic accessors
