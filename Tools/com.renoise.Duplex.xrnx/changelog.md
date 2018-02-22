@@ -1,5 +1,14 @@
 # Duplex Changelog
 
+## 1.07
+- Update submodules, switch to cLib.require 
+- Fixed: error when recording automation (missing include) #135
+
+## 1.06
+- Switch to serialosc as default protocol for monome
+- Add readme for monome (how to use serialosc)
+- Fixed: using undeclared variable when packing #105
+
 ## 1.05 
 - Fixed: error when interpreting XYPad arguments #101
 - Tweak: Navigator - improved carry-over-loop implementation
