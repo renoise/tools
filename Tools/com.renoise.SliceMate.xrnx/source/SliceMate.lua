@@ -616,9 +616,10 @@ function SliceMate:insert_sliced_note(slice_xcursorpos,instr_idx,sample_idx,src_
   end 
 
   notecol.note_value = sample.sample_mapping.base_note
-  --notecol.note_value = sample.sample_mapping.note_range[1]
   notecol.instrument_value = instr_idx-1
-  if not self.prefs.quantize_enabled.value then
+  if self.prefs.quantize_enabled.value then
+    notecol.delay_value = 0
+  else
     local delay_val = math.floor(slice_xcursorpos.fraction * 255)
     notecol.delay_value = delay_val
     if (delay_val > 0) then
