@@ -37,7 +37,9 @@ function SliceMate:__init(...)
   -- the computed slice and root positions (in frames)
   self.position_slice = renoise.Document.ObservableNumber(-1)
   self.position_root = renoise.Document.ObservableNumber(-1)
-
+  -- the computed phrase index and line position 
+  self.phrase_index = renoise.Document.ObservableNumber(-1)
+  self.phrase_line = renoise.Document.ObservableNumber(-1)
   -- the edited pattern (bound with line notifiers)
   self.pattern_index = renoise.Document.ObservableNumber(-1)
 
@@ -87,11 +89,6 @@ function SliceMate:__init(...)
       else
         matched = notecol.note_value < 121
       end
-      --[[
-      if matched and not match_all then
-        return true
-      end
-      ]]
     end
     if match_instr then
       if match_all and matched then
@@ -99,11 +96,6 @@ function SliceMate:__init(...)
       else
         matched = notecol.instrument_value < 255
       end
-      --[[
-      if matched and not match_all then
-        return true
-      end
-      ]]
     end
     return matched
   end
@@ -178,56 +170,70 @@ function SliceMate:get_cursor()
 end
 
 ---------------------------------------------------------------------------------------------------
--- set waveform selection based on the cursor-position
+-- update values as we change the cursor-position
 
 function SliceMate:select(user_selected)
   TRACE("SliceMate:select(user_selected)",user_selected)
 
-  local slice_xcursorpos = self:get_position()
-  local pos = xNoteCapture.nearest(self.compare_fn)
-  if not pos then
+  local cursor_pos = self:get_position()
+  local trigger_pos = xNoteCapture.nearest(self.compare_fn)
+  if not trigger_pos then
     self.instrument_status.value = ""
     self.instrument_index.value = 0  
   else
-    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(pos,slice_xcursorpos)
-    if not frame and sample_idx then
-      local notecol = pos:get_column()
+    -- (attempt to) determine position in phrase 
+    local rslt,err = self:get_phrase_position(trigger_pos,cursor_pos)
+    if (rslt ~= nil) then 
       self.position_slice.value = -1
-      self.slice_index.value = -1
-      self.instrument_status.value = sample_idx -- error message
-      self.instrument_index.value = notecol and notecol.instrument_value+1 or 0      
-    elseif sample_idx then
-      local instr = rns.instruments[instr_idx]
-      if user_selected or self.prefs.autoselect_instr.value then
-        rns.selected_instrument_index = instr_idx
+      self.slice_index.value = -1    
+      self.phrase_index.value = rslt.phrase_index 
+      self.phrase_line.value = rslt.phrase_line
+      self.instrument_index.value = rslt.instrument_index
+    else 
+      -- no phrase, determine position in sample buffer 
+      self.phrase_index.value = -1
+      self.phrase_line.value = -1
+      local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(trigger_pos,cursor_pos)
+      if not frame and sample_idx then
+        -- failed - display reason
+        local notecol = trigger_pos:get_column()
+        self.position_slice.value = -1
+        self.slice_index.value = -1
+        self.instrument_status.value = sample_idx -- error message
+        self.instrument_index.value = notecol and notecol.instrument_value+1 or 0      
+      elseif sample_idx then
+        local instr = rns.instruments[instr_idx]
+        if user_selected or self.prefs.autoselect_instr.value then
+          rns.selected_instrument_index = instr_idx
+        end
+        if user_selected or self.prefs.autoselect_in_list.value then
+          if (rns.selected_instrument_index == instr_idx) then
+            rns.selected_sample_index = sample_idx
+          end
+        end -- /autoselect_in_list
+        -- compute 'root' frame 
+        local root_frame = 0
+        if (sample_idx > 1) then
+          root_frame = xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)
+        end
+        self.position_root.value = math.ceil(frame+root_frame) 
+        self.position_slice.value = math.ceil(frame)
+        self.slice_index.value = frame and sample_idx-1 
+        if user_selected or self.prefs.autoselect_in_wave.value then
+          local sample = instr.samples[sample_idx]
+          if (rns.selected_sample_index == 1) then
+            frame = frame + root_frame
+            sample = instr.samples[1]
+          end
+          local success,error = xSample.set_buffer_selection(sample,frame,frame)
+          if error then
+            renoise.app():show_status(error)
+          end
+        self.instrument_status.value = ""
+        self.instrument_index.value = instr_idx 
+        end -- /autoselect_in_wave
       end
-      if user_selected or self.prefs.autoselect_in_list.value then
-        if (rns.selected_instrument_index == instr_idx) then
-          rns.selected_sample_index = sample_idx
-        end
-      end -- /autoselect_in_list
-      -- compute 'root' frame 
-      local root_frame = 0
-      if (sample_idx > 1) then
-        root_frame = xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)
-      end
-      self.position_root.value = math.ceil(frame+root_frame) 
-      self.position_slice.value = math.ceil(frame)
-      self.slice_index.value = frame and sample_idx-1 
-      if user_selected or self.prefs.autoselect_in_wave.value then
-        local sample = instr.samples[sample_idx]
-        if (rns.selected_sample_index == 1) then
-          frame = frame + root_frame
-          sample = instr.samples[1]
-        end
-        local success,error = xSample.set_buffer_selection(sample,frame,frame)
-        if error then
-          renoise.app():show_status(error)
-        end
-      self.instrument_status.value = ""
-      self.instrument_index.value = instr_idx 
-      end -- /autoselect_in_wave
-    end
+    end 
   end 
 end                  
 
@@ -284,9 +290,9 @@ end
 function SliceMate:previous_note()
   TRACE("SliceMate:previous_note()")
 
-  local pos = xNoteCapture.previous(self.compare_fn)
-  if pos then
-    pos:select()
+  local trigger_pos = xNoteCapture.previous(self.compare_fn)
+  if trigger_pos then
+    trigger_pos:select()
     self.select_requested = true
   end
 end
@@ -296,9 +302,9 @@ end
 function SliceMate:next_note()
   TRACE("SliceMate:next_note()")
 
-  local pos = xNoteCapture.next(self.compare_fn)
-  if pos then
-    pos:select()
+  local trigger_pos = xNoteCapture.next(self.compare_fn)
+  if trigger_pos then
+    trigger_pos:select()
     self.select_requested = true
   end
 end
@@ -406,6 +412,9 @@ end
 ---------------------------------------------------------------------------------------------------
 -- obtain the sample buffer position from the position of the triggering note / cursor 
 -- (perform a few checks before calling the xSample method)
+-- @param trigger_pos (xCursorPos)
+-- @param cursor_pos (xCursorPos)
+-- @param autofix (boolean)
 -- @return {
 --  frame,
 --  sample_idx,
@@ -413,10 +422,10 @@ end
 --  notecol
 --}
 
-function SliceMate:get_buffer_position(trigger_pos,slice_xcursorpos,autofix)
-  TRACE("SliceMate:get_buffer_position(trigger_pos,slice_xcursorpos,autofix)",trigger_pos,slice_xcursorpos,autofix)
+function SliceMate:get_buffer_position(trigger_pos,cursor_pos,autofix)
+  TRACE("SliceMate:get_buffer_position(trigger_pos,cursor_pos,autofix)",trigger_pos,cursor_pos,autofix)
 
-  local patt_idx,patt,track,ptrack,line = trigger_pos:resolve()
+  local _patt_idx,_patt,track,_ptrack,line = trigger_pos:resolve()
   if not line then
     return false,"Could not resolve pattern-line"                    
   end
@@ -473,11 +482,121 @@ function SliceMate:get_buffer_position(trigger_pos,slice_xcursorpos,autofix)
   end 
 
   local frame,notecol = 
-    xSample.get_buffer_frame_by_notepos(sample,trigger_pos,slice_xcursorpos,ignore_sxx)
+    xSample.get_buffer_frame_by_notepos(sample,trigger_pos,cursor_pos,ignore_sxx)
   return frame,sample_idx,instr_idx,notecol
 
 end 
 
+---------------------------------------------------------------------------------------------------
+-- determine the phrase position/line number at the provided position 
+-- @param trigger_pos (xCursorPos)
+-- @param cursor_pos (xCursorPos)
+-- @return table{
+--  phrase_idx: number        -- the phrase index specified by the Zxx command, if any
+--  phrase_line: number       -- the resolved phrase line index 
+--  phrase_offset: number     -- the phrase offset specified by the Sxx command, if any
+--  note_column_index: number -- the source note-column index 
+--  instrument_index: number  -- the source instrument index 
+--  zxx_column_index: number  -- the column index of the sxx command, if any
+--  sxx_column_index: number  -- the column index of the zxx command
+-- } ... or nil when no phrase was matched 
+
+function SliceMate:get_phrase_position(trigger_pos,cursor_pos)
+  TRACE("SliceMate:get_phrase_position(trigger_pos,cursor_pos)",trigger_pos,cursor_pos)
+
+  if self.prefs.support_phrases.value then 
+    
+    local phrase_idx = nil  
+    local phrase_offset = 0 
+    local zxx_col_idx = nil  
+    local sxx_col_idx = nil 
+    
+    local patt_idx,patt,track,ptrack,line = trigger_pos:resolve()
+    if not track then
+      return nil,"Could not resolve track"                    
+    end
+    if not line then
+      return nil,"Could not resolve pattern-line"                    
+    end
+      
+    local notecol = line.note_columns[trigger_pos.column]
+    if not notecol then
+      return nil, "Could not resolve note-column"
+    end
+  
+    local instr_idx = notecol.instrument_value+1
+    local instr = rns.instruments[instr_idx]
+    if not instr then
+      return nil,"Could not resolve instrument"
+    end
+      
+    -- quick check: instr contains phrases? 
+    if instr then 
+      if (#instr.phrases == 0) then 
+        return nil 
+      else
+        -- examine triggering note:
+        
+        -- detect explicit Zxx commands
+        local visible_only = true -- only search visible columns
+        --local notecol_idx = rns.selected_note_column_index
+        local zxx_cmd = xLinePattern.get_effect_command(track,line,"0Z",trigger_pos.column,visible_only)
+        print("zxx_cmd",rprint(zxx_cmd))
+        if not table.is_empty(zxx_cmd) then 
+          -- an explicit Zxx command was found 
+          -- (prefer note-fx column over fx-column) 
+          for k,v in ipairs(zxx_cmd) do 
+            if (v.type == xEffectColumn.TYPE.EFFECT_NOTECOLUMN) then 
+              phrase_idx = v.value
+              zxx_col_idx = v.index
+              break
+            end
+            phrase_idx = v.value
+            zxx_col_idx = v.index
+          end
+        elseif xInstrument.is_triggering_phrase(instr) then 
+          -- no zxx - if set to prg/key mode, use the selected phrase 
+          -- TODO support key-mapped phrases 
+          phrase_idx = xInstrument.get_selected_phrase_index(instr_idx)
+        end
+        --print("phrase_idx",phrase_idx)
+
+        -- detect offset command 
+        local sxx_cmd = xLinePattern.get_effect_command(track,line,"0S",trigger_pos.column,visible_only)
+        print("sxx_cmd",rprint(sxx_cmd))
+        -- prefer note-fx column over fx-column
+        for k,v in ipairs(sxx_cmd) do 
+          if (v.type == xEffectColumn.TYPE.EFFECT_NOTECOLUMN) then 
+            phrase_offset = v.value
+            sxx_col_idx = v.index
+            break
+          end
+          phrase_offset = v.value
+          sxx_col_idx = v.index
+        end          
+        --print("phrase_offset",phrase_offset)
+      end
+        
+    end
+    
+    local phrase = instr.phrases[phrase_idx]
+    if (phrase_idx 
+      and phrase_idx > 0
+      and phrase
+    ) then 
+      return {
+        phrase_line = xPhrase.get_line_from_cursor(phrase,trigger_pos,cursor_pos,phrase_offset),
+        phrase_index = phrase_idx,
+        phrase_offset = phrase_offset,
+        instrument_index = instr_idx,
+        zxx_column_index = zxx_col_idx,
+        sxx_column_index = sxx_col_idx,
+      }
+    end 
+  end 
+  
+end  
+  
 ---------------------------------------------------------------------------------------------------
 -- insert slice at the cursor-position 
 -- @return boolean, false when slicing failed, nil when handled elsewhere (e.g. note insert)
@@ -487,9 +606,9 @@ function SliceMate:insert_slice()
   TRACE("SliceMate:insert_slice()")
 
   local autofix = self.prefs.autofix_instr.value
-  local slice_xcursorpos = self:get_position()
-  local pos = xNoteCapture.nearest(self.compare_fn)
-  if not pos then
+  local cursor_pos = self:get_position()
+  local trigger_pos = xNoteCapture.nearest(self.compare_fn)
+  if not trigger_pos then
     -- offer to insert note when nothing was found 
     local is_sliceable,err = SliceMate.is_sliceable(rns.selected_instrument,autofix) 
     err = err and "\n\nThe error message received was:\n"..err or ""
@@ -505,14 +624,25 @@ function SliceMate:insert_slice()
         .."\nautomatically, as they are encountered"
     elseif is_sliceable and self.ui:promp_initial_note_insert() then
       local instr_idx = rns.selected_instrument_index
-      local inserted,err = self:insert_sliced_note(slice_xcursorpos,instr_idx,1)
+      local inserted,err = self:insert_sliced_note(cursor_pos,instr_idx,1)
       if not inserted and err then 
         return false,err
       end   
     end 
   else
+    
+    local phrase_pos,err = self:get_phrase_position(trigger_pos,cursor_pos)
+    print("phrase_pos,err",phrase_pos,err)
+    if (phrase_pos ~= nil) then 
+      local src_notecol = trigger_pos:get_column()
+      self:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)
+      return true 
+    end
+    
+    -- not a phrase, or we don't support phrases: 
+    -- determine buffer position 
 
-    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(pos,slice_xcursorpos,autofix)
+    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(trigger_pos,cursor_pos,autofix)
     if not frame and sample_idx then 
       return false, ("Unable to insert slice:\n%s"):format(sample_idx) -- error message
     elseif sample_idx then
@@ -577,7 +707,7 @@ function SliceMate:insert_slice()
       end
 
       if self.prefs.insert_note.value then
-        local inserted,err = self:insert_sliced_note(slice_xcursorpos,instr_idx,slice_idx+1,notecol)
+        local inserted,err = self:insert_sliced_note(cursor_pos,instr_idx,slice_idx+1,notecol)
         if not inserted and err then 
           return false,err
         end 
@@ -591,14 +721,14 @@ function SliceMate:insert_slice()
 end
 
 ---------------------------------------------------------------------------------------------------
--- @param slice_xcursorpos (xCursorPos), where to insert 
+-- @param cursor_pos (xCursorPos), where to insert 
 -- @param instr_idx (number), instrument index 
 -- @param sample_idx (number), sample index - mapping decides which note to insert
 -- @param [src_notecol] (renoise.NoteColumn), carry over volume/panning when set 
 
 
-function SliceMate:insert_sliced_note(slice_xcursorpos,instr_idx,sample_idx,src_notecol)
-  TRACE("SliceMate:insert_sliced_note(slice_xcursorpos,instr_idx,sample_idx,src_notecol)",slice_xcursorpos,instr_idx,sample_idx,src_notecol)
+function SliceMate:insert_sliced_note(cursor_pos,instr_idx,sample_idx,src_notecol)
+  TRACE("SliceMate:insert_sliced_note(cursor_pos,instr_idx,sample_idx,src_notecol)",cursor_pos,instr_idx,sample_idx,src_notecol)
 
   local instr = rns.instruments[instr_idx]
   local sample = instr.samples[sample_idx]
@@ -606,11 +736,11 @@ function SliceMate:insert_sliced_note(slice_xcursorpos,instr_idx,sample_idx,src_
     return false,"Could not resolve sample"
   end
 
-  local patt_idx,patt,track,ptrack,line = slice_xcursorpos:resolve()
+  local _patt_idx,_patt,track,_ptrack,line = cursor_pos:resolve()
   if not line then
     return false,"Could not resolve pattern-line"                    
   end
-  local notecol = line.note_columns[slice_xcursorpos.column]
+  local notecol = line.note_columns[cursor_pos.column]
   if not notecol then
     return false,"Could not resolve note-column"
   end 
@@ -620,7 +750,64 @@ function SliceMate:insert_sliced_note(slice_xcursorpos,instr_idx,sample_idx,src_
   if self.prefs.quantize_enabled.value then
     notecol.delay_value = 0
   else
-    local delay_val = math.floor(slice_xcursorpos.fraction * 255)
+    local delay_val = math.floor(cursor_pos.fraction * 255)
+    notecol.delay_value = delay_val
+    if (delay_val > 0) then
+      track.delay_column_visible = true
+    end
+  end
+  self:propagate_vol_pan(src_notecol,notecol)
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- @param cursor_pos (xCursorPos), where to insert 
+-- @param phrase_pos (table), as returned by get_phrase_position()
+-- @param [src_notecol] (renoise.NoteColumn), carry over volume/panning when set 
+
+
+function SliceMate:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)
+  TRACE("SliceMate:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)",cursor_pos,phrase_pos,src_notecol)
+
+  local instr = rns.instruments[phrase_pos.instrument_index]
+  --[[
+  local sample = instr.samples[sample_idx]
+  if not sample then
+    return false,"Could not resolve sample"
+  end
+  ]]
+
+  local _patt_idx,_patt,track,_ptrack,line = cursor_pos:resolve()
+  if not line then
+    return false,"Could not resolve pattern-line"                    
+  end
+  local notecol = line.note_columns[cursor_pos.column]
+  if not notecol then
+    return false,"Could not resolve note-column"
+  end 
+
+  notecol.note_value = src_notecol.note_value 
+  notecol.instrument_value = phrase_pos.instrument_index-1
+  
+  -- attempt to apply zxx/sxx to same columns as source   
+  xLinePattern.set_effect_column_command(
+    track,line,"0Z",phrase_pos.phrase_index,phrase_pos.zxx_column_index)
+  xLinePattern.set_effect_column_command(
+    track,line,"0S",phrase_pos.phrase_line,phrase_pos.sxx_column_index)
+  
+  -- apply delay to note if line contains fractional part 
+  local fraction = cLib.fraction(phrase_pos.phrase_line)
+  print("fraction",fraction)
+  
+  self:propagate_vol_pan(src_notecol,notecol)
+
+  --[[
+  notecol.note_value = sample.sample_mapping.base_note
+  notecol.instrument_value = instr_idx-1
+  if self.prefs.quantize_enabled.value then
+    notecol.delay_value = 0
+  else
+    local delay_val = math.floor(cursor_pos.fraction * 255)
     notecol.delay_value = delay_val
     if (delay_val > 0) then
       track.delay_column_visible = true
@@ -632,8 +819,25 @@ function SliceMate:insert_sliced_note(slice_xcursorpos,instr_idx,sample_idx,src_
   elseif rns.transport.keyboard_velocity_enabled then
     notecol.volume_value = rns.transport.keyboard_velocity 
   end
+  ]]
 
 end
+
+---------------------------------------------------------------------------------------------------
+-- configure note-column with vol/pan from source, or use current keyboard velocity 
+-- @param src_notecol (renoise.NoteColumn)
+-- @param dest_notecol (renoise.NoteColumn)
+
+function SliceMate:propagate_vol_pan(src_notecol,dest_notecol)
+  
+  if self.prefs.propagate_vol_pan.value and src_notecol then
+    dest_notecol.volume_value = src_notecol.volume_value
+    dest_notecol.panning_value = src_notecol.panning_value
+  elseif rns.transport.keyboard_velocity_enabled then
+    dest_notecol.volume_value = rns.transport.keyboard_velocity 
+  end 
+  
+end  
 
 ---------------------------------------------------------------------------------------------------
 

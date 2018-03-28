@@ -54,35 +54,38 @@ function SliceMate_UI:__init(...)
 
   -- vToggleButton
   self.vtoggle_slice = nil
-  self.vtoggle_options = nil
 
+  --- update flags
+  self.update_instrument_requested = false
+  
   -- notifiers --
 
   self.owner.instrument_index:add_notifier(function()
-    self:update_instrument()
+    self.update_instrument_requested = true
   end)
-
   self.owner.instrument_status:add_notifier(function()
-    self:update_instrument()
+    self.update_instrument_requested = true
   end)
-
   self.owner.slice_index:add_notifier(function()
-    self:update_instrument()
+    self.update_instrument_requested = true
   end)
-
   self.owner.position_slice:add_notifier(function()
-    self:update_instrument()
+    self.update_instrument_requested = true
+  end)
+  self.owner.phrase_index:add_notifier(function()
+    self.update_instrument_requested = true
+  end)
+  self.owner.phrase_line:add_notifier(function()
+    self.update_instrument_requested = true
   end)
 
-  self.prefs.show_slice_options:add_notifier(function()
-    self:update_slice_options()  
+  self.prefs.show_options:add_notifier(function()
+    self:update_options()  
   end)
 
-  self.prefs.show_tool_options:add_notifier(function()
-    self:update_tool_options()  
-  end)
+
+  renoise.tool().app_idle_observable:add_notifier(self,self.on_idle)
   
-
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -118,23 +121,10 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function SliceMate_UI:update_slice_options()
+function SliceMate_UI:update_options()
 
-  local enabled = self.prefs.show_slice_options.value
+  local enabled = self.prefs.show_options.value
   self.vtoggle_slice.enabled = enabled
-  local ctrl = self.vb.views["slice_panel"]
-  if ctrl then
-    ctrl.visible = enabled
-  end
-
-end
-
----------------------------------------------------------------------------------------------------
-
-function SliceMate_UI:update_tool_options()
-
-  local enabled = self.prefs.show_tool_options.value
-  self.vtoggle_options.enabled = enabled
   local ctrl = self.vb.views["options_panel"]
   if ctrl then
     ctrl.visible = enabled
@@ -151,6 +141,8 @@ function SliceMate_UI:update_instrument()
   local instr_idx = self.owner.instrument_index.value
   local instr = rns.instruments[instr_idx]
   local slice_index = self.owner.slice_index.value
+  local phrase_index = self.owner.phrase_index.value
+  local phrase_line = self.owner.phrase_line.value
   local frame = self.owner.position_slice.value
   local root_frame = self.owner.position_root.value
 
@@ -171,37 +163,55 @@ function SliceMate_UI:update_instrument()
     ctrl.visible = (instr_status ~= "")
   end
 
-  local ctrl = self.vb.views["position_slice"]
+  local ctrl = self.vb.views["position"]
   if ctrl then
     local str_status = ""
-    if (instr_idx == 0) then
-      str_status = "-" 
-    else
-      str_status = (frame == -1) and "-" or ("%d / %d"):format(frame,root_frame)
+    if (phrase_index > 0) then 
+      str_status = ("Line: %s"):format(phrase_line)
+    else 
+      if (instr_idx == 0) then
+        str_status = "-" 
+      else
+        str_status = (frame == -1) and "-" or ("%d / %d"):format(frame,root_frame)
+      end
+      str_status = ("Pos: %s"):format(str_status)
     end
-    str_status = ("Pos: %s"):format(str_status)
     ctrl.tooltip = str_status
     ctrl.text = str_status
   end
   
-  local ctrl = self.vb.views["slice_status"]
+  local ctrl = self.vb.views["status"]
   if ctrl then
-    local slice_count = instr and (#instr.samples > 1) 
-      and #instr.samples[1].slice_markers or 0
     local str_status = ""
-    if (instr_idx == 0) or ((slice_index == 0) and (slice_count == 0)) then
-      str_status = instr and "0" or "-"
+    local rmv_bt = self.vb.views["remove_slice_button"]
+    if (phrase_index > 0) then 
+      -- phrase status
+      local phrase_count = instr and #instr.phrases
+      if (instr_idx == 0) or ((phrase_index == 0) and (phrase_count == 0)) then
+        str_status = instr and "0" or "-"
+      else
+        str_status = (phrase_index == -1) and "-" or ("%d / %d"):format(phrase_index,phrase_count)
+      end
+      str_status = ("Active phrase: %s"):format(str_status)
+      if rmv_bt then 
+        rmv_bt.visible = false
+      end 
     else
-      str_status = (slice_index == -1) and "-" or ("%d / %d"):format(slice_index,slice_count)
-    end
-    str_status = ("Active slice: %s"):format(str_status)
+      -- slice status
+      local slice_count = instr and (#instr.samples > 1) 
+        and #instr.samples[1].slice_markers or 0
+      if (instr_idx == 0) or ((slice_index == 0) and (slice_count == 0)) then
+        str_status = instr and "0" or "-"
+      else
+        str_status = (slice_index == -1) and "-" or ("%d / %d"):format(slice_index,slice_count)
+      end
+      str_status = ("Active slice: %s"):format(str_status)
+      if rmv_bt then 
+        rmv_bt.visible = (instr_idx > 0 and slice_index > 0)
+      end 
+    end 
     ctrl.tooltip = str_status
     ctrl.text = str_status
-
-    local rmv_bt = self.vb.views["remove_slice_button"]
-    if rmv_bt then 
-      rmv_bt.visible = (instr_idx > 0 and slice_index > 0)
-    end 
 
   end
 
@@ -234,25 +244,12 @@ function SliceMate_UI:build_vtoggle_slice()
     text_enabled = "≡",
     text_disabled = "≡",
     notifier = function(ref)
-      self.prefs.show_slice_options.value = ref.enabled
+      self.prefs.show_options.value = ref.enabled
     end,
   }
   return self.vtoggle_slice.view
 end
 
----------------------------------------------------------------------------------------------------
-
-function SliceMate_UI:build_vtoggle_options()
-  self.vtoggle_options = vToggleButton{
-    vb = self.vb,
-    text_enabled = "⚙",
-    text_disabled = "⚙",
-    notifier = function(ref)
-      self.prefs.show_tool_options.value = ref.enabled
-    end,
-  }
-  return self.vtoggle_options.view
-end
 
 ---------------------------------------------------------------------------------------------------
 
@@ -305,7 +302,7 @@ function SliceMate_UI:build()
           vb:row{
             --mode = "justify",
             vb:text{
-              id = "slice_status",
+              id = "status",
               text = "",
               width = self.dialog_width-39,
             },
@@ -325,35 +322,17 @@ function SliceMate_UI:build()
           },
           vb:row{
             vb:text{
-              id = "position_slice",
+              id = "position",
               text = "",
               width = self.dialog_width-31,
             },
-            self:build_vtoggle_options(),
+            --self:build_vtoggle_options(),
           },
             vb:space{
               height = 3
             },
           
-          vb:column{
-            id = "options_panel",    
-            vb:row{
-              vb:checkbox{
-                bind = self.prefs.autostart
-              },
-              vb:text{
-                text = "Auto-start tool"
-              }
-            },
-            vb:row{
-              vb:checkbox{
-                bind = self.prefs.show_on_launch
-              },
-              vb:text{
-                text = "Show UI on auto-start"
-              }
-            },            
-          }
+
         },
         -- navigation panel 
         vb:column{
@@ -424,8 +403,12 @@ function SliceMate_UI:build()
             self:build_vtoggle_slice(),
           },   
           vb:column{       
-            id = "slice_panel",
+            id = "options_panel",
             vb:column{
+              vb:text{
+                text = "Slice Options",
+                font = "bold",
+              },
               vb:row{
                 tooltip = "Decide if slices should be quantized, and by how large an amount",
                 vb:checkbox{
@@ -450,7 +433,7 @@ function SliceMate_UI:build()
                 }
               },            
               vb:row{
-                tooltip = "Carry over VOL/PAN from previous note (if any)",
+                tooltip = "Carry over VOL/PAN from previous note when inserting new notes",
                 vb:checkbox{
                   bind = self.prefs.propagate_vol_pan
                 },
@@ -458,6 +441,21 @@ function SliceMate_UI:build()
                   text = "Propagate VOL/PAN"
                 }
               }, 
+              vb:row{
+                tooltip = "Allow slicing of instrument phrases",
+                vb:checkbox{
+                  bind = self.prefs.support_phrases
+                },
+                vb:text{
+                  text = "Allow phrase slicing"
+                }
+              }, 
+            }, 
+            vb:column{
+              vb:text{
+                text = "Selection",
+                font = "bold",
+              },              
               vb:row{
                 tooltip = "Automatically select instrument underneath cursor",
                 vb:checkbox{
@@ -494,8 +492,30 @@ function SliceMate_UI:build()
                   text = "Auto-fix instrument"
                 }
               },
-                    
-            }
+            },
+            vb:column{
+              vb:text{
+                text = "General",
+                font = "bold",
+              },
+              vb:row{
+                vb:checkbox{
+                  bind = self.prefs.autostart
+                },
+                vb:text{
+                  text = "Auto-start tool"
+                }
+              },
+              vb:row{
+                vb:checkbox{
+                  bind = self.prefs.show_on_launch
+                },
+                vb:text{
+                  text = "Show UI on auto-start"
+                }
+              },            
+            }              
+          
           },
         },
       },      
@@ -504,9 +524,20 @@ function SliceMate_UI:build()
   self.vb_content = vb_content
 
   self:update_instrument()
-  self:update_slice_options()
   self:update_slice_button()
-  self:update_tool_options()
+  self:update_options()
+  --self:update_tool_options()
 
 end
 
+---------------------------------------------------------------------------------------------------
+--- handle idle notifications
+
+function SliceMate_UI:on_idle()
+
+  if self.update_instrument_requested then
+    self.update_instrument_requested = false
+    self:update_instrument()
+  end
+  
+end

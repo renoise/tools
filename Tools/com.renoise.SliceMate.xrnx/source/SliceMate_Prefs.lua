@@ -42,9 +42,10 @@ function SliceMate_Prefs:__init()
   self:add_property("quantize_amount", renoise.Document.ObservableNumber(SliceMate_Prefs.QUANTIZE_AMOUNT.LINE))
   self:add_property("insert_note", renoise.Document.ObservableBoolean(true))
   self:add_property("propagate_vol_pan", renoise.Document.ObservableBoolean(true))
+  self:add_property("support_phrases", renoise.Document.ObservableBoolean(true))
   -- remember UI state
-  self:add_property("show_tool_options", renoise.Document.ObservableBoolean(false))
-  self:add_property("show_slice_options", renoise.Document.ObservableBoolean(false))
+  --self:add_property("show_tool_options", renoise.Document.ObservableBoolean(false))
+  self:add_property("show_options", renoise.Document.ObservableBoolean(false))
   
   self:reset()
 
