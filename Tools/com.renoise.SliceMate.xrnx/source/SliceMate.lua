@@ -109,6 +109,10 @@ function SliceMate:__init(...)
   renoise.tool().app_idle_observable:add_notifier(function()
     self:on_idle()
   end)
+  
+  self.prefs.support_phrases:add_notifier(function()
+    self.select_requested = true
+  end)
 
   self.prefs.autoselect_instr:add_notifier(function()
     self:on_idle()
@@ -188,6 +192,7 @@ function SliceMate:select(user_selected)
       self.slice_index.value = -1    
       self.phrase_index.value = rslt.phrase_index 
       self.phrase_line.value = rslt.phrase_line
+      self.instrument_status.value = ""
       self.instrument_index.value = rslt.instrument_index
     else 
       -- no phrase, determine position in sample buffer 
@@ -401,7 +406,7 @@ function SliceMate:get_position()
 
   if (choices[self.prefs.quantize_amount.value]) then 
     choices[self.prefs.quantize_amount.value]()
-    pos.fraction = 0    
+    pos.line = math.floor(pos.line)
     return pos
   else 
     error("Unexpected quantize amount")
@@ -473,7 +478,7 @@ function SliceMate:get_buffer_position(trigger_pos,cursor_pos,autofix)
   if (sample_idx == 1) and (#instr.samples > 0) then 
     local matched_sxx = xLinePattern.get_effect_command(track,line,"0S",trigger_pos.column,true)
     if not table.is_empty(matched_sxx) then 
-      local applied_sxx = matched_sxx[#matched_sxx].value
+      local applied_sxx = matched_sxx[#matched_sxx].amount_value
       if (applied_sxx < #instr.samples) then 
         sample_idx = applied_sxx+1
         ignore_sxx = true
@@ -494,7 +499,6 @@ end
 -- @return table{
 --  phrase_idx: number        -- the phrase index specified by the Zxx command, if any
 --  phrase_line: number       -- the resolved phrase line index 
---  phrase_offset: number     -- the phrase offset specified by the Sxx command, if any
 --  note_column_index: number -- the source note-column index 
 --  instrument_index: number  -- the source instrument index 
 --  zxx_column_index: number  -- the column index of the sxx command, if any
@@ -540,19 +544,20 @@ function SliceMate:get_phrase_position(trigger_pos,cursor_pos)
         -- detect explicit Zxx commands
         local visible_only = true -- only search visible columns
         --local notecol_idx = rns.selected_note_column_index
-        local zxx_cmd = xLinePattern.get_effect_command(track,line,"0Z",trigger_pos.column,visible_only)
-        print("zxx_cmd",rprint(zxx_cmd))
+        local zxx_cmd = xLinePattern.get_effect_command(
+          track,line,"0Z",trigger_pos.column,visible_only)
+        --print("zxx_cmd",rprint(zxx_cmd))
         if not table.is_empty(zxx_cmd) then 
           -- an explicit Zxx command was found 
           -- (prefer note-fx column over fx-column) 
           for k,v in ipairs(zxx_cmd) do 
-            if (v.type == xEffectColumn.TYPE.EFFECT_NOTECOLUMN) then 
-              phrase_idx = v.value
-              zxx_col_idx = v.index
+            if (v.column_type == xEffectColumn.TYPE.EFFECT_NOTECOLUMN) then 
+              phrase_idx = v.amount_value
+              zxx_col_idx = v.column_index
               break
             end
-            phrase_idx = v.value
-            zxx_col_idx = v.index
+            phrase_idx = v.amount_value
+            zxx_col_idx = v.column_index
           end
         elseif xInstrument.is_triggering_phrase(instr) then 
           -- no zxx - if set to prg/key mode, use the selected phrase 
@@ -562,17 +567,18 @@ function SliceMate:get_phrase_position(trigger_pos,cursor_pos)
         --print("phrase_idx",phrase_idx)
 
         -- detect offset command 
-        local sxx_cmd = xLinePattern.get_effect_command(track,line,"0S",trigger_pos.column,visible_only)
-        print("sxx_cmd",rprint(sxx_cmd))
+        local sxx_cmd = xLinePattern.get_effect_command(
+          track,line,"0S",trigger_pos.column,visible_only)
+        --print("sxx_cmd",rprint(sxx_cmd))
         -- prefer note-fx column over fx-column
         for k,v in ipairs(sxx_cmd) do 
-          if (v.type == xEffectColumn.TYPE.EFFECT_NOTECOLUMN) then 
-            phrase_offset = v.value
-            sxx_col_idx = v.index
+          if (v.column_type == xEffectColumn.TYPE.EFFECT_NOTECOLUMN) then 
+            phrase_offset = v.amount_value
+            sxx_col_idx = v.column_index
             break
           end
-          phrase_offset = v.value
-          sxx_col_idx = v.index
+          phrase_offset = v.amount_value
+          sxx_col_idx = v.column_index
         end          
         --print("phrase_offset",phrase_offset)
       end
@@ -584,10 +590,14 @@ function SliceMate:get_phrase_position(trigger_pos,cursor_pos)
       and phrase_idx > 0
       and phrase
     ) then 
+      
+      local phrase_line,err = xPhrase.get_line_from_cursor(
+        phrase,trigger_pos,cursor_pos,phrase_offset,notecol)
+      --print("phrase_line,err",phrase_line,err)
+      
       return {
-        phrase_line = xPhrase.get_line_from_cursor(phrase,trigger_pos,cursor_pos,phrase_offset),
+        phrase_line = phrase_line,
         phrase_index = phrase_idx,
-        phrase_offset = phrase_offset,
         instrument_index = instr_idx,
         zxx_column_index = zxx_col_idx,
         sxx_column_index = sxx_col_idx,
@@ -598,8 +608,8 @@ function SliceMate:get_phrase_position(trigger_pos,cursor_pos)
 end  
   
 ---------------------------------------------------------------------------------------------------
--- insert slice at the cursor-position 
--- @return boolean, false when slicing failed, nil when handled elsewhere (e.g. note insert)
+-- insert slice at the cursor-position (sample or phrase, automatically decided)
+-- @return boolean, false when slicing failed
 -- @return string, error message when failed
 
 function SliceMate:insert_slice()
@@ -632,17 +642,22 @@ function SliceMate:insert_slice()
   else
     
     local phrase_pos,err = self:get_phrase_position(trigger_pos,cursor_pos)
-    print("phrase_pos,err",phrase_pos,err)
+    --print("phrase_pos,err",phrase_pos,err)
     if (phrase_pos ~= nil) then 
       local src_notecol = trigger_pos:get_column()
-      self:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)
-      return true 
+      local rslt,err = self:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)
+      if not rslt then 
+        return false,err
+      else
+        return true
+      end
     end
     
     -- not a phrase, or we don't support phrases: 
     -- determine buffer position 
 
-    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(trigger_pos,cursor_pos,autofix)
+    local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(
+      trigger_pos,cursor_pos,autofix)
     if not frame and sample_idx then 
       return false, ("Unable to insert slice:\n%s"):format(sample_idx) -- error message
     elseif sample_idx then
@@ -764,19 +779,13 @@ end
 -- @param cursor_pos (xCursorPos), where to insert 
 -- @param phrase_pos (table), as returned by get_phrase_position()
 -- @param [src_notecol] (renoise.NoteColumn), carry over volume/panning when set 
-
+-- @return boolean, true when note was inserted 
+-- @return string, error message when failed 
 
 function SliceMate:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)
   TRACE("SliceMate:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)",cursor_pos,phrase_pos,src_notecol)
 
   local instr = rns.instruments[phrase_pos.instrument_index]
-  --[[
-  local sample = instr.samples[sample_idx]
-  if not sample then
-    return false,"Could not resolve sample"
-  end
-  ]]
-
   local _patt_idx,_patt,track,_ptrack,line = cursor_pos:resolve()
   if not line then
     return false,"Could not resolve pattern-line"                    
@@ -785,43 +794,65 @@ function SliceMate:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)
   if not notecol then
     return false,"Could not resolve note-column"
   end 
+  local phrase = instr.phrases[phrase_pos.phrase_index]
+  if not phrase then 
+    return false,"Could not resolve phrase"
+  end
+
+  local lpb_factor = self:get_lpb_factor(phrase)
+  --print(">>> lpb_factor",lpb_factor)
+  local phrase_line = phrase_pos.phrase_line
+  --print(">>> phrase_line #A",phrase_line)
+  local fract = cLib.fraction(phrase_pos.phrase_line)
+  --print(">>> fract",fract)
+  
+  -- if phrase is slower than pattern and cursor is positioned 
+  -- "between lines", we are unable to slice 
+  if (fract > 0) and (lpb_factor < 1) then 
+    return false, "Unable to slice the phrase at the current line."
+      .."\nPlease navigate to a nearby line which doesn’t show a "
+      .."\nwarning triangle (⚠ N/A) and try again"
+  end    
 
   notecol.note_value = src_notecol.note_value 
   notecol.instrument_value = phrase_pos.instrument_index-1
+  
+  -- delay/shift note if line contains fractional part 
+  if (fract > 0) then 
+    -- increase line by at least one - 
+    phrase_line = math.max(math.floor(phrase_line)+1,
+      math.floor(phrase_line) + math.floor(fract * lpb_factor))
+    --print(">>> phrase_line #B",phrase_line)
+    local delay_amount = (phrase_line - phrase_pos.phrase_line) / lpb_factor
+    --print(">>> delay_amount",delay_amount)
+    notecol.delay_value = math.floor(delay_amount*255)
+    track.delay_column_visible = true
+  end
   
   -- attempt to apply zxx/sxx to same columns as source   
   xLinePattern.set_effect_column_command(
     track,line,"0Z",phrase_pos.phrase_index,phrase_pos.zxx_column_index)
   xLinePattern.set_effect_column_command(
-    track,line,"0S",phrase_pos.phrase_line,phrase_pos.sxx_column_index)
-  
-  -- apply delay to note if line contains fractional part 
-  local fraction = cLib.fraction(phrase_pos.phrase_line)
-  print("fraction",fraction)
+    track,line,"0S",phrase_line-1,phrase_pos.sxx_column_index)
   
   self:propagate_vol_pan(src_notecol,notecol)
 
-  --[[
-  notecol.note_value = sample.sample_mapping.base_note
-  notecol.instrument_value = instr_idx-1
-  if self.prefs.quantize_enabled.value then
-    notecol.delay_value = 0
-  else
-    local delay_val = math.floor(cursor_pos.fraction * 255)
-    notecol.delay_value = delay_val
-    if (delay_val > 0) then
-      track.delay_column_visible = true
-    end
-  end
-  if self.prefs.propagate_vol_pan.value and src_notecol then
-    notecol.volume_value = src_notecol.volume_value
-    notecol.panning_value = src_notecol.panning_value
-  elseif rns.transport.keyboard_velocity_enabled then
-    notecol.volume_value = rns.transport.keyboard_velocity 
-  end
-  ]]
-
+  return true
+  
 end
+
+---------------------------------------------------------------------------------------------------
+-- retrieve current LPB factor (phrase vs. pattern)
+-- NB: using LPB from transport might not reflect value during playback, 
+-- we could determine this value by reading from the actual pattern/song (TODO)
+
+function SliceMate:get_lpb_factor(phrase)
+  TRACE("SliceMate:get_lpb_factor(phrase)",phrase)
+
+  assert(type(phrase)=="InstrumentPhrase")
+  return phrase.lpb / rns.transport.lpb 
+  
+end  
 
 ---------------------------------------------------------------------------------------------------
 -- configure note-column with vol/pan from source, or use current keyboard velocity 
@@ -829,7 +860,8 @@ end
 -- @param dest_notecol (renoise.NoteColumn)
 
 function SliceMate:propagate_vol_pan(src_notecol,dest_notecol)
-  
+  TRACE("SliceMate:propagate_vol_pan(src_notecol,dest_notecol)",src_notecol,dest_notecol)
+
   if self.prefs.propagate_vol_pan.value and src_notecol then
     dest_notecol.volume_value = src_notecol.volume_value
     dest_notecol.panning_value = src_notecol.panning_value

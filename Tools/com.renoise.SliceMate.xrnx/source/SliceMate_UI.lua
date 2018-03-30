@@ -137,9 +137,9 @@ end
 function SliceMate_UI:update_instrument()
   TRACE("SliceMate_UI:update_instrument()")
 
-  local instr_status = self.owner.instrument_status.value
   local instr_idx = self.owner.instrument_index.value
   local instr = rns.instruments[instr_idx]
+  local instr_status = self.owner.instrument_status.value
   local slice_index = self.owner.slice_index.value
   local phrase_index = self.owner.phrase_index.value
   local phrase_line = self.owner.phrase_line.value
@@ -166,14 +166,24 @@ function SliceMate_UI:update_instrument()
   local ctrl = self.vb.views["position"]
   if ctrl then
     local str_status = ""
-    if (phrase_index > 0) then 
-      str_status = ("Line: %s"):format(phrase_line)
-    else 
-      if (instr_idx == 0) then
-        str_status = "-" 
-      else
-        str_status = (frame == -1) and "-" or ("%d / %d"):format(frame,root_frame)
+    if (instr_idx == 0) then
+      str_status = "-" 
+    elseif (phrase_index > 0) then 
+      local phrase = instr.phrases[phrase_index]
+      local lpb_factor = self.owner:get_lpb_factor(phrase)
+      -- position in phrase 
+      str_status = ("Offset S%.2X"):format(phrase_line-1)
+      local fract = cLib.fraction(phrase_line)
+      if (fract > 0) then 
+        if (lpb_factor > 1) then 
+          str_status = ("%s + %.2f Line"):format(str_status,fract)
+        else
+          str_status = ("%s - ⚠ N/A"):format(str_status)
+        end
       end
+    else 
+      -- position in sample 
+      str_status = (frame == -1) and "-" or ("%d / %d"):format(frame,root_frame)
       str_status = ("Pos: %s"):format(str_status)
     end
     ctrl.tooltip = str_status
@@ -183,31 +193,35 @@ function SliceMate_UI:update_instrument()
   local ctrl = self.vb.views["status"]
   if ctrl then
     local str_status = ""
-    local rmv_bt = self.vb.views["remove_slice_button"]
-    if (phrase_index > 0) then 
-      -- phrase status
-      local phrase_count = instr and #instr.phrases
-      if (instr_idx == 0) or ((phrase_index == 0) and (phrase_count == 0)) then
-        str_status = instr and "0" or "-"
-      else
-        str_status = (phrase_index == -1) and "-" or ("%d / %d"):format(phrase_index,phrase_count)
-      end
-      str_status = ("Active phrase: %s"):format(str_status)
-      if rmv_bt then 
-        rmv_bt.visible = false
-      end 
+    if (instr_idx == 0) then
+      str_status = "-" 
     else
-      -- slice status
-      local slice_count = instr and (#instr.samples > 1) 
-        and #instr.samples[1].slice_markers or 0
-      if (instr_idx == 0) or ((slice_index == 0) and (slice_count == 0)) then
-        str_status = instr and "0" or "-"
+      local rmv_bt = self.vb.views["remove_slice_button"]
+      if (phrase_index > 0) then 
+        -- phrase status
+        local phrase_count = instr and #instr.phrases
+        if (instr_idx == 0) or ((phrase_index == 0) and (phrase_count == 0)) then
+          str_status = instr and "0" or "-"
+        else
+          str_status = (phrase_index == -1) and "-" or ("%d / %d"):format(phrase_index,phrase_count)
+        end
+        str_status = ("Active phrase: %s"):format(str_status)
+        if rmv_bt then 
+          rmv_bt.visible = false
+        end 
       else
-        str_status = (slice_index == -1) and "-" or ("%d / %d"):format(slice_index,slice_count)
-      end
-      str_status = ("Active slice: %s"):format(str_status)
-      if rmv_bt then 
-        rmv_bt.visible = (instr_idx > 0 and slice_index > 0)
+        -- slice status
+        local slice_count = instr and (#instr.samples > 1) 
+          and #instr.samples[1].slice_markers or 0
+        if (instr_idx == 0) or ((slice_index == 0) and (slice_count == 0)) then
+          str_status = instr and "0" or "-"
+        else
+          str_status = (slice_index == -1) and "-" or ("%d / %d"):format(slice_index,slice_count)
+        end
+        str_status = ("Active slice: %s"):format(str_status)
+        if rmv_bt then 
+          rmv_bt.visible = (instr_idx > 0 and slice_index > 0)
+        end 
       end 
     end 
     ctrl.tooltip = str_status
@@ -241,8 +255,9 @@ end
 function SliceMate_UI:build_vtoggle_slice()
   self.vtoggle_slice = vToggleButton{
     vb = self.vb,
-    text_enabled = "≡",
-    text_disabled = "≡",
+    tooltip = "Toggle Options",
+    text_enabled = "▾",
+    text_disabled = "▴",
     notifier = function(ref)
       self.prefs.show_options.value = ref.enabled
     end,
@@ -390,6 +405,7 @@ function SliceMate_UI:build()
               id = "insert_slice_button",
               width = self.dialog_width - 32,
               text = "Slice at Cursor",
+              tooltip = "Slice sample/phrase at this cursor position",
               midi_mapping = "Tools:SliceMate:Insert Slice [Trigger]",
               notifier = function()
                 local success,err = self.owner:insert_slice()
@@ -409,6 +425,15 @@ function SliceMate_UI:build()
                 text = "Slice Options",
                 font = "bold",
               },
+              vb:row{
+                tooltip = "Support slicing of instrument phrases",
+                vb:checkbox{
+                  bind = self.prefs.support_phrases
+                },
+                vb:text{
+                  text = "Support phrase slicing"
+                }
+              },               
               vb:row{
                 tooltip = "Decide if slices should be quantized, and by how large an amount",
                 vb:checkbox{
@@ -442,14 +467,14 @@ function SliceMate_UI:build()
                 }
               }, 
               vb:row{
-                tooltip = "Allow slicing of instrument phrases",
+                tooltip = "Attempt to correct issues with instruments as they are sliced",
                 vb:checkbox{
-                  bind = self.prefs.support_phrases
+                  bind = self.prefs.autofix_instr
                 },
                 vb:text{
-                  text = "Allow phrase slicing"
+                  text = "Auto-fix instrument"
                 }
-              }, 
+              },              
             }, 
             vb:column{
               vb:text{
@@ -483,15 +508,6 @@ function SliceMate_UI:build()
                   text = "Auto-select in waveform"
                 }
               },       
-              vb:row{
-                tooltip = "Attempt to correct issues with instruments as they are sliced",
-                vb:checkbox{
-                  bind = self.prefs.autofix_instr
-                },
-                vb:text{
-                  text = "Auto-fix instrument"
-                }
-              },
             },
             vb:column{
               vb:text{

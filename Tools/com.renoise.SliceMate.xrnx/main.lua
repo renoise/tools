@@ -16,7 +16,7 @@ This tool provides handy features for working with sample-slices
 rns = nil
 _trace_filters = nil
 --_trace_filters = {".*"}
---_trace_filters = {"^xSample"}
+--_trace_filters = {"^SliceMate","^xLinePattern","^xSample","^xPhrase"}
 
 _clibroot = 'source/cLib/classes/'
 _vlibroot = 'source/vLib/classes/'
