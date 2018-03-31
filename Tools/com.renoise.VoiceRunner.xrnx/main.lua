@@ -28,6 +28,7 @@ _vlibroot = 'source/vLib/classes/'
 
 require (_clibroot..'cLib')
 require (_clibroot..'cDebug')
+require (_clibroot..'cTable')
 require (_clibroot..'cFilesystem')
 require (_clibroot..'cProcessSlicer')
 require (_clibroot..'cColor')
