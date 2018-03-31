@@ -61,7 +61,7 @@ APP_DISPLAY_NAME = "SliceMate"
 -- Methods
 ---------------------------------------------------------------------------------------------------
 
-function show(show_dialog)
+function launch(show_dialog)
   rns = renoise.song()
   if not app then
     app = SliceMate{
@@ -82,7 +82,7 @@ end
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:SliceMate...",
   invoke = function() 
-    show(true) 
+    launch(true) 
   end
 } 
 
@@ -90,7 +90,7 @@ renoise.tool():add_midi_mapping{
   name = "Tools:SliceMate:Show dialog... [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      show(true) 
+      launch(true) 
     end
   end
 }
@@ -99,7 +99,7 @@ renoise.tool():add_keybinding {
   name = "Global:SliceMate:Show dialog...",
   invoke = function(repeated)
     if (not repeated) then 
-      show(true) 
+      launch(true) 
     end
   end
 }
@@ -110,7 +110,7 @@ renoise.tool():add_midi_mapping{
   name = "Tools:SliceMate:Detach Sampler... [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      show() 
+      launch() 
       app:detach_sampler()
     end
   end
@@ -123,7 +123,7 @@ renoise.tool():add_midi_mapping{
   name = "Tools:SliceMate:Insert Slice [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      show()
+      launch()
       app:insert_slice()
     end
   end
@@ -133,7 +133,7 @@ renoise.tool():add_keybinding {
   name = "Global:SliceMate:Insert Slice",
   invoke = function(repeated)
     if not repeated then 
-      show()
+      launch()
       app:insert_slice()
     end
   end
@@ -145,7 +145,7 @@ renoise.tool():add_midi_mapping{
   name = "Tools:SliceMate:Previous Note [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      show()
+      launch()
       app:previous_note()
     end
   end
@@ -155,7 +155,7 @@ renoise.tool():add_keybinding {
   name = "Global:SliceMate:Previous Note",
   invoke = function(repeated)
     if not repeated then 
-      show()
+      launch()
       app:previous_note()
     end
   end
@@ -167,7 +167,7 @@ renoise.tool():add_midi_mapping{
   name = "Tools:SliceMate:Next Note [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      show()
+      launch()
       app:next_note()
     end
   end
@@ -177,7 +177,7 @@ renoise.tool():add_keybinding {
   name = "Global:SliceMate:Next Note",
   invoke = function(repeated)
     if not repeated then 
-      show()
+      launch()
       app:next_note()
     end
   end
@@ -189,7 +189,7 @@ renoise.tool():add_midi_mapping{
   name = "Tools:SliceMate:Previous Column [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      show()
+      launch()
       app:previous_column()
     end
   end
@@ -199,7 +199,7 @@ renoise.tool():add_keybinding {
   name = "Global:SliceMate:Previous Column",
   invoke = function(repeated)
     if not repeated then 
-      show()
+      launch()
       app:previous_column()
     end
   end
@@ -211,7 +211,7 @@ renoise.tool():add_midi_mapping{
   name = "Tools:SliceMate:Next Column [Trigger]",
   invoke = function(msg)
     if msg:is_trigger() then
-      show()
+      launch()
       app:next_column()
     end
   end
@@ -221,7 +221,7 @@ renoise.tool():add_keybinding {
   name = "Global:SliceMate:Next Column",
   invoke = function(repeated)
     if not repeated then 
-      show()
+      launch()
       app:next_column()
     end
   end
@@ -233,7 +233,7 @@ renoise.tool():add_keybinding {
 
 renoise.tool().app_new_document_observable:add_notifier(function()
   if prefs.autostart.value then
-    show(prefs.show_on_launch.value)
+    launch(true)
   end
 
 end)
