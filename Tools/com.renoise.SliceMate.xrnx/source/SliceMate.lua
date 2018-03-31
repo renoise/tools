@@ -984,7 +984,7 @@ function SliceMate:attach_to_instrument()
 
   local instr,err = self:get_instrument()
   if not instr then
-   LOG("*** "..err)
+   --LOG("*** "..err)
    return
   end
 

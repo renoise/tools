@@ -186,7 +186,7 @@ function SliceMate_UI:update_instrument()
       local phrase = instr.phrases[phrase_index]
       local lpb_factor = self.owner:get_lpb_factor(phrase)
       -- position in phrase 
-      print(">>> phrase_line",phrase_line)
+      --print(">>> phrase_line",phrase_line)
       str_status = ("Offset S%.2X"):format(phrase_line-1)
       local fract = cLib.fraction(phrase_line)
       if (fract > 0) then 
