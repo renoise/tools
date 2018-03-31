@@ -221,7 +221,6 @@ function ScaleMate_UI:update()
   TRACE"ScaleMate_UI:update()"
 
   if not self.dialog or not self.dialog.visible then 
-    LOG("Skip update - self.dialog",self.dialog)
     return 
   end 
 
