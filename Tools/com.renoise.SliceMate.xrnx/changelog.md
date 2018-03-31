@@ -1,0 +1,36 @@
+# SliceMate Changelog
+
+## 0.2
+- Add support for slicing instrument phrases
+- Add emulated pattern navigation while dialog is focused
+- Add ability to navigate prev/next line 
+- Remove "show GUI on auto-start" option (always do this)
+- Update cLib/xLib libraries
+
+## 0.17
+
+- Add support for Sxx commands (also when triggering slices)
+- Notes are inserted using their basenote
+
+## 0.16
+
+- Bugfixes
+
+## 0.15
+
+- Quantize notes to line,beat,bar,block or pattern (optional)
+- Fixed: "detach" button should now work properly
+- Clear the "slice status" when not connected to an instrument
+
+## 0.12
+
+- Detect changes to instrument, samples, song (tempo) and pattern data
+- Bugfixes
+
+## 0.11
+
+- Carry over sample properties to newly sliced samples
+
+## 0.1 
+
+- Initial version 
