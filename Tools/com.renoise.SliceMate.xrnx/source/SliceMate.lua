@@ -174,7 +174,8 @@ function SliceMate:get_cursor()
 end
 
 ---------------------------------------------------------------------------------------------------
--- update values as we change the cursor-position
+-- obtain current values based on cursor-position
+-- @param user_selected (boolean), when true we update the selected instr/sample/etc.
 
 function SliceMate:select(user_selected)
   TRACE("SliceMate:select(user_selected)",user_selected)
@@ -194,6 +195,10 @@ function SliceMate:select(user_selected)
       self.phrase_line.value = rslt.phrase_line
       self.instrument_status.value = ""
       self.instrument_index.value = rslt.instrument_index
+      -- select instrument
+      if user_selected or self.prefs.autoselect_instr.value then
+        rns.selected_instrument_index = rslt.instrument_index
+      end      
     else 
       -- no phrase, determine position in sample buffer 
       self.phrase_index.value = -1
@@ -312,6 +317,24 @@ function SliceMate:next_note()
     trigger_pos:select()
     self.select_requested = true
   end
+end
+
+---------------------------------------------------------------------------------------------------
+
+function SliceMate:previous_line()
+  TRACE("SliceMate:previous_line()")
+
+  xPatternPos.jump_to_previous_line()
+  self.select_requested = true
+end
+
+---------------------------------------------------------------------------------------------------
+
+function SliceMate:next_line()
+  TRACE("SliceMate:next_line()")
+
+  xPatternPos.jump_to_next_line()
+  self.select_requested = true
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -765,7 +788,8 @@ function SliceMate:insert_sliced_note(cursor_pos,instr_idx,sample_idx,src_noteco
   if self.prefs.quantize_enabled.value then
     notecol.delay_value = 0
   else
-    local delay_val = math.floor(cursor_pos.fraction * 255)
+    local fract = cLib.fraction(cursor_pos.line)
+    local delay_val = math.floor(fract * 255)
     notecol.delay_value = delay_val
     if (delay_val > 0) then
       track.delay_column_visible = true

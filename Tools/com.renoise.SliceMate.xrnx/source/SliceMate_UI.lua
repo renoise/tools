@@ -32,6 +32,16 @@ function SliceMate_UI:show()
 
 end
 
+---------------------------------------------------------------------------------------------------
+-- Emulate basic pattern navigation while dialog has focus
+
+function SliceMate_UI:dialog_keyhandler(dialog,key)
+  TRACE("SliceMate_UI:dialog_keyhandler(dialog,key)",dialog,key)
+
+  local handled = xCursorPos.handle_key(key)
+
+end 
+
 ----------------------------------------------------------------------------------------------------
 -- Class methods
 ----------------------------------------------------------------------------------------------------
@@ -41,7 +51,11 @@ function SliceMate_UI:__init(...)
   local args = cLib.unpack_args(...)
   assert(type(args.owner)=="SliceMate","Expected 'owner' to be a class instance")
 
-  vDialog.__init(self,...)
+  vDialog.__init(self,{
+    dialog_title = args.dialog_title,    
+    waiting_to_show_dialog = args.waiting_to_show_dialog,
+    dialog_keyhandler = self.dialog_keyhandler,
+  })
 
   -- renoise.ViewBuilder
   self.vb = renoise.ViewBuilder()
@@ -172,6 +186,7 @@ function SliceMate_UI:update_instrument()
       local phrase = instr.phrases[phrase_index]
       local lpb_factor = self.owner:get_lpb_factor(phrase)
       -- position in phrase 
+      print(">>> phrase_line",phrase_line)
       str_status = ("Offset S%.2X"):format(phrase_line-1)
       local fract = cLib.fraction(phrase_line)
       if (fract > 0) then 
@@ -272,7 +287,9 @@ function SliceMate_UI:build()
   TRACE("SliceMate_UI:build()")
   
   local vb = self.vb
-
+  
+  local prev_next_bt_w = (self.dialog_width-52)/2
+  
   local vb_content = 
     vb:row{
       margin = 4,
@@ -365,23 +382,45 @@ function SliceMate_UI:build()
               end
             },
             vb:column{
-              vb:button{
-                tooltip = "Go to previous note",
-                width = self.dialog_width-52,
-                midi_mapping = "Tools:SliceMate:Previous Note [Trigger]",
-                text = "Previous note",
-                notifier = function()
-                  self.owner:previous_note()
-                end
+              vb:row{
+                vb:button{
+                  tooltip = "Go to previous note",
+                  width = prev_next_bt_w,
+                  midi_mapping = "Tools:SliceMate:Previous Note [Trigger]",
+                  text = "▴ Note",
+                  notifier = function()
+                    self.owner:previous_note()
+                  end
+                },
+                vb:button{
+                  tooltip = "Go to previous line",
+                  width = prev_next_bt_w,
+                  midi_mapping = "Tools:SliceMate:Previous Line [Trigger]",
+                  text = "▴ Line",
+                  notifier = function()
+                    self.owner:previous_line()
+                  end
+                },
               },
-              vb:button{
-                tooltip = "Go to next note",
-                width = self.dialog_width-52,
-                midi_mapping = "Tools:SliceMate:Next Note [Trigger]",
-                text = "Next note",
-                notifier = function()
-                  self.owner:next_note()
-                end
+              vb:row{
+                vb:button{
+                  tooltip = "Go to next note",
+                  width = prev_next_bt_w,
+                  midi_mapping = "Tools:SliceMate:Next Note [Trigger]",
+                  text = "▾ Note",
+                  notifier = function()
+                    self.owner:next_note()
+                  end
+                },
+                vb:button{
+                  tooltip = "Go to next line",
+                  width = prev_next_bt_w,
+                  midi_mapping = "Tools:SliceMate:Next Line [Trigger]",
+                  text = "▾ Line",
+                  notifier = function()
+                    self.owner:next_line()
+                  end
+                },
               },
             },
             vb:button{
@@ -522,14 +561,7 @@ function SliceMate_UI:build()
                   text = "Auto-start tool"
                 }
               },
-              vb:row{
-                vb:checkbox{
-                  bind = self.prefs.show_on_launch
-                },
-                vb:text{
-                  text = "Show UI on auto-start"
-                }
-              },            
+          
             }              
           
           },
