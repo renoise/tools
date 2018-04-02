@@ -32,6 +32,7 @@ function SliceMate_Prefs:__init()
   renoise.Document.DocumentNode.__init(self)
   -- tool options
   self:add_property("autostart", renoise.Document.ObservableBoolean(true))
+  self:add_property("suspend_while_hidden", renoise.Document.ObservableBoolean(true))
   -- slice settings
   self:add_property("autoselect_instr", renoise.Document.ObservableBoolean(true))
   self:add_property("autoselect_in_wave", renoise.Document.ObservableBoolean(true))

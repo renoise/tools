@@ -183,6 +183,50 @@ renoise.tool():add_keybinding {
   end
 }
 
+-- previous note
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:SliceMate:Previous Line [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      launch()
+      app:previous_line()
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:SliceMate:Previous Line",
+  invoke = function(repeated)
+    if not repeated then 
+      launch()
+      app:previous_line()
+    end
+  end
+}
+
+-- next note
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:SliceMate:Next Line [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      launch()
+      app:next_line()
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:SliceMate:Next Line",
+  invoke = function(repeated)
+    if not repeated then 
+      launch()
+      app:next_line()
+    end
+  end
+}
+
 -- previous column
 
 renoise.tool():add_midi_mapping{

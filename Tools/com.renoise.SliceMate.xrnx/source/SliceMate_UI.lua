@@ -271,8 +271,8 @@ function SliceMate_UI:build_vtoggle_slice()
   self.vtoggle_slice = vToggleButton{
     vb = self.vb,
     tooltip = "Toggle Options",
-    text_enabled = "▾",
-    text_disabled = "▴",
+    text_enabled = "▴",
+    text_disabled = "▾",
     notifier = function(ref)
       self.prefs.show_options.value = ref.enabled
     end,
@@ -289,6 +289,7 @@ function SliceMate_UI:build()
   local vb = self.vb
   
   local prev_next_bt_w = (self.dialog_width-52)/2
+  local slice_half_bt_w = (self.dialog_width-12)/2
   
   local vb_content = 
     vb:row{
@@ -438,32 +439,61 @@ function SliceMate_UI:build()
         vb:column{
           style = "group",
           margin = 4,
-          width = self.dialog_width,
+          vb:button{
+            id = "insert_slice_button",
+            width = self.dialog_width-12,
+            text = "Slice at Cursor",
+            tooltip = "Slice sample/phrase at this cursor position",
+            midi_mapping = "Tools:SliceMate:Insert Slice [Trigger]",
+            notifier = function()
+              local success,err = self.owner:insert_slice()
+              if not success and err then
+                renoise.app():show_error(err)
+              else
+                self.owner.select_requested = true
+              end
+            end
+          },
+          --[[
           vb:row{
             vb:button{
-              id = "insert_slice_button",
-              width = self.dialog_width - 32,
-              text = "Slice at Cursor",
-              tooltip = "Slice sample/phrase at this cursor position",
-              midi_mapping = "Tools:SliceMate:Insert Slice [Trigger]",
-              notifier = function()
-                local success,err = self.owner:insert_slice()
-                if not success and err then
-                  renoise.app():show_error(err)
-                else
-                  self.owner.select_requested = true
-                end
-              end
-            },  
-            self:build_vtoggle_slice(),
+              text = "▴ Slice Back",
+              width = slice_half_bt_w,
+            },
+            vb:button{
+              text = "▾ Slice Forw.",
+              width = slice_half_bt_w,
+            }
           },   
+          ]]
+        },   
+        vb:column{        
+          style = "group",
+          margin = 4,
+          vb:horizontal_aligner{
+            mode="justify",
+            vb:text{
+              text = "Tool Options",   
+              width = self.dialog_width-32,                         
+            },
+            self:build_vtoggle_slice(),        
+          },      
           vb:column{       
             id = "options_panel",
             vb:column{
+              vb:row{
+                vb:button{
+                  text = "View documentation [www]",
+                  width = self.dialog_width-12,
+                  notifier = function() 
+                    renoise.app():open_url("https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.SliceMate.xrnx")
+                  end,
+                },
+              },              
               vb:text{
-                text = "Slice Options",
+                text = "Slicing",
                 font = "bold",
-              },
+              },            
               vb:row{
                 tooltip = "Support slicing of instrument phrases",
                 vb:checkbox{
@@ -558,7 +588,16 @@ function SliceMate_UI:build()
                   bind = self.prefs.autostart
                 },
                 vb:text{
-                  text = "Auto-start tool"
+                  text = "Show GUI on startup"
+                }
+              },
+              vb:row{
+                tooltip = "Suspend visual updates while tool GUI is hidden",                  
+                vb:checkbox{
+                  bind = self.prefs.suspend_while_hidden,
+                },
+                vb:text{
+                  text = "Suspend while hidden"
                 }
               },
           

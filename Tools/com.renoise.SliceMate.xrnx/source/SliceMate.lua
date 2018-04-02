@@ -846,7 +846,6 @@ function SliceMate:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)
     -- increase line by at least one - 
     phrase_line = math.max(math.floor(phrase_line)+1,
       math.floor(phrase_line) + math.floor(fract * lpb_factor))
-    --print(">>> phrase_line #B",phrase_line)
     local delay_amount = (phrase_line - phrase_pos.phrase_line) / lpb_factor
     --print(">>> delay_amount",delay_amount)
     notecol.delay_value = math.floor(delay_amount*255)
@@ -854,11 +853,18 @@ function SliceMate:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)
   end
   
   -- attempt to apply zxx/sxx to same columns as source   
-  xLinePattern.set_effect_column_command(
+  local rslt,err = xLinePattern.set_effect_column_command(
     track,line,"0Z",phrase_pos.phrase_index,phrase_pos.zxx_column_index)
-  xLinePattern.set_effect_column_command(
+  if err then 
+    LOG(err)
+  end
+    
+  rslt,err = xLinePattern.set_effect_column_command(
     track,line,"0S",phrase_line-1,phrase_pos.sxx_column_index)
-  
+  if err then 
+    LOG(err)
+  end
+    
   self:propagate_vol_pan(src_notecol,notecol)
 
   return true
@@ -1079,6 +1085,12 @@ end
 function SliceMate:on_idle()
   --TRACE("SliceMate:on_idle()")
 
+  if (self.prefs.suspend_while_hidden.value 
+    and self.ui and not self.ui:dialog_is_visible()) 
+  then 
+    return
+  end
+  
   if self.select_requested
     or self.prefs.autoselect_in_wave.value 
     or self.prefs.autoselect_in_list.value 
