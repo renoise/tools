@@ -1,5 +1,13 @@
 # SliceMate Changelog
 
+## 0.21
+- Fix issue when placing cursor at last line of phrase
+- Preserve effect-column indices for Sxx, Zxx commands
+- Don't overwrite existing effect-columns (allocate new cols if needed)
+- Option to suspend "selection" updates while GUI is hidden (less CPU usage)
+- Add link to github documentation [www]
+- Add MIDI mappings for navigating to prev/next line 
+
 ## 0.2
 - Add support for slicing instrument phrases
 - Add emulated pattern navigation while dialog is focused
