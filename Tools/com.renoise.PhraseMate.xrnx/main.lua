@@ -46,6 +46,7 @@ cLib.require (_xlibroot..'xInstrument')
 cLib.require (_xlibroot..'xNoteColumn') 
 cLib.require (_xlibroot..'xPhraseManager')
 cLib.require (_xlibroot..'xScale')
+cLib.require (_xlibroot..'xPatternSelection')
 cLib.require (_xlibroot..'xPhraseSelection')
 cLib.require (_xlibroot..'xMatrixSelection')
 
