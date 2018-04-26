@@ -1268,14 +1268,25 @@ end
 
 function PhraseMate:apply_to_track(sel)
   TRACE("PhraseMate:apply_to_track(sel)",sel)
+  local selected_phrase
 
-  if not rns.selected_phrase then
+  if self.prefs.auto_capture_phrase.value then
+    local start_line = xLine.resolve_pattern_line(rns.selected_sequence_index, sel.start_line, rns.selected_track_index)
+    local phrase_instrument = 1 + start_line.note_columns[1].instrument_value
+    local phrase_command = xLinePattern.get_effect_command(renoise.song():track(rns.selected_track_index), start_line, "0Z", 1)
+    local phrase_index = phrase_command[1].value
+    selected_phrase = renoise.song():instrument(phrase_instrument):phrase(phrase_index)
+  else
+    selected_phrase = rns.selected_phrase
+  end
+
+  if not selected_phrase then
     return false,"No phrase was selected"
   end
 
   local options = {
     instr_index = rns.selected_instrument_index,
-    phrase = rns.selected_phrase,
+    phrase = selected_phrase,
     sequence_index = rns.selected_sequence_index,
     track_index = sel and sel.start_track or rns.selected_track_index,
     anchor_to_selection = self.prefs.anchor_to_selection.value,

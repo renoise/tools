@@ -758,6 +758,15 @@ function PhraseMateUI:build_output_tab()
           id = "ui_output_settings",
           width = PhraseMateUI.UI_WIDTH_TWOTHIRD,
           vb:row{
+            tooltip = "When writing phrase data, this option determines if the phrase index is read from the pattern, or from the phrase select dropdown.",
+            vb:checkbox{
+              bind = self.prefs.auto_capture_phrase
+            },
+            vb:text{
+              text = "Auto-capture phrase",
+            }
+          },
+          vb:row{
             tooltip = "When writing to a selection, this option determines if the output is written relative to the position of the selection, or starting from the top of the pattern",
             vb:checkbox{
               bind = self.prefs.anchor_to_selection

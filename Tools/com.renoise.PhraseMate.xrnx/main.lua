@@ -41,6 +41,7 @@ require (_clibroot.."cProcessSlicer")
 _xlibroot = 'source/xLib/classes/'
 cLib.require (_xlibroot..'xLib')
 cLib.require (_xlibroot.."xPhrase")
+cLib.require (_xlibroot..'xLine')
 cLib.require (_xlibroot..'xLinePattern')
 cLib.require (_xlibroot..'xInstrument')
 cLib.require (_xlibroot..'xNoteColumn') 
