@@ -1269,6 +1269,7 @@ end
 function PhraseMate:apply_to_track(sel)
   TRACE("PhraseMate:apply_to_track(sel)",sel)
   local selected_phrase
+  local transpose_amount = 0
 
   if self.prefs.auto_capture_phrase.value then
     local start_line = xLine.resolve_pattern_line(rns.selected_sequence_index, sel.start_line, rns.selected_track_index)
@@ -1276,6 +1277,7 @@ function PhraseMate:apply_to_track(sel)
     local phrase_command = xLinePattern.get_effect_command(renoise.song():track(rns.selected_track_index), start_line, "0Z", 1)
     local phrase_index = phrase_command[1].value
     selected_phrase = renoise.song():instrument(phrase_instrument):phrase(phrase_index)
+    transpose_amount = start_line.note_columns[1].note_value - selected_phrase.base_note
   else
     selected_phrase = rns.selected_phrase
   end
@@ -1303,6 +1305,14 @@ function PhraseMate:apply_to_track(sel)
   --self:invoke_sliced_task(xPhrase.apply_to_track,options)
   xPhrase.apply_to_track(options)
   self.suppress_line_notifier = false
+
+  if transpose_amount ~= 0 then
+    for pos, line in renoise.song().pattern_iterator:note_columns_in_pattern_track(rns.selected_pattern_index, rns.selected_track_index, true) do
+      if line.note_value < 120 and pos.line >= sel.start_line and pos.line <= sel.end_line then
+        line.note_value = line.note_value + transpose_amount
+      end
+    end
+  end
 
   return true
 
