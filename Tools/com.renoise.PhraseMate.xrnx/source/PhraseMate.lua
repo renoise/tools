@@ -1276,6 +1276,7 @@ function PhraseMate:apply_to_track(sel)
     local phrase_instrument = 1 + start_line.note_columns[1].instrument_value
     local phrase_command = xLinePattern.get_effect_command(renoise.song():track(sel.start_track), start_line, "0Z", 1)
     local phrase_index = phrase_command[1].value
+    start_line:effect_column(1):clear()
     selected_phrase = renoise.song():instrument(phrase_instrument):phrase(phrase_index)
     transpose_amount = start_line.note_columns[1].note_value - selected_phrase.base_note
   else
