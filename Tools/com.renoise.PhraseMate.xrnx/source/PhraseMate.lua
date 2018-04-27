@@ -1329,10 +1329,14 @@ function PhraseMate:apply_to_selection()
   local sel, err
 
   if self.prefs.auto_capture_phrase.value then
+    local phraseEndLine = rns.selected_pattern.number_of_lines
     local findPhraseEnd = function (notecol)
       return notecol.note_value < 121
     end
     local phraseEnd = xNoteCapture.next(findPhraseEnd)
+    if phraseEnd then
+      phraseEndLine = phraseEnd.line
+    end
 
     local findPhraseBegin = function (notecol)
       return notecol.note_value < 120
@@ -1345,9 +1349,9 @@ function PhraseMate:apply_to_selection()
       start_line = phraseBegin.line,
       start_track = phraseBegin.track,
       start_column = 1,
-      end_line = phraseEnd.line - 1,
+      end_line = phraseEndLine - 1,
       end_column = 1,
-      end_track = phraseEnd.track
+      end_track = phraseBegin.track
     }
   else
     sel,err = xPatternSelection.get_pattern_if_single_track()
