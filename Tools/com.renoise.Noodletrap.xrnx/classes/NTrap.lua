@@ -1296,6 +1296,10 @@ function NTrap:_process_recording(events)
     self:attach_to_phrase_mapping(phrase.mapping)
   end
 
+  if not phrase then 
+    LOG("*** Failed to allocate phrase, recording not saved")
+  end
+  
   -- @{ turn length into a "neat" value when using settings such as
   -- 'start at beginning of pattern' + 'after number of lines'
   local total_lines = nil
