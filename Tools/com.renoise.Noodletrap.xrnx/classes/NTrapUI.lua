@@ -74,11 +74,8 @@ function NTrapUI:__init(ntrap)
   --- (bool)
   self._blink = false
 
-  --- (renoise.Views.View) 
-  self._blink_phrase_button = nil
-
-  --- (table<renoise.Views.View>)
-  self._phrase_buttons = {}
+  --- vButtonStrip
+  self._phrase_bar = nil
 
   --- (number) last time a "phrase bar button" was pressed
   self.last_pressed_time = nil
@@ -341,6 +338,16 @@ function NTrapUI:_build_phrase_bar()
   TRACE("NTrapUI:_build_phrase_bar()")
 
   local vb = self._vb
+  
+  self._phrase_bar = vButtonStrip{
+    vb = vb,
+    width = CONTENT_W,
+    height = 20,
+    notifier = function(idx) 
+      self:_phrase_bar_notifier(idx)
+    end
+  }
+  
   local view = vb:row {
     style = "group",
     vb:column{
@@ -353,11 +360,7 @@ function NTrapUI:_build_phrase_bar()
         font = "big",
         height = 30,
       },
-      vb:row{
-        width = CONTENT_W,
-        id = "ntrap_phrase_bar",
-
-      },
+      self._phrase_bar.view,
       vb:text{
         width = CONTENT_W,
         align = "center",
@@ -1368,15 +1371,12 @@ function NTrapUI:update_phrase_bar()
 
   local ui_target_instr = self._vb.views.ntrap_phrase_bar_target_instr
   local ui_mapping_info = self._vb.views.ntrap_phrase_mapping_info
-  local ui_phrase_bar   = self._vb.views.ntrap_phrase_bar
 
-  --local vphrase = self._ntrap:_get_virtual_phrase()
   local instr = rns.selected_instrument
   local instr_idx = rns.selected_instrument_index
   
   local phrase_range = self._vb.views["ntrap_phrase_range_custom"].value
   local phrase_offset = self._vb.views["ntrap_phrase_offset_custom"].value
-    --self._ntrap:_get_phrase_range()
 
   local vrange = xPhraseManager.get_available_slot(instr_idx,phrase_range,phrase_offset)
   local instr_name = (instr and instr.name ~= "") and instr.name or "(empty)"
@@ -1395,48 +1395,27 @@ function NTrapUI:update_phrase_bar()
       .."\nPlease select a phrase with free space after it"
   end
 
-  local obtain_button_id_by_index = function(idx)
-    return string.format('ntrap_phrase_bar_button_%d',idx)
-  end
-
-  -- remove existing buttons
-  self._blink_phrase_button = nil
-  for k,v in ipairs(self._phrase_buttons) do
-    local button_id = obtain_button_id_by_index(k)
-    local ui_button = self._vb.views[button_id]
-    if ui_button then
-      ui_phrase_bar:remove_child(ui_button)
-      self._vb.views[button_id] = nil
-    end
-  end
-
-  -- build the buttons in the bar
-  local aspect = CONTENT_W/120
-
-  local build_button = function(from,to,color,tooltip,active,phrase_idx)
-    local button = {}
-    button.width = (to-from)*aspect
-    button.id = obtain_button_id_by_index(#self._phrase_buttons+1)
-    button.color = color
-    button.active = active
-    button.phrase_idx = phrase_idx
-    button.tooltip = tooltip
-    return button
-  end
-
+  -- button-strip items
+  local items = table.create()
 
   local function build_empty_or_virtual(from,to)
     TRACE("build_empty_or_virtual(from,to)",from,to)
   
     local build_empty = function (empty_from,empty_to)
-      local button = build_button(empty_from,empty_to,COLOR_PHRASE_EMPTY,nil,false)
-      self._phrase_buttons:insert(button)
+      items:insert(vButtonStripMember{
+        weight = empty_to - empty_from,
+        color = COLOR_PHRASE_EMPTY,
+        active = false,
+      })
     end
-
+    
     local build_virtual = function()
-      local button = build_button(vrange[1],vrange[2],COLOR_PHRASE_VIRTUAL,"New phrase mapping",false)
-      self._phrase_buttons:insert(button)
-      self._blink_phrase_button = obtain_button_id_by_index(#self._phrase_buttons)
+      items:insert(vButtonStripMember{
+        weight = vrange[2] - vrange[1],
+        color = self._blink and COLOR_PHRASE_VIRTUAL or COLOR_PHRASE_VIRTUAL_DIMMED,
+        tooltip = "New phrase mapping",
+        active = false,
+      })
     end
 
     if vrange 
@@ -1474,7 +1453,6 @@ function NTrapUI:update_phrase_bar()
 
   end
 
-  self._phrase_buttons = table.create()
   local prev_end
   local selected_map = xPhraseManager.get_selected_mapping()
   for k,v in ipairs(instr.phrase_mappings) do
@@ -1513,20 +1491,16 @@ function NTrapUI:update_phrase_bar()
                   .."\n[Tab or Double-click] - toggle phrase editor"
                   .."\n[Delete] - remove phrase from instrument"
                   .."\n[Left/Right] - select prev/next phrase"
-    local button = build_button(v.note_range[1],v.note_range[2],button_color,tooltip,true,k)
-    self._phrase_buttons:insert(button)
+    items:insert(vButtonStripMember{
+      weight = v.note_range[2]-v.note_range[1],
+      color = button_color,
+      tooltip = tooltip,
+      active = true, 
+      value = k,
+    })
 
-    -- room after mappings
-    --[[
-    if (k == #instr.phrase_mappings) 
-      and (v.note_range[2] <= vrange[1])
-    then
-      build_empty_or_virtual(v.note_range[2]-1,vrange[1]-1)
-    end
-    ]]
 
     prev_end = v.note_range[2]
-
 
   end
 
@@ -1539,55 +1513,7 @@ function NTrapUI:update_phrase_bar()
     build_empty_or_virtual(prev_end+1,119)
   end
 
-  for k,v in ipairs(self._phrase_buttons) do
-
-    -- what happens when pressed
-    local notifier = (v.phrase_idx) and function()
-      local instr_idx = rns.selected_instrument_index
-      -- check if phrase is still present (another instrument
-      -- might have been loaded, phrase becoming invalid...)
-      local instr = rns.instruments[instr_idx]
-      --if (instr and instr.phrases[v.phrase_idx]) then
-      if (instr and instr.phrase_mappings[v.phrase_idx]) then
-        xPhraseManager.set_selected_phrase_by_mapping_index(v.phrase_idx)
-        --rns.selected_phrase_index = v.phrase_idx
-      else
-        self:update_phrase_bar()
-      end
-      -- reset click time when a different
-      -- phrase button has been clicked 
-      if self.last_pressed_idx 
-        and (self.last_pressed_idx ~= v.phrase_idx) 
-      then
-        self.last_pressed_time = nil
-        self.last_pressed_idx = nil
-      end
-      -- check if the phrase button has been
-      -- pressed two times within given period
-      if self.last_pressed_time then
-        if (self.last_pressed_time > (os.clock() - 0.3)) 
-        then
-          self.last_pressed_time = nil
-          self:_toggle_phrase_editor()
-        end
-      end
-      self.last_pressed_time = os.clock()
-      self.last_pressed_idx = v.phrase_idx
-    end or nil
-
-    local ui_button = self._vb:button{
-      id = v.id,
-      width = math.max(5,v.width),
-      tooltip = v.tooltip,
-      color = v.color,
-      active = v.active,
-      notifier = notifier
-    }
-
-    ui_phrase_bar:add_child(ui_button)
-
-  end
-
+  self._phrase_bar.items = items
 
 
 end
@@ -1600,13 +1526,8 @@ function NTrapUI:update_blinks()
 
   local blink = (math.floor(os.clock()%2) == 0) and true or false
   if (blink ~= self._blink) then
-    local ui_blink_phrase_button = self._vb.views[self._blink_phrase_button]
-    if ui_blink_phrase_button then
-      ui_blink_phrase_button.color = (blink) and 
-        COLOR_PHRASE_VIRTUAL or COLOR_PHRASE_VIRTUAL_DIMMED
-    end
     self._blink = blink
-
+    self:update_phrase_bar()
   end
 
 end
@@ -1781,6 +1702,51 @@ function NTrapUI:_toggle_phrase_editor()
   
 end
 
+
+--------------------------------------------------------------------------------
+-- when clicking a button in the phrase-bar...
+
+function NTrapUI:_phrase_bar_notifier(idx) 
+  TRACE("NTrapUI:_phrase_bar_notifier(idx)",idx)
+  
+  local item = self._phrase_bar.items[idx]
+  if not item then 
+    LOG("*** Could not retrieve item ")
+  end 
+  
+  local phrase_idx = item.value
+  print("NTrapUI:_phrase_bar_notifier() - phrase_idx",phrase_idx)
+  
+  local instr_idx = rns.selected_instrument_index
+  -- check if phrase is still present (another instrument
+  -- might have been loaded, phrase becoming invalid...)
+  local instr = rns.instruments[instr_idx]
+  if (instr and instr.phrase_mappings[phrase_idx]) then
+    xPhraseManager.set_selected_phrase_by_mapping_index(phrase_idx)
+  else
+    self:update_phrase_bar()
+  end
+  -- reset click time when a different
+  -- phrase button has been clicked 
+  if self.last_pressed_idx 
+    and (self.last_pressed_idx ~= phrase_idx) 
+  then
+    self.last_pressed_time = nil
+    self.last_pressed_idx = nil
+  end
+  -- check if the phrase button has been
+  -- pressed two times within given period
+  if self.last_pressed_time then
+    if (self.last_pressed_time > (os.clock() - 0.3)) 
+    then
+      self.last_pressed_time = nil
+      self:_toggle_phrase_editor()
+    end
+  end
+  self.last_pressed_time = os.clock()
+  self.last_pressed_idx = phrase_idx
+
+end
 
 --------------------------------------------------------------------------------
 

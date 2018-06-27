@@ -10,8 +10,8 @@ local waiting_to_show_dialog = true
 
 rns = nil
 
---_trace_filters = {".*"}
 _trace_filters = nil
+_trace_filters = {".*"}
 
 -- includes ---------------------------
 
@@ -23,6 +23,11 @@ require (_clibroot.."cProcessSlicer")
 _xlibroot = "classes/xLib/classes/"
 require (_xlibroot.."xPhraseManager")
 require (_xlibroot.."xNoteColumn")
+
+_vlibroot = "classes/vLib/classes/"
+--require (_vlibroot.."vControl")
+cLib.require (_vlibroot.."vLib")
+cLib.require (_vlibroot.."vButtonStrip")
 
 require "classes/NTrapEvent"
 require "classes/NTrap"
