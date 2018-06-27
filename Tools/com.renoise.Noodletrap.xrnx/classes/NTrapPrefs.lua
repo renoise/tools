@@ -19,6 +19,7 @@ NTrapPrefs.AUTORUN_ENABLED = true
 NTrapPrefs.SKIP_EMPTY_DEFAULT = true
 NTrapPrefs.SKIP_EMPTY_DEFAULT = true
 NTrapPrefs.YIELD_DEFAULT = 100
+NTrapPrefs.LOG_EVENTS = false
 
 --[[
 NTrapPrefs.INSTR_FOLLOW = 1
@@ -178,6 +179,7 @@ function NTrapPrefs:__init()
   self:add_property("autorun_enabled",    renoise.Document.ObservableBoolean(NTrapPrefs.AUTORUN_ENABLED))
   self:add_property("skip_empty_enabled", renoise.Document.ObservableBoolean(NTrapPrefs.SKIP_EMPTY_DEFAULT))
   self:add_property("yield_counter",      renoise.Document.ObservableNumber(NTrapPrefs.YIELD_DEFAULT))
+  self:add_property("log_events",      renoise.Document.ObservableBoolean(NTrapPrefs.LOG_EVENTS))
 
 
 end

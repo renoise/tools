@@ -295,10 +295,6 @@ function NTrapUI:build()
           self:_build_tab_phrases(),
         },
         vb:column{
-          id = 'ntrap_tab_log',
-          self:_build_log_window(),
-        },
-        vb:column{
           id = 'ntrap_tab_settings',
           self:_build_tab_settings(),
         },
@@ -376,7 +372,7 @@ function NTrapUI:_build_tabs()
     },
     vb:switch{
       id = "ntrap_opt_tab_recording",
-      items = {"Input","Record","Phrase","Events","Settings"},
+      items = {"Input","Record","Phrase","Settings"},
       width = RIGHT_COL_W,
       value = 1,
       notifier = function(idx)
@@ -791,38 +787,6 @@ end
 
 --------------------------------------------------------------------------------
 
-function NTrapUI:_build_log_window()
-  TRACE("NTrapUI:_build_log_window()")
-
-  local vb = self._vb
-  local widget_id = "ntrap_log_window"
-  local view = vb:column{
-    vb:space{
-      height = 5,
-    },
-    vb:row{
-      margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
-      style = "border",
-      vb:multiline_text {
-        id = widget_id,
-        width = CONTENT_W,
-        text = "",
-        font = "mono",
-        height = 60,
-      },
-    },
-    vb:space{
-      height = 5,
-    },
-
-  }
-
-  return view
-
-end
-
---------------------------------------------------------------------------------
-
 function NTrapUI:_build_tab_settings()
   TRACE("NTrapUI:_build_tab_settings()")
 
@@ -873,6 +837,20 @@ function NTrapUI:_build_tab_settings()
       },
       vb:text{
         text = "Launch when Renoise starts",
+      },
+    },
+    vb:row{
+      width = CONTENT_W,
+      vb:text{
+        text = "Log Events",
+        width = LEFT_COL_W
+      },
+      vb:checkbox{
+        id = "ntrap_log_events",
+        bind = self._ntrap._settings.log_events,
+      },
+      vb:text{
+        text = "Log MIDI/Note events to terminal",
       },
     },
     vb:row{
@@ -1479,14 +1457,9 @@ end
 function NTrapUI:log_string(...)
   --TRACE("NTrapUI:log_string(str)",str)
 
-
-  local ui_widget = self._vb.views.ntrap_log_window
-  if ui_widget then
-    local str = cDebug.concat_args(...)
-    ui_widget:add_line(str)
-    ui_widget:scroll_to_last_line()
-  end
-
+  if self._ntrap._settings.log_events.value then  
+    LOG(">>> Noodletrap: ",cDebug.concat_args(...))
+  end 
 end
 
 --------------------------------------------------------------------------------
@@ -1585,7 +1558,6 @@ function NTrapUI:_switch_option_tab(idx)
     self._vb.views.ntrap_tab_input,
     self._vb.views.ntrap_tab_recording,
     self._vb.views.ntrap_tab_phrases,
-    self._vb.views.ntrap_tab_log,
     self._vb.views.ntrap_tab_settings,
   }
 
