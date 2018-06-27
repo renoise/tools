@@ -115,3 +115,6 @@
 [submodule "Tools/com.renoise.AutoMate.xrnx/classes/vLib"]
 	path = Tools/com.renoise.AutoMate.xrnx/classes/vLib
 	url = https://github.com/renoise/vLib.git
+[submodule "Tools/com.renoise.Noodletrap.xrnx/classes/vLib"]
+	path = Tools/com.renoise.Noodletrap.xrnx/classes/vLib
+	url = https://github.com/renoise/vLib.git

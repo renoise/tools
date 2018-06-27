@@ -21,12 +21,14 @@ require (_clibroot.."cLib")
 require (_clibroot.."cDebug")
 require (_clibroot.."cString")
 require (_clibroot.."cColor")
+require (_clibroot.."cValue")
 
 require (_vlibroot.."vLib")
 require (_vlibroot.."helpers/vSelection")
 require (_vlibroot.."parsers/vXML")
 require (_vlibroot.."vArrowButton")
 require (_vlibroot.."vButton")
+require (_vlibroot.."vButtonStrip")
 require (_vlibroot.."vDialog")
 require (_vlibroot.."vEditField")
 require (_vlibroot.."vTextField")
@@ -50,7 +52,7 @@ require (_vlibroot.."vTree")
 -- workaround for http://goo.gl/UnSDnw
 local automatic_start = false
 
-local vbutton,vtogglebutton,varrowbutton,vtabs,vtable,vbrowser,vtree,vlog,vgraph,vpathselector,vpopup,veditfield,vtextfield,vsearchfield --,vwaveform
+local vbutton,vbuttonstrip,vtogglebutton,varrowbutton,vtabs,vtable,vbrowser,vtree,vlog,vgraph,vpathselector,vpopup,veditfield,vtextfield,vsearchfield --,vwaveform
 
 local vlib_controls = {}
 local vlib_controls_ref = {}
@@ -226,11 +228,12 @@ function build()
 
   build_varrowbutton()
   build_vbutton()
+  build_vbuttonstrip()
   build_veditfield()
   build_vtextfield()
   build_vsearchfield()
   build_vfilebrowser()
-  build_vgraph()
+  --build_vgraph()
   build_vlog()
   build_vpathselector()
   build_vpopup()
@@ -551,7 +554,145 @@ functionally similar to the renoise Viewbuilder version]],
 
 end
 
+-------------------------------------------------------------------------------
 
+function build_vbuttonstrip()
+  TRACE("build_vbuttonstrip()")
+
+  vb.views.props_row:add_child(vb:column{
+    id = "vButtonStrip_properties",
+    style = "panel",
+    vb:text{
+      text = "vButtonStrip",
+      font = "bold",
+    },
+    vb:text{
+      text = [[
+The buttonstrip component contains a list of styleable buttons.
+Individual properties are assigned through 'items' (see below)]],
+      font = "italic",
+    },
+    vb:row{
+      vb:text{
+        text = "spacing"
+      },
+      vb:valuebox{
+        id = "vButtonStrip_spacing",
+        value = -3,
+        min = -3,
+        max = 10,
+        notifier = function(val)
+          set_control_property("spacing",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "placeholder_message"
+      },
+      vb:textfield{
+        id = "vButtonStrip_placeholder_message",
+        text = "No items",
+        notifier = function(val)
+          set_control_property("placeholder_message",val)
+        end
+      },
+    },
+    vb:row{
+      vb:text{
+        text = "min_segment_size"
+      },
+      vb:valuebox{
+        id = "vButtonStrip_min_segment_size",
+        value = 5,
+        min = 0,
+        max = 10,
+        notifier = function(val)
+          set_control_property("min_segment_size",val)
+        end
+      },
+    },    
+    vb:row{
+      vb:text{
+        text = "items"
+      },
+      vb:multiline_textfield{
+        id = "vButtonStrip_items",
+        width = 450,
+        height = 150,
+        text = "",
+      },
+    },    
+    vb:button{
+      text = "set items",
+      width = 50,
+      notifier = function()
+        local str_items = vb.views.vButtonStrip_items.text
+        local t,err = string_to_lua(str_items)
+        if err then
+          print("Error while parsing data:",err)
+        else
+          set_control_property("items",t)
+        end
+      end
+    },
+    vb:row{
+      vb:text{
+        text = "-- Methods ---------"
+      },
+    },
+    vb:row{
+      vb:button{
+        text = "press()",
+        notifier = function()
+          vbuttonstrip:press()
+        end
+      }
+    },
+    vb:row{
+      vb:button{
+        text = "release()",
+        notifier = function()
+          vbuttonstrip:release()
+        end
+      }
+    },
+
+  })
+
+  vbuttonstrip = vButtonStrip{
+    vb = vb,
+    id = "vButtonStrip",
+    tooltip = "vButtonStrip",
+    width = 200,
+    spacing = -3,
+    min_segment_size = 5,
+    items = {
+      {weight = 1, text = "one", color = {0xFF,0x80,0x00}},
+      {weight = 2, text = "two", color = {0x80,0xFF,0x00}},
+      {weight = 3, text = "three", color = {0x00,0x80,0xFF}},
+      {weight = 4, text = "four"},
+      {weight = 5, text = "five"},
+      {weight = 6, text = "six"},
+    },
+    notifier = function(idx)
+      print("vbuttonstrip.notifier()")
+    end,
+    pressed = function(idx)
+      print("vbuttonstrip.pressed()")
+    end,
+    released = function(idx)
+      print("vbuttonstrip.released()")
+    end,
+    on_resize = function()
+      print("vbuttonstrip.on_resize()")
+    end,
+  }
+  vb.views.controls_col:add_child(vbuttonstrip.view)
+  table.insert(vlib_controls_ref,vbuttonstrip)
+  table.insert(vlib_controls,vbuttonstrip.id)
+
+end
 
 -------------------------------------------------------------------------------
 
@@ -3155,6 +3296,15 @@ function update_properties()
     vb.views.vButton_color.text = cColor.color_table_to_hex_string(active_ctrl.color)
     vb.views.vButton_bitmap.text = active_ctrl.bitmap
 
+  elseif (ctrl_name == "vButtonStrip") then
+
+    vb.views.vButtonStrip_items.text = 
+      cString.table_to_string(active_ctrl.items,{multiline = true}) 
+    vb.views.vButtonStrip_min_segment_size.value = active_ctrl.min_segment_size 
+    vb.views.vButtonStrip_spacing.value = active_ctrl.spacing
+    vb.views.vButtonStrip_placeholder_message.text = active_ctrl.placeholder_message
+    
+    
   elseif (ctrl_name == "vToggleButton") then
 
     vb.views.vToggleButton_enabled.value = active_ctrl.enabled
