@@ -91,8 +91,9 @@ v0.99 - in progress
 
   FEATURE More precisely laid out phrase bar (vLib integration)
   CHANGE MIDI/Note events optionally logged to terminal (can be specified in Settings)  
-  FIXED Disallow recording when there is no room (issue#141)
+  CHANGE Disable PC keyboard input by default, show "warning" when enabling
   FIXED Sometimes, error occurs when deleting phrases in 'bar' (issue#141)
+  FIXED Disallow recording when there is no room (issue#141)
   FIXED Error when opening tool without active instrument (issue#129 + issue#76)
 
 v0.98 - 10 May 2016
