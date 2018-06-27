@@ -149,7 +149,7 @@ function NTrapPrefs:__init()
   self:add_property("record_quantize_custom", renoise.Document.ObservableNumber(1))
   self:add_property("quantize_preserve_length", renoise.Document.ObservableBoolean(true))
   self:add_property("midi_in_port",         renoise.Document.ObservableString(NTrapPrefs.NO_INPUT))
-  self:add_property("keyboard_enabled",     renoise.Document.ObservableBoolean(true))
+  self:add_property("keyboard_enabled",     renoise.Document.ObservableBoolean(false))
   
 
   -- recording options

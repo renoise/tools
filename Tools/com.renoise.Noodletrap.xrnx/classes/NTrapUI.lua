@@ -485,6 +485,16 @@ function NTrapUI:_build_tab_inputs()
         value = true,
         notifier = function(val)
           self._ntrap:_save_setting("keyboard_enabled",val)
+          if val then 
+            renoise.app():show_message(
+              "Use this feature to quickly enter ideas using the PC keyboard,"
+              .."\nwhile the Noodletrap dialog is focused. Notice however, that"
+              .."\nnote duration is not accurate - especially short 'staccato' "
+              .."\nnotes will not be recorded very precisely with this tool."
+              .."\n"
+              .."\nFor precise noodling, it's recommended to use a MIDI keyboard."
+            )
+          end
         end,
       },
       vb:text{
