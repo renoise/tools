@@ -2,6 +2,23 @@
 main.lua
 ============================================================================]]--
 
+--[[
+  
+# Noodletrap
+
+Noodletrap lets you record notes while bypassing the recording process in Renoise. Instead, your recordings ("noodlings") are stored into the instrument itself, using phrases as the storage mechanism.
+
+## Links
+
+Renoise: [Tool page](http://www.renoise.com/tools/noodletrap/)
+
+Renoise Forum: [Feedback and bugs](http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/)
+
+Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Noodletrap.xrnx) 
+
+
+]]
+
 -- variables --------------------------
 
 local ntrap = nil
@@ -11,7 +28,7 @@ local waiting_to_show_dialog = true
 rns = nil
 
 _trace_filters = nil
-_trace_filters = {".*"}
+--_trace_filters = {".*"}
 
 -- includes ---------------------------
 
@@ -25,7 +42,6 @@ require (_xlibroot.."xPhraseManager")
 require (_xlibroot.."xNoteColumn")
 
 _vlibroot = "classes/vLib/classes/"
---require (_vlibroot.."vControl")
 cLib.require (_vlibroot.."vLib")
 cLib.require (_vlibroot.."vButtonStrip")
 

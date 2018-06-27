@@ -4,19 +4,7 @@
 
 --[[--
 
-# Noodletrap
-
-Noodletrap lets you record notes while bypassing the recording process in Renoise. Instead, your recordings ("noodlings") are stored into the instrument itself, using phrases as the storage mechanism.
-
-## Links
-
-Renoise: [Tool page](http://www.renoise.com/tools/noodletrap/)
-
-Renoise Forum: [Feedback and bugs](http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/)
-
-Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Noodletrap.xrnx) 
-
-
+Preferences for Noodletrap
 
 --]]
 
@@ -156,8 +144,6 @@ function NTrapPrefs:__init()
   renoise.Document.DocumentNode.__init(self)
 
   -- general options
-  --self:add_property("target_instr",         renoise.Document.ObservableNumber(1))
-  --self:add_property("target_instr_custom",  renoise.Document.ObservableNumber(1))
   self:add_property("record_quantize",      renoise.Document.ObservableNumber(NTrapPrefs.QUANTIZE_DEFAULT))
   self:add_property("record_quantize_custom", renoise.Document.ObservableNumber(1))
   self:add_property("quantize_preserve_length", renoise.Document.ObservableBoolean(true))

@@ -4,18 +4,7 @@
 
 --[[--
 
-# Noodletrap
-
-Noodletrap lets you record notes while bypassing the recording process in Renoise. Instead, your recordings ("noodlings") are stored into the instrument itself, using phrases as the storage mechanism.
-
-## Links
-
-Renoise: [Tool page](http://www.renoise.com/tools/noodletrap/)
-
-Renoise Forum: [Feedback and bugs](http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/)
-
-Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Noodletrap.xrnx) 
-
+User interface for Noodletrap
 
 --]]
 
@@ -65,11 +54,6 @@ function NTrapUI:__init(ntrap)
   --  .octave
   -- }
   self._live_keys = {}
-
-  --- (number) whenever a key has been pressed,
-  -- it will temporarily halt the output of repeated
-  -- keys - we halt our check for this amount of time
-  --self._halt_until = nil
 
   --- (bool)
   self._blink = false
@@ -421,49 +405,6 @@ function NTrapUI:_build_tab_inputs()
   local view = vb:column{
     width = CONTENT_W,
     margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
-
-    --[[
-    vb:row{
-      --visible = false,
-      vb:text{
-        width = LEFT_COL_W,
-        text = "Instrument",
-      },
-      vb:popup{
-        id = "ntrap_target_instr",
-        width = MIDDLE_W,
-        items = NTrapPrefs.INSTR,
-        notifier = function(idx)
-          self._ntrap:_save_setting("target_instr",idx)
-          self:_apply_instrument_from_option(idx)
-        end,
-      },
-      vb:valuebox{
-        id = "ntrap_target_instr_custom",
-        value = 1,
-        width = RIGHT_W,
-        min = 1,
-        max = 512,
-        tonumber = function(str)
-          return math.floor(tonumber(str))
-        end,
-        tostring = function(num)
-          return string.format("%d",num)
-        end,
-        notifier = function(idx)
-          self._ntrap:_save_setting("target_instr_custom",idx)
-          self._ntrap:_attach_to_instrument(false,idx)
-        end,
-      },
-      vb:text{
-        id = "ntrap_target_instr_warning",
-        text = "⚠",
-        font = "big",
-        tooltip = "Instrument not defined in this song",
-      },
-
-    },
-    ]]
 
     vb:row{
       vb:text{
@@ -889,7 +830,6 @@ function NTrapUI:_build_tab_settings()
   local view = vb:column{  
     vb:row{
       width = CONTENT_W,
-      --margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
       vb:text{
         text = "Process\n#notes",
         width = LEFT_COL_W
@@ -918,30 +858,8 @@ function NTrapUI:_build_tab_settings()
         text = "Lower = less CPU usage while recording, \nHigher = fewer undo points"
       },
     },
-    --[[
     vb:row{
       width = CONTENT_W,
-      --margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
-      vb:text{
-        text = "Octave",
-        width = LEFT_COL_W
-      },
-      vb:checkbox{
-        id = "ntrap_align_octaves",
-        active = false, -- TODO separate MIDI input to make this happen
-        value = NTrapPrefs.ALIGN_OCTAVES,
-        notifier = function(val)
-          self._ntrap:_save_setting("align_octaves",val)
-        end,
-      },
-      vb:text{
-        text = "Align MIDI keyboard with the octave in Renoise",
-      },
-    },
-    ]]
-    vb:row{
-      width = CONTENT_W,
-      --margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
       vb:text{
         text = "Startup",
         width = LEFT_COL_W
@@ -959,7 +877,6 @@ function NTrapUI:_build_tab_settings()
     },
     vb:row{
       width = CONTENT_W,
-      --margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
       vb:text{
         text = "Phrases",
         width = LEFT_COL_W
@@ -1066,12 +983,10 @@ function NTrapUI:update()
   TRACE("NTrapUI:update()")
 
   if not self._ntrap._active then
-    --print("not active, skip update...")
     return
   end
 
   local settings = self._ntrap._settings
-  --print("settings",settings)
 
   -- midi input port
   local node = settings:property("midi_in_port")
@@ -1292,7 +1207,6 @@ function NTrapUI:update_record_status()
 
     if (node.value == NTrapPrefs.STOP_NOTE) then
       local slider_value = 0
-      --print("self._ntrap._live_voices",self._ntrap._live_voices)
       if (self._ntrap._live_voices == 0) then
         local beats_passed = 0
         local most_recent = self._ntrap:_get_most_recent_event() 
@@ -1343,7 +1257,6 @@ function NTrapUI:update_record_status()
     ui_record_button.color = {0x00,0x00,0x00}
     ui_cancel_button.text = "Done"
     ui_record_slider.visible = false
-
   end
 
 

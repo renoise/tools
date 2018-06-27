@@ -4,19 +4,7 @@
 
 --[[--
 
-# Noodletrap
-
-Noodletrap lets you record notes while bypassing the recording process in Renoise. Instead, your recordings ("noodlings") are stored into the instrument itself, using phrases as the storage mechanism.
-
-## Links
-
-Renoise: [Tool page](http://www.renoise.com/tools/noodletrap/)
-
-Renoise Forum: [Feedback and bugs](http://forum.renoise.com/index.php/topic/43047-new-tool-30-noodletrap/)
-
-Github: [Documentation and source](https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Noodletrap.xrnx)
-
-
+Noodletrap main application class 
 
 --]]
 
@@ -32,9 +20,6 @@ function NTrap:__init(prefs)
 
   --- (NTrapPrefs) current settings
   self._settings = prefs
-
-  --- (int) instrument index (set on attach)
-  --self._instr_idx = nil
 
   --- (int) track context
   self._track_idx = nil
@@ -107,7 +92,7 @@ function NTrap:__init(prefs)
   self._update_record_requested = false
 
   -- (ProcessSlicer) for dealing with CPU intensive tasks
-  self.process_slicer = nil
+  --self.process_slicer = nil
 
 
   -- Provide MIDI mappings
@@ -852,7 +837,6 @@ function NTrap:_attach_to_instrument(new_song,instr_idx)
     end
   )
 
-  --self._instr_idx = instr_idx
   self:_obtain_selected_phrase()
   self._update_requested = true
 
@@ -964,19 +948,8 @@ end
 function NTrap:_recording_check()
   --TRACE("NTrap:_recording_check()")
 
-  -- TODO could this actually be false? 
+  -- TODO no more room for keymapped phrases 
 
-  --[[
-  if not self._instr_idx then
-    LOG("No instrument has been targeted")
-    return false
-  end
-
-  if renoise.song().transport.edit_mode then
-    LOG("Can't record while edit mode is enabled")
-    return false
-  end
-  ]]
 
   return true
 
