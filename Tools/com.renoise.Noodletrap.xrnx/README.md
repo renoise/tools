@@ -1,6 +1,19 @@
 # Noodletrap
-Noodletrap is a tool for Renoise that enables an alternative keyboard recording workflow, in which recordings - "noodlings" - are stored as phrases in the selected instrument instead of being record directly into the song. This approach lends itself well to spontaneous jamming and improvisation as you don't have to "make room" in the song first and instead, can focus on playing. Phrases are automatically created each time you start a new recording. Along with MIDI-mappable buttons for the most important features of the GUI, this allows a standalone workflow where you can control the entire recording process from your master keyboard or other MIDI device. ## Main features* **Convenience**: record ideas without the need to "make room in the song" first
-* **Ease of use**: the entire recording workflow can be controlled via MIDI or shortcuts   * **Precision**: record using high resolution (adjustable LPB for each recording)* **Flexibility**: afterwards, recording can be anywhere in the song, in any track (phrase)* **Integration**: support for trigger options (hold and mono), and MIDI commands (pitchbend/cc/prg)* **Customizable**: almost every option in the tool can be tailored to suit your needs 
+
+Noodletrap is a tool for Renoise that enables an alternative keyboard recording workflow, in which recordings - "noodlings" - are stored as phrases in the selected instrument instead of being record directly into the song. This approach lends itself well to spontaneous jamming and improvisation as you don't have to "make room" in the song first and instead, can focus on playing. 
+
+Phrases are automatically created each time you start a new recording. Along with MIDI-mappable buttons for the most important features of the GUI, this allows a standalone workflow where you can control the entire recording process from your master keyboard or other MIDI device. 
+
+## Main features
+
+* **Convenience**: record ideas without the need to "make room in the song" first
+* **Ease of use**: the entire recording workflow can be controlled via MIDI or shortcuts   
+* **Precision**: record using high resolution (adjustable LPB for each recording)
+* **Flexibility**: afterwards, recording can be anywhere in the song, in any track (phrase)
+* **Integration**: support for trigger options (hold and mono), and MIDI commands (pitchbend/cc/prg)
+* **Customizable**: almost every option in the tool can be tailored to suit your needs 
+
+
 ## How to use 
 
 First, launch the tool. This is done from the Renoise Tools menu. The tool remains active only while the GUI is visible.     
@@ -73,6 +86,14 @@ Bug? Sometimes, passing value from keyhandler does not sound a note
 (it will try to memorize whatever middle frame you have currently selected, and restore that)
 
 ## Changelog
+
+v0.99 - in progress
+
+  FEATURE More precisely laid out phrase bar (vLib integration)
+  CHANGE MIDI/Note events optionally logged to terminal (can be specified in Settings)  
+  FIXED Disallow recording when there is no room (issue#141)
+  FIXED Sometimes, error occurs when deleting phrases in 'bar' (issue#141)
+  FIXED Error when opening tool without active instrument (issue#129 + issue#76)
 
 v0.98 - 10 May 2016
 
