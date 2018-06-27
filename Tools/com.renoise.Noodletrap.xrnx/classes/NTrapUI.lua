@@ -1476,7 +1476,7 @@ function NTrapUI:update_phrase_bar()
 
   self._phrase_buttons = table.create()
   local prev_end
-  local selected_map_idx = xPhraseManager.get_selected_mapping_index()
+  local selected_map = xPhraseManager.get_selected_mapping()
   for k,v in ipairs(instr.phrase_mappings) do
 
     -- room before mappings
@@ -1490,7 +1490,9 @@ function NTrapUI:update_phrase_bar()
     end
 
     -- real, actual phrase (clickable)
-    local is_selected = (k == selected_map_idx)
+    local is_selected = selected_map 
+      and (v.note_range[1] == selected_map.note_range[1])
+      and (v.note_range[2] == selected_map.note_range[2])
 
     local is_disabled = nil
     if (renoise.API_VERSION > 4) then
