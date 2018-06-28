@@ -486,13 +486,16 @@ function NTrapUI:_build_tab_inputs()
         notifier = function(val)
           self._ntrap:_save_setting("keyboard_enabled",val)
           if val then 
-            renoise.app():show_message(
-              "Use this feature to quickly enter ideas using the PC keyboard,"
-              .."\nwhile the Noodletrap dialog is focused. Notice however, that"
-              .."\nnote duration is not accurate - especially short 'staccato' "
-              .."\nnotes will not be recorded very precisely with this tool."
-              .."\n"
-              .."\nFor precise noodling, it's recommended to use a MIDI keyboard."
+            renoise.app():show_message([[
+This feature will allow you to record notes using the PC keyboard,
+while the Noodletrap dialog is focused. 
+
+Please notice that the note duration is affected by using the PC 
+keyboard for recording notes. Especially with short, 'staccato'-alike 
+notes you can experience a difference between what you played, and 
+what the final recording sounds like. 
+
+For precise noodling, it's always recommended to use a MIDI keyboard.]]
             )
           end
         end,
@@ -802,6 +805,7 @@ function NTrapUI:_build_tab_settings()
 
   local vb = self._vb
   local view = vb:column{  
+    --[[
     vb:row{
       width = CONTENT_W,
       vb:text{
@@ -832,6 +836,7 @@ function NTrapUI:_build_tab_settings()
         text = "Lower = less CPU usage while recording, \nHigher = fewer undo points"
       },
     },
+    ]]
     vb:row{
       width = CONTENT_W,
       vb:text{
@@ -1112,9 +1117,9 @@ function NTrapUI:update()
   local ui_widget = self._vb.views.ntrap_skip_empty_enabled
   ui_widget.value = node.value
 
-  local node = settings:property("yield_counter")
-  local ui_widget = self._vb.views.ntrap_yield_counter
-  ui_widget.value = node.value
+  --local node = settings:property("yield_counter")
+  --local ui_widget = self._vb.views.ntrap_yield_counter
+  --ui_widget.value = node.value
 
 
   -- dedicated updates
