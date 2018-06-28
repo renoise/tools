@@ -1615,7 +1615,7 @@ function NTrapUI:_phrase_bar_notifier(idx)
   end 
   
   local phrase_idx = item.value
-  print("NTrapUI:_phrase_bar_notifier() - phrase_idx",phrase_idx)
+  --print("NTrapUI:_phrase_bar_notifier() - phrase_idx",phrase_idx)
   
   local instr_idx = rns.selected_instrument_index
   -- check if phrase is still present (another instrument
