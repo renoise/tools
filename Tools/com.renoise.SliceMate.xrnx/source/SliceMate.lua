@@ -477,7 +477,7 @@ function SliceMate:get_buffer_position(trigger_pos,cursor_pos,autofix)
   
   -- resolve sample by looking at notecol 
   local sample,sample_idx = nil
-  local samples = xInstrument.get_samples_mapped_to_note(instr,notecol.note_value) 
+  local samples = xKeyZone.get_samples_mapped_to_note(instr,notecol.note_value) 
   if not table.is_empty(samples) then
     sample_idx = samples[1]
   end
