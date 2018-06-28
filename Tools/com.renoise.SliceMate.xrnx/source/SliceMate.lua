@@ -235,7 +235,7 @@ function SliceMate:select(user_selected)
             frame = frame + root_frame
             sample = instr.samples[1]
           end
-          local success,error = xSample.set_buffer_selection(sample,frame,frame)
+          local success,error = xSampleBuffer.set_buffer_selection(sample.sample_buffer,frame,frame)
           if error then
             renoise.app():show_status(error)
           end
