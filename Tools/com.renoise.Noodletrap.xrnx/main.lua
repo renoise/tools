@@ -58,6 +58,13 @@ ntrap_preferences = NTrapPrefs()
 renoise.tool().preferences = ntrap_preferences
 ntrap = NTrap(ntrap_preferences)
 
+function initialize()
+  rns = renoise.song()
+  if ntrap:is_running() then
+    ntrap:attach_to_song(true)
+  end
+end
+
 --------------------------------------------------------------------------------
 -- menu entries
 --------------------------------------------------------------------------------
@@ -66,6 +73,7 @@ renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Noodletrap",
   invoke = function()
     if ntrap then
+      initialize()
       ntrap:show_dialog()
     end
   end  
@@ -116,12 +124,7 @@ end)
 renoise.tool().app_new_document_observable:add_notifier(function()
   TRACE("main:app_new_document_observable fired...")
 
-  rns = renoise.song()
-
-  if ntrap:is_running() then
-    ntrap:attach_to_song(true)
-  end
-
+  initialize()
 end)
 
 
