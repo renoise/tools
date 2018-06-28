@@ -39,7 +39,7 @@ cLib.require (_xlibroot.."xInstrument")
 cLib.require (_xlibroot.."xOscClient")
 cLib.require (_xlibroot.."xNoteColumn")
 cLib.require (_xlibroot.."xPatternSequencer")
-cLib.require (_xlibroot.."xSongSettings")
+cLib.require (_xlibroot.."xPersistentSettings")
 cLib.require (_xlibroot.."xCursorPos")
 
 

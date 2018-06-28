@@ -66,7 +66,7 @@ function Mlrx_settings.store_local_settings(mlrx)
     groups = build_groups(),
   }
 
-  xSongSettings.store(config,
+  xPersistentSettings.store(config,
     Mlrx_settings.TOKEN_START,Mlrx_settings.TOKEN_END)
 
 end
@@ -149,7 +149,7 @@ function Mlrx_settings.retrieve_local_settings(mlrx)
 
   end
 
-  local config,err = xSongSettings.retrieve(Mlrx_settings.TOKEN_START,Mlrx_settings.TOKEN_END)
+  local config,err = xPersistentSettings.retrieve(Mlrx_settings.TOKEN_START,Mlrx_settings.TOKEN_END)
   if not config then 
     if err then
       renoise.app():show_status(err)  
