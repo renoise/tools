@@ -1298,6 +1298,7 @@ function NTrap:_process_recording(events)
 
   if not phrase then 
     LOG("*** Failed to allocate phrase, recording not saved")
+    return
   end
   
   -- @{ turn length into a "neat" value when using settings such as
