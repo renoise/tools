@@ -14,21 +14,7 @@ Preferences for Noodletrap
 class 'NTrapPrefs'(renoise.Document.DocumentNode)
 
 NTrapPrefs.NO_INPUT = "No MIDI input selected"
-NTrapPrefs.ALIGN_OCTAVES = true
-NTrapPrefs.AUTORUN_ENABLED = true
-NTrapPrefs.SKIP_EMPTY_DEFAULT = true
-NTrapPrefs.SKIP_EMPTY_DEFAULT = true
 NTrapPrefs.YIELD_DEFAULT = 100
-NTrapPrefs.LOG_EVENTS = false
-
---[[
-NTrapPrefs.INSTR_FOLLOW = 1
-NTrapPrefs.INSTR_CUSTOM = 2
-NTrapPrefs.INSTR = {
-  "Follow selected",
-  "Manually select",
-}
-]]
 
 NTrapPrefs.ARM_MANUAL = 1
 NTrapPrefs.ARM_PLAYBACK = 2
@@ -175,11 +161,10 @@ function NTrapPrefs:__init()
   self:add_property("phrase_tracking_custom", renoise.Document.ObservableNumber(NTrapPrefs.PHRASE_TRACKING_DEFAULT))
 
   -- settings
-  self:add_property("align_octaves",    renoise.Document.ObservableBoolean(NTrapPrefs.ALIGN_OCTAVES))
-  self:add_property("autorun_enabled",    renoise.Document.ObservableBoolean(NTrapPrefs.AUTORUN_ENABLED))
-  self:add_property("skip_empty_enabled", renoise.Document.ObservableBoolean(NTrapPrefs.SKIP_EMPTY_DEFAULT))
+  self:add_property("autorun_enabled",    renoise.Document.ObservableBoolean(false))
+  self:add_property("skip_empty_enabled", renoise.Document.ObservableBoolean(true))
   self:add_property("yield_counter",      renoise.Document.ObservableNumber(NTrapPrefs.YIELD_DEFAULT))
-  self:add_property("log_events",      renoise.Document.ObservableBoolean(NTrapPrefs.LOG_EVENTS))
+  self:add_property("log_events",      renoise.Document.ObservableBoolean(false))
 
 
 end

@@ -845,10 +845,7 @@ function NTrapUI:_build_tab_settings()
       },
       vb:checkbox{
         id = "ntrap_autorun_enabled",
-        value = NTrapPrefs.AUTORUN_ENABLED,
-        notifier = function(val)
-          self._ntrap:_save_setting("autorun_enabled",val)
-        end,
+        bind = self._ntrap._settings.autorun_enabled,
       },
       vb:text{
         text = "Launch when Renoise starts",
@@ -876,10 +873,7 @@ function NTrapUI:_build_tab_settings()
       },
       vb:checkbox{
         id = "ntrap_skip_empty_enabled",
-        value = NTrapPrefs.SKIP_EMPTY_DEFAULT,
-        notifier = function(val)
-          self._ntrap:_save_setting("skip_empty_enabled",val)
-        end,
+        bind = self._ntrap._settings.skip_empty_enabled,
       },
       vb:text{
         text = "Do not create empty phrases",
@@ -1107,20 +1101,6 @@ function NTrapUI:update()
   ui_widget.value = node.value
 
   self:_apply_phrase_tracking_from_option(node.value)
-
-  -- settings
-  local node = settings:property("autorun_enabled")
-  local ui_widget = self._vb.views.ntrap_autorun_enabled
-  ui_widget.value = node.value
-
-  local node = settings:property("skip_empty_enabled")
-  local ui_widget = self._vb.views.ntrap_skip_empty_enabled
-  ui_widget.value = node.value
-
-  --local node = settings:property("yield_counter")
-  --local ui_widget = self._vb.views.ntrap_yield_counter
-  --ui_widget.value = node.value
-
 
   -- dedicated updates
   self:update_phrase_bar()
