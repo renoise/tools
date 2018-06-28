@@ -1,18 +1,18 @@
 --[[ 
 
-  Testcase for xSongSettings
+  Testcase for xPersistentSettings
 
 --]]
 
 _xlib_tests:insert({
-name = "xSongSettings",
+name = "xPersistentSettings",
 fn = function()
 
   --require (_xlibroot.."xLine")
-  cLib.require (_xlibroot.."xSongSettings")
-  _trace_filters = {"^xSongSettings*"}
+  cLib.require (_xlibroot.."xPersistentSettings")
+  _trace_filters = {"^xPersistentSettings*"}
 
-  LOG(">>> xSongSettings: starting unit-test...")
+  LOG(">>> xPersistentSettings: starting unit-test...")
 
   local passed,err = nil,nil
 
@@ -32,33 +32,33 @@ fn = function()
   }
 
   -- test for non-existing settings
-  passed,err = xSongSettings.test("blah","blup")
+  passed,err = xPersistentSettings.test("blah","blup")
   if passed then 
     error(err)
   end
 
   -- clear FooSettings
-  passed,err = xSongSettings.clear(fooTokenStart,fooTokenEnd)
+  passed,err = xPersistentSettings.clear(fooTokenStart,fooTokenEnd)
   if not passed then 
     error(err)
   end
 
   -- test for FooSettings 
-  passed,err = xSongSettings.test(fooTokenStart,fooTokenEnd)
+  passed,err = xPersistentSettings.test(fooTokenStart,fooTokenEnd)
   if passed then 
     error(err)
   end
 
   -- save FooSettings 
-  passed,err = xSongSettings.store(fooSettings,fooTokenStart,fooTokenEnd)
+  passed,err = xPersistentSettings.store(fooSettings,fooTokenStart,fooTokenEnd)
   if not passed then 
     error(err)
   end
   
-  assert(xSongSettings.test(fooTokenStart,fooTokenEnd)==true)
+  assert(xPersistentSettings.test(fooTokenStart,fooTokenEnd)==true)
 
   -- load FooSettings
-  local fooRetrieved = xSongSettings.retrieve(fooTokenStart,fooTokenEnd)
+  local fooRetrieved = xPersistentSettings.retrieve(fooTokenStart,fooTokenEnd)
   assert(type(fooRetrieved)=="table")
   assert(type(fooRetrieved.some_number)=="number")
   assert(type(fooRetrieved.some_boolean)=="boolean")
@@ -84,19 +84,19 @@ fn = function()
   }
 
   -- clear barSettings
-  passed,err = xSongSettings.clear(barTokenStart,barTokenEnd)
+  passed,err = xPersistentSettings.clear(barTokenStart,barTokenEnd)
   if not passed then 
     error(err)
   end
 
   -- save BarSettings
-  passed,err = xSongSettings.store(barSettings,barTokenStart,barTokenEnd)
+  passed,err = xPersistentSettings.store(barSettings,barTokenStart,barTokenEnd)
   if not passed then 
     error(err)
   end
 
   -- load BarSettings
-  local barRetrieved = xSongSettings.retrieve(barTokenStart,barTokenEnd)
+  local barRetrieved = xPersistentSettings.retrieve(barTokenStart,barTokenEnd)
   assert(type(barRetrieved)=="table")
   assert(type(barRetrieved.other_number)=="number")
   assert(type(barRetrieved.other_boolean)=="boolean")
@@ -106,22 +106,22 @@ fn = function()
   assert(type(barRetrieved.other_object.with.deep.nesting)=="boolean")
 
   -- clear FooSettings
-  passed,err = xSongSettings.clear(fooTokenStart,fooTokenEnd)
+  passed,err = xPersistentSettings.clear(fooTokenStart,fooTokenEnd)
   if not passed then 
     error(err)
   end
 
-  assert(xSongSettings.test(fooTokenStart,fooTokenEnd)==false)
+  assert(xPersistentSettings.test(fooTokenStart,fooTokenEnd)==false)
   
   -- clear BarSettings
-  passed,err = xSongSettings.clear(barTokenStart,barTokenEnd)
+  passed,err = xPersistentSettings.clear(barTokenStart,barTokenEnd)
   if not passed then 
     error(err)
   end
 
-  assert(xSongSettings.test(barTokenStart,barTokenEnd)==false)
+  assert(xPersistentSettings.test(barTokenStart,barTokenEnd)==false)
 
-  LOG(">>> xSongSettings: OK - passed all tests")
+  LOG(">>> xPersistentSettings: OK - passed all tests")
 
 end
 })
