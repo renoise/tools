@@ -169,9 +169,8 @@ function NTrap:prepare_recording()
     self._ui:update_record_status()
     self:begin_recording()
   end
-
-  LOG(string.format(
-    "Prepared for recording at %.4f",os.clock()))
+  
+  self:log_string(string.format("Prepared for recording at %.4f",os.clock()))
 
 end
 
@@ -194,12 +193,12 @@ function NTrap:begin_recording()
     local bps = get_bps()
     local beat_fract = playpos_beats - math.floor(playpos_beats)
     self._recording_begin = os.clock() - (bps*beat_fract)
-    LOG(string.format(
+    self:log_string(string.format(
       "Beginning recording at %.4f (offset by %.4f)",
       os.clock(),(bps*beat_fract)))
   else
     self._recording_begin = os.clock()
-    LOG(string.format(
+    self:log_string(string.format(
       "Beginning recording at %.4f",os.clock()))
   end
 
@@ -225,7 +224,7 @@ function NTrap:split_recording()
     return
   end
 
-  LOG(string.format(
+  self:log_string(string.format(
     "Split recording at %d",self._split_requested_at))
 
   self._recording_stop = self._split_requested_at
@@ -299,7 +298,7 @@ function NTrap:stop_recording()
   self:_reset_recording()
   self:_on_idle()
 
-  LOG(string.format(
+  self:log_string(string.format(
     "Recording was stopped at %.4f",os.clock()))
 
   if (self._settings.start_recording.value == NTrapPrefs.START_NOTE) and
@@ -319,7 +318,7 @@ function NTrap:cancel_recording()
 
   self:_reset_recording()
 
-  LOG(string.format(
+  self:log_string(string.format(
     "Recording was cancelled at %.4f",os.clock()))
 
 end
@@ -484,7 +483,7 @@ function NTrap:_on_idle()
         local patt = self:_get_playing_pattern()
         self._recording_pattern_line_count = 
           self._recording_pattern_line_count + patt.number_of_lines
-        LOG(string.format("Entered pattern %d at %d, line count is %d",
+        self:log_string(string.format("Entered pattern %d at %d, line count is %d",
           rns.selected_pattern_index,os.clock(),
           self._recording_pattern_line_count))
       end
@@ -876,7 +875,7 @@ function NTrap:attach_to_phrase_mapping(phrase_mapping)
   end
 
   if not phrase_mapping then
-    LOG("NTrap: could not attach to phrase mapping")
+    LOG("*** Noodletrap: could not attach to phrase mapping")
     return
   end
 
@@ -991,7 +990,7 @@ function NTrap:_open_midi_port(port_name,store_setting)
       self:_save_setting("midi_in_port",port_name)
     end
   else
-    LOG("Could not create MIDI input device ", port_name)
+    LOG("*** Noodletrap: Could not create MIDI input device ", port_name)
   end
 
 
@@ -1038,7 +1037,7 @@ function NTrap:_midi_callback(message)
     if (rns_pitch+(rns_octave*12) < 0) 
       or (rns_pitch+(rns_octave*12) > 119) 
     then
-      LOG("*** ignore note outside playable range",rns_pitch+(rns_octave*12))
+      LOG("*** Noodletrap: ignore note outside playable range",rns_pitch+(rns_octave*12))
       return
     end
 
@@ -1276,7 +1275,7 @@ function NTrap:_process_recording(events)
   if table.is_empty(events) and
     (self._settings.skip_empty_enabled.value)
   then
-    LOG("Skipping empty recording (change this in settings)")    
+    self:log_string("Skipping empty recording (change this in settings)")    
     return
   end
 
@@ -1297,7 +1296,7 @@ function NTrap:_process_recording(events)
   end
 
   if not phrase then 
-    LOG("*** Failed to allocate phrase, recording not saved")
+    LOG("*** Noodletrap: failed to allocate phrase, recording not saved")
     return
   end
   
@@ -1358,7 +1357,7 @@ function NTrap:_process_recording(events)
     local write_event = function(line,fraction,event,col_idx,quantize)
       --print("write_event = function(line,fraction,event,col_idx)",line,fraction,event,col_idx)
       if (line > renoise.InstrumentPhrase.MAX_NUMBER_OF_LINES) then
-        LOG("*** skipping event at line",line)
+        LOG("*** Noodletrap: skipping event at line",line)
         return
       end
       local phrase_line = phrase:line(line)
@@ -1456,7 +1455,7 @@ function NTrap:_process_recording(events)
             --print("sounded in column, pitch   ",voice_column,evt.pitch)
             write_event(line,fraction,evt,voice_column,q_amount)
           else
-            LOG("*** skipping output, not enough note columns")
+            LOG("*** Noodletrap: skipping output, not enough note columns")
           end
         else
           --print("*** note-off at line, pitch    ",line,evt.pitch)
