@@ -805,6 +805,8 @@ function NTrapUI:_build_tab_settings()
 
   local vb = self._vb
   local view = vb:column{  
+    margin = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN,
+    
     --[[
     vb:row{
       width = CONTENT_W,
