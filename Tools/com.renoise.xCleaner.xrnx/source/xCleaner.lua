@@ -616,7 +616,7 @@ function xCleaner:collect_sample_info(instr,item,sample_idx)
     num_channels = buffer.number_of_channels
     num_channels_actual = buffer.number_of_channels
     if xCleaner.find_channel_issues then
-      local channel_info = xSample.get_channel_info(sample)
+      local channel_info = xSampleBuffer.get_channel_info(sample)
       --print("channel_info",channel_info)
       if (channel_info == xSample.SAMPLE_INFO.DUPLICATE) then
         item.summary = item.summary ..
@@ -646,7 +646,8 @@ function xCleaner:collect_sample_info(instr,item,sample_idx)
           and xSample.SAMPLE_CHANNELS.BOTH
           or xSample.SAMPLE_CHANNELS.LEFT -- aka MONO
         local threshold = options.detect_silence_threshold.value
-        local leading,trailing = xSample.detect_leading_trailing_silence(buffer,channels,threshold)
+        local leading,trailing = 
+          xSampleBuffer.detect_leading_trailing_silence(buffer,channels,threshold)
         --print(">>> leading,trailing PRE",sample.name,leading,trailing)        
         if leading or trailing then 
           -- if loop is enabled, only include the trailing part 
@@ -691,7 +692,7 @@ function xCleaner:collect_sample_info(instr,item,sample_idx)
     bit_depth = buffer.bit_depth
     bit_depth_actual = buffer.bit_depth
     if xCleaner.find_actual_bit_depth then
-      bit_depth_actual = xSample.get_bit_depth(sample)
+      bit_depth_actual = xSampleBuffer.get_bit_depth(sample)
     end
   end
   item.bit_depth = bit_depth
