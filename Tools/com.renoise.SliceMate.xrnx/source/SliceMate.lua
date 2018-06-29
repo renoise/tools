@@ -739,7 +739,7 @@ function SliceMate:insert_slice()
         if (#instr.samples > 1) then          
           local new_sample = instr.samples[slice_idx+1]
           cReflection.copy_object_properties(sample,new_sample)
-          xSample.initialize_loop(new_sample)
+          xSample.set_loop_all(new_sample)
         end
 
       end
