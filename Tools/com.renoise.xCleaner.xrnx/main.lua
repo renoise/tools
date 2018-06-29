@@ -3,7 +3,7 @@ main.lua
 ============================================================================]]--
 
 _trace_filters = nil
---_trace_filters = {".*"}
+_trace_filters = {".*"}
 
 
 --------------------------------------------------------------------------------
@@ -22,7 +22,6 @@ require (_clibroot.."cString")
 require (_clibroot.."cTable")
 
 cLib.require (_xlibroot.."xLib")
-cLib.require (_xlibroot.."xPhrase")
 cLib.require (_xlibroot.."xSample")
 cLib.require (_xlibroot.."xSampleBuffer")
 cLib.require (_xlibroot.."xSampleMapping")
@@ -65,15 +64,25 @@ renoise.tool().preferences = options
 
 -- workaround for http://goo.gl/UnSDnw
 local waiting_to_show_dialog = false
-
 local x = nil
+rns = nil
 
-local function show_dialog()
+function initialize()
+  rns = renoise.song()
+  if x then
+    x:attach_to_song()
+  end  
+end
 
+function show_dialog()
+
+  
   if not x then
     x = xCleaner()
   end
 
+  initialize()
+  
   x:show()
   x:gather()
 
@@ -107,13 +116,7 @@ renoise.tool():add_keybinding{
 --------------------------------------------------------------------------------
 
 renoise.tool().app_new_document_observable:add_notifier(function()
-  if x then
-    x:attach_to_song()
-  end
-end)
-
-renoise.tool().app_became_active_observable:add_notifier(function()
-
+  initialize()
 end)
 
 renoise.tool().app_idle_observable:add_notifier(function()
@@ -127,8 +130,6 @@ renoise.tool().app_idle_observable:add_notifier(function()
   end
 
 end)
-
-
 
 --------------------------------------------------------------------------------
 -- debug
