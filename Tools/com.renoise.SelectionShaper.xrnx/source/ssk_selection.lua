@@ -359,7 +359,7 @@ function SSK_Selection:apply_range(sel_start,sel_end)
     end
     --print("extend_by",extend_by)
 
-    local bop = xSampleBufferOperation{
+    xSampleBufferOperation.run({
       instrument_index = self.owner.instrument_index,
       sample_index = self.owner.sample_index,
       restore_zoom = true,
@@ -384,8 +384,7 @@ function SSK_Selection:apply_range(sel_start,sel_end)
       on_error = function(err)
         TRACE("*** error message",err)
       end
-    }
-    bop:run()
+    })
   end
 
 end

@@ -60,7 +60,7 @@ function SSK_Modify:phase_shift_fine(frame)
     TRACE("[SSK_Modify:phase_shift_with_ratio] on_complete - ")
   end    
 
-  local bop = xSampleBufferOperation{
+  xSampleBufferOperation.run({
     instrument_index = self.owner.instrument_index,
     sample_index = self.owner.sample_index,
     restore_selection = true,
@@ -72,8 +72,7 @@ function SSK_Modify:phase_shift_fine(frame)
         frame=frame,
       },
     }
-  }
-  bop:run()
+  })
 
 end
 
@@ -86,7 +85,7 @@ function SSK_Modify:set_fade(fn,mod_fn)
   local buffer = self.owner:get_sample_buffer() 
   if buffer then 
 
-    local bop = xSampleBufferOperation{
+    xSampleBufferOperation.run({
       instrument_index = self.owner.instrument_index,
       sample_index = self.owner.sample_index,
       restore_selection = true,
@@ -102,8 +101,7 @@ function SSK_Modify:set_fade(fn,mod_fn)
       on_complete = function()
         TRACE("[set_fade] process_done")
       end
-    }
-    bop:run()
+    })
 
   end 
 end

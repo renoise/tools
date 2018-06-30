@@ -138,7 +138,7 @@ function SSK:make_wave(fn,mod_fn)
     return 
   end 
 
-  local bop = xSampleBufferOperation{
+  xSampleBufferOperation.run({
     instrument_index = self.instrument_index,
     sample_index = self.sample_index,
     restore_selection = true,
@@ -159,8 +159,7 @@ function SSK:make_wave(fn,mod_fn)
       end
 
     end 
-  }
-  bop:run()
+  })
 
 end
 
@@ -192,7 +191,7 @@ function SSK:copy_to_new()
     end
   end
 
-  local bop = xSampleBufferOperation{
+  xSampleBufferOperation.run({
     instrument_index = self.instrument_index,
     sample_index = self.sample_index,
     create_sample = true,
@@ -205,8 +204,7 @@ function SSK:copy_to_new()
       _bop_.sample.name = "#".._bop_.sample.name
       rns.selected_sample_index = _bop_.new_sample_index
     end
-  }
-  bop:run()
+  })
 
 end
 
@@ -271,7 +269,7 @@ function SSK:buffer_swap()
       end
     end
 
-    local bop = xSampleBufferOperation{
+    xSampleBufferOperation.run({
       instrument_index = self.instrument_index,
       sample_index = self.sample_index,
       --force_frames = range,
@@ -282,8 +280,7 @@ function SSK:buffer_swap()
       on_complete = function(_bop_)
         -- select the clipped range 
       end
-    }
-    bop:run()
+    })
     ]]
     
   end
@@ -299,7 +296,7 @@ function SSK:sweep_ins()
     return 
   end
 
-  local bop = xSampleBufferOperation{
+  xSampleBufferOperation.run({
     instrument_index = self.instrument_index,
     sample_index = self.sample_index,
     restore_selection = true,
@@ -313,9 +310,7 @@ function SSK:sweep_ins()
     on_complete = function()
       TRACE("[sweep_ins] process_done")
     end    
-  }
-
-  bop:run()
+  })
 
 end
 
@@ -329,7 +324,7 @@ function SSK:sync_del()
     return 
   end
 
-  local bop = xSampleBufferOperation{
+  xSampleBufferOperation.run({
     instrument_index = self.instrument_index,
     sample_index = self.sample_index,
     restore_selection = true,
@@ -343,9 +338,7 @@ function SSK:sync_del()
     on_complete = function()
       TRACE("[sync_del] process_done")
     end    
-  }
-
-  bop:run()
+  })
 
 end
 
@@ -361,7 +354,7 @@ function SSK:trim()
 
   local range = xSampleBuffer.get_selection_range(buffer)
 
-  local bop = xSampleBufferOperation{
+  xSampleBufferOperation.run({
     instrument_index = self.instrument_index,
     sample_index = self.sample_index,
     force_frames = range,
@@ -376,8 +369,7 @@ function SSK:trim()
       xSample.set_loop_all(sample)
       xSampleBuffer.select_all(sample.sample_buffer)
     end
-  }
-  bop:run()
+  })
 
 end
 
