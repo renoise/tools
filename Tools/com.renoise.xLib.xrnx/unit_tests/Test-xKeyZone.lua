@@ -54,10 +54,14 @@ _xlib_tests:insert({
     -- create multisample layout
     local note_steps,note_min,note_max = 7,0,48
     local vel_steps,vel_min,vel_max = 1,0,0x7F
-    local mappings = xKeyZone.create_multisample_layout(
-      note_steps,note_min,note_max,
-      vel_steps,vel_min,vel_max
-      )
+    local mappings = xKeyZone.create_multisample_layout({
+      note_steps = note_steps,
+      note_min = note_min,
+      note_max = note_max,
+      vel_steps = vel_steps,
+      vel_min = vel_min,
+      vel_max = vel_max
+    })
   
     rprint(mappings)
     assert(type(mappings)=="table")
