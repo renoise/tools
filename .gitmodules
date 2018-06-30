@@ -118,3 +118,6 @@
 [submodule "Tools/com.renoise.Noodletrap.xrnx/classes/vLib"]
 	path = Tools/com.renoise.Noodletrap.xrnx/classes/vLib
 	url = https://github.com/renoise/vLib.git
+[submodule "Tools/com.renoise.xCleaner.xrnx/source/Babbler"]
+	path = Tools/com.renoise.xCleaner.xrnx/source/Babbler
+	url = https://github.com/bjorn-nesby/org.oscillity.Babbler.git

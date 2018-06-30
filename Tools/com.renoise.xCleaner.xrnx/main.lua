@@ -34,6 +34,8 @@ cLib.require (_vlibroot.."vLib")
 cLib.require (_vlibroot.."vTable")
 cLib.require (_vlibroot.."vTabs")
 
+require ("source/Babbler/Babbler")
+
 require ("source/xCleaner")
 require ("source/xCleanerUI")
 
