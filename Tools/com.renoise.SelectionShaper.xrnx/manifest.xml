@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>5</ApiVersion>
+  <Id>com.renoise.SelectionShaper</Id>
+  <Version>3</Version>
+  <Author>danoise [danoise@renoise.com]</Author>
+  <Name>Selection Shaper Kai</Name>
+  <Category>sample</Category>
+  <Description>Generate and modify samples in Sample editor. The successor of 'org.uprime22.selection_shaper_kai by uprime22 &amp; satobox'</Description>
+</RenoiseScriptingTool>

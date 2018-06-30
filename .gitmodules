@@ -121,3 +121,12 @@
 [submodule "Tools/com.renoise.xCleaner.xrnx/source/Babbler"]
 	path = Tools/com.renoise.xCleaner.xrnx/source/Babbler
 	url = https://github.com/bjorn-nesby/org.oscillity.Babbler.git
+[submodule "Tools/com.renoise.SelectionShaper.xrnx/source/xLib"]
+	path = Tools/com.renoise.SelectionShaper.xrnx/source/xLib
+	url = https://github.com/renoise/xLib.git
+[submodule "Tools/com.renoise.SelectionShaper.xrnx/source/cLib"]
+	path = Tools/com.renoise.SelectionShaper.xrnx/source/cLib
+	url = https://github.com/renoise/cLib.git
+[submodule "Tools/com.renoise.SelectionShaper.xrnx/source/vLib"]
+	path = Tools/com.renoise.SelectionShaper.xrnx/source/vLib
+	url = https://github.com/renoise/vLib.git
