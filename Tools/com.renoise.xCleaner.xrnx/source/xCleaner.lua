@@ -101,16 +101,11 @@ function xCleaner:__init()
 
   -- string or nil
   self.user_specified_name = ""
-
-  -- table, (previously) generated names
-  self.generated_names = {}
-
   self.generated_name = nil
-
-  -- table, load names from external file
-  self.name_pool = loadfile('source/data/cumbria_fells.lua')
-  self.name_pool = self.name_pool()
-  --print(">>> xCleaner.name_pool",self.name_pool,rprint(self.name_pool))
+  
+  -- initialize babbler 
+  self.babbler = Babbler(loadfile('source/Babbler/data/cumbria_fells.lua')())
+  
 
   -- set initial prefs --------------
 
@@ -199,13 +194,13 @@ function xCleaner:fix_issues()
   self._ui:add_to_log(str,true)
 
   -- generate single random name
-  self.generated_name = self:generate_name()
-  self.generated_names = {}
+  self.generated_name = self.babbler:generate()
 
   -- processing function
   local process = function(instr_idx,fn_progress,fn_done)
+    --print("process - instr_idx,fn_progress,fn_done",instr_idx,fn_progress,fn_done)
     for k,xsample in ipairs(self.samples) do
-      self:fix_issue(instr,samples_tab_idx,xsamples,xsample.index,fn_progress)
+      self:fix_issue(instr_idx,samples_tab_idx,xsamples,xsample.index,fn_progress)
       if self.do_slice then
         coroutine.yield()
       end
@@ -240,7 +235,7 @@ function xCleaner:fix_issues()
 
   -- clear temp stuff
   self.generated_name = nil
-  self.generated_names = {}
+  self.babbler:reset()
 
 end
 --------------------------------------------------------------------------------
@@ -249,10 +244,12 @@ end
 -- @param tab_idx (int)
 -- @param data (table)
 -- @param item_idx (int)
+-- @param update_callback (function)
 
-function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
-  TRACE("xCleaner:fix_issue()",instr,tab_idx,data,item_idx,update_callback)
+function xCleaner:fix_issue(instr_idx,tab_idx,data,item_idx,update_callback)
+  TRACE("xCleaner:fix_issue(instr_idx,tab_idx,data,item_idx,update_callback)",instr_idx,tab_idx,data,item_idx,update_callback)
   
+  local instr = rns.instruments[instr_idx] 
   if not instr then
     LOG("*** xCleaner:fix_issue() - no instrument selected")
     return false
@@ -276,6 +273,7 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
       local name_tokens = xSample.get_name_tokens(sample.name)
       --print(">>> name_tokens...",rprint(name_tokens))
       if (options.samplename.value == xCleaner.SAMPLENAME.KEEP) then
+        --[[
         if name_tokens.plugin_type
           and name_tokens.plugin_name 
           and name_tokens.preset_name 
@@ -289,6 +287,7 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
         else
           str_name = sample.name
         end
+        ]]
       elseif (options.samplename.value == xCleaner.SAMPLENAME.CUSTOM) then
         str_name = self.user_specified_name
       elseif (options.samplename.value == xCleaner.SAMPLENAME.SHORTEN) then
@@ -302,7 +301,7 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
       elseif (options.samplename.value == xCleaner.SAMPLENAME.RANDOM) then
         str_name = cString.capitalize(self.generated_name)
       elseif (options.samplename.value == xCleaner.SAMPLENAME.RANDOM_ALL) then
-        str_name = cString.capitalize(self:generate_name())
+        str_name = cString.capitalize(self.babbler:generate())
       end
 
       -- add velocity/note
@@ -329,11 +328,11 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
 
     -- how to fix panning issue
     if xsample.channel_info then
-      if (xsample.channel_info == xSample.SAMPLE_INFO.PAN_LEFT) then
+      if (xsample.channel_info == xSampleBuffer.SAMPLE_INFO.PAN_LEFT) then
         channel_action = xSample.SAMPLE_CONVERT.MONO_LEFT
-      elseif (xsample.channel_info == xSample.SAMPLE_INFO.PAN_RIGHT) then
+      elseif (xsample.channel_info == xSampleBuffer.SAMPLE_INFO.PAN_RIGHT) then
         channel_action = xSample.SAMPLE_CONVERT.MONO_RIGHT
-      elseif (xsample.channel_info == xSample.SAMPLE_INFO.DUPLICATE) then
+      elseif (xsample.channel_info == xSampleBuffer.SAMPLE_INFO.DUPLICATE) then
         channel_action = xSample.SAMPLE_CONVERT.MONO_LEFT
       end
     end
@@ -342,8 +341,6 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
     if (xsample.bit_depth ~= xsample.bit_depth_actual) then
       bit_depth = xsample.bit_depth_actual
     end
-
-    --print("PRE channel_action,bit_depth,xsample.excess_data",channel_action,bit_depth,xsample.excess_data)
 
     -- do we have something to fix? 
     if channel_action 
@@ -359,11 +356,6 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
       end
 
       -- provide defaults
-      if not channel_action then
-        channel_action = (buffer.number_of_channels == 2) and
-          xSample.SAMPLE_CONVERT.STEREO or xSample.SAMPLE_CONVERT.MONO_LEFT
-      end
-
       if not bit_depth then
         bit_depth = xsample.bit_depth
       end
@@ -390,25 +382,29 @@ function xCleaner:fix_issue(instr,tab_idx,data,item_idx,update_callback)
         range.end_frame = sample.loop_end
       end
 
-      TRACE("POST instr,item_idx,bit_depth,channel_action,range",instr,item_idx,bit_depth,channel_action,range)
-      sample = xSample.convert_sample(instr,item_idx,bit_depth,channel_action,range)
-
-      -- hard panning: adjust on sample level
-      if (xsample.channel_info == xSample.SAMPLE_INFO.PAN_LEFT) then
-        sample.panning = 0
-      elseif (xsample.channel_info == xSample.SAMPLE_INFO.PAN_RIGHT) then
-        sample.panning = 1
-      end
-      
-      local issues_fixed = nil
-      self:collect_sample_info(instr,xsample,item_idx)
-      xsample.excess_data = false
-      xsample.excess_data = false
-      xsample.excess_data = false
-      xsample.summary,issues_fixed = cString.strip_line(xsample.summary,"\^ISSUE:")
-      if update_callback then
-        update_callback(xsample,tab_idx,issues_fixed)
-      end
+      sample = xSample.convert_sample(instr_idx,item_idx,{
+        bit_depth = bit_depth,
+        channel_action = channel_action,
+        range = range,
+      },function(new_sample)
+        
+        -- hard panning: adjust on sample level
+        if (xsample.channel_info == xSampleBuffer.SAMPLE_INFO.PAN_LEFT) then
+          new_sample.panning = 0
+        elseif (xsample.channel_info == xSampleBuffer.SAMPLE_INFO.PAN_RIGHT) then
+          new_sample.panning = 1
+        end
+        
+        local issues_fixed = nil
+        self:collect_sample_info(instr,xsample,item_idx)
+        xsample.excess_data = false
+        xsample.excess_data = false
+        xsample.excess_data = false
+        xsample.summary,issues_fixed = cString.strip_line(xsample.summary,"\^ISSUE:")
+        if update_callback then
+          update_callback(xsample,tab_idx,issues_fixed)
+        end        
+      end)
 
     end
 
@@ -616,35 +612,35 @@ function xCleaner:collect_sample_info(instr,item,sample_idx)
     num_channels = buffer.number_of_channels
     num_channels_actual = buffer.number_of_channels
     if xCleaner.find_channel_issues then
-      local channel_info = xSampleBuffer.get_channel_info(sample)
+      local channel_info = xSampleBuffer.get_channel_info(sample.sample_buffer)
       --print("channel_info",channel_info)
-      if (channel_info == xSample.SAMPLE_INFO.DUPLICATE) then
+      if (channel_info == xSampleBuffer.SAMPLE_INFO.DUPLICATE) then
         item.summary = item.summary ..
           "ISSUE: Reported as stereo, but seems to be in mono\n"
         num_channels_actual = 1
-      elseif (channel_info == xSample.SAMPLE_INFO.PAN_RIGHT) or 
-        (channel_info == xSample.SAMPLE_INFO.PAN_LEFT)
+      elseif (channel_info == xSampleBuffer.SAMPLE_INFO.PAN_RIGHT) or 
+        (channel_info == xSampleBuffer.SAMPLE_INFO.PAN_LEFT)
       then
         item.summary = item.summary ..
           "ISSUE: One of the channels are silent ('hard-panned')\n"
         num_channels_actual = 1
-      elseif (channel_info == xSample.SAMPLE_INFO.SILENT) then
+      elseif (channel_info == xSampleBuffer.SAMPLE_INFO.SILENT) then
         item.summary = item.summary ..
           "WARNING: The entire sample is silent \n"
         num_channels_actual = num_channels
-      elseif (channel_info == xSample.SAMPLE_INFO.MONO) then
+      elseif (channel_info == xSampleBuffer.SAMPLE_INFO.MONO) then
         num_channels_actual = 1
-      elseif (channel_info == xSample.SAMPLE_INFO.STEREO) then
+      elseif (channel_info == xSampleBuffer.SAMPLE_INFO.STEREO) then
         num_channels_actual = 2
       end
       item.channel_info = channel_info
 
       -- detect_leading_trailing_silence 
-      if (item.channel_info ~= xSample.SAMPLE_INFO.SILENT) then 
+      if (item.channel_info ~= xSampleBuffer.SAMPLE_INFO.SILENT) then 
         --local buffer = sample.sample_buffer
         local channels = (num_channels_actual == 2) 
-          and xSample.SAMPLE_CHANNELS.BOTH
-          or xSample.SAMPLE_CHANNELS.LEFT -- aka MONO
+          and xSampleBuffer.SAMPLE_CHANNELS.BOTH
+          or xSampleBuffer.SAMPLE_CHANNELS.LEFT -- aka MONO
         local threshold = options.detect_silence_threshold.value
         local leading,trailing = 
           xSampleBuffer.detect_leading_trailing_silence(buffer,channels,threshold)
@@ -692,7 +688,7 @@ function xCleaner:collect_sample_info(instr,item,sample_idx)
     bit_depth = buffer.bit_depth
     bit_depth_actual = buffer.bit_depth
     if xCleaner.find_actual_bit_depth then
-      bit_depth_actual = xSampleBuffer.get_bit_depth(sample)
+      bit_depth_actual = xSampleBuffer.get_bit_depth(sample.sample_buffer)
     end
   end
   item.bit_depth = bit_depth
@@ -700,7 +696,7 @@ function xCleaner:collect_sample_info(instr,item,sample_idx)
   item.bit_depth_display = (bit_depth == 0) and 
     xCleaner.NOT_AVAILABLE or bit_depth
   if (bit_depth ~= bit_depth_actual) then
-    if item.channel_info and (item.channel_info == xSample.SAMPLE_INFO.SILENT) then
+    if item.channel_info and (item.channel_info == xSampleBuffer.SAMPLE_INFO.SILENT) then
       -- silent sample, do not complain over bitrate
     else
       item.bit_depth_display = ("%d⚠"):format(bit_depth)
@@ -943,113 +939,6 @@ function xCleaner.count_tokens(t,token)
   end
   return count
   
-end
-
---------------------------------------------------------------------------------
--- random name generator
-
-function xCleaner:generate_name(str,iters,idx,once)
-  TRACE("xCleaner:generate_name(str,iters,idx,once)",str,iters,idx,once)
-
-  local vowels = {"a","e","i","o","u","y"}
-
-  if not str then
-    str = ""
-  end
-
-  local function enough_iters()
-    if once then
-      return true
-    else
-      return ((iters > 1) and (iters < 4)) and true or false
-    end
-  end
-
-  -- perhaps add a vowel at end? 
-  local function maybe_repeat(str)
-    if once then
-      return str
-    else
-      once = true
-      return (#str > 5) and str or str .. " " .. self:generate_name(nil,nil,nil,once)
-    end
-  end
-
-  -- perhaps add a vowel at end? 
-  local function maybe_vowel(str)
-    local dice = math.random(1,#vowels)
-    if (math.random(0,1) == 0) then
-      str = str .. vowels[dice]
-    end
-    return str
-  end
-
-
-  local function finalize(str)
-    return maybe_repeat(maybe_vowel(str))
-  end
-
-  --Pick a random word
-  local choice_idx = math.random(1,#self.name_pool)
-  local choice = self.name_pool[choice_idx]
-
-  -- Continue from index, or set to beginning
-  if not idx or (idx > #choice) then
-    idx = 1
-  end
-
-  --One character at a time
-  local grab_consonants = false
-  for k = idx,#choice do
-    local chr = string.sub(choice,k,k)
-    -- 1.continue until vowel
-    local is_vowel = table.find(table.values(vowels),chr)
-    if not is_vowel then
-      str = ("%s%s"):format(str,chr)
-    else -- is vowel  
-      if grab_consonants then          
-        -- 3. done grabbing consonants - switch or finish
-        if not iters then
-          iters = 1
-        elseif enough_iters() then
-          --print("*** 3. done grabbing consonants - finish",str)
-          return finalize(str)
-        end
-        iters = iters + 1
-        --print("*** 3. done grabbing consonants - switch",str,iters,k)
-        return self:generate_name(str,iters,k,once)
-      end
-
-      str = ("%s%s"):format(str,chr)
-      -- 2. grab succeeding consonants 
-      grab_consonants = true
-      --print("*** 2. grab succeeding consonants ")
-    end
-
-  end
-
-  if not iters then
-    iters = 1
-  end
-
-  if enough_iters() then
-    if table.find(self.generated_names,str) then
-      -- avoid duplicate names (start over)
-      --print("*** 5. duplicate name - start over")
-      return self:generate_name(nil,nil,nil,once)
-    end
-    --print("*** 4. done",str)
-    table.insert(self.generated_names,str)
-    return finalize(str)
-  else
-    if once then
-      return str
-    else
-      --print("*** 4. not done yet - ",str,iters)
-      return str .. self:generate_name(str,iters,nil,once)
-    end
-  end
-
 end
 
 --------------------------------------------------------------------------------
