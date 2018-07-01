@@ -153,10 +153,12 @@ function SSK:make_wave(fn,mod_fn)
     },
     on_complete = function(new_buffer)
       TRACE("[make_wave] process_done - new_buffer",new_buffer)
-      -- attempt to load config 
+      -- TODO save properties
+      --[[
       if self.instrument then 
         SSK_Config.save_to_instrument(self)
       end
+      ]]
 
     end 
   })

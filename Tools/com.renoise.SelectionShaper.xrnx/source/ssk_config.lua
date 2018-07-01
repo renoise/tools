@@ -113,6 +113,7 @@ end
 ---------------------------------------------------------------------------------------------------
 -- save/update configuration
 
+--[[
 function SSK_Config.save_to_instrument(ssk)
   assert(type(ssk)=="SSK")
   assert(type(ssk.instrument)=="Instrument")
@@ -137,7 +138,8 @@ function SSK_Config.save_to_instrument(ssk)
   end
 
   print("saved config")
-
+  
 end
+]]
 
 
