@@ -35,7 +35,8 @@ SSK_Gui.DIALOG_WIDTH = 400
 SSK_Gui.DIALOG_MARGIN = 3
 SSK_Gui.DIALOG_SPACING = 3
 SSK_Gui.INPUT_WIDTH = 80
-SSK_Gui.LABEL_WIDTH = 64
+SSK_Gui.LABEL_WIDTH = 74
+SSK_Gui.ADVANCED_LEFT_PAD = 60
 SSK_Gui.FORMULA_WIDTH = 120
 SSK_Gui.TOGGLE_SIZE = 16
 SSK_Gui.KEYZONE_HEIGHT = 120
@@ -51,7 +52,8 @@ SSK_Gui.ITEM_HEIGHT = 20
 SSK_Gui.NULL_SPACING = -3
 SSK_Gui.SMALL_BT_WIDTH = 32
 SSK_Gui.WIDE_BT_WIDTH = 60
-SSK_Gui.TALL_BT_HEIGHT = 18
+SSK_Gui.TALL_BT_HEIGHT = 21
+SSK_Gui.TALL_BT_COLOR = {0,0,0} -- SSK_Gui.COLOR_DESELECTED
 SSK_Gui.ROW_STYLE = "invisible" --"body"
 SSK_Gui.ROW_SPACING = 0
 SSK_Gui.ROW_MARGIN = 1
@@ -479,7 +481,11 @@ function SSK_Gui:update_panel_visibility()
   local vb = self.vb
   vb.views.ssk_selection_panel.visible = prefs.display_selection_panel.value
   vb.views.ssk_generate_panel.visible = prefs.display_generate_panel.value
+  vb.views.ssk_generate_advanced.visible = prefs.display_generate_panel.value
+  vb.views.ssk_generate_advanced_panel.visible = prefs.display_generate_advanced.value
   vb.views.ssk_modify_panel.visible = prefs.display_modify_panel.value
+  vb.views.ssk_modify_advanced.visible = prefs.display_modify_panel.value
+  vb.views.ssk_modify_advanced_panel.visible = prefs.display_modify_advanced.value
   vb.views.ssk_multisample_editor.visible = prefs.multisample_mode.value
 end
 
@@ -523,6 +529,7 @@ function SSK_Gui:update_generate_panel()
 
   vb.views.ssk_generate_random_bt.active = can_generate
   vb.views.ssk_generate_repeat_random_bt.active = (can_generate and can_repeat_rnd) and true or false
+  vb.views.ssk_generate_repeat_random_bt.color = (can_generate and can_repeat_rnd) and SSK_Gui.COLOR_SELECTED or SSK_Gui.COLOR_DESELECTED
   vb.views.ssk_generate_white_noise_bt.active = can_generate
   vb.views.ssk_generate_brown_noise_bt.active = can_generate
   vb.views.ssk_generate_violet_noise_bt.active = can_generate
@@ -532,18 +539,15 @@ function SSK_Gui:update_generate_panel()
   vb.views.ssk_generate_triangle_wave_bt.active = can_generate
 
   -- highlight recently generated 
-  local recent_sin = (self.owner.generator.recently_generated == cWaveform.FORM.SIN)
-  local recent_saw = (self.owner.generator.recently_generated == cWaveform.FORM.SAW)
-  local recent_square = (self.owner.generator.recently_generated == cWaveform.FORM.SQUARE)
-  local recent_triangle = (self.owner.generator.recently_generated == cWaveform.FORM.TRIANGLE)
-  vb.views.ssk_generate_sin_wave_bt.color = 
-    prefs.auto_generate.value and recent_sin and SSK_Gui.COLOR_SELECTED or SSK_Gui.COLOR_NONE
-  vb.views.ssk_generate_saw_wave_bt.color = 
-    prefs.auto_generate.value and recent_saw and SSK_Gui.COLOR_SELECTED or SSK_Gui.COLOR_NONE
-  vb.views.ssk_generate_square_wave_bt.color = 
-    prefs.auto_generate.value and recent_square and SSK_Gui.COLOR_SELECTED or SSK_Gui.COLOR_NONE
-  vb.views.ssk_generate_triangle_wave_bt.color = 
-    prefs.auto_generate.value and recent_triangle and SSK_Gui.COLOR_SELECTED or SSK_Gui.COLOR_NONE
+  local recent = self.owner.generator.recently_generated
+  local recent_sin = (recent == cWaveform.FORM.SIN)
+  local recent_saw = (recent == cWaveform.FORM.SAW)
+  local recent_square = (recent == cWaveform.FORM.SQUARE)
+  local recent_triangle = (recent == cWaveform.FORM.TRIANGLE)
+  vb.views.ssk_generate_sin_wave_bt.color = recent_sin and SSK_Gui.COLOR_SELECTED or SSK_Gui.COLOR_DESELECTED
+  vb.views.ssk_generate_saw_wave_bt.color = recent_saw and SSK_Gui.COLOR_SELECTED or SSK_Gui.COLOR_DESELECTED
+  vb.views.ssk_generate_square_wave_bt.color = recent_square and SSK_Gui.COLOR_SELECTED or SSK_Gui.COLOR_DESELECTED
+  vb.views.ssk_generate_triangle_wave_bt.color = recent_triangle and SSK_Gui.COLOR_SELECTED or SSK_Gui.COLOR_DESELECTED
 
 end
 
@@ -1492,7 +1496,7 @@ function SSK_Gui:build_generate_panel()
       width = SSK_Gui.DIALOG_INNER_WIDTH,
     },
     self:build_panel_header("Generate",function()
-    end,prefs.display_generate_panel),
+    end,prefs.display_generate_panel,prefs.display_generate_advanced,"ssk_generate_advanced"),
     vb:column{
       id = "ssk_generate_panel",
       visible = false,
@@ -1500,12 +1504,14 @@ function SSK_Gui:build_generate_panel()
         vb:text{
           width = SSK_Gui.LABEL_WIDTH,
           text = "Random",
+          align = "right",
         },
         vb:button{
           id = "ssk_generate_random_bt",
           bitmap = self.btmp.run_random,
           width = SSK_Gui.WIDE_BT_WIDTH,
           height = SSK_Gui.TALL_BT_HEIGHT,
+          color = SSK_Gui.TALL_BT_COLOR,
           text = 'Random',
           tooltip = "Apply random waves to the selected range",
           notifier = function()
@@ -1514,9 +1520,10 @@ function SSK_Gui:build_generate_panel()
         },
         vb:button{
           id = "ssk_generate_repeat_random_bt",
-          width = SSK_Gui.WIDE_BT_WIDTH,
+          --width = SSK_Gui.WIDE_BT_WIDTH,
           height = SSK_Gui.TALL_BT_HEIGHT,
-          text = "Repeat",
+          color = SSK_Gui.TALL_BT_COLOR,
+          text = "↲",
           tooltip = "Apply the last generated random wave to the selected range",
           notifier = function()
             self.owner.generator:repeat_random_wave()
@@ -1527,6 +1534,7 @@ function SSK_Gui:build_generate_panel()
         vb:text{
           width = SSK_Gui.LABEL_WIDTH,
           text = "Noise",
+          align = "right",
         },
         self:build_white_noise(),
         self:build_brown_noise(), 
@@ -1538,6 +1546,7 @@ function SSK_Gui:build_generate_panel()
         vb:text{
           width = SSK_Gui.LABEL_WIDTH,
           text = "Wave",
+          align = "right",
         },
         self:build_sin_2pi(),
         self:build_saw_wave(),
@@ -1549,8 +1558,9 @@ function SSK_Gui:build_generate_panel()
       },
       vb:row{
         vb:space{
-          width = 20,
+          width = SSK_Gui.ADVANCED_LEFT_PAD,
         },
+        id = "ssk_generate_advanced_panel",
         vb:column{
           vb:row{
             tooltip = "When enabled, changes to cycle/shift etc. will automatically"
@@ -1687,10 +1697,8 @@ function SSK_Gui:build_modify_panel()
     vb:space{
       width = SSK_Gui.DIALOG_INNER_WIDTH,
     },
-    vb:row{
       self:build_panel_header("Modify",function()
-      end,prefs.display_modify_panel),
-    },    
+      end,prefs.display_modify_panel,prefs.display_modify_advanced,"ssk_modify_advanced"),
     vb:column{    
       id = "ssk_modify_panel",
       visible = false, 
@@ -1702,6 +1710,7 @@ function SSK_Gui:build_modify_panel()
           vb:text{
             text = "Shift",
             width = SSK_Gui.LABEL_WIDTH,
+            align = "right",
           },
           self:build_phase_shift_plus(),
           self:build_phase_shift_minus(),
@@ -1715,12 +1724,14 @@ function SSK_Gui:build_modify_panel()
           vb:text{
             text = "Center",
             width = SSK_Gui.LABEL_WIDTH,
+            align = "right",
           },
           vb:button{
             id = "ssk_generate_fade_center_a_bt",
             width = SSK_Gui.WIDE_BT_WIDTH,
             bitmap = self.btmp.center_fade,
             height = SSK_Gui.TALL_BT_HEIGHT,
+            color = SSK_Gui.TALL_BT_COLOR,
             tooltip = "Fade center",
             notifier = function()
               self.owner.modify:set_fade(SSK_Modify.center_fade_fn)
@@ -1731,6 +1742,7 @@ function SSK_Gui:build_modify_panel()
             width = SSK_Gui.WIDE_BT_WIDTH,
             bitmap = self.btmp.center_amplify,
             height = SSK_Gui.TALL_BT_HEIGHT,
+            color = SSK_Gui.TALL_BT_COLOR,
             tooltip = "Amplify center",
             notifier = function()
               self.owner.modify:set_fade(SSK_Modify.center_amplify_fn)
@@ -1745,12 +1757,14 @@ function SSK_Gui:build_modify_panel()
           vb:text{
             text = "Multiply",
             width = SSK_Gui.LABEL_WIDTH,
+            align = "right",
           },
           vb:button{
             id = "ssk_generate_multiply_lower_bt",
             width = SSK_Gui.WIDE_BT_WIDTH,
             bitmap = self.btmp.multiply_lower,
             height = SSK_Gui.TALL_BT_HEIGHT,
+            color = SSK_Gui.TALL_BT_COLOR,
             tooltip = "Lower amplitude",
             notifier = function()
               self.owner.modify:set_fade(SSK_Modify.multiply_lower_fn)
@@ -1761,6 +1775,7 @@ function SSK_Gui:build_modify_panel()
             width = SSK_Gui.WIDE_BT_WIDTH,
             bitmap = self.btmp.multiply_raise,
             height = SSK_Gui.TALL_BT_HEIGHT,
+            color = SSK_Gui.TALL_BT_COLOR,
             tooltip = "Raise amplitude",
             notifier = function()
               self.owner.modify:set_fade(SSK_Modify.multiply_raise_fn)
@@ -1775,12 +1790,14 @@ function SSK_Gui:build_modify_panel()
           vb:text{
             text = "Fade",
             width = SSK_Gui.LABEL_WIDTH,
+            align = "right",
           },
           vb:button{
             id = "ssk_generate_fade_in_bt",
             width = SSK_Gui.WIDE_BT_WIDTH,
             bitmap = self.btmp.fade_in,
             height = SSK_Gui.TALL_BT_HEIGHT,
+            color = SSK_Gui.TALL_BT_COLOR,
             tooltip = "Fade in",
             notifier = function()
               self.owner.modify:set_fade(SSK_Modify.fade_in_fn)
@@ -1791,6 +1808,7 @@ function SSK_Gui:build_modify_panel()
             width = SSK_Gui.WIDE_BT_WIDTH,
             bitmap = self.btmp.fade_out,
             height = SSK_Gui.TALL_BT_HEIGHT,
+            color = SSK_Gui.TALL_BT_COLOR,
             tooltip = "Fade out",
             notifier = function()
               self.owner.modify:set_fade(SSK_Modify.fade_out_fn)
@@ -1814,6 +1832,7 @@ function SSK_Gui:build_modify_panel()
             width = SSK_Gui.WIDE_BT_WIDTH,
             bitmap = self.btmp.resize_expand,
             height = SSK_Gui.TALL_BT_HEIGHT,
+            color = SSK_Gui.TALL_BT_COLOR,
             tooltip = "Expand selection",
             notifier = function()
               self.owner:resize_expand()
@@ -1824,6 +1843,7 @@ function SSK_Gui:build_modify_panel()
             width = SSK_Gui.WIDE_BT_WIDTH,
             bitmap = self.btmp.resize_shrink,
             height = SSK_Gui.TALL_BT_HEIGHT,
+            color = SSK_Gui.TALL_BT_COLOR,
             tooltip = "Shrink selection",
             notifier = function()
               self.owner:resize_shrink()
@@ -1839,6 +1859,7 @@ function SSK_Gui:build_modify_panel()
           vb:text{
             text = "Ringmod",
             width = SSK_Gui.LABEL_WIDTH,
+            align = "right",
           },
           self:build_ring_mod_sin(),
           self:build_ring_mod_saw(),
@@ -1849,6 +1870,7 @@ function SSK_Gui:build_modify_panel()
             text = "PD Copy",
             width = SSK_Gui.WIDE_BT_WIDTH,
             height = SSK_Gui.TALL_BT_HEIGHT,
+            color = SSK_Gui.TALL_BT_COLOR,
             tooltip = SSK_Gui.MSG_COPY_PD,
             notifier = function()
               self.owner.modify:pd_copy()
@@ -1856,8 +1878,9 @@ function SSK_Gui:build_modify_panel()
           },
         },
         vb:row{      
+          id = "ssk_modify_advanced_panel",          
           vb:space{
-            width = SSK_Gui.ITEM_HEIGHT,
+            width = SSK_Gui.ADVANCED_LEFT_PAD,
           },        
           self:build_fade_cycle_shift_set(), 
           vb:space{
@@ -1880,8 +1903,9 @@ function SSK_Gui:build_selection_start_row()
 
   return vb:row{ 
     vb:text{
-      width = SSK_Gui.LABEL_WIDTH - SSK_Gui.TOGGLE_SIZE - 2,
-      text = "Start"
+      width = SSK_Gui.LABEL_WIDTH,
+      text = "Start",
+      align = "right",
     },    
     vb:button{
       text = "➙",
@@ -1941,8 +1965,9 @@ function SSK_Gui:build_selection_length_row()
 
   return vb:row{ 
     vb:text{
-      width = SSK_Gui.LABEL_WIDTH - SSK_Gui.TOGGLE_SIZE - 2,
-      text = "Length"
+      width = SSK_Gui.LABEL_WIDTH,
+      text = "Length",
+      align = "right",
     },    
     vb:button{
       text = "➙",
@@ -2032,6 +2057,7 @@ function SSK_Gui:build_sin_2pi()
     width = SSK_Gui.WIDE_BT_WIDTH,
     bitmap = self.btmp.sin_2pi,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     tooltip = "Draw sin wave.",
     notifier = function()
       self.owner.generator:sine_wave()
@@ -2049,6 +2075,7 @@ function SSK_Gui:build_saw_wave()
     width = SSK_Gui.WIDE_BT_WIDTH,
     bitmap = self.btmp.saw,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     tooltip = "Draw saw wave.",
     notifier = function()
       self.owner.generator:saw_wave()
@@ -2066,6 +2093,7 @@ function SSK_Gui:build_square_wave()
     width = SSK_Gui.WIDE_BT_WIDTH,
     bitmap = self.btmp.square,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     tooltip = "Draw square wave.",
     notifier = function()
       self.owner.generator:square_wave()
@@ -2082,6 +2110,7 @@ function SSK_Gui:build_triangle_wave()
     width = SSK_Gui.WIDE_BT_WIDTH,
     bitmap = self.btmp.triangle,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     tooltip = "Draw triangle wave.",
     notifier = function()
       self.owner.generator:triangle_wave()
@@ -2101,6 +2130,7 @@ function SSK_Gui:build_cycle_shift_set()
       vb:text{
         text = "Cycle",
         width = SSK_Gui.SMALL_LABEL_WIDTH,
+        align = "right",
       },
       vb:textfield{
         id = 'mod_cycle',
@@ -2122,6 +2152,7 @@ function SSK_Gui:build_cycle_shift_set()
       vb:text{
         text = "Shift",
         width = SSK_Gui.SMALL_LABEL_WIDTH,
+        align = "right",
       },
       vb:valuebox{
         id = 'mod_shift',
@@ -2172,6 +2203,7 @@ function SSK_Gui:build_duty_cycle()
       },  
       vb:text{
         text = "Duty cycle",
+        align = "right",
       },  
     },
     -- Input duty cycle 
@@ -2179,6 +2211,7 @@ function SSK_Gui:build_duty_cycle()
       vb:text{
         text = "Cycle",
         width = SSK_Gui.SMALL_LABEL_WIDTH,
+        align = "right",
       },
       vb:valuebox{
         id = 'duty_fiducial',
@@ -2213,6 +2246,7 @@ function SSK_Gui:build_duty_cycle()
       vb:text{
         text = "Var",
         width = SSK_Gui.SMALL_LABEL_WIDTH,
+        align = "right",
       },
       vb:valuebox{
         id = 'duty_variation',
@@ -2238,6 +2272,7 @@ function SSK_Gui:build_duty_cycle()
       vb:text{
         text = "Freq",
         width = SSK_Gui.SMALL_LABEL_WIDTH,
+        align = "right",
       },
       vb:valuebox{
         id = 'duty_var_frq',
@@ -2266,6 +2301,7 @@ function SSK_Gui:build_white_noise()
     id = "ssk_generate_white_noise_bt",
     width = SSK_Gui.WIDE_BT_WIDTH,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     bitmap = self.btmp.white_noise,
     tooltip = "White noise",
     notifier = function()
@@ -2281,6 +2317,7 @@ function SSK_Gui:build_brown_noise()
     id = "ssk_generate_brown_noise_bt",
     width = SSK_Gui.WIDE_BT_WIDTH,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     bitmap = self.btmp.brown_noise,
     tooltip = "Brown noise",
     notifier = function()
@@ -2296,6 +2333,7 @@ function SSK_Gui:build_violet_noise()
     id = "ssk_generate_violet_noise_bt",
     width = SSK_Gui.WIDE_BT_WIDTH,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     bitmap = self.btmp.violet_noise,
     tooltip = "Violet noise",
     notifier = function()
@@ -2311,6 +2349,7 @@ function SSK_Gui:build_pink_noise()
   return self.vb:button{
     width = SSK_Gui.WIDE_BT_WIDTH,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     tooltip = "Pink noise",
     notifier = function()
       self.owner:make_wave(cWaveform.pink_noise_fn)
@@ -2329,6 +2368,7 @@ function SSK_Gui:build_phase_shift_plus()
   return self.vb:button{
     id = "ssk_generate_shift_plus_bt",
     width = SSK_Gui.WIDE_BT_WIDTH,
+    color = SSK_Gui.TALL_BT_COLOR,
     bitmap = self.btmp.phase_shift_plus,
     tooltip = "Phase shift +1/24",
     notifier = function()
@@ -2344,6 +2384,7 @@ function SSK_Gui:build_phase_shift_minus()
   return self.vb:button{
     id = "ssk_generate_shift_minus_bt",
     width = SSK_Gui.WIDE_BT_WIDTH,
+    color = SSK_Gui.TALL_BT_COLOR,
     bitmap = self.btmp.phase_shift_minus,
     tooltip = "Phase shift -1/24",
     notifier = function()
@@ -2359,6 +2400,7 @@ function SSK_Gui:build_phase_shift_fine_plus()
   return self.vb:button{
     id = "ssk_generate_shift_plus_fine_bt",
     width = SSK_Gui.WIDE_BT_WIDTH,
+    color = SSK_Gui.TALL_BT_COLOR,
     bitmap = self.btmp.phase_shift_fine_plus,
     tooltip = "Phase shift +1sample",
     notifier = function()
@@ -2374,6 +2416,7 @@ function SSK_Gui:build_phase_shift_fine_minus()
   return self.vb:button{
     id = "ssk_generate_shift_minus_fine_bt",
     width = SSK_Gui.WIDE_BT_WIDTH,
+    color = SSK_Gui.TALL_BT_COLOR,
     bitmap = self.btmp.phase_shift_fine_minus,
     tooltip = "Phase shift -1sample",
     notifier = function()
@@ -2391,6 +2434,7 @@ function SSK_Gui:build_ring_mod_sin()
     width = SSK_Gui.WIDE_BT_WIDTH,
     bitmap = self.btmp.ring_mod_sin,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     tooltip = "Fade (Ring modulation) with sin",
     notifier = function()
       self.owner.modify:fade_mod_sin()
@@ -2407,6 +2451,7 @@ function SSK_Gui:build_ring_mod_saw()
     width = SSK_Gui.WIDE_BT_WIDTH,
     bitmap = self.btmp.ring_mod_saw,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     tooltip = "Fade (Ring modulation) witn saw",
     notifier = function()
       self.owner.modify:fade_mod_saw()
@@ -2423,6 +2468,7 @@ function SSK_Gui:build_ring_mod_square()
     width = SSK_Gui.WIDE_BT_WIDTH,
     bitmap = self.btmp.ring_mod_square,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     tooltip = "Fade (Ring modulation) witn square",
     notifier = function()
       self.owner.modify:fade_mod_square()
@@ -2439,6 +2485,7 @@ function SSK_Gui:build_ring_mod_triangle()
     width = SSK_Gui.WIDE_BT_WIDTH,
     bitmap = self.btmp.ring_mod_triangle,
     height = SSK_Gui.TALL_BT_HEIGHT,
+    color = SSK_Gui.TALL_BT_COLOR,
     tooltip = "Fade (Ring modulation) witn triangle",
     notifier = function()
       self.owner.modify:fade_mod_triangle()
@@ -2737,20 +2784,51 @@ end
 ]]
 
 ---------------------------------------------------------------------------------------------------
--- Make random waves
+-- @param title: string
+-- @param cb_binding: value of panel visibility checkbox
+-- @param cb_advanced_binding: value of "advanced" checkbox
+-- @param cb_advanced_id: id of "advanced" row 
 
-function SSK_Gui:build_panel_header(title,callback,cb_binding)
-  return self.vb:row{
-    self.vb:checkbox{
-      bind = cb_binding,
-      width = SSK_Gui.TOGGLE_SIZE,
-      height = SSK_Gui.TOGGLE_SIZE,        
-      notifier = callback, 
+function SSK_Gui:build_panel_header(title,callback,cb_binding,cb_advanced_binding,cb_advanced_id)
+  local cb_advanced = nil
+  print("cb_advanced_binding",cb_advanced_binding,type(cb_advanced_binding))
+  if (type(cb_advanced_binding) == "ObservableBoolean")  then 
+    print("cb_advanced_id",cb_advanced_id)
+    cb_advanced = 
+    self.vb:row{
+      self.vb:row{
+        id = cb_advanced_id,
+        self.vb:checkbox{
+          bind = cb_advanced_binding,
+          notifier = function()
+            self:update_panel_visibility()
+          end,
+        },
+        self.vb:text{
+          text = "Advanced"
+        }
+      }
+    }
+  else    
+    -- empty view for justified layout
+    cb_advanced = self.vb:row{}
+  end
+  
+  return self.vb:horizontal_aligner{
+    mode = "justify",
+    self.vb:row{
+      self.vb:checkbox{
+        bind = cb_binding,
+        width = SSK_Gui.TOGGLE_SIZE,
+        height = SSK_Gui.TOGGLE_SIZE,
+        notifier = callback,
+      },
+      self.vb:text{
+        text = title,
+        font = SSK_Gui.PANEL_HEADER_FONT,
+      },
     },
-    self.vb:text{
-      text = title,
-      font = SSK_Gui.PANEL_HEADER_FONT,
-    },
+    cb_advanced
   }  
 end 
 
