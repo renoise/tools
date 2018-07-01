@@ -15,7 +15,8 @@ _xlib_tests:insert({
     --require (_xlibroot.."xPatternSequencer")
     --require (_xlibroot.."xParameterAutomation")
     cLib.require (_xlibroot.."xAudioDeviceAutomation")
-    _trace_filters = {"^xAudioDeviceAutomation","^xParameterAutomation"}
+    
+    _trace_filters = {"^xAudioDevice*","^xParameter*"}
       
     -----------------------------------------------------------------------------------------------
     -- prepare
@@ -30,7 +31,7 @@ _xlib_tests:insert({
     -- create devices and some automation across a couple of patterns...
 
     local prepare = function ()
-      print("prepare")
+      print(">>> prepare")
 
       -- create two patterns 
 
@@ -116,9 +117,11 @@ _xlib_tests:insert({
     -- copy/paste between two identical devices 
     -- (src range spans two patterns, pasting should use src range)
 
-    local device_auto = xAudioDevice.copy_automation(src_track_idx,src_device_idx,src_range)
-    local success,err = xAudioDevice.paste_automation(device_auto,src_track_idx,dest_device_idx)
-    print(err)
+    local device_auto = 
+      xAudioDevice.copy_automation(src_track_idx,src_device_idx,src_range)
+    
+    local success,err = 
+      xAudioDevice.paste_automation(device_auto,src_track_idx,dest_device_idx,src_range)
     assert(success,err) -- ?? why no logging of err 
 
     -- copy/paste between incompatible devices (should fail)

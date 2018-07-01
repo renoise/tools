@@ -73,7 +73,8 @@ fn = function()
   assert(success == false)
 
   -- using instance as constructor argument  
-
+  -- (ensure that values are copied, not a reference)
+  
   xline = xLine(xline_def)
   assert(xline.note_columns[1].note_value == 48)
   xline2 = xLine(xline)
