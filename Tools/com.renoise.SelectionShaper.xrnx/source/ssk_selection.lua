@@ -279,6 +279,10 @@ end
 function SSK_Selection:is_perfect_trail()
   TRACE("SSK_Selection:is_perfect_trail()")
 
+  if (self.length_offset == 0) then 
+    return true
+  end
+  
   local as_os_fx = self:display_as_os_fx()
   if as_os_fx then 
     local tmp = self.start_offset
@@ -616,7 +620,7 @@ function SSK_Selection:get_hz_from_range()
   assert(type(sample)=="Sample")
 
   local sel_hz = buffer.sample_rate/xSampleBuffer.get_selection_range(buffer) 
-  local transp_hz = cLib.note_to_hz(xSample.get_transpose(sample))
+  local transp_hz = cLib.note_to_hz(xSample.get_transposed_note(48,sample))
   local base_hz = cLib.note_to_hz(48) 
   return (transp_hz / base_hz) * sel_hz
 
