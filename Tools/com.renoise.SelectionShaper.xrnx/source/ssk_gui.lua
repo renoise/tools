@@ -518,7 +518,7 @@ function SSK_Gui:update_generate_panel()
 
   local can_generate_multisample = self.owner.generator:can_generate_multisample()
   local can_generate = self.owner:get_sample_buffer() and true or can_generate_multisample
-  local can_repeat_rnd = self.owner.random_wave_fn 
+  local can_repeat_rnd = self.owner.generator.random_wave_fn 
   local vb = self.vb
 
   vb.views.ssk_generate_random_bt.active = can_generate
@@ -880,7 +880,7 @@ function SSK_Gui:update_selection_strip()
       elseif is_perfect_lead then
         -- get length for each individual segment
         -- (avoid rounding artifacts)
-        seg_start,seg_end = self.owner:get_nth_segment_by_offset(k-1,num_segments)        
+        seg_start,seg_end = self.owner.selection:get_nth_segment_by_offset(k-1,num_segments)        
         segment_length = seg_end-seg_start
         --print("segment_length",segment_length,seg_end,seg_start)
       end
@@ -1250,7 +1250,7 @@ function SSK_Gui:select_by_segment(idx,strip)
 
   if is_perfect_lead and is_perfect_trail and not self.display_buffer_as_loop then 
     -- select by offset index 
-    local seg_start,seg_end = self.owner:get_nth_segment_by_offset(idx-1,#strip.items)
+    local seg_start,seg_end = self.owner.selection:get_nth_segment_by_offset(idx-1,#strip.items)
     sample.sample_buffer.selection_range = {seg_start,seg_end}
   else
     -- select by assigned weight 
@@ -1509,7 +1509,7 @@ function SSK_Gui:build_generate_panel()
           text = 'Random',
           tooltip = "Apply random waves to the selected range",
           notifier = function()
-            self.owner:random_wave()
+            self.owner.generator:random_wave()
           end
         },
         vb:button{
@@ -1519,7 +1519,7 @@ function SSK_Gui:build_generate_panel()
           text = "Repeat",
           tooltip = "Apply the last generated random wave to the selected range",
           notifier = function()
-            self.owner:repeat_random_wave()
+            self.owner.generator:repeat_random_wave()
           end
         },
       },
