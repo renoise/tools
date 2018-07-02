@@ -628,7 +628,7 @@ function SSK_Selection:get_hz_from_range()
   assert(type(sample)=="Sample")
 
   local frames = xSampleBuffer.get_selection_range(buffer) 
-  return cConvert.frames_to_hz(frames,buffer.sample_rate,xSample.get_transpose(sample))
+  return cConvert.frames_to_hz(frames,buffer.sample_rate,xSample.get_transposed_note(sample))
 
 end
 
