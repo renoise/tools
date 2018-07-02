@@ -55,7 +55,7 @@ fn = function()
   assert(#xline.effect_columns == 1)
   assert(xline.effect_columns[1].number_string == "0S")
   assert(xline.effect_columns[1].amount_string == "80")
-  
+
   -- confirm that constructor table is dereferenced 
 
   xline_def.note_columns = {
@@ -78,12 +78,8 @@ fn = function()
   xline = xLine(xline_def)
   assert(xline.note_columns[1].note_value == 48)
   xline2 = xLine(xline)
-  --print("xline.note_columns[1]",xline.note_columns[1])
-  --print("xline2.note_columns[1]",xline2.note_columns[1])
   xline.note_columns[1].note_value = 42
   assert(xline.note_columns[1].note_value == 42)
-  --print("xline.note_columns[1].note_value",xline2.note_columns[1].note_value)
-  --print("xline2.note_columns[1].note_value",xline2.note_columns[1].note_value)
   assert(xline2.note_columns[1].note_value == 48)
 
   -- testing sparse note-columns 
@@ -100,7 +96,6 @@ fn = function()
   assert(xline.note_columns[1].note_value == 1)
   assert(xline.note_columns[2].note_value == nil)
   assert(xline.note_columns[3].note_value == nil)
-  rprint("xline.note_columns")
   assert(xline.note_columns[4].note_value == 4)
   assert(xline.note_columns[5].note_value == 5)
   
