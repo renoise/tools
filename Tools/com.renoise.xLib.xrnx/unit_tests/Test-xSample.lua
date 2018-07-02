@@ -268,7 +268,7 @@ _xlib_tests:insert({
     assert(type(tokens)=="table")
     assert(tokens.plugin_name == "Synth1 VST")
     assert(tokens.preset_name == "Honky Piano")
-    assert(tokens.velocity == "")
+    assert(tokens.velocity == nil)
     assert(tokens.note == nil)
     
     
