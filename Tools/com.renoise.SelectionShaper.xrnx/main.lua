@@ -37,6 +37,7 @@ _vlibroot = 'source/vLib/classes/'
 _xlibroot = 'source/xLib/classes/'
 
 require (_clibroot..'cLib')
+require (_clibroot..'cConvert')
 require (_clibroot..'cDebug')
 require (_clibroot..'cTable')
 require (_clibroot..'cString')
