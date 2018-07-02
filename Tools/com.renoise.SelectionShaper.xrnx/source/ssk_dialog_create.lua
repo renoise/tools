@@ -313,16 +313,16 @@ function SSK_Dialog_Create:update()
 
   local num_frames = nil
   if note_determines_length then 
-    num_frames = cLib.note_to_frames(note,sample_rate,tuning_hz)
+    num_frames = cConvert.note_to_frames(note,sample_rate,tuning_hz)
     vb.views.ssk_length_from_note.value = num_frames
     vb.views.ssk_length_as_frames.value = num_frames
   else 
     num_frames = vb.views.ssk_length_as_frames.value
     if (num_frames == 0) then 
       -- specify default value (C-0 with current rate/tuning)
-      num_frames = cLib.note_to_frames(0,sample_rate,tuning_hz)
+      num_frames = cConvert.note_to_frames(0,sample_rate,tuning_hz)
     end 
-    local note = cLib.hz_to_note(sample_rate/num_frames,tuning_hz)
+    local note = cConvert.hz_to_note(sample_rate/num_frames,tuning_hz)
     print("note",note)
     vb.views.ssk_note_from_frames.text = xNoteColumn.note_value_to_string(note)
   end
