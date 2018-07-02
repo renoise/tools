@@ -399,8 +399,8 @@ function xRulesUIAction:create_row(k,v,args)
 
   self.vb_value_valuefield = vb:valuefield{
     visible = args.show_valuefield or false,
-    min = args.value_min or -99999,
-    max = args.value_max or 99999,
+    min = args.value_min or -cLib.HUGE_INT,
+    max = args.value_max or cLib.HUGE_INT,
     tostring = args.fn_tostring,
     tonumber = args.fn_tonumber,
     value = type(v) == "number" and v or 0,

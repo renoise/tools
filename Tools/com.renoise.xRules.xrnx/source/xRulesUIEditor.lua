@@ -1089,7 +1089,7 @@ function xRulesUIEditor.get_maximum_value(msg_type,value_idx)
   elseif msg_type then
     return 16383
   else
-    return 9999999 -- a "big" number
+    return cLib.HUGE_INT
   end
 
 end

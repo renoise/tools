@@ -739,8 +739,8 @@ function xRulesAppDialogPrefs:create_dialog()
       {key = "NAME",      col_width="auto", col_type=vTable.CELLTYPE.TEXTFIELD,   notifier=handle_name},
       {key = "ADDRESS",   col_width=90,     col_type=vTable.CELLTYPE.TEXTFIELD,   notifier=handle_address},
       {key = "PREFIX",    col_width=70,     col_type=vTable.CELLTYPE.TEXTFIELD,   notifier=handle_prefix}, 
-      {key = "PORT_IN",   col_width=60,     col_type=vTable.CELLTYPE.VALUEBOX,    notifier=handle_port_in,  min = 0,  max = 99999},
-      {key = "PORT_OUT",  col_width=60,     col_type=vTable.CELLTYPE.VALUEBOX,    notifier=handle_port_out, min = 0,  max = 99999},
+      {key = "PORT_IN",   col_width=60,     col_type=vTable.CELLTYPE.VALUEBOX,    notifier=handle_port_in,  min = 0,  max = cLib.HUGE_INT},
+      {key = "PORT_OUT",  col_width=60,     col_type=vTable.CELLTYPE.VALUEBOX,    notifier=handle_port_out, min = 0,  max = cLib.HUGE_INT},
       {key = "REMOVE",    col_width=20,     col_type=vTable.CELLTYPE.BUTTON,      notifier=remove_device,   text = "Remove"},
     },
     data = {}

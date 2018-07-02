@@ -278,7 +278,7 @@ function ControlMap:get_params(group_name,index)
   if group_name and string.find(group_name,ControlMap.WILDCARD_PATTERN) then
 
     -- loop through "more than enough" groups
-    for count=1,9999 do
+    for count=1,cLib.HUGE_INT do
 
       local tmp_group_name = (group_name):gsub(ControlMap.WILDCARD_PATTERN,count)
       --print("tmp_group_name",tmp_group_name)

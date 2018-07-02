@@ -78,8 +78,8 @@ xStreamUI.EDIT_RACK_MARGIN = 40
 xStreamUI.SMALL_VERTICAL_MARGIN = 6
 xStreamUI.MIN_SPACING = -3
 
-xStreamUI.ARGS_MIN_VALUE = -99999
-xStreamUI.ARGS_MAX_VALUE = 99999
+xStreamUI.ARGS_MIN_VALUE = -cLib.HUGE_INT
+xStreamUI.ARGS_MAX_VALUE = cLib.HUGE_INT
 
 xStreamUI.ICON_COMPACT = "./source/icons/minimize.bmp"
 xStreamUI.ICON_EXPANDED = "./source/icons/maximize.bmp"
