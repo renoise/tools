@@ -121,12 +121,39 @@ function SSK:delete_sample()
 end
 
 ---------------------------------------------------------------------------------------------------
--- show the 'insert/create' dialog ...
+-- show the 'insert/create' dialog 
+-- @param xmap (xSampleMapping), create config based on selected mapping 
 
-function SSK:insert_sample()
-  TRACE("SSK:insert_sample()")
-  self.create_dialog:show()
+function SSK:insert_sample(xmap)
+  TRACE("SSK:insert_sample(xmap)",xmap)
+
+  local xsample = nil
+  if xmap then 
+    local srate = self:get_sample_rate()
+    local num_frames = cConvert.note_to_frames(xmap.base_note,srate)
+    xsample = xSample{
+      sample_buffer = {
+        number_of_frames = num_frames
+      },
+      sample_mapping = xmap,
+    }
+  else 
+    xsample = xSample() -- using default props
+  end
+
+  self.create_dialog:show(xsample)
 end
+
+---------------------------------------------------------------------------------------------------
+-- get current sample rate (active sample or default)
+
+function SSK:get_sample_rate()
+
+  local buffer = self:get_sample_buffer() 
+  return buffer and buffer.sample_rate or xSampleBuffer.DEFAULT_SAMPLE_RATE
+
+end
+
 
 ---------------------------------------------------------------------------------------------------
 -- Generate sample data from a function
