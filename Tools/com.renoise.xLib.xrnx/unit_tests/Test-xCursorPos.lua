@@ -139,7 +139,7 @@ fn = function()
   -- bad positions
 
   local notepos = xCursorPos{
-    sequence = 9999,
+    sequence = cLib.HUGE_INT,
     track = 2,
     line = 16,
     column = 2,
@@ -149,7 +149,7 @@ fn = function()
 
   local notepos = xCursorPos{
     sequence = 1,
-    track = 9999,
+    track = cLib.HUGE_INT,
     line = 16,
     column = 2,
   }
@@ -159,7 +159,7 @@ fn = function()
   local notepos = xCursorPos{
     sequence = 1,
     track = 1,
-    line = 9999,
+    line = cLib.HUGE_INT,
     column = 2,
   }
   local column,err = notepos:get_column()
@@ -169,7 +169,7 @@ fn = function()
     sequence = 1,
     track = 1,
     line = 1,
-    column = 9999, 
+    column = cLib.HUGE_INT, 
   }
   local column,err = notepos:get_column()
   assert(not column,"Unexpected match")
