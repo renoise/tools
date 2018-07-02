@@ -23,7 +23,6 @@ SSK_Prefs.MAX_VEL_STEPS = xSampleMapping.MAX_VELOCITY
 SSK_Prefs.DEFAULT_EXTEND_NOTES = true
 
 ---------------------------------------------------------------------------------------------------
--- constructor, 
 
 function SSK_Prefs:__init()
   TRACE("SSK_Prefs:__init()")
@@ -42,7 +41,7 @@ function SSK_Prefs:__init()
   self:add_property("auto_generate", renoise.Document.ObservableBoolean(false))
   self:add_property("multisample_mode", renoise.Document.ObservableBoolean(false))
   self:add_property("safe_mode", renoise.Document.ObservableBoolean(true))
-  
+
   -- create dialog 
   self:add_property("length_mode", renoise.Document.ObservableNumber(440))
   self:add_property("tuning_hz", renoise.Document.ObservableNumber(SSK_Dialog_Create.LENGTH_MODE.SAMPLES))
@@ -56,7 +55,7 @@ function SSK_Prefs:__init()
   self:add_property("multiply_setend", renoise.Document.ObservableString(""))
   self:add_property("flick_paste", renoise.Document.ObservableBoolean(false))
 
-  -- multisample_note_min
+  -- multisample layout
   self:add_property("multisample_note_min",renoise.Document.ObservableNumber(0))
   self:add_property("multisample_note_max",renoise.Document.ObservableNumber(0))
   self:add_property("multisample_note_steps",renoise.Document.ObservableNumber(0))
@@ -101,7 +100,8 @@ end
 
 function SSK_Prefs:reset()
 
-    self.display_selection_as.value = 1 --SSK_Gui.DISPLAY_AS
+    self.display_selection_as.value = 3 -- SSK_Gui.DISPLAY_AS.SAMPLES
+    self.multiply_setend.value = "2"
 
     self.multisample_note_min.value = xSampleMapping.MIN_NOTE
     self.multisample_note_max.value = xSampleMapping.MAX_NOTE
@@ -111,11 +111,6 @@ function SSK_Prefs:reset()
     self.multisample_vel_steps.value = xKeyZone.DEFAULT_VEL_STEPS
 
     self.A4hz.value = 440
-    --self.sel_start_frames.value = "1"
-    --self.sel_start_beats.value = "0"
-    --self.sel_length_frames.value = "168"
-    --self.sel_length_beats.value = "1"
-    self.multiply_setend.value = "2"
     self.mod_cycle.value = "1"
     self.mod_shift.value = 0
     self.mod_duty_onoff.value = false
