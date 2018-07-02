@@ -287,6 +287,10 @@ end
 function SSK_Selection:is_perfect_trail()
   TRACE("SSK_Selection:is_perfect_trail()")
 
+  if (self.length_offset == 0) then 
+    return true
+  end
+  
   local as_os_fx = self:display_as_os_fx()
   if as_os_fx then 
     local tmp = self.start_offset
@@ -367,7 +371,7 @@ function SSK_Selection:apply_range(sel_start,sel_end)
     end
     --print("extend_by",extend_by)
 
-    local bop = xSampleBufferOperation{
+    xSampleBufferOperation.run({
       instrument_index = self.owner.instrument_index,
       sample_index = self.owner.sample_index,
       restore_zoom = true,
@@ -392,8 +396,7 @@ function SSK_Selection:apply_range(sel_start,sel_end)
       on_error = function(err)
         TRACE("*** error message",err)
       end
-    }
-    bop:run()
+    })
   end
 
 end
