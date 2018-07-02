@@ -66,6 +66,7 @@ function SSK:__init(prefs)
   --- SSK_Dialog_Create
   self.create_dialog = SSK_Dialog_Create{
     dialog_title = "Create a new sample",
+    owner = self,
   }
 
   -- == Observables ==

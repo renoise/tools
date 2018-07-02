@@ -42,7 +42,12 @@ function SSK_Prefs:__init()
   self:add_property("auto_generate", renoise.Document.ObservableBoolean(false))
   self:add_property("multisample_mode", renoise.Document.ObservableBoolean(false))
   self:add_property("safe_mode", renoise.Document.ObservableBoolean(true))
-
+  
+  -- create dialog 
+  self:add_property("length_mode", renoise.Document.ObservableNumber(440))
+  self:add_property("tuning_hz", renoise.Document.ObservableNumber(SSK_Dialog_Create.LENGTH_MODE.SAMPLES))
+  
+  
   -- misc
   self:add_property("A4hz", renoise.Document.ObservableNumber(0))
   self:add_property("sig",renoise.Document.ObservableNumber(0))

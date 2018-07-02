@@ -57,6 +57,8 @@ require (_xlibroot..'xPersistentSettings')
 require (_xlibroot..'xInstrument')
 require (_xlibroot..'xNoteColumn')
 
+require ('source/ssk_dialog_create')
+
 -- load preferences before some ssk_* classes 
 require ('source/ssk_prefs')
 renoise.tool().preferences = SSK_Prefs()
@@ -69,7 +71,6 @@ require ('source/ssk_gui_keyzone')
 require ('source/ssk_selection')
 require ('source/ssk_generator')
 require ('source/ssk_modify')
-require ('source/ssk_dialog_create')
 require ('source/ssk')
 
 
