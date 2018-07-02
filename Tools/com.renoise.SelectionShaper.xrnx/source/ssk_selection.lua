@@ -37,8 +37,16 @@ function SSK_Selection:__init(owner)
   self.length_offset = 0
 
   --- Multiplying range
-  self.multiply_setend = cReflection.evaluate_string(self.prefs.multiply_setend.value)
+  self.multiply_setend = 2
+  
+  --- observables ---------------------
 
+  local function apply_multiply_setend()
+    self.multiply_setend = cReflection.evaluate_string(self.prefs.multiply_setend.value)
+  end
+
+  self.prefs.multiply_setend:add_notifier(apply_multiply_setend)
+  apply_multiply_setend()
   
 end 
 
@@ -279,10 +287,6 @@ end
 function SSK_Selection:is_perfect_trail()
   TRACE("SSK_Selection:is_perfect_trail()")
 
-  if (self.length_offset == 0) then 
-    return true
-  end
-  
   local as_os_fx = self:display_as_os_fx()
   if as_os_fx then 
     local tmp = self.start_offset
@@ -350,7 +354,7 @@ function SSK_Selection:apply_range(sel_start,sel_end)
   else
     -- extend sample beyond start/end 
     local extend_at_end = (sel_start > 0)
-    print("*** extend_at_end",extend_at_end)
+    --print("*** extend_at_end",extend_at_end)
     local loop_start = self.owner.sample.loop_start
     local loop_end = self.owner.sample.loop_end    
     local extend_by
@@ -363,7 +367,7 @@ function SSK_Selection:apply_range(sel_start,sel_end)
     end
     --print("extend_by",extend_by)
 
-    xSampleBufferOperation.run({
+    local bop = xSampleBufferOperation{
       instrument_index = self.owner.instrument_index,
       sample_index = self.owner.sample_index,
       restore_zoom = true,
@@ -388,7 +392,8 @@ function SSK_Selection:apply_range(sel_start,sel_end)
       on_error = function(err)
         TRACE("*** error message",err)
       end
-    })
+    }
+    bop:run()
   end
 
 end
@@ -619,10 +624,8 @@ function SSK_Selection:get_hz_from_range()
   local sample = self.owner.sample   
   assert(type(sample)=="Sample")
 
-  local sel_hz = buffer.sample_rate/xSampleBuffer.get_selection_range(buffer) 
-  local transp_hz = cLib.note_to_hz(xSample.get_transposed_note(48,sample))
-  local base_hz = cLib.note_to_hz(48) 
-  return (transp_hz / base_hz) * sel_hz
+  local frames = xSampleBuffer.get_selection_range(buffer) 
+  return cConvert.frames_to_hz(frames,buffer.sample_rate,xSample.get_transpose(sample))
 
 end
 
@@ -642,7 +645,7 @@ function SSK_Selection.string_to_frames(str,ini_hz,sample_rate)
   if not st or (st > 119) then 
     return cReflection.evaluate_string(str)
   else 
-    return cLib.note_to_frames(st,sample_rate,ini_hz)
+    return cConvert.note_to_frames(st,sample_rate,ini_hz)
   end
 end
 
