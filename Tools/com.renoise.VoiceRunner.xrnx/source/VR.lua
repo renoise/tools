@@ -338,8 +338,6 @@ function VR:do_sort(scope,template)
     error("Unexpected scope")
   end
 
-  print("*** VR:do_sort - rslt,err",rslt,err)
-
   if err then
     if (err == xVoiceSorter.ERROR_CODE.TOO_MANY_COLS) then
       if not self.ui then 
@@ -348,7 +346,6 @@ function VR:do_sort(scope,template)
       end
       if self.ui then 
         self.ui:show_too_many_cols_dialog(function(template)
-          print("triggered callback - template",rprint(template.entries))
           self:do_sort(scope,template)
         end)
       else 
