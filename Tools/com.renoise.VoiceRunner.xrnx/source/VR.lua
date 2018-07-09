@@ -124,97 +124,114 @@ function VR:__init(...)
     unique_instrument = self.prefs.unique_instrument.value,
   }
 
-  --- configure user-interface
-  self.ui = VR_UI{
-    dialog_title = self.app_display_name,
-    owner = self,
-    waiting_to_show_dialog = self.prefs.autostart.value,
-  }
+  --- VR_UI 
+  self.ui = nil
 
-  -- notifications --------------------
+end
 
-  renoise.tool().app_new_document_observable:add_notifier(function()
-    rns = renoise.song()
-  end)
+--------------------------------------------------------------------------------
+-- enter live mode: add notifiers and build GUI
 
-  self.prefs.select_all_columns:add_notifier(function()
-    self.select_all_columns = self.prefs.select_all_columns.value
-  end)
+function VR:launch()
 
-  self.prefs.toggle_line_selection:add_notifier(function()
-    self.toggle_line_selection = self.prefs.toggle_line_selection.value
-    self.select_all_columns = self.prefs.select_all_columns.value
-  end)
-
-  self.prefs.safe_mode:add_notifier(function()
-    self.safe_mode = self.prefs.safe_mode.value
-  end)
-
-  -- xVoiceSorter
-
-  self.prefs.sort_mode:add_notifier(function()
-    self.xsorter.sort_mode = self.prefs.sort_mode.value
-  end)
-
-  self.prefs.sort_method:add_notifier(function()
-    self.xsorter.sort_method = self.prefs.sort_method.value
-  end)
-
-  self.prefs.unique_instrument:add_notifier(function()
-    self.xsorter.unique_instrument = self.prefs.unique_instrument.value
-  end)
-
-  -- xVoiceRunner
-
-  self.prefs.remove_orphans:add_notifier(function()
-    self.runner.remove_orphans = self.prefs.remove_orphans.value
-  end)
-
-  self.prefs.split_at_note:add_notifier(function()
-    self.runner.split_at_note = self.prefs.split_at_note.value
-  end)
-
-  self.prefs.split_at_note_change:add_notifier(function()
-    self.runner.split_at_note_change = self.prefs.split_at_note_change.value
-  end)
-
-  self.prefs.split_at_instrument_change:add_notifier(function()
-    self.runner.split_at_instrument_change = self.prefs.split_at_instrument_change.value
-  end)
-
-  self.prefs.link_ghost_notes:add_notifier(function()
-    self.runner.link_ghost_notes = self.prefs.link_ghost_notes.value
-  end)
-
-  self.prefs.link_glide_notes:add_notifier(function()
-    self.runner.link_glide_notes = self.prefs.link_glide_notes.value
-  end)
-
-  self.prefs.stop_at_note_off:add_notifier(function()
-    self.runner.stop_at_note_off = self.prefs.stop_at_note_off.value
-  end)
-
-  self.prefs.stop_at_note_cut:add_notifier(function()
-    self.runner.stop_at_note_cut = self.prefs.stop_at_note_cut.value
-  end)
-
-  self.prefs.create_noteoffs:add_notifier(function()
-    self.runner.create_noteoffs = self.prefs.create_noteoffs.value
-  end)
-
-  self.prefs.close_open_notes:add_notifier(function()
-    self.runner.close_open_notes = self.prefs.close_open_notes.value
-  end)
+  if not self.ui then 
+    
+    self.ui = VR_UI{
+      dialog_title = self.app_display_name,
+      owner = self,
+      waiting_to_show_dialog = self.prefs.autostart.value,
+    }
+      
+    self.prefs.select_all_columns:add_notifier(function()
+      self.select_all_columns = self.prefs.select_all_columns.value
+    end)
   
-  self.prefs.reveal_subcolumns:add_notifier(function()
-    self.runner.reveal_subcolumns = self.prefs.reveal_subcolumns.value
-  end)
+    self.prefs.toggle_line_selection:add_notifier(function()
+      self.toggle_line_selection = self.prefs.toggle_line_selection.value
+      self.select_all_columns = self.prefs.select_all_columns.value
+    end)
+  
+    self.prefs.safe_mode:add_notifier(function()
+      self.safe_mode = self.prefs.safe_mode.value
+    end)
+  
+    -- xVoiceSorter
+  
+    self.prefs.sort_mode:add_notifier(function()
+      self.xsorter.sort_mode = self.prefs.sort_mode.value
+    end)
+  
+    self.prefs.sort_method:add_notifier(function()
+      self.xsorter.sort_method = self.prefs.sort_method.value
+    end)
+  
+    self.prefs.unique_instrument:add_notifier(function()
+      self.xsorter.unique_instrument = self.prefs.unique_instrument.value
+    end)
+  
+    -- xVoiceRunner
+  
+    self.prefs.remove_orphans:add_notifier(function()
+      self.runner.remove_orphans = self.prefs.remove_orphans.value
+    end)
+  
+    self.prefs.split_at_note:add_notifier(function()
+      self.runner.split_at_note = self.prefs.split_at_note.value
+    end)
+  
+    self.prefs.split_at_note_change:add_notifier(function()
+      self.runner.split_at_note_change = self.prefs.split_at_note_change.value
+    end)
+  
+    self.prefs.split_at_instrument_change:add_notifier(function()
+      self.runner.split_at_instrument_change = self.prefs.split_at_instrument_change.value
+    end)
+  
+    self.prefs.link_ghost_notes:add_notifier(function()
+      self.runner.link_ghost_notes = self.prefs.link_ghost_notes.value
+    end)
+  
+    self.prefs.link_glide_notes:add_notifier(function()
+      self.runner.link_glide_notes = self.prefs.link_glide_notes.value
+    end)
+  
+    self.prefs.stop_at_note_off:add_notifier(function()
+      self.runner.stop_at_note_off = self.prefs.stop_at_note_off.value
+    end)
+  
+    self.prefs.stop_at_note_cut:add_notifier(function()
+      self.runner.stop_at_note_cut = self.prefs.stop_at_note_cut.value
+    end)
+  
+    self.prefs.create_noteoffs:add_notifier(function()
+      self.runner.create_noteoffs = self.prefs.create_noteoffs.value
+    end)
+  
+    self.prefs.close_open_notes:add_notifier(function()
+      self.runner.close_open_notes = self.prefs.close_open_notes.value
+    end)
+    
+    self.prefs.reveal_subcolumns:add_notifier(function()
+      self.runner.reveal_subcolumns = self.prefs.reveal_subcolumns.value
+    end)
+  
+  
+    -- initialize -----------------------
+  
+    self.ui:build()
+  
+  end
+  
+  self.ui:show()
+    
+end
 
 
-  -- initialize -----------------------
+--------------------------------------------------------------------------------
+-- exit live mode: release notifiers 
 
-  self.ui:build()
-
+function VR:shutdown()
+  
 end
 
 --------------------------------------------------------------------------------
@@ -268,12 +285,14 @@ end
 function VR:do_sort(scope,template)
   TRACE("VR:do_sort(scope,template)",scope,template)
 
-  if self.ui.dialog_too_many_cols 
-    and self.ui.dialog_too_many_cols.visible
-  then
-    self.ui.dialog_too_many_cols:close()
-  end
-
+  if self.ui then
+    if self.ui.dialog_too_many_cols 
+      and self.ui.dialog_too_many_cols.visible
+    then
+      self.ui.dialog_too_many_cols:close()
+    end
+  end 
+  
   if not scope then
     scope = self.prefs.selected_scope.value
   end
@@ -307,10 +326,16 @@ function VR:do_sort(scope,template)
 
   if err then
     if (err == xVoiceSorter.ERROR_CODE.TOO_MANY_COLS) then
-      self.ui:show_too_many_cols_dialog(function(template)
-        --print("triggered callback - template",rprint(template.entries))
-        self:do_sort(scope,template)
-      end)
+      if self.ui then 
+        self.ui:show_too_many_cols_dialog(function(template)
+          --print("triggered callback - template",rprint(template.entries))
+          self:do_sort(scope,template)
+        end)
+      else 
+        renoise.app():show_warning("It is not possible to create > 12 note columns - "
+      .."\nplease execute this action from the VoiceRunner GUI, " 
+      .."\nwhere you can pick which notes to keep.")
+      end
     elseif (err == xVoiceSorter.ERROR_CODE.CANT_PRESERVE_EXISTING) then
       renoise.app():show_warning("Can't preserve existing notes outside selection")
     else

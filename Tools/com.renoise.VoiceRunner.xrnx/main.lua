@@ -59,13 +59,13 @@ require ('source/VR_Template')
 -- Variables
 --------------------------------------------------------------------------------
 
-local voicerunner
-local prefs = VR_Prefs()
-renoise.tool().preferences = prefs
-
 APP_DISPLAY_NAME = "VoiceRunner"
 
-
+local prefs = VR_Prefs()
+renoise.tool().preferences = prefs
+local voicerunner = VR{
+  app_display_name = APP_DISPLAY_NAME,
+}
 
 --------------------------------------------------------------------------------
 -- Menu entries & MIDI/Key mappings
@@ -472,13 +472,7 @@ renoise.tool():add_midi_mapping {
 function show()
 
   rns = renoise.song()
-  if not voicerunner then
-    voicerunner = VR{
-      app_display_name = APP_DISPLAY_NAME,
-    }
-  end
-
-  voicerunner.ui:show()
+  voicerunner:launch()
 
 end
 
@@ -494,4 +488,10 @@ renoise.tool().app_new_document_observable:add_notifier(function()
     show()
   end
 
+end)
+
+-- notifications --------------------
+
+renoise.tool().app_new_document_observable:add_notifier(function()
+  rns = renoise.song()
 end)
