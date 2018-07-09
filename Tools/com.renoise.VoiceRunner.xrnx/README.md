@@ -64,8 +64,8 @@ Should give results that are both _readable_ (columns generally sorted by low-to
 **Unique Method**    
 The unique sorting method will examine the pattern and fit every note it encounters within a dedicated note-column. Use this mode to sort e.g. drum-tracks, where each note-column can represent a unique sound in the drumkit. 
 
-**Custom Method**   
-This mode is planned and will allow custom note/instrument combinations + column names. 
+**Compact Method**   
+This mode is a compromise between the normal and unique method. 
 
 ### Buttons
 
