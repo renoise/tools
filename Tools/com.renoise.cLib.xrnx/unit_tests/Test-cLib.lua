@@ -60,13 +60,15 @@ _tests:insert({
     assert(cLib.clamp_value(0,100,200) == 100)
     assert(cLib.clamp_value(0,-200,-100) == -100)
     
-    --[[
-    assert(cLib.wrap_value(10,0,9) == 0)
-    assert(cLib.wrap_value(30,0,19) == 10)
-    assert(cLib.wrap_value(300,0,199) == 100)
-    print(">>>",cLib.wrap_value(128,64,127))
+    assert(cLib.wrap_value(0,0,10) == 0)
+    assert(cLib.wrap_value(1,0,10) == 1)
+    assert(cLib.wrap_value(1,5,9) == 5)
     assert(cLib.wrap_value(128,64,127) == 65)
-    ]]
+    assert(cLib.wrap_value(9.66,5,9) == 5.66)
+    assert(cLib.wrap_value(300,0,200) == 100)
+    assert(cLib.wrap_value(-300,0,200) == 100)
+    assert(cLib.wrap_value(300,0,-200) == -100)
+    assert(cLib.wrap_value(3,-10,-20) == -17)
     
     assert(cLib.sign(0) == 1)
     --assert(cLib.sign(-0) == -1) 
