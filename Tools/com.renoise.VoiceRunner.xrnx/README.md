@@ -65,7 +65,7 @@ Should give results that are both _readable_ (columns generally sorted by low-to
 The unique sorting method will examine the pattern and fit every note it encounters within a dedicated note-column. Use this mode to sort e.g. drum-tracks, where each note-column can represent a unique sound in the drumkit. 
 
 **Compact Method**   
-This mode is a compromise between the normal and unique method. 
+This mode is a compromise between the normal and unique method. It is a non-destructive sorting mode that reconstructs the pattern data, line by line. Unlike the normal sort, notes can appear "across columns", but will always respect the high-low or low-high direction on each individual line. 
 
 ### Buttons
 
