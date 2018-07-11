@@ -16,6 +16,7 @@ This tool provides handy features for working with sample-slices
 rns = nil
 _trace_filters = nil
 --_trace_filters = {".*"}
+--_trace_filters = {"^SliceMate","^xSample"}
 --_trace_filters = {"^SliceMate","^xLinePattern","^xSample","^xPhrase"}
 
 _clibroot = 'source/cLib/classes/'
@@ -35,6 +36,7 @@ cLib.require (_xlibroot..'xLine')
 cLib.require (_xlibroot..'xLinePattern')
 cLib.require (_xlibroot..'xTrack')
 cLib.require (_xlibroot..'xPatternSequencer')
+cLib.require (_xlibroot..'xPhrase')
 cLib.require (_xlibroot..'xSongPos')
 cLib.require (_xlibroot..'xKeyZone')
 cLib.require (_xlibroot..'xBlockLoop')
