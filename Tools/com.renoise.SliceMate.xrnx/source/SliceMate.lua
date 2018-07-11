@@ -388,15 +388,6 @@ function SliceMate.is_sliceable(instr,attempt_fix)
     end
   end
 
-  -- TODO support beatsync (different pitch)
-  if sample.beat_sync_enabled then
-    if attempt_fix then 
-      sample.beat_sync_enabled = false 
-    else
-      return false, "Please disable beat-sync on the sample"
-    end
-  end
-
   return true
 
 end
@@ -725,6 +716,7 @@ function SliceMate:insert_slice()
 
         instr.samples[1]:insert_slice_marker(frame)
         slice_idx = xInstrument.get_slice_marker_at_pos(instr,frame,snap)
+        local new_sample = instr.samples[slice_idx+1]
 
         -- if we just added the first slice, modify the source note 
         -- (the note does not change automatically)
@@ -737,9 +729,20 @@ function SliceMate:insert_slice()
         -- properties of the slice that they were derived from 
         -- (usually, they inherit from the root sample)
         if (#instr.samples > 1) then          
-          local new_sample = instr.samples[slice_idx+1]
           cReflection.copy_object_properties(sample,new_sample)
           xSample.set_loop_all(new_sample)
+        end
+        
+        -- in order to keep the playback speed of a beat-synced sample, 
+        -- we need to modify the #lines of both the old and new sample
+        if sample.beat_sync_enabled then 
+          
+          local num_lines_old = xSample.get_lines_spanned(sample,sample.sample_mapping.base_note)
+          local num_lines_new = xSample.get_lines_spanned(new_sample,new_sample.sample_mapping.base_note)
+          
+          sample.beat_sync_lines = cLib.round_value(num_lines_old)
+          new_sample.beat_sync_lines = cLib.round_value(num_lines_new)
+          
         end
 
       end
@@ -1040,6 +1043,9 @@ function SliceMate:attach_to_sample()
 
   self._sample_observables:insert(sample.beat_sync_enabled_observable)
   sample.beat_sync_enabled_observable:add_notifier(self, update)
+  
+  self._sample_observables:insert(sample.beat_sync_lines_observable)
+  sample.beat_sync_lines_observable:add_notifier(self, update)
 
   self._sample_observables:insert(sample.fine_tune_observable)
   sample.fine_tune_observable:add_notifier(self, update)
