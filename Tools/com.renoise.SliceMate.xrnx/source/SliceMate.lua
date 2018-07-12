@@ -703,6 +703,7 @@ function SliceMate:insert_slice()
       return false, ("Unable to insert slice:\n%s"):format(sample_idx) -- error message
     elseif sample_idx then
       local instr = rns.instruments[instr_idx]
+      local root_sample = instr.samples[1]
       local sample = instr.samples[sample_idx]
 
       if (frame == 0) then
@@ -741,12 +742,15 @@ function SliceMate:insert_slice()
         end 
 
         -- beatsync: remember the length of the "old" slice 
-        slice_idx = xInstrument.get_slice_marker_after_pos(instr,frame)
-        local next_sample = instr.samples[slice_idx+1]
-        local old_num_frames = nil
+        local num_frames = nil
+        local add_to_end = false
         if sample.beat_sync_enabled then 
-          old_num_frames =  sample.sample_buffer.number_of_frames - 
-            next_sample.sample_buffer.number_of_frames
+          local prev_slice_idx,prev_marker = xInstrument.get_slice_marker_before_pos(instr,frame)
+          local next_slice_idx,next_marker = xInstrument.get_slice_marker_after_pos(instr,frame)
+          add_to_end = not next_marker and true or false
+          local prev_marker = prev_marker or 0
+          local next_marker = next_marker or root_sample.sample_buffer.number_of_frames
+          num_frames = next_marker - prev_marker
         end                
         
         instr.samples[1]:insert_slice_marker(frame)
@@ -772,8 +776,14 @@ function SliceMate:insert_slice()
         -- in order to keep the playback speed of a beat-synced sample, 
         -- we need to modify the #lines of both the old and new sample
         if sample.beat_sync_enabled then 
-          local ratio = old_num_frames/frame_within_slice
-          local sync_lines = sample.beat_sync_lines
+          local ratio = num_frames/frame_within_slice
+          local sync_lines = nil
+          if not add_to_end then 
+            local ratio_2 = root_sample.sample_buffer.number_of_frames/num_frames
+            sync_lines = cLib.round_value(root_sample.beat_sync_lines / ratio_2)
+          else 
+            sync_lines = sample.beat_sync_lines
+          end
           local lines = cLib.round_value(sync_lines / ratio)
           if (slice_idx > 1) then     
             -- only adjust beat-sync if not the first sample
