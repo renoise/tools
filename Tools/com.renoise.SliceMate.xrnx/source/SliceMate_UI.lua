@@ -197,9 +197,17 @@ function SliceMate_UI:update_instrument()
         end
       end
     else 
-      -- position in sample 
-      str_status = (frame == -1) and "-" or ("%d / %d"):format(frame,root_frame)
-      str_status = ("Pos: %s"):format(str_status)
+      local sample = self.owner:get_sample() 
+      if sample and sample.beat_sync_enabled then 
+        -- position in sample (lines)
+        local exceed = (self.owner.lines_travelled >= sample.beat_sync_lines)
+        str_status = ("%d / %d"):format(self.owner.lines_travelled,sample.beat_sync_lines)
+        str_status = ("Lines: %s %s"):format(str_status,exceed and "⚠" or "")
+      else
+        -- position in sample (frames)
+        str_status = (frame == -1) and "-" or ("%d / %d"):format(frame,root_frame)
+        str_status = ("Pos: %s"):format(str_status)
+      end
     end
     ctrl.tooltip = str_status
     ctrl.text = str_status
