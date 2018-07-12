@@ -201,7 +201,7 @@ function SliceMate_UI:update_instrument()
       if sample and sample.beat_sync_enabled then 
         -- position in sample (lines)
         local exceed = (self.owner.lines_travelled >= sample.beat_sync_lines)
-        str_status = ("%d / %d"):format(self.owner.lines_travelled,sample.beat_sync_lines)
+        str_status = ("%d / %d"):format(self.owner.lines_travelled+1,sample.beat_sync_lines)
         str_status = ("Lines: %s %s"):format(str_status,exceed and "⚠" or "")
       else
         -- position in sample (frames)
