@@ -255,6 +255,7 @@ end
 -- 
 
 function SliceMate:remove_active_slice()
+  TRACE("SliceMate:remove_active_slice()")
 
   if (self.instrument_index.value == 0) then 
     return false,"No active instrument to remove slice from"
@@ -276,9 +277,32 @@ function SliceMate:remove_active_slice()
 
   local marker_pos = xInstrument.get_slice_marker_by_sample_idx(instr,self.slice_index+1)
   if marker_pos then
+    
+    -- if beat-synced, combine the #lines of this slice + the previous one 
+    -- (remember the value before deleting the slice)
+    local old_beat_sync_lines = nil
+    local sample_to_remove = instr.samples[self.slice_index+1]
+    if sample_to_remove and sample_to_remove.beat_sync_enabled then 
+      old_beat_sync_lines = sample_to_remove.beat_sync_lines
+    end
+    
     sample:delete_slice_marker(marker_pos)
-  end
 
+    if sample.beat_sync_enabled then    
+
+      -- figure out what is now the previous sample 
+      if (self.slice_index.value > 1) then 
+        local prev_sample = instr.samples[self.slice_index.value ]
+        if prev_sample and prev_sample.beat_sync_enabled then 
+          local num_lines = old_beat_sync_lines + prev_sample.beat_sync_lines
+          prev_sample.beat_sync_lines = num_lines
+        end
+          
+      end
+    end 
+    
+  end
+  
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -686,6 +710,7 @@ function SliceMate:insert_slice()
       end
 
       -- if the sample is a slice, offset frame by it's pos
+      local frame_within_slice = frame
       if (sample_idx > 1) then
         frame = frame + xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)
       end
@@ -705,20 +730,28 @@ function SliceMate:insert_slice()
         -- existing marker
       else 
       
-        local transpose_offset = 0
-        
         -- about to add first slice?
-        if (#instr.samples == 1) then
-          -- remember the difference between keyzone transpose and C-4 
-          -- (not converted automatically when creating slice)
+        -- remember the difference between keyzone transpose and C-4 
+        -- (not converted automatically when creating slice)
+        if not sample.beat_sync_enabled and (#instr.samples == 1) then
           local base_note = instr.samples[1].sample_mapping.base_note
           local trigger_note = 48 - notecol.note_value 
-          transpose_offset = 48 - base_note - trigger_note
+          local transpose_offset = 48 - base_note - trigger_note
           instr.samples[1].transpose = instr.samples[1].transpose + transpose_offset
         end 
 
+        -- beatsync: remember the length of the "old" slice 
+        slice_idx = xInstrument.get_slice_marker_after_pos(instr,frame)
+        local next_sample = instr.samples[slice_idx+1]
+        local old_num_frames = nil
+        if sample.beat_sync_enabled then 
+          old_num_frames =  sample.sample_buffer.number_of_frames - 
+            next_sample.sample_buffer.number_of_frames
+        end                
+        
         instr.samples[1]:insert_slice_marker(frame)
         slice_idx = xInstrument.get_slice_marker_at_pos(instr,frame,snap)
+        
         local new_sample = instr.samples[slice_idx+1]
 
         -- if we just added the first slice, modify the source note 
@@ -739,13 +772,15 @@ function SliceMate:insert_slice()
         -- in order to keep the playback speed of a beat-synced sample, 
         -- we need to modify the #lines of both the old and new sample
         if sample.beat_sync_enabled then 
-          
-          local num_lines_old = xSample.get_lines_spanned(sample,sample.sample_mapping.base_note)
-          local num_lines_new = xSample.get_lines_spanned(new_sample,new_sample.sample_mapping.base_note)
-          
-          sample.beat_sync_lines = cLib.round_value(num_lines_old)
-          new_sample.beat_sync_lines = cLib.round_value(num_lines_new)
-          
+          local ratio = old_num_frames/frame_within_slice
+          local sync_lines = sample.beat_sync_lines
+          local lines = cLib.round_value(sync_lines / ratio)
+          if (slice_idx > 1) then     
+            -- only adjust beat-sync if not the first sample
+            -- (as that one contains the full duration)
+            sample.beat_sync_lines = lines
+          end 
+          new_sample.beat_sync_lines = sync_lines - lines
         end
 
       end
