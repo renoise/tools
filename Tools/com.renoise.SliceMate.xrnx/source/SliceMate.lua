@@ -48,6 +48,9 @@ function SliceMate:__init(...)
   self.cursor_pos = nil
   self.track_idx = nil
   self.notecol_idx = nil
+  
+  -- (number) how far away is our trigger_pos? 
+  self.lines_travelled = nil
 
   -- delayed execution (idle updates)
   self.select_requested = false
@@ -181,11 +184,12 @@ function SliceMate:select(user_selected)
   TRACE("SliceMate:select(user_selected)",user_selected)
 
   local cursor_pos = self:get_position()
-  local trigger_pos = xNoteCapture.nearest(self.compare_fn)
+  local trigger_pos,lines_travelled = xNoteCapture.nearest(self.compare_fn,nil,{ignore_next=true})
   if not trigger_pos then
     self.instrument_status.value = ""
     self.instrument_index.value = 0  
   else
+    self.lines_travelled = lines_travelled    
     -- (attempt to) determine position in phrase 
     local rslt,err = self:get_phrase_position(trigger_pos,cursor_pos)
     if (rslt ~= nil) then 
@@ -631,7 +635,7 @@ function SliceMate:insert_slice()
 
   local autofix = self.prefs.autofix_instr.value
   local cursor_pos = self:get_position()
-  local trigger_pos = xNoteCapture.nearest(self.compare_fn)
+  local trigger_pos,_lines_travelled = xNoteCapture.nearest(self.compare_fn,nil,{ignore_next = true})
   if not trigger_pos then
     -- offer to insert note when nothing was found 
     local is_sliceable,err = SliceMate.is_sliceable(rns.selected_instrument,autofix) 
@@ -654,7 +658,6 @@ function SliceMate:insert_slice()
       end   
     end 
   else
-    
     local phrase_pos,err = self:get_phrase_position(trigger_pos,cursor_pos)
     --print("phrase_pos,err",phrase_pos,err)
     if (phrase_pos ~= nil) then 
