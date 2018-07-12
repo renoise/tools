@@ -60,6 +60,7 @@ Below, some more detailed information:
 
 * "Slice": shows you which slice is currently selected
 * "Pos": shows you the frame (position in sample) of the slice and/or root sample
+* "Line": when slicing a beat-synced sample, the tool will show the current line (instead of frame)
 
 #### For phrases
 
@@ -100,19 +101,14 @@ These options deal with selections, as the cursor position changes:
 
 ## Limitations
 
-The tool can only work with samples that are configured like this
+**The tool can only work with samples that have the AUTOSEEK option enabled.**  
 
-* Auto-seek: ON, Beat-sync: OFF 
-* No pitch modulation (not allowed when auto-seeked)
+Also, the tool is not able to reliably track the position if you are:
 
-The tool will tell you if any of the above conditions are not met. 
-
-Also, the tool is not able to reliably track the position if you are 
-
-* Using commands to modify the song tempo (BPM and LPB)
-* Using commands sample playback (e.g. 0Bxx/reverse)
+* **Using commands to modify the song tempo (BPM and LPB) *during* sample playback**. This doesn't mean that you can't change BPM or LPB in your song - simply do it before or after sample playback.
+* **Using commands to control sample playback (e.g. 0Bxx/reverse)**. You *can* use these commands, but the tool will ignore whatever effect it might have on the sample playback, and instead, track time as if the sample was continuously playing. 
 
 Finally, the tool does not support slicing looped samples. 
-You can use the tool with such samples, but once the playback reaches the loop end-point, slicing is no longer possible (you should receive an error message if you try). 
+You can use the tool with such samples, but once the playback reaches the loop end-point, slicing is no longer possible (you should receive an warning if you try). 
 
 

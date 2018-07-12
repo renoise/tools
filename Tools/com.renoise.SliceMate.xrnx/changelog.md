@@ -1,5 +1,10 @@
 # SliceMate Changelog
 
+## 0.22
+
+- Add support for beat-synced samples 
+- Fix: never search forward when looking for notes to slice
+
 ## 0.21
 - Fix issue when placing cursor at last line of phrase
 - Preserve effect-column indices for Sxx, Zxx commands
