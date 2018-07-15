@@ -24,11 +24,9 @@ The tool can be launched in a number of ways:
 
 1. Load up some (long) sample and enter it into the pattern
 2. Position the cursor somewhere in the 'note trail' 
-3. Check the SliceMate status panel - tells us if the sample is valid
-4. If the sample is invalid, a warning appears (click for solution)
-5. Else, we are able to slice the sample. Hit **"Slice at Cursor"**
-6. If sample settings are compatible, a new slice/note is inserted
-7. Move cursor somewhere else, repeat and rinse 
+3. Hit **"Slice at Cursor"**
+4. If all went well, a new slice/note is inserted
+5. Move cursor somewhere else, repeat and rinse 
 
 ### How to slice a phrase
 
@@ -36,10 +34,9 @@ The tool can be launched in a number of ways:
 2. Enter a note somewhere in the pattern. 
 3. Enter a Zxx command for the note, or ensure that "Prg" mode is enabled
 4. Position the cursor somewhere in the 'note trail' 
-5. If we are unable to slice, a warning appears (click for solution). 
-6. Else, we are able to slice the sample. Hit **"Slice at Cursor"**
-7. If sample settings are compatible, a new note is inserted
-8. Move cursor somewhere else, repeat and rinse 
+5. Hit **"Slice at Cursor"**
+6. If all went well, a new note is inserted
+7. Move cursor somewhere else, repeat and rinse 
 
 
 ## The user interface 
@@ -72,17 +69,29 @@ Below, some more detailed information:
 * Left/right arrows: allows you to navigate between columns and tracks
 * Previous/next buttons: detect and move cursor to other notes/lines in the song 
 
+### Slice panel 
+
+The slice panel contains a number of buttons, each one relating to slicing in some way. 
+
+* **Slice at Cursor** - as the title says, pressing this button will slice the sample at the current position. If no sample is present, a dialog will appear and ask if a note should be written to the pattern.
+* **▲ Slice / ▼ Slice** - these buttons control the forward/backward slicing. Pressing either one will insert a slice with a distance which is determined by the currently selected `Quantize` option. 
+* **▲ Insert / ▼ Insert** - click these buttons to insert existing slices into the pattern. Unlike with the other buttons, inserting will not create new slices.  
+
+> Before creating a new slice, SliceMate checks if there is already an active slice at the provided position. If this is the case, that slice is simply reused. 
+
+
+
 ### Options panel 
 
 This panel contains all options for SliceMate
 
 #### Slice Options
 
-* Insert note: inserts a note in the pattern every time the sample is sliced
-* Quantize note: make sure notes are always on a line [1]
-* Propagate VOL/PAN: when inserting a note, use the volume and panning from the previous one
-
-> [1]: You can record non-quantized ("precise") sliced notes by disabling this feature. Do the slicing while playing, with the pattern-editor cursor set to follow playback.
+* **Quantize note**: make sure notes are always on a line. Valid options are LINE,BEAT,BAR,BLOCK,PATTERN
+* **Support phrase slicing**: enables phrase-slicing support 
+* **Insert note when slicing**: inserts a note in the pattern every time the sample is sliced (when false, a slice is created but no note is inserted).
+* **Propagate VOL/PAN**: when inserting a note, use the volume and panning from the previous one
+* **Auto-fix instrument**: attempt to fix simply issues that prevent the tool from working, such as autoseek not being enabled. 
 
 #### Selection 
 
