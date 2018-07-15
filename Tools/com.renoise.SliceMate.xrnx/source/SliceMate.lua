@@ -68,9 +68,9 @@ function SliceMate:__init(...)
   -- initialize ---------------------------------
 
   -- apply some defaults
-  xSongPos.DEFAULT_BOUNDS_MODE = xSongPos.OUT_OF_BOUNDS.LOOP
-  xSongPos.DEFAULT_LOOP_MODE = xSongPos.LOOP_BOUNDARY.SOFT
-  xSongPos.DEFAULT_BLOCK_MODE = xSongPos.BLOCK_BOUNDARY.SOFT
+  xSongPos.DEFAULT_BOUNDS_MODE = xSongPos.OUT_OF_BOUNDS.NULL
+  xSongPos.DEFAULT_LOOP_MODE = xSongPos.LOOP_BOUNDARY.NONE
+  xSongPos.DEFAULT_BLOCK_MODE = xSongPos.BLOCK_BOUNDARY.NONE
 
   --- configure user-interface
   self.ui = SliceMate_UI{
@@ -438,6 +438,46 @@ function SliceMate:get_position()
     xSongPos.decrease_by_lines(1,pos)
   end 
 
+  return self:get_next_position(pos)
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- obtain previous quantized position 
+-- @param pos (xCursorPos)
+-- @return xCursorPos
+
+function SliceMate:get_previous_position(pos)
+  TRACE("SliceMate:get_previous_position(pos)",pos)
+  
+  local choices = {
+    [self.prefs.QUANTIZE_AMOUNT.BEAT] = function() xSongPos.previous_beat(pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.BAR] = function() xSongPos.previous_bar(pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.BLOCK] = function() xSongPos.previous_block(pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.PATTERN] = function() xSongPos.previous_pattern(pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.LINE] = function() xSongPos.decrease_by_lines(1,pos) end,
+  }
+
+  if (choices[self.prefs.quantize_amount.value]) then 
+    choices[self.prefs.quantize_amount.value]()
+    if (pos and pos.line) then
+      pos.line = math.floor(pos.line)
+      return pos
+    end
+  else 
+    error("Unexpected quantize amount")
+  end
+  
+end
+
+---------------------------------------------------------------------------------------------------
+-- obtain next quantized position 
+-- @param pos (xCursorPos)
+-- @return xCursorPos
+
+function SliceMate:get_next_position(pos)
+  TRACE("SliceMate:get_next_position(pos)",pos)
+
   local choices = {
     [self.prefs.QUANTIZE_AMOUNT.BEAT] = function() xSongPos.next_beat(pos) end,
     [self.prefs.QUANTIZE_AMOUNT.BAR] = function() xSongPos.next_bar(pos) end,
@@ -448,8 +488,10 @@ function SliceMate:get_position()
 
   if (choices[self.prefs.quantize_amount.value]) then 
     choices[self.prefs.quantize_amount.value]()
-    pos.line = math.floor(pos.line)
-    return pos
+    if (pos and pos.line) then 
+      pos.line = math.floor(pos.line)
+      return pos
+    end
   else 
     error("Unexpected quantize amount")
   end
@@ -457,20 +499,18 @@ function SliceMate:get_position()
 end
 
 ---------------------------------------------------------------------------------------------------
--- obtain the sample buffer position from the position of the triggering note / cursor 
--- (perform a few checks before calling the xSample method)
 -- @param trigger_pos (xCursorPos)
 -- @param cursor_pos (xCursorPos)
 -- @param autofix (boolean)
--- @return {
---  frame,
---  sample_idx,
---  instr_idx,
---  notecol
---}
+-- @return sample (renoise.Sample) or nil 
+-- @return sample_idx (number) or string (error message)
+-- -- only when succesfull -- 
+-- @return instr_idx (number)
+-- @return notecol (renoise.NoteColumn)
+-- @return ignore_sxx (boolean)
 
-function SliceMate:get_buffer_position(trigger_pos,cursor_pos,autofix)
-  TRACE("SliceMate:get_buffer_position(trigger_pos,cursor_pos,autofix)",trigger_pos,cursor_pos,autofix)
+function SliceMate:get_sample_from_pos(trigger_pos,cursor_pos,autofix)
+  TRACE("SliceMate:get_sample_from_pos(trigger_pos,cursor_pos,autofix)",trigger_pos,cursor_pos,autofix)
 
   local _patt_idx,_patt,track,_ptrack,line = trigger_pos:resolve()
   if not line then
@@ -527,7 +567,33 @@ function SliceMate:get_buffer_position(trigger_pos,cursor_pos,autofix)
       end 
     end 
   end 
+  
+  return sample,sample_idx,instr_idx,notecol,ignore_sxx
 
+end 
+
+---------------------------------------------------------------------------------------------------
+-- obtain the sample buffer position from the position of the triggering note / cursor 
+-- (perform a few checks before calling the xSample method)
+-- @param trigger_pos (xCursorPos)
+-- @param cursor_pos (xCursorPos)
+-- @param autofix (boolean)
+-- @return frame (number) or boolean false when unable to resolve 
+-- @return sample_idx (number) or error message (string)
+-- -- only when succesfull -- 
+-- @return instr_idx
+-- @return notecol
+
+function SliceMate:get_buffer_position(trigger_pos,cursor_pos,autofix)
+  TRACE("SliceMate:get_buffer_position(trigger_pos,cursor_pos,autofix)",trigger_pos,cursor_pos,autofix)
+
+  local sample,sample_idx,instr_idx,notecol,ignore_sxx = 
+    self:get_sample_from_pos(trigger_pos,cursor_pos,autofix)
+  if not sample then 
+    -- unable to resolve, return false + error  
+    return sample, sample_idx
+  end
+    
   local frame,notecol = 
     xSample.get_buffer_frame_by_notepos(sample,trigger_pos,cursor_pos,ignore_sxx)
   return frame,sample_idx,instr_idx,notecol
@@ -650,37 +716,158 @@ function SliceMate:get_phrase_position(trigger_pos,cursor_pos)
 end  
   
 ---------------------------------------------------------------------------------------------------
--- insert slice at the cursor-position (sample or phrase, automatically decided)
+-- slice forward from cursor-position
+-- @param mode, SliceMate_Prefs.SLICE_NAV_MODE
+-- @param [fill], boolean - continue until end of sample has been reached
 -- @return boolean, false when slicing failed
 -- @return string, error message when failed
 
-function SliceMate:insert_slice()
-  TRACE("SliceMate:insert_slice()")
+function SliceMate:insert_forward_slice(mode,fill)
+  TRACE("SliceMate:insert_forward_slice(mode,fill)",mode,fill)
+  
+  local pos = xCursorPos()
+  local limit_to_pos = not fill
+  
+  if (mode == SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE) then 
+    
+    if not fill then 
+      pos = self:get_next_position(pos)
+      if pos then 
+        xSongPos.apply_to_edit_pos(pos)
+        local inserted,err = self:insert_slice(pos)
+        if err then 
+          return false,err
+        end
+      else 
+        return false,"Could not slice forward - reached end of song?"
+      end
+    else
+      while pos do
+        pos = self:get_next_position(pos)
+        if pos then 
+          local skip_insert_dialog = true
+          local inserted,err = self:insert_slice(pos,skip_insert_dialog)
+          if err then 
+            return false,err
+          end          
+        else 
+          return false,"Could not slice forward - reached end of song?"
+        end
+      end 
+    end
+    
+  elseif (mode == SliceMate_Prefs.SLICE_NAV_MODE.SLICE) then 
+    
+    local line_spans,instr_idx,notecol,trigger_pos,duration = self:get_slice_line_spans(pos,limit_to_pos)
+    if not line_spans then 
+      return line_spans,instr_idx -- error message
+    end      
+    xSongPos.increase_by_lines(duration,trigger_pos)
+    if not trigger_pos then 
+      return false, "Could not slice forward - reached end of song?"
+    end
+    if xSongPos.less_than(trigger_pos,pos) then 
+      return false, "Could not slice forward - end of sample reached"
+    else 
+      if line_spans and not table.is_empty(line_spans) then 
+        local slice_idx = line_spans[#line_spans].marker_index+1
+        local inserted,err = self:insert_sliced_note(trigger_pos,instr_idx,slice_idx,notecol)
+        if not inserted and err then 
+          return false,err
+        end 
+      end 
+      xSongPos.apply_to_edit_pos(trigger_pos)
+    end
+    
+  else
+    error("Unexpected slice_nav_mode")
+  end
+  
+end
 
-  local autofix = self.prefs.autofix_instr.value
-  local cursor_pos = self:get_position()
-  local trigger_pos,_lines_travelled = xNoteCapture.nearest(self.compare_fn,nil,{ignore_next = true})
-  if not trigger_pos then
-    -- offer to insert note when nothing was found 
-    local is_sliceable,err = SliceMate.is_sliceable(rns.selected_instrument,autofix) 
-    err = err and "\n\nThe error message received was:\n"..err or ""
-    if not is_sliceable and autofix then
-      return false,"Unable to insert slice - no notes found near cursor,"
-        .."\nand instrument could not automatically be made sliceable."
-        ..err
-    elseif not is_sliceable then 
-      return false,"Unable to insert slice - no notes found near cursor,"
-        .."\nand instrument doesn't seem to be sliceable."
-        ..err
-        .."\n\nHint: enable 'Auto-fix instrument' to fix these issues"
-        .."\nautomatically, as they are encountered"
-    elseif is_sliceable and self.ui:promp_initial_note_insert() then
-      local instr_idx = rns.selected_instrument_index
-      local inserted,err = self:insert_sliced_note(cursor_pos,instr_idx,1)
+---------------------------------------------------------------------------------------------------
+-- slice backward from cursor-position
+-- @param mode, SliceMate_Prefs.SLICE_NAV_MODE
+-- @return boolean, false when slicing failed
+-- @return string, error message when failed
+
+function SliceMate:insert_backward_slice(mode,fill)
+  TRACE("SliceMate:insert_backward_slice(mode,fill)",mode,fill)
+  
+  local pos = xCursorPos()
+  local limit_to_pos = not fill
+
+  if (mode == SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE) then 
+    
+    if not fill then 
+      pos = self:get_previous_position(pos)
+      if pos then 
+        xSongPos.apply_to_edit_pos(pos)
+        return self:insert_slice(pos)
+      end
+    else
+      local skip_insert_dialog = true          
+      while pos do
+        pos = self:get_previous_position(pos)
+        if pos then 
+          local inserted, err = self:insert_slice(pos,skip_insert_dialog)
+          if not inserted then 
+            LOG(err)
+            break 
+          end
+        else 
+          return false,"Could not slice forward - reached end of song?"
+        end
+      end 
+    end
+    
+  elseif (mode == SliceMate_Prefs.SLICE_NAV_MODE.SLICE) then 
+
+    local line_spans,instr_idx,notecol,trigger_pos,duration = 
+      self:get_slice_line_spans(pos,limit_to_pos,true)
+    if not line_spans then 
+      return line_spans,instr_idx -- error message
+    end      
+    xSongPos.increase_by_lines(duration,trigger_pos)
+    
+    if line_spans and not table.is_empty(line_spans) then
+      local slice_idx = line_spans[#line_spans].marker_index+1
+      local inserted,err = self:insert_sliced_note(trigger_pos,instr_idx,slice_idx,notecol)
       if not inserted and err then 
         return false,err
-      end   
+      end 
     end 
+    
+    trigger_pos.line = cLib.round_value(trigger_pos.line)    
+    xSongPos.apply_to_edit_pos(trigger_pos)
+    
+    
+  else
+    error("Unexpected slice_nav_mode")
+  end
+  
+end
+
+---------------------------------------------------------------------------------------------------
+-- insert slice at the cursor-position (sample or phrase, automatically decided)
+-- @return boolean, false when slicing failed
+-- @return string, message 
+
+function SliceMate:insert_slice(cursor_pos,skip_insert_dialog)
+  TRACE("SliceMate:insert_slice(cursor_pos,skip_insert_dialog)",cursor_pos,skip_insert_dialog)
+
+  if not cursor_pos then 
+    cursor_pos = self:get_position()
+  end
+  
+  local autofix = self.prefs.autofix_instr.value
+  local trigger_pos,_lines_travelled = xNoteCapture.nearest(self.compare_fn,cursor_pos,{ignore_next = true})
+  if not trigger_pos then
+    if skip_insert_dialog then 
+      return false, "Could not find a note to slice"
+    else 
+      return self:insert_basenote(cursor_pos)
+    end
   else
     local phrase_pos,err = self:get_phrase_position(trigger_pos,cursor_pos)
     --print("phrase_pos,err",phrase_pos,err)
@@ -707,7 +894,8 @@ function SliceMate:insert_slice()
       local sample = instr.samples[sample_idx]
 
       if (frame == 0) then
-        return false -- fail silently (existing note?)
+        LOG("fail silently (existing note?)")
+        return true -- fail silently (existing note?)
       end
 
       -- if the sample is a slice, offset frame by it's pos
@@ -716,12 +904,11 @@ function SliceMate:insert_slice()
         frame = frame + xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)
       end
 
-      -- fail if the frame is exceeding the buffer size 
+      -- fail silently if the frame is exceeding the buffer size 
       local buffer = instr.samples[1].sample_buffer
       if buffer.has_sample_data then
         if (buffer.number_of_frames < frame) then
-          return false, "Can't insert slice - frame exceeded buffer size"
-            .. "\n (probably past the end of the sample)"
+          return true, "Reached end of the sample"
         end
       end
 
@@ -743,11 +930,9 @@ function SliceMate:insert_slice()
 
         -- beatsync: remember the length of the "old" slice 
         local num_frames = nil
-        local add_to_end = false
         if sample.beat_sync_enabled then 
           local prev_slice_idx,prev_marker = xInstrument.get_slice_marker_before_pos(instr,frame)
           local next_slice_idx,next_marker = xInstrument.get_slice_marker_after_pos(instr,frame)
-          add_to_end = not next_marker and true or false
           local prev_marker = prev_marker or 0
           local next_marker = next_marker or root_sample.sample_buffer.number_of_frames
           num_frames = next_marker - prev_marker
@@ -757,6 +942,12 @@ function SliceMate:insert_slice()
         slice_idx = xInstrument.get_slice_marker_at_pos(instr,frame,snap)
         
         local new_sample = instr.samples[slice_idx+1]
+        
+        -- check if keyzone has been completely filled 
+        if (sample.sample_mapping.base_note > new_sample.sample_mapping.base_note) then 
+          return false,"Unable to allocate room for sample in the keyzone - "
+            .."\nconsider using a lower range for the drumkit layout"
+        end
 
         -- if we just added the first slice, modify the source note 
         -- (the note does not change automatically)
@@ -777,13 +968,7 @@ function SliceMate:insert_slice()
         -- we need to modify the #lines of both the old and new sample
         if sample.beat_sync_enabled then 
           local ratio = num_frames/frame_within_slice
-          local sync_lines = nil
-          if not add_to_end then 
-            local ratio_2 = root_sample.sample_buffer.number_of_frames/num_frames
-            sync_lines = cLib.round_value(root_sample.beat_sync_lines / ratio_2)
-          else 
-            sync_lines = sample.beat_sync_lines
-          end
+          local sync_lines = sample.beat_sync_lines
           local lines = cLib.round_value(sync_lines / ratio)
           if (slice_idx > 1) then     
             -- only adjust beat-sync if not the first sample
@@ -825,6 +1010,10 @@ function SliceMate:insert_sliced_note(cursor_pos,instr_idx,sample_idx,src_noteco
     return false,"Could not resolve sample"
   end
 
+  -- apply rounding to line, but save fraction first 
+  local fract = cLib.fraction(cursor_pos.line)
+  cursor_pos.line = cLib.round_value(cursor_pos.line)
+  
   local _patt_idx,_patt,track,_ptrack,line = cursor_pos:resolve()
   if not line then
     return false,"Could not resolve pattern-line"                    
@@ -839,7 +1028,6 @@ function SliceMate:insert_sliced_note(cursor_pos,instr_idx,sample_idx,src_noteco
   if self.prefs.quantize_enabled.value then
     notecol.delay_value = 0
   else
-    local fract = cLib.fraction(cursor_pos.line)
     local delay_val = math.floor(fract * 255)
     notecol.delay_value = delay_val
     if (delay_val > 0) then
@@ -919,6 +1107,181 @@ function SliceMate:insert_sliced_phrase_note(cursor_pos,phrase_pos,src_notecol)
   self:propagate_vol_pan(src_notecol,notecol)
 
   return true
+  
+end
+
+---------------------------------------------------------------------------------------------------
+-- @param cursor_pos (xCursorPos)
+-- @return boolean, true when note was inserted
+-- @return [string], error message  
+
+function SliceMate:insert_basenote(cursor_pos)
+  
+  local autofix = self.prefs.autofix_instr.value  
+  local is_sliceable,err = SliceMate.is_sliceable(rns.selected_instrument,autofix) 
+  
+  err = err and "\n\nThe error message received was:\n"..err or ""
+  if not is_sliceable and autofix then
+    return false,"Unable to insert slice - no notes found near cursor,"
+      .."\nand instrument could not automatically be made sliceable."
+      ..err
+  elseif not is_sliceable then 
+    return false,"Unable to insert slice - no notes found near cursor,"
+      .."\nand instrument doesn't seem to be sliceable."
+      ..err
+      .."\n\nHint: enable 'Auto-fix instrument' to fix these issues"
+      .."\nautomatically, as they are encountered"
+  elseif is_sliceable and self.ui:promp_initial_note_insert() then
+    local instr_idx = rns.selected_instrument_index
+    local inserted,err = self:insert_sliced_note(cursor_pos,instr_idx,1)
+    if not inserted and err then 
+      return false,err
+    end   
+  end 
+  
+  return true 
+  
+end  
+
+---------------------------------------------------------------------------------------------------
+-- provided with a position, will return a table containing the duration of each slice 
+--  from the triggering note until the provided position 
+-- @param pos (SongPos or compatible)
+-- @param backward (boolean)
+-- @return line_spans (table) or false (if not found)
+-- @return instr_idx (number) or string (error message)
+-- -- only on success -- 
+-- @return notecol (renoise.NoteColumn) or nil 
+-- @return trigger_pos (xCursorPos)
+-- @return total_duration (number) combined length of spans + note-delay
+
+function SliceMate:get_slice_line_spans(pos,limit_to_pos,backward)
+  TRACE("SliceMate:get_slice_line_spans(pos,limit_to_pos,backward)",pos,limit_to_pos,backward)
+    
+  -- determine if we have a triggering note 
+  
+  local capture_options = {ignore_next = true} 
+  local trigger_pos = xNoteCapture.nearest(self.compare_fn,pos,capture_options)
+  if not trigger_pos then 
+    return false, "Could not find triggering note"
+  end
+
+  -- get information about our note-trail: instr, frame...
+  local autofix = self.prefs.autofix_instr.value    
+  local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(
+    trigger_pos,pos,autofix)
+  
+  local instr = rns.instruments[instr_idx]
+  if not xInstrument.is_sliced(instr) then 
+    return false, "This instrument does not contain any slices"
+  end
+  
+  -- make frame relative to "root sample"
+  if (sample_idx > 1) then
+    frame = frame + xInstrument.get_slice_marker_by_sample_idx(instr,sample_idx)
+  end
+  
+  -- figure out the line-duration of the previous slices
+  -- (until reaching the trigger position)
+  
+  local sample = instr.samples[sample_idx]
+  local line_spans = {}  
+  local precision = 3   -- apply rounding 
+  
+  local get_lines_spanned = function(slice_idx)
+    local num_slice_frames = xInstrument.get_num_frames_in_slice(instr,slice_idx)
+    local trans_note = sample.beat_sync_enabled 
+      and xSample.get_beatsynced_note(sample)
+      or xSample.get_transposed_note(sample,sample.sample_mapping.base_note)
+    trans_note = 48 + (48 - trans_note)
+    local lines_spanned = xSample.get_lines_spanned(sample,trans_note,num_slice_frames)
+    return lines_spanned
+  end
+  
+  local pos_is_equal = xSongPos.equal(trigger_pos,pos)
+
+  -- if we are positioned on top of a note, 
+  -- extending forward/backward is a bit simpler 
+  if pos_is_equal then 
+    if backward then 
+      if (sample_idx > 1) then 
+        --print(">>> extend back from trigger note ")
+        local lines_spanned = cLib.round_with_precision(get_lines_spanned(sample_idx-2),precision)
+        xSongPos.decrease_by_lines(lines_spanned,trigger_pos)
+        xSongPos.decrease_by_lines(lines_spanned,pos)
+        table.insert(line_spans,{
+          marker_index = sample_idx-2,
+          duration = lines_spanned
+        })
+      end         
+    else 
+      if (sample_idx < #instr.samples) then 
+        --print(">>> extend forward from trigger note")
+        local lines_spanned = cLib.round_with_precision(get_lines_spanned(sample_idx-1),precision)
+        table.insert(line_spans,{
+          marker_index = sample_idx,
+          duration = lines_spanned
+        })
+      end 
+    end
+  end
+  
+  if table.is_empty(line_spans) then 
+    
+    -- collect line-spans from the note-trail -
+    -- start from the trigger-pos, extend until we reach the cursor-pos 
+    
+    local done = false 
+    local just_one_more = true
+    local lines_searched = 0     
+    local slice_idx = sample_idx
+    
+    while not done do 
+      sample = instr.samples[slice_idx+1]
+      if not sample then 
+        done = true
+      else 
+        local lines_spanned = get_lines_spanned(slice_idx-1)
+        lines_searched =  cLib.round_with_precision(lines_searched + lines_spanned,precision)
+        local search_pos = xCursorPos(trigger_pos)       
+        xSongPos.increase_by_lines(lines_searched,search_pos)
+        if not search_pos.sequence then
+          done = true 
+        else 
+          local less_than = xSongPos.less_than(pos,search_pos)
+          if backward then 
+            done = less_than 
+          elseif less_than then 
+            just_one_more = false 
+          end
+        end
+        if not done then 
+          table.insert(line_spans,{
+            marker_index = slice_idx,
+            duration = lines_spanned
+          })
+        end
+        slice_idx = slice_idx + 1
+        if not just_one_more then 
+          done = true 
+        end
+      end
+    end
+    
+  end
+  
+  -- apply rounding _after_ collecting the values 
+  for k,v in ipairs(line_spans) do 
+    v.duration = cLib.round_with_precision(v.duration,precision)
+  end
+  
+  -- total duration includes possible delay from triggering note 
+  local total_duration = (notecol.delay_value/256)
+  for k,v in ipairs(line_spans) do 
+    total_duration = total_duration + v.duration
+  end
+  
+  return line_spans,instr_idx,notecol,trigger_pos,total_duration
   
 end
 

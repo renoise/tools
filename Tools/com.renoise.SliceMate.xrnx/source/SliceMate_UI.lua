@@ -160,6 +160,8 @@ function SliceMate_UI:update_instrument()
   local frame = self.owner.position_slice.value
   local root_frame = self.owner.position_root.value
 
+  local in_trail = (instr_idx > 0) and true or false 
+  
   local ctrl = self.vb.views["instrument_index"]
   if ctrl then
     local instr_name = instr and instr.name or "Instrument N/A"
@@ -168,7 +170,7 @@ function SliceMate_UI:update_instrument()
     end
     local subtract = (instr_status ~= "") and 19 or 0
     ctrl.text = instr_name
-    ctrl.width = self.dialog_width-subtract-30
+    ctrl.width = self.dialog_width-subtract-32
   end
   
   local ctrl = self.vb.views["instrument_status"]
@@ -180,7 +182,7 @@ function SliceMate_UI:update_instrument()
   local ctrl = self.vb.views["position"]
   if ctrl then
     local str_status = ""
-    if (instr_idx == 0) then
+    if not in_trail then
       str_status = "-" 
     elseif (phrase_index > 0) then 
       local phrase = instr.phrases[phrase_index]
@@ -207,7 +209,7 @@ function SliceMate_UI:update_instrument()
         -- position in sample (frames)
         str_status = (frame == -1) and "-" or ("%d / %d"):format(frame,root_frame)
         str_status = ("Pos: %s"):format(str_status)
-      end
+      end        
     end
     ctrl.tooltip = str_status
     ctrl.text = str_status
@@ -216,41 +218,45 @@ function SliceMate_UI:update_instrument()
   local ctrl = self.vb.views["status"]
   if ctrl then
     local str_status = ""
-    if (instr_idx == 0) then
+    local rmv_bt = self.vb.views["vb_remove_slice_button"]
+    if not in_trail then
       str_status = "-" 
+      rmv_bt.visible = false
     else
-      local rmv_bt = self.vb.views["remove_slice_button"]
       if (phrase_index > 0) then 
         -- phrase status
         local phrase_count = instr and #instr.phrases
-        if (instr_idx == 0) or ((phrase_index == 0) and (phrase_count == 0)) then
+        if not in_trail or ((phrase_index == 0) and (phrase_count == 0)) then
           str_status = instr and "0" or "-"
         else
           str_status = (phrase_index == -1) and "-" or ("%d / %d"):format(phrase_index,phrase_count)
         end
         str_status = ("Active phrase: %s"):format(str_status)
-        if rmv_bt then 
-          rmv_bt.visible = false
-        end 
+        rmv_bt.visible = false
       else
         -- slice status
         local slice_count = instr and (#instr.samples > 1) 
           and #instr.samples[1].slice_markers or 0
-        if (instr_idx == 0) or ((slice_index == 0) and (slice_count == 0)) then
+        if not in_trail or ((slice_index == 0) and (slice_count == 0)) then
           str_status = instr and "0" or "-"
         else
           str_status = (slice_index == -1) and "-" or ("%d / %d"):format(slice_index,slice_count)
         end
         str_status = ("Active slice: %s"):format(str_status)
-        if rmv_bt then 
-          rmv_bt.visible = (instr_idx > 0 and slice_index > 0)
-        end 
+        rmv_bt.visible = (in_trail and slice_index > 0)
       end 
     end 
     ctrl.tooltip = str_status
     ctrl.text = str_status
 
   end
+  
+  -- slice buttons 
+  self.vb.views["vb_insert_slice_back"].active = in_trail
+  self.vb.views["vb_insert_slice_forward"].active = in_trail
+  self.vb.views["vb_insert_slice_previous"].active = in_trail
+  self.vb.views["vb_insert_slice_next"].active = in_trail
+  
 
 end
 
@@ -279,8 +285,8 @@ function SliceMate_UI:build_vtoggle_slice()
   self.vtoggle_slice = vToggleButton{
     vb = self.vb,
     tooltip = "Toggle Options",
-    text_enabled = "▴",
-    text_disabled = "▾",
+    text_enabled = "◂",
+    text_disabled = "▸",
     notifier = function(ref)
       self.prefs.show_options.value = ref.enabled
     end,
@@ -297,7 +303,11 @@ function SliceMate_UI:build()
   local vb = self.vb
   
   local prev_next_bt_w = (self.dialog_width-52)/2
-  local slice_half_bt_w = (self.dialog_width-12)/2
+  --local slice_half_bt_w = (self.dialog_width-12)/2
+  
+  local options_checkbox_w = 20
+  local options_control_w = 80
+  local options_label_w = 60
   
   local vb_content = 
     vb:row{
@@ -311,7 +321,6 @@ function SliceMate_UI:build()
           style = "group",
           margin = 4,
           vb:row{
-            width = self.dialog_width-12,
             vb:text{
               id = "instrument_index",
               text = "",
@@ -325,7 +334,7 @@ function SliceMate_UI:build()
                 id = "instrument_status",
                 bitmap = "./source/icons/warning.bmp",
                 mode = "transparent",
-                width = 20,
+                width = options_checkbox_w,
                 notifier = function()
                   renoise.app():show_message(self.owner.instrument_status.value)
                 end
@@ -333,6 +342,7 @@ function SliceMate_UI:build()
             },
             vb:button{
               bitmap = "./source/icons/detach.bmp",
+              width = options_checkbox_w,
               midi_mapping = "Tools:SliceMate:Detach Sampler... [Trigger]",
               notifier = function()
                 self.owner:detach_sampler()
@@ -345,12 +355,13 @@ function SliceMate_UI:build()
             vb:text{
               id = "status",
               text = "",
-              width = self.dialog_width-39,
+              width = self.dialog_width-31,
             },
             vb:button{
-              id = "remove_slice_button",
-              text = "Del",
+              id = "vb_remove_slice_button",
+              text = "⨯",
               tooltip = "Remove this slice",
+              width = options_checkbox_w,
               notifier = function()
                 local removed,err = self.owner:remove_active_slice()
                 if not removed and err then 
@@ -384,6 +395,7 @@ function SliceMate_UI:build()
             vb:button{
               tooltip = "Go to previous note-column",
               height = 36,
+              width = options_checkbox_w,
               text = "◀",
               midi_mapping = "Tools:SliceMate:Previous Column [Trigger]",
               notifier = function()
@@ -435,6 +447,7 @@ function SliceMate_UI:build()
             vb:button{
               tooltip = "Go to next note-column",
               height = 36,
+              width = options_checkbox_w,
               text = "▶",
               midi_mapping = "Tools:SliceMate:Next Column [Trigger]",
               notifier = function()
@@ -455,165 +468,295 @@ function SliceMate_UI:build()
             midi_mapping = "Tools:SliceMate:Insert Slice [Trigger]",
             notifier = function()
               local success,err = self.owner:insert_slice()
-              if not success and err then
+              if err then
                 renoise.app():show_error(err)
               else
                 self.owner.select_requested = true
               end
             end
           },
-          --[[
           vb:row{
             vb:button{
-              text = "▴ Slice Back",
-              width = slice_half_bt_w,
+              text = "↑",
+              id = "vb_insert_slice_back_fill",
+              width = options_checkbox_w,
+              notifier = function()
+                local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
+                if not success and err then
+                  renoise.app():show_error(err)
+                else
+                  self.owner.select_requested = true
+                end                                
+              end
             },
             vb:button{
-              text = "▾ Slice Forw.",
-              width = slice_half_bt_w,
-            }
-          },   
-          ]]
+              text = "▴ Slice",
+              id = "vb_insert_slice_back",
+              width = prev_next_bt_w,
+              notifier = function()
+                local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
+                if not success and err then
+                  renoise.app():show_error(err)
+                else
+                  self.owner.select_requested = true
+                end
+              end
+            },
+            vb:button{
+              text = "▴ Insert",
+              id = "vb_insert_slice_previous",
+              width = prev_next_bt_w,
+              notifier = function()
+                local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.SLICE)
+                if not success and err then
+                  renoise.app():show_error(err)
+                else
+                  self.owner.select_requested = true
+                end
+              end
+            },
+            vb:button{
+              text = "↑",
+              id = "vb_insert_slice_previous_fill",
+              width = options_checkbox_w,
+              notifier = function()
+                
+              end
+            },
+            
+          },
+          vb:row{
+            vb:button{
+              text = "↓",
+              id = "vb_insert_slice_forward_fill",
+              width = options_checkbox_w,
+              notifier = function()
+                local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
+                if not success and err then
+                  renoise.app():show_error(err)
+                else
+                  self.owner.select_requested = true
+                end                
+              end
+            },            
+            vb:button{
+              text = "▾ Slice",
+              id = "vb_insert_slice_forward",
+              width = prev_next_bt_w,
+              notifier = function()
+                local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
+                if not success and err then
+                  renoise.app():show_error(err)
+                else
+                  self.owner.select_requested = true
+                end
+              end              
+            },
+            vb:button{
+              text = "▾ Insert",
+              id = "vb_insert_slice_next",
+              width = prev_next_bt_w,
+              notifier = function()
+                local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.SLICE)
+                if not success and err then
+                  renoise.app():show_error(err)
+                else
+                  self.owner.select_requested = true
+                end
+              end              
+            },
+            vb:button{
+              text = "↓",
+              id = "vb_insert_slice_next_fill",
+              width = options_checkbox_w,
+              notifier = function()
+                
+              end
+            },            
+            
+          },
+        
         },   
         vb:column{        
           style = "group",
           margin = 4,
+          width = self.dialog_width,                   
           vb:horizontal_aligner{
             mode="justify",
-            vb:text{
-              text = "Tool Options",   
-              width = self.dialog_width-32,                         
+            vb:button{
+              text = "About",
+              notifier = function() 
+                renoise.app():open_url("https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.SliceMate.xrnx")
+              end,
             },
-            self:build_vtoggle_slice(),        
+            vb:row{
+              vb:text{
+                text = "Options",   
+                align = "right",
+              },
+              self:build_vtoggle_slice(),        
+            }
           },      
-          vb:column{       
-            id = "options_panel",
-            vb:column{
-              vb:row{
-                vb:button{
-                  text = "View documentation [www]",
-                  width = self.dialog_width-12,
-                  notifier = function() 
-                    renoise.app():open_url("https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.SliceMate.xrnx")
-                  end,
-                },
-              },              
-              vb:text{
-                text = "Slicing",
-                font = "bold",
-              },            
-              vb:row{
-                tooltip = "Support slicing of instrument phrases",
-                vb:checkbox{
-                  bind = self.prefs.support_phrases
-                },
-                vb:text{
-                  text = "Support phrase slicing"
-                }
-              },               
-              vb:row{
-                tooltip = "Decide if slices should be quantized, and by how large an amount",
-                vb:checkbox{
-                  bind = self.prefs.quantize_enabled
-                },
-                vb:text{
-                  text = "Quantize to "
-                },
-                vb:popup{
-                  items = SliceMate_Prefs.QUANTIZE_LABELS,
-                  bind = self.prefs.quantize_amount,
-                  width = 76,
-                }
-              },
-              vb:row{
-                tooltip = "Insert a note into the pattern when slicing sample",
-                vb:checkbox{
-                  bind = self.prefs.insert_note
-                },
-                vb:text{
-                  text = "Insert note when slicing"
-                }
-              },            
-              vb:row{
-                tooltip = "Carry over VOL/PAN from previous note when inserting new notes",
-                vb:checkbox{
-                  bind = self.prefs.propagate_vol_pan
-                },
-                vb:text{
-                  text = "Propagate VOL/PAN"
-                }
-              }, 
-              vb:row{
-                tooltip = "Attempt to correct issues with instruments as they are sliced",
-                vb:checkbox{
-                  bind = self.prefs.autofix_instr
-                },
-                vb:text{
-                  text = "Auto-fix instrument"
-                }
-              },              
-            }, 
-            vb:column{
-              vb:text{
-                text = "Selection",
-                font = "bold",
-              },              
-              vb:row{
-                tooltip = "Automatically select instrument underneath cursor",
-                vb:checkbox{
-                  bind = self.prefs.autoselect_instr
-                },
-                vb:text{
-                  text = "Auto-select instrument"
-                }
-              },
-              vb:row{
-                tooltip = "Automatically select sample in instr. sample-list",
-                vb:checkbox{
-                  bind = self.prefs.autoselect_in_list
-                },
-                vb:text{
-                  text = "Auto-select in sample-list"
-                }
-              },
-              vb:row{
-                tooltip = "Visualize the computed playback position in the waveform editor",
-                vb:checkbox{
-                  bind = self.prefs.autoselect_in_wave
-                },
-                vb:text{
-                  text = "Auto-select in waveform"
-                }
-              },       
-            },
-            vb:column{
-              vb:text{
-                text = "General",
-                font = "bold",
-              },
-              vb:row{
-                vb:checkbox{
-                  bind = self.prefs.autostart
-                },
-                vb:text{
-                  text = "Show GUI on startup"
-                }
-              },
-              vb:row{
-                tooltip = "Suspend visual updates while tool GUI is hidden",                  
-                vb:checkbox{
-                  bind = self.prefs.suspend_while_hidden,
-                },
-                vb:text{
-                  text = "Suspend while hidden"
-                }
-              },
-          
-            }              
-          
-          },
         },
-      },      
+      }, 
+      vb:column{       
+        id = "options_panel",
+        spacing = 4,
+        vb:column{
+          margin = 4,
+          style = "group",
+          width = "100%",
+          vb:text{
+            text = "General",
+            font = "bold",
+          },
+          vb:row{
+            vb:checkbox{
+              bind = self.prefs.autostart
+            },
+            vb:text{
+              text = "Show GUI on startup"
+            }
+          },
+          vb:row{
+            tooltip = "Suspend visual updates while tool GUI is hidden",                  
+            vb:checkbox{
+              bind = self.prefs.suspend_while_hidden,
+            },
+            vb:text{
+              text = "Suspend while hidden"
+            }
+          },
+        },        
+        vb:column{
+          margin = 4,
+          style = "group",
+          vb:text{
+            text = "Slicing",
+            font = "bold",
+          },            
+          vb:row{
+            tooltip = "Decide if slices should be quantized, and by how large an amount",
+            vb:checkbox{
+              bind = self.prefs.quantize_enabled
+            },
+            vb:text{
+              text = "Quantize to ",
+              width = options_label_w,
+            },
+            vb:popup{
+              items = SliceMate_Prefs.QUANTIZE_LABELS,
+              bind = self.prefs.quantize_amount,
+              width = options_control_w,
+            }
+          },
+          --[[
+          vb:row{
+            vb:space{
+              width = options_checkbox_w,
+            },
+            vb:text{
+              text = "Back/Forw.",
+              width = options_label_w,
+            },
+            vb:popup{
+              items = SliceMate_Prefs.SLICE_NAV_LABELS,
+              bind = self.prefs.slice_nav_mode,
+              width = options_control_w,
+            }
+          },   
+          vb:row{
+            vb:space{
+              width = options_checkbox_w,
+            },
+            vb:text{
+              text = "Frames",
+              width = options_label_w,
+            },
+            vb:valuebox{
+              value = 0,
+              width = options_control_w - options_checkbox_w,
+              active = false,
+            },
+            
+          },   
+          ]]
+          vb:row{
+            tooltip = "Support slicing of instrument phrases",
+            vb:checkbox{
+              bind = self.prefs.support_phrases
+            },
+            vb:text{
+              text = "Support phrase slicing"
+            }
+          },                         
+          vb:row{
+            tooltip = "Insert a note into the pattern when slicing sample",
+            vb:checkbox{
+              bind = self.prefs.insert_note
+            },
+            vb:text{
+              text = "Insert note when slicing"
+            }
+          },            
+          vb:row{
+            tooltip = "Carry over VOL/PAN from previous note when inserting new notes",
+            vb:checkbox{
+              bind = self.prefs.propagate_vol_pan
+            },
+            vb:text{
+              text = "Propagate VOL/PAN"
+            }
+          }, 
+          vb:row{
+            tooltip = "Attempt to correct issues with instruments as they are sliced",
+            vb:checkbox{
+              bind = self.prefs.autofix_instr
+            },
+            vb:text{
+              text = "Auto-fix instrument"
+            }
+          },              
+        },
+        vb:column{
+          margin = 4,
+          style = "group",
+          width = "100%",
+          vb:text{
+            text = "Selection",
+            font = "bold",
+          },                      
+          vb:row{
+            tooltip = "Automatically select instrument underneath cursor",
+            vb:checkbox{
+              bind = self.prefs.autoselect_instr
+            },
+            vb:text{
+              text = "Auto-select instrument"
+            }
+          },
+          vb:row{
+            tooltip = "Automatically select sample in instr. sample-list",
+            vb:checkbox{
+              bind = self.prefs.autoselect_in_list
+            },
+            vb:text{
+              text = "Auto-select in sample-list"
+            }
+          },
+          vb:row{
+            tooltip = "Visualize the computed playback position in the waveform editor",
+            vb:checkbox{
+              bind = self.prefs.autoselect_in_wave
+            },
+            vb:text{
+              text = "Auto-select in waveform"
+            }
+          },       
+        },        
+        
+      },
+       
     }
 
   self.vb_content = vb_content

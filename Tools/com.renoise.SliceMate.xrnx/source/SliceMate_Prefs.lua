@@ -27,6 +27,12 @@ SliceMate_Prefs.QUANTIZE_LABELS = {
   "Pattern",
 }
 
+SliceMate_Prefs.SLICE_NAV_MODE = {  
+  QUANTIZE = 1,
+  SLICE = 2,
+  FRAMES = 3,
+}
+
 function SliceMate_Prefs:__init()
 
   renoise.Document.DocumentNode.__init(self)
