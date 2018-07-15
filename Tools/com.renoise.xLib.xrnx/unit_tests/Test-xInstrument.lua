@@ -1,0 +1,4 @@
+-- get_slice_marker_at_pos
+-- get_slice_marker_after_pos
+-- get_num_frames_in_slice
+-- etc

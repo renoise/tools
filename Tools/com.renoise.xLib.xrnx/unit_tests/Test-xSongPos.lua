@@ -116,15 +116,15 @@ fn = function()
   assert((new_pos.sequence==3),"expected sequence to be 3")
   assert((new_pos.line==seq3_num_lines),("expected line to be %d"):format(seq3_num_lines))
 
-  xSongPos.increase_by_lines(1,new_pos,xSongPos.OUT_OF_BOUNDS.CAP)
+  xSongPos.increase_by_lines(1,new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP})
   assert((new_pos.sequence==3),"expected sequence to be 3")
   assert((new_pos.line==seq3_num_lines),("expected line to be %d"):format(seq3_num_lines))
 
-  xSongPos.increase_by_lines(10,new_pos,xSongPos.OUT_OF_BOUNDS.LOOP)
+  xSongPos.increase_by_lines(10,new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP})
   assert((new_pos.sequence==1),"expected sequence to be 1")
   assert((new_pos.line==10),"expected line to be 10")
 
-  xSongPos.increase_by_lines(total_lines,new_pos,xSongPos.OUT_OF_BOUNDS.NULL)
+  xSongPos.increase_by_lines(total_lines,new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.NULL})
   assert((new_pos.sequence==nil),"expected sequence to be NULL")
 
   -- increase (beat)
@@ -236,17 +236,17 @@ fn = function()
   assert((new_pos.line==13),"expected line to be 13")
 
   new_pos = {sequence=3,line=64}
-  xSongPos.next_block(new_pos,xSongPos.OUT_OF_BOUNDS.LOOP  )
+  xSongPos.next_block(new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP})
   assert((new_pos.sequence==1),"expected sequence to be 1")
   assert((new_pos.line==1),"expected line to be 1")
   
   new_pos = {sequence=3,line=60}
-  xSongPos.next_block(new_pos,xSongPos.OUT_OF_BOUNDS.CAP)
+  xSongPos.next_block(new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP})
   assert((new_pos.sequence==3),"expected sequence to be 3")
   assert((new_pos.line==64),"expected line to be 64")
   
   new_pos = {sequence=3,line=60}
-  xSongPos.next_block(new_pos,xSongPos.OUT_OF_BOUNDS.NULL)
+  xSongPos.next_block(new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.NULL})
   assert((new_pos.sequence==nil),"expected sequence to be nil")
   assert((new_pos.line==nil),"expected line to be nil")
   
@@ -274,17 +274,17 @@ fn = function()
   assert((new_pos.line==1),"expected line to be 1")
 
   new_pos = {sequence=3,line=64}
-  xSongPos.next_block(new_pos,xSongPos.OUT_OF_BOUNDS.LOOP)
+  xSongPos.next_block(new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP})
   assert((new_pos.sequence==1),"expected sequence to be 1")
   assert((new_pos.line==1),"expected line to be 1")
   
   new_pos = {sequence=3,line=60}
-  xSongPos.next_block(new_pos,xSongPos.OUT_OF_BOUNDS.CAP)
+  xSongPos.next_block(new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP})
   assert((new_pos.sequence==3),"expected sequence to be 3")
   assert((new_pos.line==64),"expected line to be 64")
   
   new_pos = {sequence=3,line=60}
-  xSongPos.next_block(new_pos,xSongPos.OUT_OF_BOUNDS.NULL)
+  xSongPos.next_block(new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.NULL})
   assert((new_pos.sequence==nil),"expected sequence to be nil")
   assert((new_pos.line==nil),"expected line to be nil")
   
@@ -304,22 +304,22 @@ fn = function()
   assert((new_pos.line==1),"expected line to be 1")
 
   new_pos = {sequence=3,line=1}
-  xSongPos.next_pattern(new_pos,xSongPos.OUT_OF_BOUNDS.CAP)
+  xSongPos.next_pattern(new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP})
   assert((new_pos.sequence==3),"expected sequence to be 3:"..new_pos.sequence)
   assert((new_pos.line==64),"expected line to be 64:"..new_pos.line)
   
   new_pos = {sequence=3,line=64}
-  xSongPos.next_pattern(new_pos,xSongPos.OUT_OF_BOUNDS.CAP)
+  xSongPos.next_pattern(new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP})
   assert((new_pos.sequence==3),"expected sequence to be 3:"..new_pos.sequence)
   assert((new_pos.line==64),"expected line to be 64:"..new_pos.line)
   
   new_pos = {sequence=3,line=64}
-  xSongPos.next_pattern(new_pos,xSongPos.OUT_OF_BOUNDS.LOOP)
+  xSongPos.next_pattern(new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP})
   assert((new_pos.sequence==1),"expected sequence to be 1:"..new_pos.sequence)
   assert((new_pos.line==1),"expected line to be 1:"..new_pos.line)
 
   new_pos = {sequence=3,line=64}
-  xSongPos.next_pattern(new_pos,xSongPos.OUT_OF_BOUNDS.NULL)
+  xSongPos.next_pattern(new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.NULL})
   assert((new_pos.sequence==nil),"expected sequence to be nil")
   assert((new_pos.line==nil),"expected line to be nil")
 
@@ -337,15 +337,15 @@ fn = function()
   assert((new_pos.sequence==1),"expected sequence to be 1")
   assert((new_pos.line==1),"expected line to be 1")
 
-  xSongPos.decrease_by_lines(seq1_num_lines,new_pos,xSongPos.OUT_OF_BOUNDS.CAP)
+  xSongPos.decrease_by_lines(seq1_num_lines,new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP})
   assert((new_pos.sequence==1),"expected sequence to be 1")
   assert((new_pos.line==1),"expected line to be 1")
 
-  xSongPos.decrease_by_lines(seq1_num_lines,new_pos,xSongPos.OUT_OF_BOUNDS.LOOP)
+  xSongPos.decrease_by_lines(seq1_num_lines,new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.LOOP})
   assert((new_pos.sequence==seq_count),("expected sequence to be %d"):format(seq_count))
   assert((new_pos.line==seq3_num_lines-seq1_num_lines+1),("expected line to be %d"):format(seq3_num_lines-seq1_num_lines+1))
 
-  xSongPos.decrease_by_lines(total_lines,new_pos,xSongPos.OUT_OF_BOUNDS.NULL)
+  xSongPos.decrease_by_lines(total_lines,new_pos,{bounds_mode = xSongPos.OUT_OF_BOUNDS.NULL})
   assert((new_pos.sequence==nil),"expected sequence to be NULL")
 
   -- normalize
@@ -413,6 +413,10 @@ fn = function()
   local pos1 = {sequence=3,line=1}
   local pos2 = {sequence=2,line=seq2_num_lines}
   assert((xSongPos.get_line_diff(pos1,pos2)==1),"expected line_diff to be 1")
+
+  -- TODO convert between songpos and beats 
+  
+  
 
 
   LOG(">>> xSongPos: OK - passed all tests")
