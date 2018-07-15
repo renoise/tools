@@ -253,7 +253,9 @@ function SliceMate_UI:update_instrument()
   
   -- slice buttons 
   self.vb.views["vb_insert_slice_back"].active = in_trail
+  self.vb.views["vb_insert_slice_back_fill"].active = in_trail
   self.vb.views["vb_insert_slice_forward"].active = in_trail
+  self.vb.views["vb_insert_slice_forward_fill"].active = in_trail
   self.vb.views["vb_insert_slice_previous"].active = in_trail
   self.vb.views["vb_insert_slice_next"].active = in_trail
   
@@ -480,6 +482,7 @@ function SliceMate_UI:build()
               text = "↑",
               id = "vb_insert_slice_back_fill",
               width = options_checkbox_w,
+              tooltip = "Slice backward using Quantize until reaching the start",
               notifier = function()
                 local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
                 if not success and err then
@@ -492,6 +495,7 @@ function SliceMate_UI:build()
             vb:button{
               text = "▴ Slice",
               id = "vb_insert_slice_back",
+              tooltip = "Slice backward using Quantize",
               width = prev_next_bt_w,
               notifier = function()
                 local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
@@ -505,6 +509,7 @@ function SliceMate_UI:build()
             vb:button{
               text = "▴ Insert",
               id = "vb_insert_slice_previous",
+              tooltip = "Insert the previous slice",
               width = prev_next_bt_w,
               notifier = function()
                 local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.SLICE)
@@ -519,6 +524,7 @@ function SliceMate_UI:build()
               text = "↑",
               id = "vb_insert_slice_previous_fill",
               width = options_checkbox_w,
+              active = false,
               notifier = function()
                 
               end
@@ -529,6 +535,7 @@ function SliceMate_UI:build()
             vb:button{
               text = "↓",
               id = "vb_insert_slice_forward_fill",
+              tooltip = "Slice forward using Quantize until reaching the end",
               width = options_checkbox_w,
               notifier = function()
                 local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
@@ -542,6 +549,7 @@ function SliceMate_UI:build()
             vb:button{
               text = "▾ Slice",
               id = "vb_insert_slice_forward",
+              tooltip = "Slice forward using Quantize",              
               width = prev_next_bt_w,
               notifier = function()
                 local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
@@ -556,6 +564,7 @@ function SliceMate_UI:build()
               text = "▾ Insert",
               id = "vb_insert_slice_next",
               width = prev_next_bt_w,
+              tooltip = "Insert the next slice",
               notifier = function()
                 local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.SLICE)
                 if not success and err then
@@ -569,6 +578,7 @@ function SliceMate_UI:build()
               text = "↓",
               id = "vb_insert_slice_next_fill",
               width = options_checkbox_w,
+              active = false,
               notifier = function()
                 
               end
