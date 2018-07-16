@@ -1,8 +1,14 @@
 # SliceMate Changelog
 
-## 0.22
+## 0.25
+- Feature: Forward/backward slicing, using quantize
+- Feature: Forward/backward fill, limited by scope (song, pattern, etc.)
+- Feature: Slice insert (insert existing slices into pattern)
+- Cleaned up, rearranged GUI a bit 
+- Fixed beat-sync issue (related to xLib) 
 
-- Add support for beat-synced samples 
+## 0.22
+- Add preliminary support for beat-synced samples 
 - Fix: never search forward when looking for notes to slice
 
 ## 0.21

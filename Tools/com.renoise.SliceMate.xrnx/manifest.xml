@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <ApiVersion>5</ApiVersion>
   <Id>com.renoise.SliceMate</Id>
-  <Version>0.22</Version>
+  <Version>0.25</Version>
   <Author>danoise [bjorn.nesby@gmail.com]</Author>
   <Name>SliceMate</Name>
   <Category>Pattern Editor, Sample, Slice</Category>
