@@ -498,7 +498,7 @@ function SliceMate_UI:build()
           -- quantization 
           vb:row{
             vb:text{
-              text = "Quantize to",
+              text = "Quantize",
               width = slice_sub_label_w,
             },
             vb:popup{
@@ -511,7 +511,7 @@ function SliceMate_UI:build()
           -- scope select 
           vb:row{
             vb:text{
-              text = "Limit fill to",
+              text = "Limit Fill",
               width = slice_sub_label_w,
             },
             vb:popup{
