@@ -1,6 +1,14 @@
 # SliceMate 
 
+![Splash Image](docs/splash_big.png)
+
 This tool makes it easy to slice auto-seeked samples and phrases from within the pattern editor. Perfect for remixing and working with rendered stems. 
+
+## Links
+
+* Download from tool page: http://renoise.com/tools/slicemate  
+* Discuss in Renoise forum: http://forum.renoise.com/index.php/topic/49630-new-tool-31-slicemate/  
+* Check for / report issues: https://github.com/renoise/xrnx/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+slicemate
 
 ## Features
 
@@ -10,6 +18,15 @@ This tool makes it easy to slice auto-seeked samples and phrases from within the
 * Supports real-time operation (slice a sample while listening to it) with optional quantization
 * Can "slice" phrases too - also when using a different LPB than the song
 * "Delay-column-aware", for maximum precision 
+
+SliceMate has full support for sample offset commands (Sxx). This includes support on the sliced samples themselves, but also the special syntax Renoise has for the "root sample". 
+
+![Sxx Command](docs/slicemate-workflow-sxx-edited.gif)  
+_Pay attention to the selection in the waveform editor while commands are entered_
+
+And it also understands when you've used the alternative Sxx-based approach to slice triggering
+![Sxx Command](docs/slicemate-workflow-sxx-root.gif)  
+_Here, the Sxx command decides which slice is active_
 
 ## Quickstart
 
@@ -71,11 +88,20 @@ Below, some more detailed information:
 
 ### Slice panel 
 
-The slice panel contains a number of buttons, each one relating to slicing in some way. 
+The slice panel contains all buttons that are related to slicing. 
 
 * **Slice at Cursor** - as the title says, pressing this button will slice the sample at the current position. If no sample is present, a dialog will appear and ask if a note should be written to the pattern.
-* **▲ Slice / ▼ Slice** - these buttons control the forward/backward slicing. Pressing either one will insert a slice with a distance which is determined by the currently selected `Quantize` option. 
-* **▲ Insert / ▼ Insert** - click these buttons to insert existing slices into the pattern. Unlike with the other buttons, inserting will not create new slices.  
+
+* **Quantize** - determines the current quantization mode. Default is 'Beat', which is usually every four lines or so. Note that quantization always applies to Slice (Forward & Backward) and Fill, but only applies to 'Slice at Cursor' when explicitly enabled  (see options). 
+
+* **Limit Fill** - here you can choose how to control fill actions. Default limit is 'Whole Pattern' - if you don't want any limit, simply choose 'Whole Song'. 
+
+* **Slice (Forward & Backward)** - these buttons control the forward/backward slicing. 
+Pressing either one will insert a slice with a distance which is determined by the currently selected `Quantize` option. In principle, these buttons do exactly the same as if you clicked 'Slice at Cursor', moved the cursor a few lines, clicked 'Slice at Cursor', etc.
+
+* **Insert (Previous & Next)** - click these buttons to insert _existing_ slices into the pattern. Unlike with the other buttons, inserting will not create new slices. Note that the slices are automatically inserted with the actual playback duration - in theory, positioning the cursor at the trigger note and hitting "insert" repeatedly should create a seamless string of notes, recreating the full original sample. 
+
+* **Fill (Up & Down)** - located next to 'Slice' and 'Insert'. Will repeat the selected action, using the selected `Quantize`, for as many times as the `Fill Limit` (scope) and sample length allows. Use this, for example, to insert slices for every beat throughout the currently selected pattern.
 
 > Before creating a new slice, SliceMate checks if there is already an active slice at the provided position. If this is the case, that slice is simply reused. 
 
@@ -87,11 +113,13 @@ This panel contains all options for SliceMate
 
 #### Slice Options
 
-* **Quantize note**: make sure notes are always on a line. Valid options are LINE,BEAT,BAR,BLOCK,PATTERN
-* **Support phrase slicing**: enables phrase-slicing support 
-* **Insert note when slicing**: inserts a note in the pattern every time the sample is sliced (when false, a slice is created but no note is inserted).
+* **Force Quantization**: enforce quantization when using 'Slice at Cursor'.  
+Note that, even when disabled, the selected option is still the one in use by other slicing methods (Forward & Backward). Valid options are LINE,BEAT,BAR,BLOCK,PATTERN
+* **Support phrase slicing**: enables transparent phrase-slicing support 
+* **Insert note when slicing**: inserts a note in the pattern every time the sample is sliced.  
+When set to false, a slice is still created but no note is inserted.
 * **Propagate VOL/PAN**: when inserting a note, use the volume and panning from the previous one
-* **Auto-fix instrument**: attempt to fix simply issues that prevent the tool from working, such as autoseek not being enabled. 
+* **Auto-fix instrument**: attempt to fix simple issues that prevent the tool from working, such as autoseek not being enabled. 
 
 #### Selection 
 
