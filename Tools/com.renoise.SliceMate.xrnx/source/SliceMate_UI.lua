@@ -92,7 +92,13 @@ function SliceMate_UI:__init(...)
   self.owner.phrase_line:add_notifier(function()
     self.update_instrument_requested = true
   end)
-
+  
+  --self.prefs.limit_fill:add_notifier(function()
+  --  self:update_slice_button()
+  --end)
+  self.prefs.quantize_enabled:add_notifier(function()
+    self:update_slice_button()
+  end)
   self.prefs.show_options:add_notifier(function()
     self:update_options()  
   end)
@@ -125,11 +131,14 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function SliceMate_UI:update_slice_button()
-
+  print("SliceMate_UI:update_slice_button()")
+  
   local ctrl = self.vb.views["insert_slice_button"]
-  if ctrl then 
-    ctrl.active = (rns.selected_track.type == renoise.Track.TRACK_TYPE_SEQUENCER)
-  end 
+  --local fill_mode = SliceMate_Prefs.LIMIT_FILL_LABELS[self.prefs.limit_fill.value]
+  local text = "Slice at Cursor"
+  
+  ctrl.active = (rns.selected_track.type == renoise.Track.TRACK_TYPE_SEQUENCER)
+  ctrl.text = self.prefs.quantize_enabled.value and text .. " [Quant]" or text 
 
 end
 
@@ -161,6 +170,7 @@ function SliceMate_UI:update_instrument()
   local root_frame = self.owner.position_root.value
 
   local in_trail = (instr_idx > 0) and true or false 
+  local is_phrase = (self.owner.phrase_index.value > 0) and true or false
   
   local ctrl = self.vb.views["instrument_index"]
   if ctrl then
@@ -256,8 +266,8 @@ function SliceMate_UI:update_instrument()
   self.vb.views["vb_insert_slice_back_fill"].active = in_trail
   self.vb.views["vb_insert_slice_forward"].active = in_trail
   self.vb.views["vb_insert_slice_forward_fill"].active = in_trail
-  self.vb.views["vb_insert_slice_previous"].active = in_trail
-  self.vb.views["vb_insert_slice_next"].active = in_trail
+  self.vb.views["vb_insert_slice_previous"].active = in_trail and not is_phrase
+  self.vb.views["vb_insert_slice_next"].active = in_trail and not is_phrase
   
 
 end
@@ -308,8 +318,15 @@ function SliceMate_UI:build()
   --local slice_half_bt_w = (self.dialog_width-12)/2
   
   local options_checkbox_w = 20
-  local options_control_w = 80
   local options_label_w = 60
+  local column_button_h = 33
+  
+  local slice_sub_label_w = 60
+  local slice_sub_button_w = 58
+  local slice_sub_fill_button_w = 40
+  
+  -- derived
+  local slice_sub_popup_w = slice_sub_button_w + slice_sub_fill_button_w
   
   local vb_content = 
     vb:row{
@@ -396,7 +413,7 @@ function SliceMate_UI:build()
           vb:row{
             vb:button{
               tooltip = "Go to previous note-column",
-              height = 36,
+              height = column_button_h,
               width = options_checkbox_w,
               text = "◀",
               midi_mapping = "Tools:SliceMate:Previous Column [Trigger]",
@@ -405,6 +422,7 @@ function SliceMate_UI:build()
               end
             },
             vb:column{
+              spacing = -3,
               vb:row{
                 vb:button{
                   tooltip = "Go to previous note",
@@ -448,7 +466,7 @@ function SliceMate_UI:build()
             },
             vb:button{
               tooltip = "Go to next note-column",
-              height = 36,
+              height = column_button_h,
               width = options_checkbox_w,
               text = "▶",
               midi_mapping = "Tools:SliceMate:Next Column [Trigger]",
@@ -477,116 +495,172 @@ function SliceMate_UI:build()
               end
             end
           },
+          -- quantization 
           vb:row{
-            vb:button{
-              text = "↑",
-              id = "vb_insert_slice_back_fill",
-              width = options_checkbox_w,
-              tooltip = "Slice backward using Quantize until reaching the start",
-              notifier = function()
-                local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
-                if not success and err then
-                  renoise.app():show_error(err)
-                else
-                  self.owner.select_requested = true
-                end                                
-              end
+            vb:text{
+              text = "Quantize to",
+              width = slice_sub_label_w,
             },
-            vb:button{
-              text = "▴ Slice",
-              id = "vb_insert_slice_back",
-              tooltip = "Slice backward using Quantize",
-              width = prev_next_bt_w,
-              notifier = function()
-                local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
-                if not success and err then
-                  renoise.app():show_error(err)
-                else
-                  self.owner.select_requested = true
-                end
-              end
-            },
-            vb:button{
-              text = "▴ Insert",
-              id = "vb_insert_slice_previous",
-              tooltip = "Insert the previous slice",
-              width = prev_next_bt_w,
-              notifier = function()
-                local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.SLICE)
-                if not success and err then
-                  renoise.app():show_error(err)
-                else
-                  self.owner.select_requested = true
-                end
-              end
-            },
-            vb:button{
-              text = "↑",
-              id = "vb_insert_slice_previous_fill",
-              width = options_checkbox_w,
-              active = false,
-              notifier = function()
-                
-              end
-            },
-            
+            vb:popup{
+              items = SliceMate_Prefs.QUANTIZE_LABELS,
+              bind = self.prefs.quantize_amount,
+              width = slice_sub_popup_w,
+            }
           },
+          
+          -- scope select 
           vb:row{
-            vb:button{
-              text = "↓",
-              id = "vb_insert_slice_forward_fill",
-              tooltip = "Slice forward using Quantize until reaching the end",
-              width = options_checkbox_w,
-              notifier = function()
-                local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
-                if not success and err then
-                  renoise.app():show_error(err)
-                else
-                  self.owner.select_requested = true
-                end                
-              end
-            },            
-            vb:button{
-              text = "▾ Slice",
-              id = "vb_insert_slice_forward",
-              tooltip = "Slice forward using Quantize",              
-              width = prev_next_bt_w,
-              notifier = function()
-                local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
-                if not success and err then
-                  renoise.app():show_error(err)
-                else
-                  self.owner.select_requested = true
-                end
-              end              
+            vb:text{
+              text = "Limit fill to",
+              width = slice_sub_label_w,
             },
-            vb:button{
-              text = "▾ Insert",
-              id = "vb_insert_slice_next",
-              width = prev_next_bt_w,
-              tooltip = "Insert the next slice",
-              notifier = function()
-                local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.SLICE)
-                if not success and err then
-                  renoise.app():show_error(err)
-                else
-                  self.owner.select_requested = true
+            vb:popup{
+              width = slice_sub_popup_w,
+              bind = self.prefs.limit_fill,
+              items = SliceMate_Prefs.LIMIT_FILL_LABELS
+            }
+          },          
+          -- slice forward/back 
+          vb:column{
+            --style = "group",
+            --margin = 4,
+            spacing = -3,
+            vb:row{
+              vb:text{
+                text = "Slice Back",
+                width = slice_sub_label_w,
+              },
+              vb:button{
+                text = "▴ Slice",
+                width = slice_sub_button_w,
+                id = "vb_insert_slice_back",
+                tooltip = "Slice backward using Quantize",
+                notifier = function()
+                  local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
+                  if not success and err then
+                    renoise.app():show_error(err)
+                  else
+                    self.owner.select_requested = true
+                  end
                 end
-              end              
+              },
+              vb:button{
+                text = "▴ Fill",
+                width = slice_sub_fill_button_w,
+                id = "vb_insert_slice_back_fill",
+                tooltip = "Slice backward using Quantize until reaching the start",
+                notifier = function()
+                  local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
+                  if not success and err then
+                    renoise.app():show_error(err)
+                  else
+                    self.owner.select_requested = true
+                  end                                
+                end
+              },
             },
-            vb:button{
-              text = "↓",
-              id = "vb_insert_slice_next_fill",
-              width = options_checkbox_w,
-              active = false,
-              notifier = function()
-                
-              end
-            },            
-            
+            vb:row{
+              vb:text{
+                text = "Slice Forw",
+                width = slice_sub_label_w,
+              },
+              vb:button{
+                text = "▾ Slice",
+                width = slice_sub_button_w,
+                id = "vb_insert_slice_forward",
+                tooltip = "Slice forward using Quantize",
+                notifier = function()
+                  local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
+                  if not success and err then
+                    renoise.app():show_error(err)
+                  else
+                    self.owner.select_requested = true
+                  end                
+                end               
+              },
+              vb:button{
+                text = "▾ Fill",
+                width = slice_sub_fill_button_w,
+                id = "vb_insert_slice_forward_fill",
+                tooltip = "Slice forward using Quantize until reaching the end",
+                notifier = function()
+                  local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
+                  if not success and err then
+                    renoise.app():show_error(err)
+                  else
+                    self.owner.select_requested = true
+                  end                
+                end              
+              },
+            },
           },
-        
-        },   
+          -- insert slice 
+          vb:column{
+            --style = "group",
+            --margin = 4,
+            spacing = -3,
+            vb:column{
+              spacing = -3,
+              vb:row{
+                vb:text{
+                  text = "Ins. Prev",
+                  width = slice_sub_label_w,
+                },
+                vb:button{
+                  text = "▴ Insert",
+                  width = slice_sub_button_w,
+                  id = "vb_insert_slice_previous",
+                  tooltip = "Insert the previous slice",
+                  notifier = function()
+                    local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.SLICE)
+                    if not success and err then
+                      renoise.app():show_error(err)
+                    else
+                      self.owner.select_requested = true
+                    end
+                  end              
+                },
+                vb:button{
+                  text = "▴ Fill",
+                  width = slice_sub_fill_button_w,
+                  id = "vb_insert_slice_previous_fill",
+                  active = false,
+                },
+              },
+              vb:row{
+                vb:text{
+                  text = "Ins. Next",
+                  width = slice_sub_label_w,
+                },
+                vb:button{
+                  text = "▾ Insert",
+                  width = slice_sub_button_w,
+                  id = "vb_insert_slice_next",
+                  tooltip = "Insert the next slice",
+                  notifier = function()
+                    local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.SLICE)
+                    if not success and err then
+                      renoise.app():show_error(err)
+                    else
+                      self.owner.select_requested = true
+                    end
+                  end               
+                  
+                },
+                vb:button{
+                  id = "vb_insert_slice_next_fill",
+                  text = "▾ Fill",
+                  width = slice_sub_fill_button_w,
+                  active = false,
+                },
+              },      
+            },    
+          },
+
+          
+        },
+
+        -- footer
         vb:column{        
           style = "group",
           margin = 4,
@@ -615,7 +689,7 @@ function SliceMate_UI:build()
         vb:column{
           margin = 4,
           style = "group",
-          width = "100%",
+          width = self.dialog_width,
           vb:text{
             text = "General",
             font = "bold",
@@ -641,56 +715,20 @@ function SliceMate_UI:build()
         vb:column{
           margin = 4,
           style = "group",
+          width = self.dialog_width,
           vb:text{
             text = "Slicing",
             font = "bold",
           },            
           vb:row{
-            tooltip = "Decide if slices should be quantized, and by how large an amount",
+            tooltip = "Decide if slices are quantized",
             vb:checkbox{
               bind = self.prefs.quantize_enabled
             },
             vb:text{
-              text = "Quantize to ",
-              width = options_label_w,
-            },
-            vb:popup{
-              items = SliceMate_Prefs.QUANTIZE_LABELS,
-              bind = self.prefs.quantize_amount,
-              width = options_control_w,
+              text = "Force Quantization"
             }
           },
-          --[[
-          vb:row{
-            vb:space{
-              width = options_checkbox_w,
-            },
-            vb:text{
-              text = "Back/Forw.",
-              width = options_label_w,
-            },
-            vb:popup{
-              items = SliceMate_Prefs.SLICE_NAV_LABELS,
-              bind = self.prefs.slice_nav_mode,
-              width = options_control_w,
-            }
-          },   
-          vb:row{
-            vb:space{
-              width = options_checkbox_w,
-            },
-            vb:text{
-              text = "Frames",
-              width = options_label_w,
-            },
-            vb:valuebox{
-              value = 0,
-              width = options_control_w - options_checkbox_w,
-              active = false,
-            },
-            
-          },   
-          ]]
           vb:row{
             tooltip = "Support slicing of instrument phrases",
             vb:checkbox{
@@ -731,7 +769,7 @@ function SliceMate_UI:build()
         vb:column{
           margin = 4,
           style = "group",
-          width = "100%",
+          width = self.dialog_width,
           vb:text{
             text = "Selection",
             font = "bold",

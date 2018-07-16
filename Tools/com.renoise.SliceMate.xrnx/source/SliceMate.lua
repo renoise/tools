@@ -716,6 +716,37 @@ function SliceMate:get_phrase_position(trigger_pos,cursor_pos)
 end  
   
 ---------------------------------------------------------------------------------------------------
+-- check if position is outside our designated scope 
+-- @param pos (xCursorPos)
+-- @return boolean, false when outside 
+-- @return string, error message 
+ 
+function SliceMate:check_scope(pos,source_pos)
+  if (self.prefs.limit_fill.value == SliceMate_Prefs.LIMIT_FILL.PATTERN) then 
+    if (pos.sequence ~= source_pos.sequence) then 
+      return false 
+    end
+  elseif (self.prefs.limit_fill.value == SliceMate_Prefs.LIMIT_FILL.PATTERN_SELECTION) then 
+    local patt_sel = rns.selection_in_pattern
+    if not patt_sel then 
+      return false, "Please create a selection in the pattern"
+    end    
+    if not patt_sel or not xPatternSelection.within_bounds(patt_sel,pos) then 
+      return false 
+    end
+  elseif (self.prefs.limit_fill.value == SliceMate_Prefs.LIMIT_FILL.SEQUENCE_SELECTION) then 
+    local seq_sel = xSequencerSelection.get_selected_range()
+    if not seq_sel then 
+      return false, "Please create a selection in the sequence"
+    end
+    if not xSequencerSelection.within_range(seq_sel,pos) then 
+      return false 
+    end
+  end
+  return true
+end
+
+---------------------------------------------------------------------------------------------------
 -- slice forward from cursor-position
 -- @param mode, SliceMate_Prefs.SLICE_NAV_MODE
 -- @param [fill], boolean - continue until end of sample has been reached
@@ -726,6 +757,7 @@ function SliceMate:insert_forward_slice(mode,fill)
   TRACE("SliceMate:insert_forward_slice(mode,fill)",mode,fill)
   
   local pos = xCursorPos()
+  local source_pos = xCursorPos(pos)
   local limit_to_pos = not fill
   
   if (mode == SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE) then 
@@ -745,6 +777,10 @@ function SliceMate:insert_forward_slice(mode,fill)
       while pos do
         pos = self:get_next_position(pos)
         if pos then 
+          local passed,err = self:check_scope(pos,source_pos) 
+          if not passed then 
+            return false,err
+          end            
           local skip_insert_dialog = true
           local inserted,err = self:insert_slice(pos,skip_insert_dialog)
           if err then 
@@ -757,6 +793,10 @@ function SliceMate:insert_forward_slice(mode,fill)
     end
     
   elseif (mode == SliceMate_Prefs.SLICE_NAV_MODE.SLICE) then 
+    
+    if (self.phrase_index.value > 0) then 
+      return false,"Phrases can't be inserted"
+    end
     
     local line_spans,instr_idx,notecol,trigger_pos,duration = self:get_slice_line_spans(pos,limit_to_pos)
     if not line_spans then 
@@ -795,6 +835,7 @@ function SliceMate:insert_backward_slice(mode,fill)
   TRACE("SliceMate:insert_backward_slice(mode,fill)",mode,fill)
   
   local pos = xCursorPos()
+  local source_pos = xCursorPos(pos)
   local limit_to_pos = not fill
 
   if (mode == SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE) then 
@@ -810,6 +851,10 @@ function SliceMate:insert_backward_slice(mode,fill)
       while pos do
         pos = self:get_previous_position(pos)
         if pos then 
+          local passed,err = self:check_scope(pos,source_pos) 
+          if not passed then 
+            return false,err
+          end            
           local inserted, err = self:insert_slice(pos,skip_insert_dialog)
           if not inserted then 
             LOG(err)
@@ -1170,7 +1215,10 @@ function SliceMate:get_slice_line_spans(pos,limit_to_pos,backward)
   local autofix = self.prefs.autofix_instr.value    
   local frame,sample_idx,instr_idx,notecol = self:get_buffer_position(
     trigger_pos,pos,autofix)
-  
+  if not frame then 
+    return false,sample_idx
+  end
+    
   local instr = rns.instruments[instr_idx]
   if not xInstrument.is_sliced(instr) then 
     return false, "This instrument does not contain any slices"
