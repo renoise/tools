@@ -2639,9 +2639,9 @@ renoise.song().instruments[].samples[].sample_buffer.display_length, _observable
 renoise.song().instruments[].samples[].sample_buffer.display_range[], _observable
   -> [array of two numbers, 1-number_of_frames]
 
--- The vertical zoom level where 1.0 is fully zoomed out.
+-- The vertical zoom level where 1.0 is fully non-zoomed.
 renoise.song().instruments[].samples[].sample_buffer.vertical_zoom_factor, _observable
-   -> [number, 0.0-1.0]
+   -> [number >= 0.0 < 2.0]
 
 -- Selection range as visible in the sample editor. always valid. returns the entire
 -- buffer when no selection is present in the UI.
