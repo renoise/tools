@@ -4,8 +4,11 @@
 - Feature: Forward/backward slicing, using quantize
 - Feature: Forward/backward fill, limited by scope (song, pattern, etc.)
 - Feature: Slice insert (insert existing slices into pattern)
+- Feature: Add “Step size” as quantize amount
 - Cleaned up, rearranged GUI a bit 
-- Fixed beat-sync issue (related to xLib) 
+- Fixed: beat-sync issue (related to xLib) 
+- Fixed: re-use effect columns if values are identical (skip writing)
+- Fixed: issue with invalid pos (first line in song)
 
 ## 0.22
 - Add preliminary support for beat-synced samples 
