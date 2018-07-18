@@ -432,11 +432,13 @@ function SliceMate:get_position()
     return pos
   end
 
+  --[[
   if not rns.transport.playing  
     or (rns.transport.playing and not rns.transport.follow_player) 
   then 
     xSongPos.decrease_by_lines(1,pos)
   end 
+  ]]
 
   return self:get_next_position(pos)
 
