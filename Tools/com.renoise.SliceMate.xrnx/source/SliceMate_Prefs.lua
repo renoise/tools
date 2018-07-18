@@ -14,13 +14,15 @@ class 'SliceMate_Prefs'(renoise.Document.DocumentNode)
 
 SliceMate_Prefs.QUANTIZE_AMOUNT = {  
   LINE = 1, 
-  BEAT = 2,
-  BAR = 3,
-  BLOCK = 4,
-  PATTERN = 5,
+  EDIT_STEP = 2,
+  BEAT = 3,
+  BAR = 4,
+  BLOCK = 5,
+  PATTERN = 6,
 }
 SliceMate_Prefs.QUANTIZE_LABELS = {  
   "Line",
+  "Edit-step",
   "Beat",
   "Bar",
   "Block",

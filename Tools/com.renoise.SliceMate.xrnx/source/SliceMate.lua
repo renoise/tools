@@ -456,6 +456,7 @@ function SliceMate:get_previous_position(pos)
     [self.prefs.QUANTIZE_AMOUNT.BLOCK] = function() xSongPos.previous_block(pos) end,
     [self.prefs.QUANTIZE_AMOUNT.PATTERN] = function() xSongPos.previous_pattern(pos) end,
     [self.prefs.QUANTIZE_AMOUNT.LINE] = function() xSongPos.decrease_by_lines(1,pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.EDIT_STEP] = function() xSongPos.decrease_by_lines(rns.transport.edit_step,pos) end,
   }
 
   if (choices[self.prefs.quantize_amount.value]) then 
@@ -484,6 +485,7 @@ function SliceMate:get_next_position(pos)
     [self.prefs.QUANTIZE_AMOUNT.BLOCK] = function() xSongPos.next_block(pos) end,
     [self.prefs.QUANTIZE_AMOUNT.PATTERN] = function() xSongPos.next_pattern(pos) end,
     [self.prefs.QUANTIZE_AMOUNT.LINE] = function() xSongPos.increase_by_lines(1,pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.EDIT_STEP] = function() xSongPos.increase_by_lines(rns.transport.edit_step,pos) end,
   }
 
   if (choices[self.prefs.quantize_amount.value]) then 
