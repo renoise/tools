@@ -143,6 +143,138 @@ renoise.tool():add_keybinding {
   end
 }
 
+-- forward slice 
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:SliceMate:Forward Slice [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      launch()
+      app:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:SliceMate:Forward Slice",
+  invoke = function(repeated)
+    if not repeated then 
+      launch()
+      app:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
+    end
+  end
+}
+
+-- forward slice (fill)
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:SliceMate:Forward Slice - Fill [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      launch()
+      app:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:SliceMate:Forward Slice - Fill",
+  invoke = function(repeated)
+    if not repeated then 
+      launch()
+      app:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
+    end
+  end
+}
+
+-- backward slice 
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:SliceMate:Backward Slice [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      launch()
+      app:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:SliceMate:Backward Slice",
+  invoke = function(repeated)
+    if not repeated then 
+      launch()
+      app:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
+    end
+  end
+}
+
+-- backward slice (fill)
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:SliceMate:Backward Slice - Fill [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      launch()
+      app:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:SliceMate:Backward Slice - Fill",
+  invoke = function(repeated)
+    if not repeated then 
+      launch()
+      app:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
+    end
+  end
+}
+
+-- insert next slice
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:SliceMate:Insert Next Slice [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      launch()
+      app:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.INSERT)
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:SliceMate:Insert Next Slice",
+  invoke = function(repeated)
+    if not repeated then 
+      launch()
+      app:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
+    end
+  end
+}
+
+-- insert previous slice
+
+renoise.tool():add_midi_mapping{
+  name = "Tools:SliceMate:Insert Previous Slice [Trigger]",
+  invoke = function(msg)
+    if msg:is_trigger() then
+      launch()
+      app:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.INSERT)
+    end
+  end
+}
+
+renoise.tool():add_keybinding {
+  name = "Global:SliceMate:Insert Previous Slice",
+  invoke = function(repeated)
+    if not repeated then 
+      launch()
+      app:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
+    end
+  end
+}
+
 -- previous note
 
 renoise.tool():add_midi_mapping{

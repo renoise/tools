@@ -43,8 +43,7 @@ SliceMate_Prefs.LIMIT_FILL_LABELS = {
 
 SliceMate_Prefs.SLICE_NAV_MODE = {  
   QUANTIZE = 1,
-  SLICE = 2,
-  FRAMES = 3,
+  INSERT = 2,
 }
 
 function SliceMate_Prefs:__init()

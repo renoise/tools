@@ -792,7 +792,7 @@ function SliceMate:insert_forward_slice(mode,fill)
       end 
     end
     
-  elseif (mode == SliceMate_Prefs.SLICE_NAV_MODE.SLICE) then 
+  elseif (mode == SliceMate_Prefs.SLICE_NAV_MODE.INSERT) then 
     
     if (self.phrase_index.value > 0) then 
       return false,"Phrases can't be inserted"
@@ -866,7 +866,7 @@ function SliceMate:insert_backward_slice(mode,fill)
       end 
     end
     
-  elseif (mode == SliceMate_Prefs.SLICE_NAV_MODE.SLICE) then 
+  elseif (mode == SliceMate_Prefs.SLICE_NAV_MODE.INSERT) then 
 
     local line_spans,instr_idx,notecol,trigger_pos,duration = 
       self:get_slice_line_spans(pos,limit_to_pos,true)

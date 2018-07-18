@@ -535,6 +535,7 @@ function SliceMate_UI:build()
                 width = slice_sub_button_w,
                 id = "vb_insert_slice_back",
                 tooltip = "Slice backward using Quantize",
+                midi_mapping = "Tools:SliceMate:Backward Slice [Trigger]",
                 notifier = function()
                   local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
                   if not success and err then
@@ -549,6 +550,7 @@ function SliceMate_UI:build()
                 width = slice_sub_fill_button_w,
                 id = "vb_insert_slice_back_fill",
                 tooltip = "Slice backward using Quantize until reaching the start",
+                midi_mapping = "Tools:SliceMate:Backward Slice - Fill [Trigger]",
                 notifier = function()
                   local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
                   if not success and err then
@@ -569,6 +571,7 @@ function SliceMate_UI:build()
                 width = slice_sub_button_w,
                 id = "vb_insert_slice_forward",
                 tooltip = "Slice forward using Quantize",
+                midi_mapping = "Tools:SliceMate:Forward Slice [Trigger]",
                 notifier = function()
                   local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE)
                   if not success and err then
@@ -583,6 +586,7 @@ function SliceMate_UI:build()
                 width = slice_sub_fill_button_w,
                 id = "vb_insert_slice_forward_fill",
                 tooltip = "Slice forward using Quantize until reaching the end",
+                midi_mapping = "Tools:SliceMate:Forward Slice - Fill [Trigger]",
                 notifier = function()
                   local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.QUANTIZE,true)
                   if not success and err then
@@ -611,8 +615,9 @@ function SliceMate_UI:build()
                   width = slice_sub_button_w,
                   id = "vb_insert_slice_previous",
                   tooltip = "Insert the previous slice",
+                  midi_mapping = "Tools:SliceMate:Insert Previous Slice [Trigger]",
                   notifier = function()
-                    local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.SLICE)
+                    local success,err = self.owner:insert_backward_slice(SliceMate_Prefs.SLICE_NAV_MODE.INSERT)
                     if not success and err then
                       renoise.app():show_error(err)
                     else
@@ -624,6 +629,7 @@ function SliceMate_UI:build()
                   text = "▴ Fill",
                   width = slice_sub_fill_button_w,
                   id = "vb_insert_slice_previous_fill",
+                  midi_mapping = "Tools:SliceMate:Insert Previous Slice - Fill [Trigger]",
                   active = false,
                 },
               },
@@ -637,8 +643,9 @@ function SliceMate_UI:build()
                   width = slice_sub_button_w,
                   id = "vb_insert_slice_next",
                   tooltip = "Insert the next slice",
+                  midi_mapping = "Tools:SliceMate:Insert Next Slice [Trigger]",
                   notifier = function()
-                    local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.SLICE)
+                    local success,err = self.owner:insert_forward_slice(SliceMate_Prefs.SLICE_NAV_MODE.INSERT)
                     if not success and err then
                       renoise.app():show_error(err)
                     else
@@ -650,6 +657,7 @@ function SliceMate_UI:build()
                 vb:button{
                   id = "vb_insert_slice_next_fill",
                   text = "▾ Fill",
+                  midi_mapping = "Tools:SliceMate:Insert Next Slice - Fill [Trigger]",
                   width = slice_sub_fill_button_w,
                   active = false,
                 },
