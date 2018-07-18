@@ -131,7 +131,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function SliceMate_UI:update_slice_button()
-  print("SliceMate_UI:update_slice_button()")
+  TRACE("SliceMate_UI:update_slice_button()")
   
   local ctrl = self.vb.views["insert_slice_button"]
   --local fill_mode = SliceMate_Prefs.LIMIT_FILL_LABELS[self.prefs.limit_fill.value]
