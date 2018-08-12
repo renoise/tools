@@ -68,7 +68,7 @@ function SliceMate:__init(...)
   -- initialize ---------------------------------
 
   -- apply some defaults
-  xSongPos.DEFAULT_BOUNDS_MODE = xSongPos.OUT_OF_BOUNDS.NULL
+  xSongPos.DEFAULT_BOUNDS_MODE = xSongPos.OUT_OF_BOUNDS.ALLOW
   xSongPos.DEFAULT_LOOP_MODE = xSongPos.LOOP_BOUNDARY.NONE
   xSongPos.DEFAULT_BLOCK_MODE = xSongPos.BLOCK_BOUNDARY.NONE
 
@@ -432,13 +432,14 @@ function SliceMate:get_position()
     return pos
   end
 
-  --[[
   if not rns.transport.playing  
     or (rns.transport.playing and not rns.transport.follow_player) 
   then 
-    xSongPos.decrease_by_lines(1,pos)
+    -- ensure we're not already at the first possible position 
+    if (rns.transport.edit_pos_beats > 0) then 
+      pos = xSongPos.decrease_by_lines(1,pos)
+    end
   end 
-  ]]
 
   return self:get_next_position(pos)
 
@@ -453,16 +454,28 @@ function SliceMate:get_previous_position(pos)
   TRACE("SliceMate:get_previous_position(pos)",pos)
   
   local choices = {
-    [self.prefs.QUANTIZE_AMOUNT.BEAT] = function() xSongPos.previous_beat(pos) end,
-    [self.prefs.QUANTIZE_AMOUNT.BAR] = function() xSongPos.previous_bar(pos) end,
-    [self.prefs.QUANTIZE_AMOUNT.BLOCK] = function() xSongPos.previous_block(pos) end,
-    [self.prefs.QUANTIZE_AMOUNT.PATTERN] = function() xSongPos.previous_pattern(pos) end,
-    [self.prefs.QUANTIZE_AMOUNT.LINE] = function() xSongPos.decrease_by_lines(1,pos) end,
-    [self.prefs.QUANTIZE_AMOUNT.EDIT_STEP] = function() xSongPos.decrease_by_lines(rns.transport.edit_step,pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.BEAT] = function() 
+      return xSongPos.previous_beat(pos) 
+    end,
+    [self.prefs.QUANTIZE_AMOUNT.BAR] = function() 
+      return xSongPos.previous_bar(pos) 
+    end,
+    [self.prefs.QUANTIZE_AMOUNT.BLOCK] = function() 
+      return xSongPos.previous_block(pos) 
+    end,
+    [self.prefs.QUANTIZE_AMOUNT.PATTERN] = function() 
+      return xSongPos.previous_pattern(pos) 
+    end,
+    [self.prefs.QUANTIZE_AMOUNT.LINE] = function() 
+      return xSongPos.decrease_by_lines(1,pos) 
+    end,
+    [self.prefs.QUANTIZE_AMOUNT.EDIT_STEP] = function() 
+      return xSongPos.decrease_by_lines(rns.transport.edit_step,pos) 
+    end,
   }
 
   if (choices[self.prefs.quantize_amount.value]) then 
-    choices[self.prefs.quantize_amount.value]()
+    pos = choices[self.prefs.quantize_amount.value]()
     if (pos and pos.line) then
       pos.line = math.floor(pos.line)
       return pos
@@ -481,18 +494,40 @@ end
 function SliceMate:get_next_position(pos)
   TRACE("SliceMate:get_next_position(pos)",pos)
 
+  local songpos_defaults = xSongPos.get_defaults()
+  xSongPos.DEFAULT_BOUNDS_MODE = xSongPos.OUT_OF_BOUNDS.ALLOW    
+  local songpos_args = xSongPos.get_defaults()
+
+  
   local choices = {
-    [self.prefs.QUANTIZE_AMOUNT.BEAT] = function() xSongPos.next_beat(pos) end,
-    [self.prefs.QUANTIZE_AMOUNT.BAR] = function() xSongPos.next_bar(pos) end,
-    [self.prefs.QUANTIZE_AMOUNT.BLOCK] = function() xSongPos.next_block(pos) end,
-    [self.prefs.QUANTIZE_AMOUNT.PATTERN] = function() xSongPos.next_pattern(pos) end,
-    [self.prefs.QUANTIZE_AMOUNT.LINE] = function() xSongPos.increase_by_lines(1,pos) end,
-    [self.prefs.QUANTIZE_AMOUNT.EDIT_STEP] = function() xSongPos.increase_by_lines(rns.transport.edit_step,pos) end,
+    [self.prefs.QUANTIZE_AMOUNT.BEAT] = function(p) 
+      return xSongPos.next_beat(p,songpos_args) 
+    end,
+    [self.prefs.QUANTIZE_AMOUNT.BAR] = function(p) 
+      return xSongPos.next_bar(p,songpos_args) 
+    end,
+    [self.prefs.QUANTIZE_AMOUNT.BLOCK] = function(p) 
+      return xSongPos.next_block(p,songpos_args) 
+    end,
+    [self.prefs.QUANTIZE_AMOUNT.PATTERN] = function(p) 
+      return xSongPos.next_pattern(p,songpos_args) 
+    end,
+    [self.prefs.QUANTIZE_AMOUNT.LINE] = function(p) 
+      return xSongPos.increase_by_lines(1,p,songpos_args) 
+    end,
+    [self.prefs.QUANTIZE_AMOUNT.EDIT_STEP] = function(p) 
+      return xSongPos.increase_by_lines(rns.transport.edit_step,p,songpos_args) 
+    end,
   }
 
   if (choices[self.prefs.quantize_amount.value]) then 
-    choices[self.prefs.quantize_amount.value]()
-    if (pos and pos.line) then 
+    local pos,travelled = choices[self.prefs.quantize_amount.value](pos)
+    print(">>> travelled,pos",travelled,pos)
+    -- check if out-of-bounds and offer to extend song 
+    -- if not pos or not pos.line then 
+    --   self:expand_song_forward(choices[self.prefs.quantize_amount.value],tmp_pos)  
+    -- end       
+    if pos and pos.line then 
       pos.line = math.floor(pos.line)
       return pos
     end
@@ -846,6 +881,7 @@ function SliceMate:insert_backward_slice(mode,fill)
     
     if not fill then 
       pos = self:get_previous_position(pos)
+      print(">>> pos",pos)
       if pos then 
         xSongPos.apply_to_edit_pos(pos)
         return self:insert_slice(pos)
@@ -1334,6 +1370,30 @@ function SliceMate:get_slice_line_spans(pos,limit_to_pos,backward)
   end
   
   return line_spans,instr_idx,notecol,trigger_pos,total_duration
+  
+end
+
+---------------------------------------------------------------------------------------------------
+-- ask user whether we should add a new pattern (and what length it should have)
+-- invoked when trying to seek forward and reaching end of song 
+
+function SliceMate:expand_song_forward(method,pos)
+  print("SliceMate:expand_song_forward(method,pos)",method,pos)
+  
+  local pattern_length = 64
+  local songpos_defaults = xSongPos.get_defaults()
+  
+  xSongPos.DEFAULT_BOUNDS_MODE = xSongPos.OUT_OF_BOUNDS.CAP
+  local tmp_pos = xCursorPos(pos)
+  local travelled = method(pos)
+  print("expand_song_forward - travelled,pos",travelled,pos)
+  
+  local line_diff = xSongPos.get_line_diff(pos,tmp_pos)
+  print("expand_song_forward - line_diff",line_diff)
+
+  
+  xSongPos.set_defaults(songpos_defaults)
+
   
 end
 
