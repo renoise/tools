@@ -66,12 +66,6 @@ function xStream:__init(...)
 
   -- xStreamProcess
   self.process = xStreamProcess(self)
-  self.xpos.callback_fn = function()
-    self.process:output()
-  end
-  self.xpos.refresh_fn = function()
-    self.process:refresh()
-  end
 
   self.prefs.scheduling:add_notifier(function()
     self.process.scheduling = self.prefs.scheduling.value
@@ -209,6 +203,15 @@ function xStream:__init(...)
   self:load_all_models()
 
   self.ui:update()
+
+  self.xpos:reset()
+  
+  self.xpos.callback_observable:add_notifier(function()
+    self.process:output()
+  end)
+  self.xpos.refresh_observable:add_notifier(function()
+    self.process:refresh()
+  end)
 
 end
 
@@ -540,6 +543,12 @@ function xStream:output_message(xmsg,mode)
     return false
   end
 
+end
+
+---------------------------------------------------------------------------------------------------
+
+function xStream:__tostring()
+  return type(self) 
 end
 
 ---------------------------------------------------------------------------------------------------
