@@ -210,7 +210,7 @@ function xStreamModel:__init(process)
       assign = function(env,v) self.process.buffer.automation_playmode = v end,
     },
     ["track_index"] = {
-      access = function(env) return self.process.buffer.track_index end,
+      access = function(env) return self.process.track_index end,
     },
     ["mute_mode"] = {
       access = function(env) return self.process.buffer.mute_mode end,
@@ -228,7 +228,10 @@ function xStreamModel:__init(process)
       access = function(env) return self end,
     },
     ["xplaypos"] = {
-      access = function(env) return self.process.xpos.playpos end,
+      access = function(env) return self.process.xstream.xpos.playpos end,
+    },
+    ["xstreampos"] = {
+      access = function(env) return self.process.xstream.xpos end,
     },
     ["xbuffer"] = {
       access = function(env) return self.process.buffer end,

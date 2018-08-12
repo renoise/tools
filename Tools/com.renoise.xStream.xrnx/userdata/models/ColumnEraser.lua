@@ -48,7 +48,7 @@ for k = 1,col_count do
   if has_changed then
     if mute_state then
       local xnotecol = {note_value = NOTE_OFF_VALUE}
-      local pos,scheduled_xinc = xpos:get_scheduled_pos(xStreamPos.SCHEDULE.LINE)
+      local pos,scheduled_xinc = xstreampos:get_scheduled_pos(xStreamPos.SCHEDULE.LINE)
       xbuffer:schedule_note_column(xnotecol,k,scheduled_xinc)
       xbuffer:schedule_note_column(xnotecol,k,scheduled_xinc+1)
     end 
