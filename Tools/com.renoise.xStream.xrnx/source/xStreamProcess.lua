@@ -454,16 +454,16 @@ function xStreamProcess:compute_scheduling_pos()
   if (self.scheduling == xStreamPos.SCHEDULE.LINE) then
     error("Scheduling should already have been applied")
   elseif (self.scheduling == xStreamPos.SCHEDULE.BEAT) then
-    xinc = xSongPos.next_beat(pos)
+    _,xinc = xSongPos.next_beat(pos)
   elseif (self.scheduling == xStreamPos.SCHEDULE.BAR) then
-    xinc = xSongPos.next_bar(pos)  
+    _,xinc = xSongPos.next_bar(pos)  
   elseif (self.scheduling == xStreamPos.SCHEDULE.BLOCK) then
-    xinc = xSongPos.next_block(pos)
+    _,xinc = xSongPos.next_block(pos)
   elseif (self.scheduling == xStreamPos.SCHEDULE.PATTERN) then
     -- if we are within a blockloop, do not set a schedule position
     -- (once the blockloop is disabled, this function is invoked)
     if not rns.transport.loop_block_enabled then
-      xinc = xSongPos.next_pattern(pos)
+      _,xinc = xSongPos.next_pattern(pos)
     else
       pos = nil
     end
@@ -642,9 +642,9 @@ function xStreamProcess:apply_to_range(from_line,to_line,mode,xinc)
   local cached_xsongpos = xSongPos.get_defaults()
   -- ignore any kind of loop (those are for realtime only)
   xSongPos.set_defaults({
-    bounds = xSongPos.OUT_OF_BOUNDS.CAP,
-    loop = xSongPos.LOOP_BOUNDARY.NONE,
-    block = xSongPos.BLOCK_BOUNDARY.NONE,
+    bounds_mode = xSongPos.OUT_OF_BOUNDS.CAP,
+    loop_boundary = xSongPos.LOOP_BOUNDARY.NONE,
+    block_boundary = xSongPos.BLOCK_BOUNDARY.NONE,
   })
   -- write output
   self.output_mode = mode -- NB: models can access this value
