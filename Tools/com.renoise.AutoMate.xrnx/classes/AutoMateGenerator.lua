@@ -96,10 +96,10 @@ function AutoMateGenerator:generate(range_or_length,playmode,yield_at)
     -- number (standalone)
     num_points = range_or_length
   else -- xSequencerSelection (bound to song)
-    xpos = xSongPos.create({
+    xpos = {
       sequence = range_or_length.start_sequence,
       line = range_or_length.start_line
-    })
+    }
     num_points = xSequencerSelection.get_number_of_lines(range_or_length) 
     -- 
     if (points_per_line > 0) then 
@@ -150,7 +150,7 @@ function AutoMateGenerator:generate(range_or_length,playmode,yield_at)
       if (line_idx ~= old_line_idx) then 
         if xpos then 
           local line_diff = line_idx - old_line_idx
-          xSongPos.increase_by_lines(line_diff,xpos,xpos_bounds,xpos_loop,xpos_block)
+          xpos = xSongPos.increase_by_lines(line_diff,xpos,xpos_bounds,xpos_loop,xpos_block)
         end
       end
     end
