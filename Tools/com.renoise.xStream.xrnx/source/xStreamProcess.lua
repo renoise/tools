@@ -716,7 +716,6 @@ function xStreamProcess:attach_to_model()
     TRACE("xStreamProcess:attach_to_model - compiled_notifier fired...")
     local model = self.models.selected_model
     self.buffer.callback = model.sandbox.callback
-    self.buffer.output_tokens = model.output_tokens
     self:recompute()
   end 
 

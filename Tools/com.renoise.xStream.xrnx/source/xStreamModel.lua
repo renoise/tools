@@ -99,10 +99,6 @@ function xStreamModel:__init(process)
   -- table<function>
   self.events_compiled = {}
 
-  -- table<string> limit to these tokens during output
-  -- (derived from the code specified in the callback)
-  self.output_tokens = {}
-
   --- configure sandbox
   -- (add basic variables and a few utility methods)
 
@@ -382,9 +378,6 @@ function xStreamModel:set_callback_str(str_fn)
   end 
 
   self.sandbox.callback_str_observable.value = str_fn
-
-  -- extract tokens for the output stage
-  self:extract_tokens(xStreamModel.CB_TYPE.MAIN)
 
   local passed,err = self.sandbox:compile()
   if not passed then 
@@ -973,52 +966,7 @@ local val = select(1,...)
     end
   end
 
-  self:extract_tokens(xStreamModel.CB_TYPE.EVENTS)
-  --print(">>> parse_events - self.events",str_status,rprint(self.events))
-
   return str_status
-
-end
-
--------------------------------------------------------------------------------
--- extract functions (tokens), result is used in the output stage
--- to determine which sub-columns should be visible
--- @param cb_type (xStreamModel.CB_TYPE)
-
-function xStreamModel:extract_tokens(cb_type)
-  TRACE("xStreamModel:extract_tokens(cb_type)",cb_type)
-
-  local rslt = {}
-  for k,v in ipairs(self.output_tokens) do
-    rslt[v] = true
-  end
-
-  -- combined note/effect-column tokens
-  local all_tokens = {
-    "note_value","note_string", 
-    "instrument_value","instrument_string",
-    "volume_value","volume_string",
-    "panning_value","panning_string",
-    "delay_value","delay_string",
-    "number_value","number_string",
-    "amount_value","amount_string",
-  }
-
-  local callbacks = {}
-  table.insert(callbacks,self.sandbox.callback_str)
-  for k,v in pairs(self.events) do
-    table.insert(callbacks,v)
-  end
-  for _,str_fn in ipairs(callbacks) do
-    for __,token in ipairs(all_tokens) do
-      if string.find(str_fn,token) then
-        rslt[token] = true
-      end
-    end
-  end
-  --print("extract_tokens - rslt POST ",self.name,rprint(rslt),rprint(table.keys(rslt)))
-
-  self.output_tokens = table.keys(rslt)
 
 end
 
