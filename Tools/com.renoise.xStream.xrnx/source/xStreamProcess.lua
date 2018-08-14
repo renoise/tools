@@ -170,7 +170,6 @@ end
 function xStreamProcess:set_track_index(idx)
   self.buffer.read_track_index = idx
   self.buffer.write_track_index = idx
-  print(">>> xStreamProcess:set_track_index",idx)
   if self.active then
     self.buffer:refresh_input_buffer()
   end
