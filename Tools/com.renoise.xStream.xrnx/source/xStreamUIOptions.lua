@@ -84,6 +84,11 @@ function xStreamUIOptions:__init(xstream)
       self.vtable_midi_outputs.active = self.xstream.process.active
     end
   end)
+  
+  -- detect when midi inputs and outpus have changed 
+  self.xstream.midi_io.device_ports_changed_observable:add_notifier(function()
+    self.update_midi_tables_requested = true
+  end)
 
 end
 
@@ -598,7 +603,7 @@ function xStreamUIOptions:create_dialog()
   vb.views["xStreamPrefsMidiOutputRack"]:add_child(vtable.view)
   self.vtable_midi_outputs = vtable
 
-  self:update_input_tab()
+  self:update_midi_tables()
 
   return vb_tab_content
 
@@ -686,6 +691,11 @@ function xStreamUIOptions:on_idle()
     self.update_model_requested = false
     self:update_model_selector()
   end
+  
+  if self.update_midi_tables_requested then 
+    self.update_midi_tables_requested = false 
+    self:update_midi_tables()
+  end
 
   if not self:dialog_is_visible() then
     return
@@ -709,16 +719,22 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function xStreamUIOptions:update_input_tab()
-
+function xStreamUIOptions:update_midi_tables()
+  print("xStreamUIOptions:update_midi_tables()")
+  
   -- midi inputs --
 
   local midi_inputs = renoise.Midi.available_input_devices()
   local midi_outputs = renoise.Midi.available_output_devices()
-  local data,vtable
-
-  data = {}
-  vtable = self.vtable_midi_inputs
+  
+  local data = {}
+  local vtable = self.vtable_midi_inputs
+  
+  -- dialog might not be visible yet 
+  if not vtable then 
+    return 
+  end
+  
   for k,v in ipairs(midi_inputs) do
     data[k] = {
       CHECKBOX = (self:match_in_list(self.prefs.midi_inputs,v)) and true or false,
