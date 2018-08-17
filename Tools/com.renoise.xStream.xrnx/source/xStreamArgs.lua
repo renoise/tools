@@ -457,13 +457,12 @@ function xStreamArgs:replace(idx,arg)
   end
 
   -- name has changed, update callback? 
-  if (arg.name ~= self.args[idx].full_name) then
-    local str_msg = "Do you want to update the callback with the new name?"
-    local choice = renoise.app():show_prompt("Renamed argument",str_msg,{"Go ahead!","Skip this step"})
-    if (choice == "Go ahead!") then
-      local str_fn = self.model.callback_str
-      local old_name = self.args[idx].full_name
-      self.model.callback_str = cSandbox.rename_string_token(str_fn,old_name,arg.name,"args.")
+  local old_name = self.args[idx].full_name  
+  if (arg.name ~= old_name) then
+    local prefix = "args."
+    local rslt,err = self.model:rename_token(old_name,arg.name,prefix)
+    if not rslt then 
+      return false,err 
     end
   end
 
