@@ -720,7 +720,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function xStreamUIOptions:update_midi_tables()
-  print("xStreamUIOptions:update_midi_tables()")
+  TRACE("xStreamUIOptions:update_midi_tables()")
   
   -- midi inputs --
 
