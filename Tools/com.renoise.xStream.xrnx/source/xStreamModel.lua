@@ -26,7 +26,7 @@ return %s
 
 -------------------------------------------------------------------------------
 -- constructor
--- @param xstream (xStream)
+-- @param process (xStreamProcess)
 
 function xStreamModel:__init(process)
   TRACE("xStreamModel:__init(process)",process)
@@ -108,13 +108,6 @@ function xStreamModel:__init(process)
     xinc = select(1, ...)
     xline = select(2, ...)
     xpos = select(3, ...)
-
-    local get_lfo = function(lfo_instance)
-      if lfo_instance then
-        return lfo_instance(0, 255, 1, nil, nil, nil, xinc)
-      end
-    end
-
   ]]
   self.sandbox.str_suffix = [[
     return xline
@@ -813,27 +806,6 @@ function xStreamModel:remove_callback(cb_type,cb_key)
   end
 
 end
-
--------------------------------------------------------------------------------
--- define initial data from current value 
--- @param str_name (string)
---[[
-function xStreamModel:add_initial_data(str_name)
-  TRACE("xStreamModel:add_initial_data(str_name)",str_name)
-
-  local val = self.data[str_name]
-  if val and not self.data_initial[str_name] then 
-    local str_fn = nil
-    if (type(val)=="table") then 
-      str_fn = xStreamModel.DEFAULT_DATA_STR:format(cLib.serialize_table(val))
-    else
-      str_fn = xStreamModel.DEFAULT_DATA_STR:format(cLib.serialize_object(val))
-    end 
-    self.data_initial[str_name] = str_fn
-  end
-
-end
-]]
 
 -------------------------------------------------------------------------------
 -- Register a new data entry
