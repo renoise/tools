@@ -290,9 +290,13 @@ function xStreamUIModelToolbar:rename_callback(new_name)
     end
   end
 
+  local is_valid,err = cReflection.is_valid_identifier(new_name) 
+  if not is_valid then
+    return false,err
+  end
+  
   -- events contain two parts
   local old_name = cb_subtype and cb_key.."."..cb_subtype or cb_key
-
   local passed,err = model:rename_callback(old_name,new_name,cb_type)
   if not passed then
     return false,err
