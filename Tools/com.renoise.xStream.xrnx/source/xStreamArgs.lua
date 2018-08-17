@@ -35,7 +35,7 @@ xStreamArgs.RESERVED_NAMES = {"Arguments","Presets"}
 
 -------------------------------------------------------------------------------
 -- constructor
--- @param xstream (xStream)
+-- @param model (xStreamModel)
 
 function xStreamArgs:__init(model)
   TRACE("xStreamArgs:__init(model)",model)
