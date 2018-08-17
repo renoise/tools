@@ -685,22 +685,18 @@ end
 -- @param old_name (string)
 -- @param new_name (string)
 -- @param cb_type (xStreamModel.CB_TYPE)
+-- @param skip_token_rename (boolean) [optional]
 -- @return bool, true when renamed
 -- @return string, error message when problem was encountered
 
-function xStreamModel:rename_callback(old_name,new_name,cb_type)
-  TRACE("xStreamModel:rename_callback(old_name,new_name,cb_type)",old_name,new_name,cb_type)
+function xStreamModel:rename_callback(old_name,new_name,cb_type,skip_token_rename)
+  TRACE("xStreamModel:rename_callback(old_name,new_name,cb_type,skip_token_rename)",old_name,new_name,cb_type,skip_token_rename)
 
-  -- check if name is valid lua identifier
-  if (type(new_name)~='string') then
-    return false,"The callback '"..new_name.."' needs to be a string value"
+  assert(type(new_name) == "string", "Expected `new_name` to be a string")
+  
+  if not skip_token_rename then     
+    self:rename_token(old_name,new_name,cb_type)
   end
-  local is_valid,err = cReflection.is_valid_identifier(new_name) 
-  if not is_valid then
-    return false,err
-  end
-
-  self:rename_token(old_name,new_name,cb_type)
 
   if (cb_type == xStreamModel.CB_TYPE.DATA) then
     self.data[new_name] = self.data[old_name]
@@ -726,26 +722,34 @@ end
 -- rename occurrences of provided token in all callbacks (main,data,events)
 -- @param old_name (string)
 -- @param new_name (string)
--- @param cb_type (xStreamModel.CB_TYPE)
+-- @param prefix (string), optional prefix string (e.g. "args.")
+-- @return bool, true when renamed
+-- @return string, error message when problem was encountered
 
-function xStreamModel:rename_token(old_name,new_name,cb_type)
-  TRACE("xStreamModel:rename_token(old_name,new_name,cb_type)",old_name,new_name,cb_type)
+function xStreamModel:rename_token(old_name,new_name,prefix)
+  TRACE("xStreamModel:rename_token(old_name,new_name,prefix)",old_name,new_name,prefix)
 
+  local is_valid,err = cReflection.is_valid_identifier(new_name) 
+  if not is_valid then
+    return false,err
+  end
+  
   local str_old,str_new
-  local cb_type = cb_type.."."
+  local prefixed_old = prefix..old_name
+  local prefixed_new = prefix..new_name
 
   local main_modified = false
   str_old = self.callback_str
-  str_new = cSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
+  str_new = cSandbox.rename_string_token(str_old,prefixed_old,prefixed_new)
   if (str_old ~= str_new) then
     self.callback_str = str_new
     main_modified = true
   end
 
   local data_modified = false
-  for k,v in ipairs(self.data_initial) do
+  for k,v in pairs(self.data_initial) do
     str_old = v
-    str_new = cSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
+    str_new = cSandbox.rename_string_token(str_old,prefixed_old,prefixed_new)
     if (str_old ~= str_new) then
       self.data[k] = str_new
       self.data_initial[k] = str_new
@@ -754,26 +758,35 @@ function xStreamModel:rename_token(old_name,new_name,cb_type)
   end
   if data_modified then
     self.parse_data(self.data_initial)
-    self.modified = true
   end
 
   local events_modified = false
-  for k,v in ipairs(self.events) do
+  for k,v in pairs(self.events) do
     str_old = v
-    str_new = cSandbox.rename_string_token(str_old,old_name,new_name,cb_type)
+    str_new = cSandbox.rename_string_token(str_old,prefixed_old,prefixed_new)
     if (str_old ~= str_new) then
       self.events[k] = str_new
       events_modified = true
     end
+    -- if there is an associated event, 
+    -- update the event name as well...
+    if (k == prefixed_old) then 
+      local skip_token_rename = true
+      local rslt,err = self:rename_callback(prefixed_old,prefixed_new,xStreamModel.CB_TYPE.EVENTS,skip_token_rename)
+      if not rslt then 
+        return false,err
+      end
+    end
   end
   if events_modified then
     self:parse_events()
-    self.modified = true
   end
 
   if main_modified or data_modified or events_modified then
     self.modified = true
   end
+  
+  return true 
 
 end
 
