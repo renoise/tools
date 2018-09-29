@@ -313,6 +313,12 @@ Static methods for dealing with instrument phrases
 
 ## Changelog
 
+#### Done 0.8
+
+    (fixed) tool in subfolder (not default folder) causes error on ruleset creation (#69)
+    (fixed) instrument index set via UI does not work bug (#81)
+    (fixed) need 'bit_depth' to be set before NRPN messages work (#82)
+
 #### Done 0.79
 
     (fixed) xLib automation class could produce glitchy values [bug]
