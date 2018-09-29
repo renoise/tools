@@ -21,8 +21,9 @@ Github: [Documentation and source](https://github.com/renoise/xrnx/blob/master/T
 
 --==============================================================================
 
---_trace_filters = {".*"}
 _trace_filters = nil
+--_trace_filters = {".*"}
+--_trace_filters = {"^xRule*"}
 
 _clibroot = "source/cLib/classes/"
 _xlibroot = "source/xLib/classes/"
