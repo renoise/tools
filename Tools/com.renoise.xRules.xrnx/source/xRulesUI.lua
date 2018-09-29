@@ -61,7 +61,7 @@ xRulesUI.TYPE_ITEMS = cLib.stringify_table(xMidiMessage.TYPE)
 xRulesUI.TYPE_OPERATOR_ITEMS = cLib.stringify_table(xRule.TYPE_OPERATORS)
 xRulesUI.VALUE_OPERATOR_ITEMS = cLib.stringify_table(xRule.VALUE_OPERATORS)
 xRulesUI.OUTPUT_ITEMS = cLib.stringify_table(xRules.OUTPUT_OPTIONS)
-xRulesUI.TYPE_ITEMS = cLib.stringify_table(xMidiMessage.TYPE)
+xRulesUI.BIT_DEPTH_ITEMS = cLib.stringify_table(xMidiMessage.BIT_DEPTH)
 
 table.sort(xRulesUI.ASPECT_ITEMS)
 table.sort(xRulesUI.TYPE_ITEMS)

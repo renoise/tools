@@ -16,6 +16,7 @@ class 'xRulesUIAction'
 --------------------------------------------------------------------------------
 
 function xRulesUIAction:__init(...)
+  TRACE("xRulesUIAction:__init()")
 
 	local args = cLib.unpack_args(...)
 
@@ -43,6 +44,7 @@ end
 -- @return view
 
 function xRulesUIAction:build_action_row(row_idx,def,label)
+  TRACE("xRulesUIAction:build_action_row(row_idx,def,label)",row_idx,def,label)
 
   self.row_idx = row_idx
   for k,v in pairs(def) do
@@ -92,10 +94,24 @@ function xRulesUIAction:build_action_row(row_idx,def,label)
       })
     end,
     [xRule.ACTIONS.SET_INSTRUMENT] = function(k,v)
+      
+      -- display as zero-based value 
+      local zerobased_fn_tostring = function(val)
+        return tostring(val-1)
+      end
+      local zerobased_fn_tonumber = function(str)
+        local val = tonumber(str)
+        return val and val+1 or 0
+      end
+
       return self:create_row(k,v,{
         show_valuebox = true,
         show_label = true,
         label_text = "to",
+        value_min = xRule.ASPECT_DEFAULTS.INSTRUMENT_INDEX[1],
+        value_max = xRule.ASPECT_DEFAULTS.INSTRUMENT_INDEX[#xRule.ASPECT_DEFAULTS.INSTRUMENT_INDEX],  
+        fn_tostring = zerobased_fn_tostring,
+        fn_tonumber = zerobased_fn_tonumber,
       })
     end,
     [xRule.ACTIONS.SET_TRACK] = function(k,v)
@@ -103,6 +119,8 @@ function xRulesUIAction:build_action_row(row_idx,def,label)
         show_valuebox = true,
         show_label = true,
         label_text = "to",
+        value_min = xRule.ASPECT_DEFAULTS.TRACK_INDEX[1],
+        value_max = xRule.ASPECT_DEFAULTS.TRACK_INDEX[#xRule.ASPECT_DEFAULTS.TRACK_INDEX],  
       })
     end,
     [xRule.ACTIONS.SET_PORT_NAME] = function(k,v)
@@ -127,6 +145,15 @@ function xRulesUIAction:build_action_row(row_idx,def,label)
       return self:create_row(k,v,{
         show_popup = true,
         popup_items = xRulesUI.TYPE_ITEMS,
+        show_label = true,
+        label_text = "to",
+      })
+    end,
+    [xRule.ACTIONS.SET_BIT_DEPTH] = function(k,v)
+      print(">>> SET_BIT_DEPTH",k,v)
+      return self:create_row(k,v,{
+        show_popup = true,
+        popup_items = xRulesUI.BIT_DEPTH_ITEMS,
         show_label = true,
         label_text = "to",
       })
@@ -307,7 +334,7 @@ end
 --  fn_tonumber = function (for valuebox/valuefield)
 
 function xRulesUIAction:create_row(k,v,args)
-  --print("create_row",k,v,args)
+  TRACE("xRulesUIAction:create_row(k,v,args)",k,v,args)
 
   local vb = self.vb
   if not args then
@@ -558,7 +585,10 @@ end
 -- @param action, xRule.ACTIONS
 
 function xRulesUIAction:change_action_key(action)
-
+  TRACE("xRulesUIAction:change_action_key(action)",action)
+  
+  assert(type(action) == "string","Expected string, got "..type(action))
+  
   local xrule = self.xrule
   local new_action = {}
   for k,v in pairs(xrule.actions[self.row_idx]) do
@@ -575,6 +605,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUIAction:change_value(val)
+  TRACE("xRulesUIAction:change_value(val)",val)
 
   local xrule = self.xrule
   for k,v in pairs(xrule.actions[self.row_idx]) do
@@ -590,6 +621,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUIAction:change_function_value(val)
+  TRACE("xRulesUIAction:change_function_value(val)",val)
 
   local xrule = self.xrule
   local success
@@ -607,6 +639,7 @@ end
 --------------------------------------------------------------------------------
 
 function xRulesUIAction:remove_action()
+  TRACE("xRulesUIAction:remove_action()")
 
   local str_msg = "Are you sure you want to remove this action"
   local choice = renoise.app():show_prompt("Remove action", str_msg, {"OK","Cancel"})
@@ -629,6 +662,8 @@ end
 -- @return table<string>
 
 function xRulesUIAction:gather_ruleset_routings()
+  TRACE("xRulesUIAction:gather_ruleset_routings()")
+  
   local rslt = {xRuleset.CURRENT_RULESET}
   for k = self.xrules.selected_ruleset_index+1,#self.xrules.rulesets do
     local ruleset = self.xrules.rulesets[k]
@@ -644,6 +679,7 @@ end
 -- @return table<string>
 
 function xRulesUIAction:gather_rule_routings()
+  TRACE("xRulesUIAction:gather_rule_routings()")
 
   local ruleset = self.xrules.selected_ruleset
   local rslt = {"Current rule (N/A)"}
