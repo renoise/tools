@@ -150,7 +150,6 @@ function xRulesUIAction:build_action_row(row_idx,def,label)
       })
     end,
     [xRule.ACTIONS.SET_BIT_DEPTH] = function(k,v)
-      print(">>> SET_BIT_DEPTH",k,v)
       return self:create_row(k,v,{
         show_popup = true,
         popup_items = xRulesUI.BIT_DEPTH_ITEMS,
