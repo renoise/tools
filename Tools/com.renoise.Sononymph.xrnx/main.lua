@@ -22,8 +22,6 @@ _trace_filters = {".*"}
 -- required files
 ---------------------------------------------------------------------------------------------------
 
-print("renoise.tool().bundle_path",renoise.tool().bundle_path)
-
 _clibroot = 'source/cLib/classes/'
 _vlibroot = 'source/vLib/classes/'
 _xlibroot = 'source/xLib/classes/'

@@ -5,7 +5,6 @@ AppUI.LABEL_W = 85
 AppUI.INPUT_W = 250
 AppUI.BUTTON_W = 130
 AppUI.DIALOG_W = AppUI.LABEL_W + AppUI.INPUT_W + AppUI.BUTTON_W
-AppUI.PATH_PLACEHOLDER = "⚠ Undefined"
 AppUI.RENOISE_PLACEHOLDER = "No sample selected"
 AppUI.SONONYM_PLACEHOLDER = "-"
 
@@ -36,7 +35,6 @@ function AppUI:__init(...)
   end)
   
   self.owner.prefs.path_to_exe:add_notifier(function()
-    print("owner.prefs.path_to_exe fired...")
     self.update_requested = true
   end)
   
@@ -56,14 +54,19 @@ function AppUI:__init(...)
     self.update_requested = true
   end)
   
-  rns.selected_sample_observable:add_notifier(function()
+  self.owner.paths_are_valid_observable:add_notifier(function()
     self.update_requested = true
   end)
   
+  
   -- initialize
   
-  renoise.tool().app_idle_observable:add_notifier(self,self.on_idle)
+  renoise.tool().app_idle_observable:add_notifier(self,self.on_idle)  
+  renoise.tool().app_new_document_observable:add_notifier(function()
+    self:attach_to_song()
+  end)
   
+  self:attach_to_song()
   
 end
 
@@ -84,8 +87,6 @@ function AppUI:create_dialog()
       self.owner.prefs.show_prefs.value = not self.owner.prefs.show_prefs.value
     end
   }
-  
-  print(">>> AppUI.DIALOG_W",AppUI.DIALOG_W)
   
   return vb:column{
     margin = 4,
@@ -136,23 +137,6 @@ function AppUI:create_dialog()
             text = "Sononym",
             width = AppUI.LABEL_W,
           },          
-          --[[
-          vb:row{
-            tooltip = "Actively monitoring the Sononym configuration",
-            vb:checkbox{
-              id = "monitor_active",
-              --bind = self.owner.monitor_active_observable,
-              width = 16,
-              height = 16,
-              notifier = function()
-                self.owner:toggle_monitoring()
-              end,
-            },
-            vb:text{
-              text = "Monitoring"
-            }
-          },
-          ]]
           vb:row{
             self.prefs_toggle.view,
             vb:text{
@@ -173,7 +157,7 @@ function AppUI:create_dialog()
             },
           },
           vb:row{
-            style = "plain",
+            --style = "plain",
             vb:text{
               id = "location_path_sononym",
               --font = "mono",
@@ -231,7 +215,7 @@ function AppUI:create_dialog()
           vb:checkbox{
             bind = self.owner.prefs.autostart
           },
-        },        
+        },                
         vb:button{
           text = "How to use",
           width = AppUI.BUTTON_W,
@@ -253,22 +237,18 @@ function AppUI:create_dialog()
             style = "plain",
             vb:textfield{
               id = "path_to_exe",
-              --font = "mono",
-              text = AppUI.PATH_PLACEHOLDER,
+              text = "",
               width = AppUI.INPUT_W,
               notifier = function(txt) 
-                local success,err = App.check_path(txt)
-                print("success,err",success,err)
-                --[[
-                if not success and err then 
-                  renoise.app():show_message(err)
-                end
-                ]]
+                local success,err = self.owner:set_path_to_exe(txt)
+                if not success then 
+                  renoise.app():show_warning(err)
+                end 
               end 
             },
           },
           vb:button{
-            text = "Reset",
+            text = "Detect",
             width = AppUI.BUTTON_W/2,
             notifier = function()
               local choice = renoise.app():show_prompt("Auto-detect path",
@@ -276,19 +256,12 @@ function AppUI:create_dialog()
                 .."\nAre you sure you want to do this?",
                 {"OK","Cancel"})
               if (choice == "OK") then 
-                local path,err = App.guess_path_to_exe()
-                print("success,err",success,err)   
-                if not path then 
-                else
-                  local success,err = App.check_path(txt)
-                  print("success,err",success,err)       
-                  if not success then      
-                    if err then 
-                      renoise.app():show_warning(err)
-                    end
+                local success,err = self.owner:set_path_to_exe(App.guess_path_to_exe())
+                if not success then 
+                  if err then 
+                    renoise.app():show_warning(err)
                   end
-                end
-                      
+                end 
               end
             end
           },
@@ -309,29 +282,33 @@ function AppUI:create_dialog()
             style = "plain",
             vb:textfield{
               id = "path_to_config",
-              --font = "mono",
-              text = AppUI.PATH_PLACEHOLDER,
+              text = "",
               width = AppUI.INPUT_W,
               notifier = function(txt) 
-                local success,err = App.check_path(txt)
-                print("success,err",success,err)                
-                --[[
                 local success,err = self.owner:set_path_to_config(txt)
-                if not success and err then 
-                  renoise.app():show_message(err)
-                end
-                ]]
+                if not success then 
+                  renoise.app():show_warning(err)
+                end 
               end 
             },
           },
           vb:button{
-            text = "Reset",
+            text = "Detect",
             width = AppUI.BUTTON_W/2,
             notifier = function()
-              local txt = vb.views["path_to_config"].text
-              local success,err = App.check_path(txt)
-              print("success,err",success,err)            
-              --self.owner:pick_path_to_exe()
+              local choice = renoise.app():show_prompt("Auto-detect path",
+                "This will attempt to auto-detect the path to the Sononym configuration. "
+                .."\nAre you sure you want to do this?",
+                {"OK","Cancel"})
+              if (choice == "OK") then               
+                local txt = vb.views["path_to_config"].text
+                local success,err = self.owner:set_path_to_config(App.guess_path_to_config())
+                if not success then 
+                  if err then 
+                    renoise.app():show_warning(err)
+                  end
+                end               
+              end               
             end
           },          
           vb:button{
@@ -342,6 +319,17 @@ function AppUI:create_dialog()
             end
           },
         },
+        vb:row{
+          vb:text{
+            text = "Status ",
+            width = AppUI.LABEL_W,            
+          },
+          vb:text{
+            text = "",
+            id = "txt_tool_status",
+          },
+        },
+      
       },
       
     },
@@ -355,7 +343,7 @@ end
 function AppUI:show()
   TRACE("AppUI:show")
 
-  if not self.owner:can_monitor() then 
+  if not self.owner.paths_are_valid then 
     local choice = renoise.app():show_prompt("Configure tool",
       "The tool needs to be configured. Do you want to automatically detect"
       .."\nappropriate paths for the Sononym executable and configuration?",
@@ -411,14 +399,12 @@ function AppUI:update()
   ctrl.width = AppUI.INPUT_W 
 
   local path_to_exe = self.owner.prefs.path_to_exe.value 
-  path_to_exe = (path_to_exe ~= "") and path_to_exe or AppUI.PATH_PLACEHOLDER 
   ctrl = vb.views["path_to_exe"]
   ctrl.text = path_to_exe
   ctrl.tooltip = ctrl.text
   ctrl.width = AppUI.INPUT_W
   
   local path_to_config = self.owner.prefs.path_to_config.value 
-  path_to_config = (path_to_config ~= "") and path_to_config or AppUI.PATH_PLACEHOLDER 
   ctrl = vb.views["path_to_config"]
   ctrl.text = path_to_config
   ctrl.tooltip = ctrl.text
@@ -430,6 +416,13 @@ function AppUI:update()
   ctrl = vb.views["preferences_content"]
   ctrl.visible = self.owner.prefs.show_prefs.value
   
+  ctrl = self.vb.views["txt_tool_status"]
+  local paths_are_valid = self.owner.paths_are_valid_observable.value
+  local monitor_active = self.owner.monitor_active_observable.value
+  ctrl.text = (paths_are_valid and monitor_active) 
+    and "✔ Monitoring for changes..." 
+    or "⚠ Invalid path: "..self.owner.invalid_path_observable.value
+
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -462,6 +455,17 @@ function AppUI:launch_howto()
   end
     
   self.about_dialog:show()
+  
+end
+
+---------------------------------------------------------------------------------------------------
+-- invoke when a new document becomes available 
+
+function AppUI:attach_to_song()
+  
+  rns.selected_sample_observable:add_notifier(function()
+    self.update_requested = true
+  end)
   
 end
 

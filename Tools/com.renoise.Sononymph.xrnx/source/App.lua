@@ -27,6 +27,12 @@ function App:__init(...)
   --  }
   self.selection_in_sononym = {}
 
+  -- 
+  self.paths_are_valid = property(self.get_paths_are_valid)
+  self.paths_are_valid_observable = renoise.Document.ObservableBoolean(false)
+  
+  self.invalid_path_observable = renoise.Document.ObservableString("")
+  
   -- AppPrefs
   self.prefs = args.prefs
   
@@ -66,11 +72,6 @@ function App:__init(...)
     self.filemon.polling_interval = self.prefs.polling_interval.value
   end)
   
-  self.monitor_active_observable:add_notifier(function()
-    --self.prefs.monitor_active.value = self.monitor_active_observable.value
-    print(">>> self.monitor_active_observable.value",self.monitor_active_observable.value)
-  end)
-  
   self.live_transfer_observable:add_notifier(function()
     if self.live_transfer_observable.value then 
       local success,err = self:do_transfer()
@@ -80,17 +81,32 @@ function App:__init(...)
     end
   end)
   
+  self.prefs.path_to_exe:add_notifier(function()
+    self:check_paths()
+  end)
+  self.prefs.path_to_config:add_notifier(function()
+    self:check_paths()
+  end)
+  
   -- initialize 
+  self:check_paths()
 
   local success,err = self:start_monitoring()
   if not success and err then 
     LOG(err)
   end
   
+  
 end
 
 ---------------------------------------------------------------------------------------------------
 -- Properties
+---------------------------------------------------------------------------------------------------
+
+function App:get_paths_are_valid()
+  return self.paths_are_valid_observable.value 
+end
+
 ---------------------------------------------------------------------------------------------------
 
 function App:get_monitor_active()
@@ -122,11 +138,12 @@ end
 -- @return boolean, false when preconditions failed 
 
 function App:start_monitoring()
-  -- check if we can monitor
-  local success,err = self:can_monitor()
-  if not success then 
-    return false,err
-  end 
+  TRACE("App:start_monitoring()")
+
+  if not self.paths_are_valid then 
+    return false 
+  end
+
   self.filemon.paths = {
     --self.prefs.path_to_exe.value,
     self.prefs.path_to_config.value,
@@ -152,19 +169,19 @@ end
 -- @return boolean, false when preconditions failed 
 
 function App:toggle_live_transfer()
+  TRACE("App:toggle_live_transfer()")
 
-  local success,err = self:can_monitor()
-  if not success then 
-    return false,err
-  end 
+  if not self.paths_are_valid then 
+    return false 
+  end
   
   if not self.live_transfer_observable.value 
     and self.prefs.show_transfer_warning.value 
   then 
     local choice = renoise.app():show_prompt("Enable auto-transfer?",""
-      .."Warning: auto-transfer will automatically replace the selected sample - "
+      .."Auto-transfer will automatically replace the selected sample - "
       .."\nare you sure you want to enable this feature?",
-      {"Ok","Always (don't show warning)","Cancel"})
+      {"Yes","Yes, and don't show this warning","Cancel"})
     if (choice == "Cancel") then 
       return false
     elseif (choice == "Always (don't show warning)") then 
@@ -179,37 +196,51 @@ function App:toggle_live_transfer()
 end
 
 ---------------------------------------------------------------------------------------------------
--- @return boolean, string (error message)
+-- check paths and update "paths_are_valid" with result
 
-function App:can_monitor()
-  --TRACE("App:can_monitor()")
+function App:check_paths()
+  TRACE("App:check_paths()")
 
-  if not self.prefs.path_to_exe.value or (self.prefs.path_to_exe.value == "") then 
-    return false, "Path to executable is not defined"
+  local path = self.prefs.path_to_exe.value
+  local success,err = App.check_path(path)
+  if not success then 
+    self.invalid_path_observable.value = path
+    self.paths_are_valid_observable.value = false
+    return
   end
   
-  if not self.prefs.path_to_config.value or (self.prefs.path_to_config.value == "") then 
-    return false, "Path to configuration is not defined"
+  local path = self.prefs.path_to_config.value
+  local success,err = App.check_path(path)
+  if not success then 
+    self.invalid_path_observable.value = path
+    self.paths_are_valid_observable.value = false
+    return
   end
   
-  return true 
+  self.invalid_path_observable.value = ""
+  self.paths_are_valid_observable.value = true
   
 end
 
 
 ---------------------------------------------------------------------------------------------------
--- guess paths (invoked when showing GUI without proper configuration)
+-- auto-configure tool (invoked when showing GUI without proper configuration)
+-- @return boolean, true when 
 
 function App:autoconfigure()
-  print("App:autoconfigure()")
+  TRACE("App:autoconfigure()")
   
-  local str = self:guess_path_to_config()
-  print(str)
+  local success,err = self:set_path_to_exe(App.guess_path_to_exe())
+  if not success then 
+    return false,err 
+  end 
   
-  error("***")
-
-  self:set_path_to_exe(App.guess_path_to_exe())
-  self:set_path_to_config(self:guess_path_to_config())
+  local success,err = self:set_path_to_config(App.guess_path_to_config())
+  if not success then 
+    return false,err 
+  end 
+  
+  return true
 
 end
 
@@ -224,7 +255,7 @@ function App:pick_path_to_exe()
   if (platform == "WINDOWS") then 
     ext = {"Sononym.exe"}
   elseif (platform == "MACINTOSH") then 
-    --ext = {"Sononym"}
+    ext = {"Sononym"}
   elseif (platform == "LINUX") then
   end 
 
@@ -241,32 +272,16 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function App:set_path_to_exe(file_path)
-  print("App:set_path_to_exe(file_path)",file_path)
+  TRACE("App:set_path_to_exe(file_path)",file_path)
 
   file_path = cFilesystem.unixslashes(file_path)
+  self.prefs.path_to_exe.value = file_path
   local success,err = App.check_path(file_path)
   if not success then 
+    self:stop_monitoring()
     return false,err
   end
-  self.prefs.path_to_exe.value = file_path
-end
-
----------------------------------------------------------------------------------------------------
--- perform an educated guess as to where query.json can be found
-
-function App:guess_path_to_config()
-  print("App:guess_path_to_config()")
-
-  local platform = os.platform()
-  if (platform == "WINDOWS") then 
-    return cFilesystem.get_user_folder() .. "AppData/Roaming/Sononym/query.json"
-  elseif (platform == "MACINTOSH") then 
-    return cFilesystem.get_user_folder() .. "Library/Application Support/Sononym/query.json"
-  elseif (platform == "LINUX") then 
-    error("not implemented")
-  end 
-
-
+  return true
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -288,19 +303,22 @@ end
 ---------------------------------------------------------------------------------------------------
 
 function App:set_path_to_config(file_path)
-  print("App:set_path_to_config(file_path)",file_path)
+  TRACE("App:set_path_to_config(file_path)",file_path)
 
   file_path = cFilesystem.unixslashes(file_path)
+  self.prefs.path_to_config.value = file_path  
   local success,err = App.check_path(file_path)
   if not success then 
+    self:stop_monitoring()
     return false,err
   end
-  self.prefs.path_to_config.value = file_path
   -- immediately start monitoring
   local success,err = self:start_monitoring()
   if not success and err then 
     LOG(err)
+    return false,err
   end
+  return true
 
 end
 
@@ -340,9 +358,11 @@ function App:do_transfer()
   end
   local fpath = string.format("%s%s",folder,self.selection_in_sononym.filename)
   
-  local success = sample.sample_buffer:load_from(fpath)
+  local success,err = pcall(function()
+    point = sample.sample_buffer:load_from(fpath)
+  end)
   if not success then 
-    return false,"Failed to load sample"
+    return false,"Failed to load sample:\n"..tostring(err)
   end
   
   -- update samplename  
@@ -368,7 +388,7 @@ end
 -- @return boolean, true or false,string when failed 
 
 function App:do_search()
-  print("App:do_search()")
+  TRACE("App:do_search()")
   
   local success,err = App.check_path(self.prefs.path_to_exe.value)
   if not success then 
@@ -477,7 +497,7 @@ end
 -- @return boolean 
 
 function App.check_path(str_path)
-  print("App.check_path(str_path)",str_path)
+  TRACE("App.check_path(str_path)",str_path)
   
   if not str_path or (str_path == "") then 
     return false,"No path specified"
@@ -492,13 +512,19 @@ function App.check_path(str_path)
 end
 
 ---------------------------------------------------------------------------------------------------
+-- attempt to resolve the location of the sononym executable 
 
 function App.guess_path_to_exe()
-  print("App.guess_path_to_exe()")
+  TRACE("App.guess_path_to_exe()")
 
   local platform = os.platform()
   if (platform == "WINDOWS") then 
-    error("not implemented")
+    -- spawn terminal to obtain windows environment variable
+    local cmd = "echo %PROGRAMFILES%"
+    local f = assert(io.popen(cmd, 'r'))
+    local s = assert(f:read('*a'))
+    f:close()
+    return cFilesystem.unixslashes(cString.trim(s).."/Sononym/Sononym.exe")
   elseif (platform == "MACINTOSH") then 
     return "/Applications/Sononym.app/Contents/MacOS/Sononym"
   elseif (platform == "LINUX") then 
@@ -506,4 +532,23 @@ function App.guess_path_to_exe()
   end   
 
 end
+
+---------------------------------------------------------------------------------------------------
+-- attempt to resolve the location of 'query.json'
+
+function App.guess_path_to_config()
+  TRACE("App.guess_path_to_config()")
+  
+  local platform = os.platform()
+  if (platform == "WINDOWS") then 
+    return cFilesystem.get_user_folder() .. "AppData/Roaming/Sononym/query.json"
+  elseif (platform == "MACINTOSH") then 
+    return cFilesystem.get_user_folder() .. "Library/Application Support/Sononym/query.json"
+  elseif (platform == "LINUX") then 
+    error("not implemented")
+  end 
+  
+end
+
+
 
