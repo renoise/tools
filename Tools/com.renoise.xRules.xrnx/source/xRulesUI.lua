@@ -286,11 +286,6 @@ function xRulesUI:build()
               renoise.app():open_url("https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.xRules.xrnx")
             end
           },
-          vb:text{
-            --id = "xrules_status_homepage",
-            text = "source and documentation [link]", 
-            font = "italic",
-          },
         },
       },
       vb:row{
