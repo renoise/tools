@@ -359,7 +359,7 @@ function App:do_transfer()
   local fpath = string.format("%s%s",folder,self.selection_in_sononym.filename)
   
   local success,err = pcall(function()
-    point = sample.sample_buffer:load_from(fpath)
+    sample.sample_buffer:load_from(fpath)
   end)
   if not success then 
     return false,"Failed to load sample:\n"..tostring(err)
