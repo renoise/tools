@@ -1,5 +1,17 @@
 # xStream Changelog
 
+## 1.6
+- Core: update cLib/vLib/xLib classes 
+- Core: using xStreamBuffer 
+- Added: support MIDI device hot-plugging
+- Changed: using popup to choose render mode (global toolbar)
+- Changed: updated / cleaned up models + documentation 
+- Fixed: unable to start tool (preferences is nil) (#102)
+- Fixed: error when editing argument, applying new settings (#103)
+- Fixed: when renaming model, watch out for certain characters (#104)
+- Fixed: renaming userdata should update other userdata (#109)
+- Fixed: error when adding preset via favorite dialog bug (#114)
+
 ## 1.57
 - Fixed: error when updating view with out-of-range value #99
 - Fixed: error when trying to select data from editor popup #100
