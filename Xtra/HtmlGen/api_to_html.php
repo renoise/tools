@@ -152,7 +152,7 @@ foreach ($files as $file) {
     $markdown = preg_replace_callback(
         '/(={4,}|-{4,})\n(.*?)(={4,}|-{4,})\n/s',
         function ($m) {
-            return header_transform('$m[1]', '$m[2]');
+            return header_transform($m[1], $m[2]);
         },
         $markdown
     );
