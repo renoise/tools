@@ -18,12 +18,9 @@ xStreamUI.COLOR_BASE = {0x30,0x34,0x32}
 
 -- disable along with model
 xStreamUI.MODEL_CONTROLS = {
-  "xStreamApplyLineButton",
-  "xStreamApplyLineLocallyButton",
-  "xStreamApplySelectionButton",
-  "xStreamApplySelectionLocallyButton",
-  "xStreamApplyTrackButton",
-  "xStreamApplyTrackButton",
+  "xStreamRenderApply",
+  "xStreamRenderModePopup",
+  "xStreamFavoriteModel",
   "xStreamFavoriteModel",
   "xStreamModelColorPreview",
   "xStreamModelRefresh",
@@ -142,6 +139,7 @@ function xStreamUI:__init(...)
   self.build_args_requested = false
   self.update_args_requested = false
   self.update_editor_requested = false
+  self.update_toolbar_requested = false
 
   --self.favorite_views = {}
   self.model_views = {}
@@ -216,7 +214,6 @@ function xStreamUI:__init(...)
     TRACE(">>> xStreamUI.dialog_visible_observable fired...")
   end)
 
-  self.compact_mode = self.prefs.compact_mode.value
 
 end
 
@@ -259,6 +256,7 @@ function xStreamUI:update()
   self.update_model_requested = true
   self.build_args_requested = true
   self.build_presets_requested = true
+  self.update_toolbar_requested = true
 
   self.model_toolbar:update_color()
   self:update_play_button()
@@ -633,16 +631,8 @@ function xStreamUI:set_compact_mode(val)
   if panel then 
     panel.visible = not val
   end 
-  local toggle_bt = self.vb.views["xStreamToggleCompactMode"]
-  local selector = self.global_toolbar.vb.views["xStreamCompactModelSelector"]
-  local logo = self.vb.views["xStreamLogo"] -- global toolbar
 
-  selector.visible = false
-  logo.visible = false
-
-  toggle_bt.text = val and "▾" or "▴"
-  selector.visible = val
-  logo.visible = not val
+  self.update_toolbar_requested = true
 
 end
 
@@ -748,6 +738,11 @@ function xStreamUI:on_idle()
   if self.update_editor_requested then
     self.update_editor_requested = false
     self.lua_editor:update()
+  end
+
+  if self.update_toolbar_requested then
+    self.update_toolbar_requested = false
+    self.global_toolbar:update()
   end
 
 
