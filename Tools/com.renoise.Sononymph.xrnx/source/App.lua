@@ -390,6 +390,19 @@ end
 function App:do_search()
   TRACE("App:do_search()")
   
+  -- show important notice the first time 
+  if self.prefs.show_search_warning.value then 
+    local choice = renoise.app():show_prompt("Important notice",""
+      .."Please make sure that Sononym is running before launching a search"
+      .."\n(NB: this message is only shown once!)"
+      ,{"Start search","Cancel"})
+    if (choice == "Cancel") then 
+      return false
+    else
+      self.prefs.show_search_warning.value = false
+    end
+  end
+    
   local success,err = App.check_path(self.prefs.path_to_exe.value)
   if not success then 
     return false,"Please define a valid path to the Sononym executable" 
