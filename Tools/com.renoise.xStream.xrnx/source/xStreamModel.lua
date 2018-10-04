@@ -727,9 +727,13 @@ function xStreamModel:rename_token(old_name,new_name,prefix)
     return false,err
   end
   
+  local add_prefix = function(prefix,str)
+    return prefix and ("%s.%s"):format(prefix,str) or str
+  end
+  
   local str_old,str_new
-  local prefixed_old = prefix..old_name
-  local prefixed_new = prefix..new_name
+  local prefixed_old = add_prefix(prefix,old_name)
+  local prefixed_new = add_prefix(prefix,new_name)
 
   local main_modified = false
   str_old = self.callback_str
