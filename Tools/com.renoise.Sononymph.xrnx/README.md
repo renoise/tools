@@ -14,7 +14,7 @@ This tool is an integration of the Sononym sample browser into Renoise. Use it t
 
 * Youtube demonstration: TODO
 * Download from tool page: http://renoise.com/tools/sononymph  
-* Discuss in Renoise forum: http://forum.renoise.com/index.php/topic/49630-new-tool-31-slicemate/  
+* Discuss in Renoise forum: http://forum.renoise.com/index.php/topic/52097-new-tool-31-sononym-integration-preview/
 * Check for / report issues: https://github.com/renoise/xrnx/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sononymph
 
 ## Quickstart
