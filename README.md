@@ -58,6 +58,6 @@ Have a look at !Introduction.txt in the [XRNX code repository](https://github.co
 ### Need More Help?
 This site contains various complete scripting tools written by the Renoise team. The existing tools may help you to get more info about how your tools could be done.
 
-For any questions regarding the Lua API, or this repository, have a look at the [Renoise Scripting Development Forum](http://forum.renoise.com/index.php/forum/48-renoise-scripting-tools/) please.
+For any questions regarding the Lua API, or this repository, have a look at the [Renoise Scripting Development Forum](https://forum.renoise.com/c/renoise-tool-development) please.
 
 *Have fun scripting and hacking Renoise!*
