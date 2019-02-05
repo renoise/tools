@@ -95,6 +95,10 @@ TrackSelector.available_mappings = {
     description = "TrackSelector: Select first track",
     component = UIButton,
   },
+  track_name = {
+    description = "TrackSelector: Display track name",
+    component = UILabel,
+  }
 }
 
 TrackSelector.default_palette = {
@@ -162,6 +166,7 @@ function TrackSelector:__init(...)
   self._select_master = nil
   self._select_sends = nil
   self._select_first = nil
+  self._track_name = nil
 
   Application.__init(self,...)
 
@@ -382,6 +387,11 @@ function TrackSelector:update()
     end
   end
 
+  if self._track_name then
+    local track_idx = rns.selected_track_index
+    self._track_name:set_text(rns.tracks[track_idx].name)
+  end
+
 end
 
 --------------------------------------------------------------------------------
@@ -392,6 +402,7 @@ end
 
 function TrackSelector:_build_app(song)
   TRACE("TrackSelector:_build_app",song)
+  -- LOG("TrackSelector:_build_app",song)
 
   -- reference to the control-map
   local cm = self.display.device.control_map
@@ -713,6 +724,16 @@ function TrackSelector:_build_app(song)
       rns.selected_track_index = track_idx
     end
     self._select_sends = c
+  end
+
+  local map = self.mappings.track_name
+  if (map) then
+    local c = UILabel(self)
+    c.group_name = map.group_name
+    --c.tooltip = map.description
+    c:set_pos(map.index)
+    self._track_name = c
+
   end
 
   Application._build_app(self)
