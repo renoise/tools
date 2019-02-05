@@ -402,7 +402,6 @@ end
 
 function TrackSelector:_build_app(song)
   TRACE("TrackSelector:_build_app",song)
-  -- LOG("TrackSelector:_build_app",song)
 
   -- reference to the control-map
   local cm = self.display.device.control_map
