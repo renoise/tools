@@ -35,6 +35,7 @@ local DATA_TPL = table.create()
 local DATA_TICK_DELAY = table.create()
 local DATA_TICK_CUT = table.create()
 local DATA_CC = table.create()
+local DATA_PB = table.create()
 
 local LPB_LOOKUP_TABLE = table.create()
 
@@ -96,6 +97,7 @@ function export_build_data(plan)
   DATA:clear(); DATA_BPM:clear(); DATA_LPB:clear(); DATA_TPL:clear()
   DATA_TICK_DELAY:clear(); DATA_TICK_CUT:clear()
   LPB_LOOKUP_TABLE:clear();
+  DATA_CC:clear();DATA_PB:clear()
 
   local instruments = RNS.instruments
   local tracks = RNS.tracks
@@ -121,12 +123,12 @@ function export_build_data(plan)
   for i=1,total_instruments do
     DATA[i] = table.create() -- notes 
     DATA_CC[i] = table.create() -- midi commands 
+    DATA_PB[i] = table.create() -- midi commands 
   end
 
   local i = 255 -- instrument_value, 255 means empty
   local j = 0 -- e.g. DATA[i][j]
-  local p = 0 -- e.g. DATA_CC[i][p]
-
+ 
   -- # TRACKS
   for track_index=1,total_tracks do
 
@@ -226,8 +228,7 @@ function export_build_data(plan)
                 cc_value = fx_col.amount_string,
               }
                 
-              p = table.count(DATA_CC[i])
-              --[[
+             --[[
               dbug("CC Message (#"..p..")"
                 .."\n # instrument_value: "..tostring(note_col.instrument_value)
                 .."\n # sequence_index: "..tostring(sequence_index)
@@ -239,7 +240,19 @@ function export_build_data(plan)
               )
               ]]
             end                
-
+            -- Midi pitchbend messages
+            if ('M1' == note_col.panning_string) 
+              and (column_index == total_note_columns)
+              and (note_col.instrument_value ~= 255)
+            then
+              --print(pos .. " " .. fx_col.number_string .. fx_col.amount_string)
+              table.insert(DATA_PB[i], {
+                cc_pos = pos,
+                cc_number = fx_col.number_string,
+                cc_value = fx_col.amount_string,
+              })
+           end                
+  
             -- Notes data
             
             -- TODO:
@@ -488,7 +501,7 @@ end
 
 -- Return a MF2T timestamp
 function _export_float_to_time(float, division, idx)
-  local lpb = 4
+  local lpb = RNS.transport.lpb
   local abs_pos = _resolve_abs_pos(float)      
   local time = (float - 1) * (division / lpb)
   return math.floor(time + .5) --Round
@@ -523,6 +536,19 @@ function _export_midi_cc(tmap, sort_me, param, idx)
   local cc_pos = _export_pos_to_float(param.cc_pos, 0, 0, idx)  
   if cc_pos ~= false and cc_pos > 0 then
     local msg = "Par ch=" .. tmap.midi_channel .. " c=" ..  tonumber(param.cc_number,16) .. " v=" .. tonumber(param.cc_value,16)
+    sort_me:insert{cc_pos, msg, tmap.track_number}
+  end
+end
+function _export_midi_pb(tmap, sort_me, param, idx)
+  -- Create MF2T message
+  local cc_pos = _export_pos_to_float(param.cc_pos, 0, 0, idx)  
+  if cc_pos ~= false and cc_pos > 0 then
+    --v = assert(loadstring('local ' .. msg[4] .. '; return v'))() --val(2 bytes!)
+    --local a = bit.band(v, 0x7f) -- Bits 0..6
+    --local b = bit.band(bit.rshift(v, 7), 0x7f) --Bits 7..13
+
+    local msg = "Pb ch=" .. tmap.midi_channel .. " v=" .. (tonumber(param.cc_number,16)*0.5)*0x100+(tonumber(param.cc_value,16)*0.5)
+    --print (msg .. " " .. param.cc_number .. param.cc_value)
     sort_me:insert{cc_pos, msg, tmap.track_number}
   end
 end
@@ -634,6 +660,23 @@ function export_midi()
           renoise.app():show_status(export_status_progress())
           if COROUTINE_MODE then coroutine.yield() end
           dbug(("Process(midi()) Instr: %d; CC Message: %d."):format(i, p))
+        end
+      end
+    end
+  end
+  -- Process MIDI-Pitchbend Messages
+  for i=1,#DATA_PB do    
+    if table.count(DATA_PB[i]) > 0 then
+      local tmap = track_map[i] 
+      if not tmap then 
+        tmap = registerTrack(i)
+      end 
+      for p=1,#DATA_PB[i] do
+        _export_midi_pb(tmap, sort_me, DATA_PB[i][p], idx)     
+        if (p % yield_every == 0) then
+          renoise.app():show_status(export_status_progress())
+          if COROUTINE_MODE then coroutine.yield() end
+          dbug(("Process(midi()) Instr: %d; PB Message: %d."):format(i, p))
         end
       end
     end
