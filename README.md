@@ -10,7 +10,8 @@ Link: [XRNX Starter Packer for Renoise 3.0](http://files.renoise.com/xrnx/XrnxSt
 
 
 ### Documentation & API Reference
-The main documentation and API references can also be read online, on this site. You'll find them right here in the [XRNX code repository](https://github.com/renoise/xrnx/tree/master/Documentation).
+The main documentation and API references can also be read online, on this site. You'll find them right here in the [Documentation](https://github.com/renoise/xrnx/tree/master/Documentation) folder. <br/> 
+A pretty HTML version can be found at [https://files.renoise.com/xrnx/documentation/](https://files.renoise.com/xrnx/documentation/).
 
 A few words on the overall folder/file Structure:
 
