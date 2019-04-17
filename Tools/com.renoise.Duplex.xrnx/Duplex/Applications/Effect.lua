@@ -1476,10 +1476,12 @@ function Effect:_attach_to_parameters(new_song)
       local param_name = parameter and parameter.name or "-"
       self._param_names[control_index]:set_text(param_name)
     end
-    --if self._param_values and self._param_values[control_index] then
-    --  local param_value = parameter and parameter.value_string or ""
-    --  self._param_values[control_index]:set_text(param_value)
-    --end
+    
+    if self._param_values and self._param_values[control_index] then
+     local param_value = parameter and parameter.value_string or ""
+     self._param_values[control_index]:set_text(param_value)
+    end
+
   end
 
   self.display:apply_tooltips(self.mappings.parameters.group_name)
