@@ -25,12 +25,14 @@ Do not try to execute this file. It uses a .lua extension for markup only.
 -- Currently there are two ways to to create custom views:
 --
 -- Shows a modal dialog with a title, custom content and custom button labels:
-renoise.app():show_custom_prompt(title, content_view, {button_labels} [,key_handler_func])
+renoise.app():show_custom_prompt(
+  title, content_view, {button_labels} [, key_handler_func, key_handler_options])
   -> [pressed button]
 
 -- _(and)_ Shows a non modal dialog, a floating tool window, with custom
 -- content:
-renoise.app():show_custom_dialog(title, content_view [, key_handler_func])
+renoise.app():show_custom_dialog(
+  title, content_view [, key_handler_func, key_handler_options])
   -> [dialog object]
 
 -- key_handler_func is optional. When defined, it should point to a function
@@ -40,16 +42,29 @@ renoise.app():show_custom_dialog(title, content_view [, key_handler_func])
 -- >   modifiers, -- modifier states. 'shift + control' - always valid  
 -- >   character, -- character representation of the key or nil  
 -- >   note,      -- virtual keyboard piano key value (starting from 0) or nil  
--- >   repeated,  -- true when the key is soft repeated (hold down)  
+-- >   state,     -- optional (see below) - is the key getting pressed or released?
+-- >   repeated,  -- optional (see below) - true when the key is soft repeated (held down)
 -- > }
+-- 
+-- The "repeated" field will not be present when 'send_key_repeat' in the key 
+-- handler options is set to false. The "state" field only is present when the
+-- 'send_key_release' in the key handler options is set to true. So by default only 
+-- key presses are send to the key handler.
 --
--- "dialog" is a reference to the dialog the keyhandler is running on.
+-- key_handler_options is an optional table with the fields:
+-- > options = { 
+-- >   send_key_repeat=true OR false   -- by default true
+-- >   send_key_release=true OR false  -- by default false
+-- > }
+-- >
+-- Returned "dialog" is a reference to the dialog the keyhandler is running on.
 --
 --     function my_keyhandler_func(dialog, key) end
 --
 -- When no key handler is specified, the Escape key is used to close the dialog.
 -- For prompts, the first character of the button labels is used to invoke
 -- the corresponding button.
+-- 
 -- When returning the passed key from the key-handler function, the
 -- key will be passed back to Renoise's key event chain, in order to allow
 -- processing global Renoise key-bindings from your dialog. This will not work
@@ -255,12 +270,22 @@ text.text
 -- Available font styles are:
 -- >  "normal"  
 -- >  "big"  
--- >  "bold  
+-- >  "bold"
 -- >  "italic"  
 -- >  "mono"
 --
 -- By default "normal".
 text.font
+  -> [string]
+
+-- Get/set the color style the text should be displayed with.
+-- Available styles are:
+-- >  "normal"
+-- >  "strong"
+-- >  "disabled"
+--
+-- By default "normal".
+text.style
   -> [string]
 
 -- Setup the text's alignment. Applies only when the view's size is larger than
@@ -371,8 +396,8 @@ multiline_text.style
 ----------- Functions
 
 -- Add/remove value change (text change) notifiers.
-textfield:add_notifier(function or {object, function} or {object, function})
-textfield:remove_notifier(function or {object, function} or {object, function})
+textfield:add_notifier(function or {object, function} or {function, object})
+textfield:remove_notifier(function or {object, function} or {function, object})
 
 
 ----------- Properties
@@ -446,8 +471,8 @@ textfield.bind
 ----------- Functions
 
 -- Add/remove value change (text change) notifiers.
-multiline_textfield:add_notifier(function or {object, function} or {object, function})
-multiline_textfield:remove_notifier(function or {object, function} or {object, function})
+multiline_textfield:add_notifier(function or {object, function} or {function, object})
+multiline_textfield:remove_notifier(function or {object, function} or {function, object})
 
 -- When a scroll bar is visible, scroll the text to show the last line.
 multiline_textfield:scroll_to_last_line()
@@ -558,8 +583,8 @@ multiline_textfield.edit_mode
 -------- Functions
 
 -- Add/remove mouse click notifiers
-bitmapview:add_notifier(function or {object, function} or {object, function})
-bitmapview:remove_notifier(function or {object, function} or {object, function})
+bitmapview:add_notifier(function or {object, function} or {function, object})
+bitmapview:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -615,10 +640,10 @@ bitmapview.notifier
 -- called as soon as the mouse is released, either over your button or anywhere
 -- else. When a "release" notifier is set, it is only called when the mouse
 -- button is pressed !and! released over your button.
-button:add_pressed_notifier(function or {object, function} or {object, function})
-button:add_released_notifier(function or {object, function} or {object, function})
-button:remove_pressed_notifier(function or {object, function} or {object, function})
-button:remove_released_notifier(function or {object, function} or {object, function})
+button:add_pressed_notifier(function or {object, function} or {function, object})
+button:add_released_notifier(function or {object, function} or {function, object})
+button:remove_pressed_notifier(function or {object, function} or {function, object})
+button:remove_released_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -682,8 +707,8 @@ button.notifier
 -------- Functions
 
 -- Add/remove value notifiers
-checkbox:add_notifier(function or {object, function} or {object, function})
-checkbox:remove_notifier(function or {object, function} or {object, function})
+checkbox:add_notifier(function or {object, function} or {function, object})
+checkbox:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -727,8 +752,8 @@ checkbox.bind
 -------- Functions
 
 -- Add/remove index change notifiers.
-switch:add_notifier(function or {object, function} or {object, function})
-switch:remove_notifier(function or {object, function} or {object, function})
+switch:add_notifier(function or {object, function} or {function, object})
+switch:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -775,8 +800,8 @@ switch.bind
 -------- Functions
 
 -- Add/remove index change notifiers.
-popup:add_notifier(function or {object, function} or {object, function})
-popup:remove_notifier(function or {object, function} or {object, function})
+popup:add_notifier(function or {object, function} or {function, object})
+popup:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -824,8 +849,8 @@ popup.bind
 -------- Functions
 
 -- Add/remove index change notifiers.
-chooser:add_notifier(function or {object, function} or {object, function})
-chooser:remove_notifier(function or {object, function} or {object, function})
+chooser:add_notifier(function or {object, function} or {function, object})
+chooser:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -872,8 +897,8 @@ chooser.bind
 -------- Functions
 
 -- Add/remove value change notifiers.
-valuebox:add_notifier(function or {object, function} or {object, function})
-valuebox:remove_notifier(function or {object, function} or {object, function})
+valuebox:add_notifier(function or {object, function} or {function, object})
+valuebox:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -942,8 +967,8 @@ valuebox.bind
 -------- Functions
 
 -- Add/remove value change notifiers.
-value:add_notifier(function or {object, function} or {object, function})
-value:remove_notifier(function or {object, function} or {object, function})
+value:add_notifier(function or {object, function} or {function, object})
+value:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -1018,8 +1043,8 @@ value.bind
 -------- Functions
 
 -- Add/remove value change notifiers.
-valuefield:add_notifier(function or {object, function} or {object, function})
-valuefield:remove_notifier(function or {object, function} or {object, function})
+valuefield:add_notifier(function or {object, function} or {function, object})
+valuefield:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -1097,8 +1122,8 @@ valuefield.bind
 -------- Functions
 
 -- Add/remove value change notifiers.
-slider:add_notifier(function or {object, function} or {object, function})
-slider:remove_notifier(function or {object, function} or {object, function})
+slider:add_notifier(function or {object, function} or {function, object})
+slider:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -1147,8 +1172,8 @@ slider.bind
 -------- Functions
 
 -- Add/remove value change notifiers.
-slider:add_notifier(function or {object, function} or {object, function})
-slider:remove_notifier(function or {object, function} or {object, function})
+slider:add_notifier(function or {object, function} or {function, object})
+slider:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -1202,8 +1227,8 @@ slider.bind
 -------- Functions
 
 -- Add/remove value change notifiers.
-rotary:add_notifier(function or {object, function} or {object, function})
-rotary:remove_notifier(function or {object, function} or {object, function})
+rotary:add_notifier(function or {object, function} or {function, object})
+rotary:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
@@ -1260,8 +1285,8 @@ rotary.bind
 -------- Functions
 
 -- Add/remove value change notifiers.
-xypad:add_notifier(function or {object, function} or {object, function})
-xypad:remove_notifier(function or {object, function} or {object, function})
+xypad:add_notifier(function or {object, function} or {function, object})
+xypad:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties

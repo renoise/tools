@@ -1507,10 +1507,17 @@ renoise.song().instruments[].phrases[]:lines_in_range(index_from, index_to)
 -- Check/add/remove notifier functions or methods, which are called by 
 -- Renoise as soon as any of the phrases's lines have changed.
 -- See renoise.song().patterns[]:has_line_notifier for more details.
-renoise.song().instruments[].phrases[]:has_line_notifier(func[, obj])
+renoise.song().instruments[].phrases[]:has_line_notifier(func [, obj])
   -> [boolean]
-renoise.song().instruments[].phrases[]:add_line_notifier(func[, obj])
-renoise.song().instruments[].phrases[]:remove_line_notifier(func[, obj])
+renoise.song().instruments[].phrases[]:add_line_notifier(func [, obj])
+renoise.song().instruments[].phrases[]:remove_line_notifier(func [, obj])
+
+-- Same as line_notifier above, but the notifier only fires when the user
+-- added, changed or deleted a line with the computer keyboard.
+renoise.song().instruments[].phrases[]:has_line_edited_notifier(func [, obj])
+  -> [boolean]
+renoise.song().instruments[].phrases[]:add_line_edited_notifier(func [, obj])
+renoise.song().instruments[].phrases[]:remove_line_edited_notifier(func [, obj])
 
 -- Note column mute states. Only valid within (1-MAX_NUMBER_OF_NOTE_COLUMNS)
 renoise.song().instruments[].phrases[]:column_is_muted(column)
@@ -1581,7 +1588,7 @@ renoise.song().instruments[].phrases[].loop_end, _observable
   -> [number, loop_start-number_of_lines]
 
 -- Phrase autoseek settings.
-renoise.song().instruments[].phrases[].autoseek, _observable 
+renoisesong().instruments[].phrases[].autoseek, _observable
   -> [boolean]
 
 -- Phrase local lines per beat setting. New phrases get initialized with 
@@ -1867,8 +1874,8 @@ renoise.song().instruments[].sample_modulation_sets[].devices[].max
 --------- Constants
 
 renoise.SampleEnvelopeModulationDevice.PLAYMODE_POINTS
-renoise.SampleEnvelopeModulationDevice.PLAYMODE_LINEAR
-renoise.SampleEnvelopeModulationDevice.PLAYMODE_CUBIC
+renoise.SampleEnvelopeModulationDevice.PLAYMODE_LINES
+renoise.SampleEnvelopeModulationDevice.PLAYMODE_CURVES
 
 renoise.SampleEnvelopeModulationDevice.LOOP_MODE_OFF
 renoise.SampleEnvelopeModulationDevice.LOOP_MODE_FORWARD
@@ -1902,12 +1909,17 @@ renoise.song().instruments[].sample_modulation_sets[].devices[]:copy_points_from
 renoise.song().instruments[].sample_modulation_sets[].devices[]:has_point_at(time)
   -> [boolean]
 -- Add a new point value (or replace any existing value) at time. 
-renoise.song().instruments[].sample_modulation_sets[].devices[]:add_point_at(time, value)
+renoise.song().instruments[].sample_modulation_sets[].devices[]:add_point_at(
+  time, value [, scaling])
 -- Removes a point at the given time. Point must exist.
 renoise.song().instruments[].sample_modulation_sets[].devices[]:remove_point_at(time)
 
 
 -------- Properties
+
+-- External editor visibility.
+renoise.song().instruments[].sample_modulation_sets[].devices[].external_editor_visible
+ -> [boolean, set to true to show he editor, false to close it]
 
 -- Play mode (interpolation mode).
 renoise.song().instruments[].sample_modulation_sets[].devices[].play_mode, _observable
@@ -1945,10 +1957,13 @@ renoise.song().instruments[].sample_modulation_sets[].devices[].points[], _obser
 
 -- An envelope point's time.
 renoise.song().instruments[].sample_modulation_sets[].devices[].points[].time
-  -> [number, 1-envelope.length]
+  -> [number, 1 - envelope.length]
 -- An envelope point's value.
 renoise.song().instruments[].sample_modulation_sets[].devices[].points[].value
-  -> [number, 0.0-1.0]
+  -> [number, 0.0 - 1.0]
+-- An envelope point's scaling (used in 'lines' playback mode only - 0.0 is linear).
+renoise.song().instruments[].sample_modulation_sets[].devices[].points[].scaling
+  -> [number, -1.0 - 1.0]
 
 
 --------------------------------------------------------------------------------
@@ -1958,8 +1973,8 @@ renoise.song().instruments[].sample_modulation_sets[].devices[].points[].value
 --------- Constants
 
 renoise.SampleStepperModulationDevice.PLAYMODE_POINTS
-renoise.SampleStepperModulationDevice.PLAYMODE_LINEAR
-renoise.SampleStepperModulationDevice.PLAYMODE_CUBIC
+renoise.SampleStepperModulationDevice.PLAYMODE_LINES
+renoise.SampleStepperModulationDevice.PLAYMODE_CURVES
 
 renoise.SampleStepperModulationDevice.MIN_NUMBER_OF_POINTS
 renoise.SampleStepperModulationDevice.MAX_NUMBER_OF_POINTS
@@ -1988,13 +2003,18 @@ renoise.song().instruments[].sample_modulation_sets[].devices[]:copy_points_from
 renoise.song().instruments[].sample_modulation_sets[].devices[]:has_point_at(time)
   -> [boolean]
 -- Add a new point value (or replace any existing value) at time. 
-renoise.song().instruments[].sample_modulation_sets[].devices[]:add_point_at(time, value)
+renoise.song().instruments[].sample_modulation_sets[].devices[]:add_point_at(
+  time, value [, scaling])
 -- Removes a point at the given time. Point must exist.
 renoise.song().instruments[].sample_modulation_sets[].devices[]:remove_point_at(time)
 
 
 -------- Properties
 
+-- External editor visibility.
+renoise.song().instruments[].sample_modulation_sets[].devices[].external_editor_visible
+ -> [boolean, set to true to show he editor, false to close it]
+  
 -- Play mode (interpolation mode).
 renoise.song().instruments[].sample_modulation_sets[].devices[].play_mode, _observable
   -> [enum = PLAYMODE]
@@ -2017,10 +2037,13 @@ renoise.song().instruments[].sample_modulation_sets[].devices[].points[], _obser
 
 -- An envelope point's time.
 renoise.song().instruments[].sample_modulation_sets[].devices[].points[].time
-  -> [number, 1-envelope.length]
+  -> [number, 1 - envelope.length]
 -- An envelope point's value.
 renoise.song().instruments[].sample_modulation_sets[].devices[].points[].value
-  -> [number, 0.0-1.0]
+  -> [number, 0.0 - 1.0]
+-- An envelope point's scaling (used in 'lines' playback mode only - 0.0 is linear).
+renoise.song().instruments[].sample_modulation_sets[].devices[].points[].scaling
+  -> [number, -1.0 - 1.0]
 
 
 --------------------------------------------------------------------------------
@@ -2407,6 +2430,10 @@ renoise.Sample.INTERPOLATE_LINEAR
 renoise.Sample.INTERPOLATE_CUBIC
 renoise.Sample.INTERPOLATE_SINC
 
+renoise.Sample.BEAT_SYNC_REPITCH
+renoise.Sample.BEAT_SYNC_PERCUSSION
+renoise.Sample.BEAT_SYNC_TEXTURE
+
 renoise.Sample.NEW_NOTE_ACTION_NOTE_CUT
 renoise.Sample.NEW_NOTE_ACTION_NOTE_OFF
 renoise.Sample.NEW_NOTE_ACTION_SUSTAIN
@@ -2487,6 +2514,8 @@ renoise.song().instruments[].samples[].beat_sync_enabled, _observable
   -> [boolean]
 renoise.song().instruments[].samples[].beat_sync_lines, _observable
   -> [number, 0-512]
+renoise.song().instruments[].samples[].beat_sync_mode, _observable
+  -> [enum = BEAT_SYNC]
 
 -- Interpolation, new note action, oneshot, mute_group, autoseek, autofade.
 renoise.song().instruments[].samples[].interpolation_mode, _observable
@@ -2702,17 +2731,23 @@ renoise.song().patterns[]:track(index)
 -- If you are only interested in changes that are made to the currently edited
 -- pattern, dynamically attach and detach to the selected pattern's line
 -- notifiers by listening to "renoise.song().selected_pattern_observable".
-
-renoise.song().patterns[]:has_line_notifier(func[, obj])
+renoise.song().patterns[]:has_line_notifier(func [, obj])
   -> [boolean]
+renoise.song().patterns[]:add_line_notifier(func [, obj])
+renoise.song().patterns[]:remove_line_notifier(func [, obj])
 
-renoise.song().patterns[]:add_line_notifier(func[, obj])
-renoise.song().patterns[]:remove_line_notifier(func[, obj])
+-- Same as line_notifier above, but the notifier only fires when the user
+-- added, changed or deleted a line with the computer or MIDI keyboard.
+renoise.song().patterns[]:has_line_edited_notifier(func [, obj])
+  -> [boolean]
+renoise.song().patterns[]:add_line_edited_notifier(func [, obj])
+renoise.song().patterns[]:remove_line_edited_notifier(func [, obj])
 
 
 -------- Properties
 
--- Quickly check if a pattern has some pattern lines or automation.
+-- Quickly check if any track in a pattern has some non empty pattern lines. 
+-- This does not look at track automation.
 renoise.song().patterns[].is_empty
   -> [read-only, boolean]
 
@@ -2824,8 +2859,8 @@ renoise.song().patterns[].tracks[].automation[], _observable
 -------- Constants
 
 renoise.PatternTrackAutomation.PLAYMODE_POINTS
-renoise.PatternTrackAutomation.PLAYMODE_LINEAR
-renoise.PatternTrackAutomation.PLAYMODE_CUBIC
+renoise.PatternTrackAutomation.PLAYMODE_LINES
+renoise.PatternTrackAutomation.PLAYMODE_CURVES
 
 
 -------- Functions
@@ -2847,7 +2882,8 @@ renoise.song().patterns[].tracks[].automation[]:has_point_at(time)
    -> [boolean]
 -- Insert a new point, or change an existing one, if a point in
 -- time already exists.
-renoise.song().patterns[].tracks[].automation[]:add_point_at(time, value)
+renoise.song().patterns[].tracks[].automation[]:add_point_at(
+  time, value [, scaling])
 -- Removes a point at the given time. Point must exist.
 renoise.song().patterns[].tracks[].automation[]:remove_point_at(time)
 
@@ -2893,11 +2929,13 @@ renoise.song().patterns[].tracks[].automation[].points[], _observable
 
 -- An automation point's time in pattern lines.
 renoise.song().patterns[].tracks[].automation[].points[].time
-  -> [number, 1-NUM_LINES_IN_PATTERN]
-
+  -> [number, 1 - NUM_LINES_IN_PATTERN]
 -- An automation point's value [0-1.0]
 renoise.song().patterns[].tracks[].automation[].points[].value
-  -> [number, 0-1.0]
+  -> [number, 0 - 1.0]
+-- An envelope point's scaling (used in 'lines' playback mode only - 0.0 is linear).
+renoise.song().patterns[].tracks[].automation[].points[].scaling
+  -> [number, -1.0 - 1.0]
 
 
 -------- Operators
@@ -3054,7 +3092,7 @@ renoise.song().patterns[].tracks[].lines[].note_columns[].delay_string
 
 renoise.song().patterns[].tracks[].lines[].note_columns[].effect_number_value
   -> [int, 0-65535 in the form 0x0000xxyy where xx=effect char 1 and yy=effect char 2]
-renoise.song().patterns[].tracks[].lines[].note_columns[].effect_number_string
+song().patterns[].tracks[].lines[].note_columns[].effect_number_string
   -> [string, '00' - 'ZZ']
 
 renoise.song().patterns[].tracks[].lines[].note_columns[].effect_amount_value 

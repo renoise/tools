@@ -29,10 +29,7 @@ To use the debugger you will need:
   (no installation required - included in Renoise)
 
 * Lua support on your system's command-line with the Lua "socket" module
-  + Windows: <http://code.google.com/p/luaforwindows/>
-  + OSX, Linux: <http://luabinaries.luaforge.net/> and
-               <http://luaforge.net/projects/luasocket/> (or)
-  + Linux: apt-get install lua5.1 liblua5.1-socket2
+  See http://w3.impa.br/~diego/software/luasocket/
 
 
 --------------------------------------------------------------------------------

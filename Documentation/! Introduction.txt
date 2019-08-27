@@ -275,10 +275,10 @@ In the XRNX bundle you'll find some information about the Duplex API and
 how to create new controller mappings.
 
 The Duplex code can also be viewed online in the XRNX repository at:
-<http://code.google.com/p/xrnx/source/browse/trunk/Tools#Tools/com.renoise.Duplex.xrnx>
+<https://github.com/renoise/xrnx/tree/master/Tools/com.renoise.Duplex.xrnx>
 
 More information can be found in Duplex manual, available here:
-<http://oscillity.net/renoise/duplex/Duplex_manual.pdf>
+<https://github.com/renoise/xrnx/blob/master/Tools/com.renoise.Duplex.xrnx/Docs/GettingStarted.md>
 
 
 --------------------------------------------------------------------------------

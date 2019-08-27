@@ -51,15 +51,21 @@ renoise.app():show_prompt(title, message, {button_labels})
 
 -- Opens a modal dialog with a title, custom content and custom button labels.
 -- See Renoise.ViewBuilder.API for more info. key_handler is an optional
--- notifier function for keyboard events in the dialog.
-renoise.app():show_custom_prompt(title, content_view, {button_labels} [, key_handler])
+-- notifier function for keyboard events in the dialog. key_handler_options is 
+-- an optional table with the fields
+-- { "send_key_repeat": true/false, "send_key_release": true/false }
+-- when not specified, "send_key_repeat" = true and "send_key_release" = false
+renoise.app():show_custom_prompt(title, content_view, 
+  {button_labels} [, key_handler, key_handler_options])
   -> [pressed_button_label]
 
 -- Shows a non modal dialog (a floating tool window) with custom content.
 -- Again see Renoise.ViewBuilder.API for more info about custom views.
 -- key_handler is an optional notifier function for keyboard events that are 
--- received by the dialog.
-renoise.app():show_custom_dialog(title, content_view [, key_handler])
+-- received by the dialog. key_handler_options is an optional table with the 
+-- fields { "send_key_repeat": true/false, "send_key_release": true/false }
+renoise.app():show_custom_dialog(title, content_view 
+  [, key_handler, key_handler_options])
   -> [renoise.Dialog object]
 
 
@@ -182,13 +188,18 @@ renoise.app().recently_saved_song_files
 renoise.app().installed_tools 
   -> [read-only, array of tables with tool info]
 
--- Globally used clipboard "slots" in the application.
-renoise.app().active_clipboard_index 
-  -> [number, 1-4]
+-- Access keyboard modifier states.
+renoise.app().key_modifier_states
+  -> [read-only, table with all modifier names and their states]
 
 -- Access to the application's window.
 renoise.app().window 
   -> [read-only, renoise.ApplicationWindow object]
+
+
+-- Get or set globally used clipboard "slots" in the application.
+renoise.app().active_clipboard_index 
+  -> [number, 1-4]
 
 
 --------------------------------------------------------------------------------
@@ -267,6 +278,10 @@ renoise.app().window.instrument_box_is_visible, _observable
 
 -- Instrument Editor detaching.
 renoise.app().window.instrument_editor_is_detached, _observable
+  -> [boolean]
+
+-- Mixer View detaching.
+renoise.app().window.mixer_view_is_detached, _observable
   -> [boolean]
 
 -- Frame with the scopes/master spectrum...
