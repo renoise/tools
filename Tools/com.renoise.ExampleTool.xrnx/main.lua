@@ -191,7 +191,7 @@ renoise.tool().app_became_active_observable:add_notifier(function()
  handle_app_became_active_notification()
 end)
   
--- Invoked, as soon as the application loses focus, another app
+-- Invoked, as soon as the application looses focus, another app
 -- became the foreground window.
 renoise.tool().app_resigned_active_observable:add_notifier(function()
   handle_app_resigned_active_notification()

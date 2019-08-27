@@ -1321,13 +1321,14 @@ function handle_key_events()
       vb:multiline_text {
         id = "key_text",
         width = TEXT_ROW_WIDTH,
-        height = 78,
+        height = 92,
         paragraphs = {
+          "key.state:",
           "key.name:", 
           "key.modifiers:", 
           "key.character:", 
           "key.note:",
-          "key.repeat:"
+          "key.repeat:",
         },
         font = "mono",
       }
@@ -1338,6 +1339,7 @@ function handle_key_events()
   
     -- update key_text to show what we got
     vb.views.key_text.paragraphs = {
+      ("key.state: '%s'"):format(key.state or "nil"),
       ("key.name: '%s'"):format(key.name), 
       ("key.modifiers: '%s'"):format(key.modifiers), 
       ("key.character: '%s'"):format(key.character or "nil"), 
@@ -1351,9 +1353,14 @@ function handle_key_events()
     end
   end
   
+  -- handler options
+  local options = {
+    send_key_repeat = true,
+    send_key_release = true
+  }
   -- show a dialog as usual, but this time also pass a keyboard handler ref
   renoise.app():show_custom_dialog(
-    "Handling Keyboard Events", content_view, key_handler)
+    "Handling Keyboard Events", content_view, key_handler, options)
 
 end
 

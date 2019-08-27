@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool doc_version="0">
-  <ApiVersion>5</ApiVersion>
+  <ApiVersion>6</ApiVersion>
   <Id>com.renoise.ExampleTool</Id>
   <Version>1.0</Version>
   <Author>taktik [taktik@renoise.com]</Author>
