@@ -563,3 +563,12 @@ doc:save_as(file_name)
 doc:load_from(file_name)
   -> [success, error_string or nil on success]
 
+
+-- Serialize the whole document tree to a XML string. 
+doc:to_string()
+  -> [string]
+
+-- Parse document tree from the given string data. See doc:load_from for details
+-- about how properties are parsed and errors are handled.
+doc:from_string(string)
+  -> [boolean, error_String]

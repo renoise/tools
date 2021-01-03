@@ -254,6 +254,20 @@ renoise.song().comments_assignment_observable
 renoise.song().show_comments_after_loading, _observable 
   -> [boolean]
 
+-- Inject/fetch custom XRNX scripting tool data into the song. Can only be called
+-- from scripts that are running in Renoise scripting tool bundles; attempts to
+-- access the data from e.g. the scripting terminal will result in an error.
+-- Returns nil when no data is present.
+--
+-- Each tool gets it's own data slot in the song, which is resolved by the tool's
+-- bundle id, so this data is unique for every tool and persistent accross tools
+-- with the same bundle id (but possibly different versions).
+-- If you want to store renoise.Document data in here, you can use the
+-- renoise.Document's 'to_string' and 'from_string' functions to serialize the data.
+-- Alternatively, write your own serializers for your custom data.
+renoise.song().tool_data
+  -> [string or nil]
+  
 -- See renoise.song():render(). Returns true while rendering is in progress.
 renoise.song().rendering
   -> [read-only, boolean]
@@ -1014,18 +1028,25 @@ renoise.song().tracks[].devices[]:parameter(index)
 
 -------- Properties
 
--- Devices.
+-- Fixed name of the device.
 renoise.song().tracks[].devices[].name
-  -> [read-only, string, device identifier]
-renoise.song().tracks[].devices[].display_name, observable 
-  -> [string, custom name]
+  -> [read-only, string]
+renoise.song().tracks[].devices[].short_name
+  -> [read-only, string]
 
+-- Configurable device display name.
+renoise.song().tracks[].devices[].display_name, observable 
+  -> [string, long device name or custom name]
+
+-- Enable/bypass the device.
 renoise.song().tracks[].devices[].is_active, _observable
   -> [boolean, not active = bypassed]
 
+-- Maximize state in DSP chain.
 renoise.song().tracks[].devices[].is_maximized, _observable
   -> [boolean]
 
+-- Preset handling.
 renoise.song().tracks[].devices[].active_preset, _observable
   -> [number, 0 when none is active or available]
 renoise.song().tracks[].devices[].active_preset_data
@@ -1033,6 +1054,7 @@ renoise.song().tracks[].devices[].active_preset_data
 renoise.song().tracks[].devices[].presets[]
   -> [read-only, array of strings]
 
+-- Parameters.
 renoise.song().tracks[].devices[].is_active_parameter
   -> [read-only, renoise.DeviceParameter object]
 
@@ -1598,7 +1620,7 @@ renoise.song().instruments[].phrases[].lpb, _observable
   
 -- Shuffle groove amount for a phrase. 
 -- 0.0 = no shuffle (off), 1.0 = full shuffle 
-renoise.song().instruments[].phrases[].shuffle
+renoise.song().instruments[].phrases[].shuffle, _observable
   -> [number, 0-1]
 
 -- Column visibility.
@@ -1722,14 +1744,24 @@ renoise.song().instruments[].sample_modulation_sets[].devices[]:parameter(index)
 --------- properties
 
 -- Fixed name of the device.
-renoise.song().instruments[].sample_modulation_sets[].devices[].name, _observable
+renoise.song().instruments[].sample_modulation_sets[].devices[].name
   -> [read-only, string]
+renoise.song().instruments[].sample_modulation_sets[].devices[].short_name
+  -> [read-only, string]
+
 -- Configurable device display name.
 renoise.song().instruments[].sample_modulation_sets[].devices[].display_name, observable 
   -> [string]
 
--- Enable/bypass the device.
+-- DEPRECATED: use 'is_active' instead
 renoise.song().instruments[].sample_modulation_sets[].devices[].enabled, _observable
+  -> [boolean]
+-- Enable/bypass the device.
+renoise.song().instruments[].sample_modulation_sets[].devices[].is_active, _observable
+  -> [boolean, not active = bypassed]
+
+-- Maximize state in modulation chain.
+renoise.song().instruments[].sample_modulation_sets[].devices[].is_maximized, _observable
   -> [boolean]
 
 -- Where the modulation gets applied (Volume, Pan, Pitch, Cutoff, Resonance).
@@ -1755,6 +1787,9 @@ renoise.song().instruments[].sample_modulation_sets[].devices[].tempo_synced, ob
   -> [boolean]
   
 -- Generic access to all parameters of this device.
+renoise.song().instruments[].sample_modulation_sets[].devices[].is_active_parameter
+  -> [read-only, renoise.DeviceParameter object]
+
 renoise.song().instruments[].sample_modulation_sets[].devices[].parameters[]
   -> [read-only, array of renoise.DeviceParameter objects]
 
@@ -1785,9 +1820,9 @@ renoise.SampleFaderModulationDevice.SCALING_EXP_FAST
 
 -------- Properties
 
--- Mode.
-renoise.song().instruments[].sample_modulation_sets[].devices[].mode, _observable 
-  -> [enum = OPERATOR]
+-- Scaling mode.
+renoise.song().instruments[].sample_modulation_sets[].devices[].scaling, _observable 
+  -> [enum = SCALING]
 
 -- Start & Target value.
 renoise.song().instruments[].sample_modulation_sets[].devices[].from
@@ -2076,6 +2111,9 @@ renoise.song().instruments[].sample_modulation_sets[].devices[].frequency
 renoise.song().instruments[].sample_modulation_sets[].devices[].amount
   -> [renoise.DeviceParameter object, 0-1]
 
+-- Delay.
+renoise.song().instruments[].sample_modulation_sets[].devices[].delay
+-> [renoise.DeviceParameter object, 0-1]
 
 --------------------------------------------------------------------------------
 -- renoise.SampleModulationSet
@@ -2283,26 +2321,29 @@ renoise.song().instruments[].plugin_properties.available_plugin_infos[]
   -> [read-only, array of plugin info tables]
   
 -- Returns true when a plugin is present; loaded successfully.
+-- see 'plugin_properties.plugin_device_observable' for related notifications.
 renoise.song().instruments[].plugin_properties.plugin_loaded
   -> [read-only, boolean]
 
 -- Valid object for successfully loaded plugins, otherwise nil. Alias plugin
 -- instruments of FX will return the resolved device, will link to the device
 -- the alias points to.
-renoise.song().instruments[].plugin_properties.plugin_device
+-- The observable is fired when the device changes: when a plugin gets loaded or
+-- unloaded or a plugin alias is assigned or unassigned.
+renoise.song().instruments[].plugin_properties.plugin_device, _observable
  -> [renoise.InstrumentPluginDevice object or renoise.AudioDevice object or nil]
 
 -- Valid for loaded and unloaded plugins.
-renoise.song().instruments[].plugin_properties.alias_instrument_index
+renoise.song().instruments[].plugin_properties.alias_instrument_index, _observable
   -> [read-only, number or 0 (when no alias instrument is set)]
-renoise.song().instruments[].plugin_properties.alias_fx_track_index
+renoise.song().instruments[].plugin_properties.alias_fx_track_index, _observable
   -> [read-only, number or 0 (when no alias FX is set)]
-renoise.song().instruments[].plugin_properties.alias_fx_device_index
+renoise.song().instruments[].plugin_properties.alias_fx_device_index, _observable
   -> [read-only, number or 0 (when no alias FX is set)]
 
 -- Valid for loaded and unloaded plugins. target instrument index or 0 of the 
 -- plugin's MIDI output (when present)
-renoise.song().instruments[].plugin_properties.midi_output_routing_index 
+renoise.song().instruments[].plugin_properties.midi_output_routing_index, _observable
   -> [read-only, number. 0 when no routing is set]
   
 -- Valid for loaded and unloaded plugins.
@@ -2346,19 +2387,23 @@ renoise.song().instruments[].plugin_properties.plugin_device:parameter(index)
 
 -------- Properties
 
--- Plugins.
+-- Device name.
 renoise.song().instruments[].plugin_properties.plugin_device.name
   -> [read-only, string]
+renoise.song().instruments[].plugin_properties.plugin_device.short_name
+  -> [read-only, string]
 
+-- Preset handling.
 renoise.song().instruments[].plugin_properties.plugin_device.active_preset, _observable
   -> [number, 0 when none is active or available]
-
+  
 renoise.song().instruments[].plugin_properties.plugin_device.active_preset_data
   -> [string, raw XML data of the active preset]
 
 renoise.song().instruments[].plugin_properties.plugin_device.presets[]
   -> [read-only, array of strings]
 
+-- Parameters.
 renoise.song().instruments[].plugin_properties.plugin_device.parameters[]
   -> [read-only, array of renoise.DeviceParameter objects]
 
@@ -2513,7 +2558,7 @@ renoise.song().instruments[].samples[].fine_tune, _observable
 renoise.song().instruments[].samples[].beat_sync_enabled, _observable
   -> [boolean]
 renoise.song().instruments[].samples[].beat_sync_lines, _observable
-  -> [number, 0-512]
+  -> [number, 1-512]
 renoise.song().instruments[].samples[].beat_sync_mode, _observable
   -> [enum = BEAT_SYNC]
 
@@ -3108,7 +3153,7 @@ renoise.song().patterns[].tracks[].lines[].note_columns[].effect_amount_string
 ~=(NoteColumn object, NoteColumn object) -> [boolean]
 
 -- Serialize a column.
-tostring(Pattern object) -> [string]
+tostring(NoteColumn object) -> [string]
 
 
 --------------------------------------------------------------------------------

@@ -291,6 +291,19 @@ renoise.tool():remove_timer(timer_func)
 renoise.tool().bundle_path
   -> [read-only, string]
 
+-- Invoked when the tool finished loading/initializing and no errors happened. When
+-- the tool has preferences, they are loaded here as well when the notification fires,
+-- but 'renoise.song()' may not yet be available.
+-- See also 'renoise.tool().app_new_document_observable'.
+renoise.tool().tool_finished_loading_observable
+  -> [renoise.Document.Observable object]
+
+-- Invoked right before a tool gets unloaded: either because it got disabled, reloaded
+-- or the application exists. You can cleanup resources or connections to other devices
+-- here if necessary.
+renoise.tool().tool_will_unload_observable
+  -> [renoise.Document.Observable object]
+
 -- Invoked as soon as the application becomes the foreground window.
 -- For example, when you ATL-TAB to it, or activate it with the mouse
 -- from another app to Renoise.
@@ -311,16 +324,16 @@ renoise.tool().app_resigned_active_observable
 renoise.tool().app_idle_observable
   -> [renoise.Document.Observable object]
 
--- Invoked each time before a new document gets created or loaded, aka the last
--- time renoise.song() still points to the old song before a new one arrives.
+-- Invoked each time before a new document gets created or loaded: this is the
+-- last time renoise.song() still points to the old song before a new one arrives.
 -- You can explicitly release notifiers to the old document here, or do your own
 -- housekeeping. Also called right before the application exits.
 renoise.tool().app_release_document_observable
   -> [renoise.Document.Observable object]
 
--- Invoked each time a new document (song) is created or loaded, aka each time
--- the result of renoise.song() is changed. Also called when the script gets
--- reloaded (only happens with the auto_reload debugging tools), in order
+-- Invoked each time a new document (song) is created or loaded. In other words:
+-- each time the result of renoise.song() is changed. Also called when the script
+-- gets reloaded (only happens with the auto_reload debugging tools), in order
 -- to connect the new script instance to the already running document.
 renoise.tool().app_new_document_observable
   -> [renoise.Document.Observable object]

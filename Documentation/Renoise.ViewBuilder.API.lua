@@ -910,6 +910,12 @@ valuebox.min
 valuebox.max
   -> [number]
 
+-- Get/set inc/dec step amounts when clicking the <> buttons.
+-- First value is the small step (applied on left clicks), second value is the
+-- big step (applied on right clicks)
+valuebox.steps
+  -> [{1=Number,2=Number}]
+
 -- Get/set the current value
 valuebox.value
   -> [number]
@@ -1135,6 +1141,16 @@ slider.min
 slider.max
   -> [number]
 
+-- Get/set inc/dec step amounts when clicking the <> buttons.
+-- First value is the small step (applied on left clicks), second value is the
+-- big step (applied on right clicks)
+slider.steps
+  -> [{1=Number,2=Number}]
+
+-- Get/set the default value (applied on double-click).
+slider.default
+  -> [number]
+
 -- Get/set the current value.
 slider.value
   -> [number]
@@ -1172,25 +1188,29 @@ slider.bind
 -------- Functions
 
 -- Add/remove value change notifiers.
-slider:add_notifier(function or {object, function} or {function, object})
-slider:remove_notifier(function or {object, function} or {function, object})
+minislider:add_notifier(function or {object, function} or {function, object})
+minislider:remove_notifier(function or {object, function} or {function, object})
 
 
 -------- Properties
 
 -- Get/set the min/max values that are expected, allowed.
 -- By default 0.0 and 1.0.
-slider.min
+minislider.min
   -> [number]
-slider.max
+minislider.max
+  -> [number]
+
+-- Get/set the default value (applied on double-click).
+minislider.default
   -> [number]
 
 -- Get/set the current value.
-slider.value
+minislider.value
   -> [number]
 
 -- Valid in the construction table only: Set up a value notifier.
-slider.notifier
+minislider.notifier
   -> [function(number)]
 
 -- Valid in the construction table only: Bind the view's value to a
@@ -1199,7 +1219,7 @@ slider.notifier
 -- soon as the Observable's value changes - automatically keeps both values
 -- in sync.
 -- Notifiers can be added to either the view or the Observable object.
-slider.bind
+minislider.bind
   -> [ObservableNumber Object]
 
 --------------------------------------------------------------------------------
@@ -1238,6 +1258,10 @@ rotary:remove_notifier(function or {object, function} or {function, object})
 rotary.min
   -> [number]
 rotary.max
+  -> [number]
+
+-- Get/set the default value (applied on double-click).
+rotary.default
   -> [number]
 
 -- Get/set the current value.
