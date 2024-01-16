@@ -2130,7 +2130,9 @@ renoise.song().instruments[].sample_modulation_sets[]:copy_from(
 
 -- Insert a new device at the given position. "device_path" must be one of
 -- renoise.song().instruments[].sample_modulation_sets[].available_devices.
-renoise.song().instruments[].sample_modulation_sets[]:insert_device_at(device_path, index) 
+-- device_target specifies where the modulation gets applied (Volume, Pan, Pitch, Cutoff, Resonance)
+-- see SampleModulationDevice.TARGET_* constants
+renoise.song().instruments[].sample_modulation_sets[]:insert_device_at(device_path, device_target, index) 
   -> [returns new renoise.SampleModulationDevice object]
 -- Delete a device at the given index.
 renoise.song().instruments[].sample_modulation_sets[]:delete_device_at(index)
