@@ -282,7 +282,10 @@ function toggler(x, y)
   local rns = renoise.song()
   local source = rns.patterns[rns.sequencer:pattern(y)]
   local dest = rns.patterns[GRIDPIE_IDX]
-  if dest == nil then abort() end
+  if dest == nil then
+    abort()
+    return
+  end
   local lc = least_common(dest.number_of_lines, source.number_of_lines)
   local toc = 0
 
