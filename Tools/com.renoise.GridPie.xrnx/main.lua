@@ -282,6 +282,7 @@ function toggler(x, y)
   local rns = renoise.song()
   local source = rns.patterns[rns.sequencer:pattern(y)]
   local dest = rns.patterns[GRIDPIE_IDX]
+  if dest == nil then abort() end
   local lc = least_common(dest.number_of_lines, source.number_of_lines)
   local toc = 0
 
@@ -517,10 +518,10 @@ end
 -- Abort
 --------------------------------------------------------------------------------
 
-function abort(notification)
+function abort()
 
   renoise.app():show_message(
-    "You dun goofed! Grid Pie needs to be restarted."
+    "Unexpected problem! Usually triggered by moving or deleting the special Grid Pie pattern, and Grid Pie needs to be restarted."
   )
   if MY_INTERFACE and MY_INTERFACE.visible then MY_INTERFACE:close() end
 
