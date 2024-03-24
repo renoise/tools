@@ -1,16 +1,18 @@
 require "toolbox"
 
---[[ Globals, capitalized for easier recognition ]]--
+--[[ Globals, capitalized for easier recognition, alphabetical order ]]--
 
 local DBUG_MODE = false
 local DISABLE_POLYRHYTHMS = false
 local GRIDPIE_IDX = nil
+local INDICATORS = table.create()
 local MATRIX_CELLS = table.create()
 local MATRIX_HEIGHT = 8
 local MATRIX_WIDTH = 8
 local MY_INTERFACE = nil
 local POLY_COUNTER = table.create()
 local REVERT_PM_SLOT = table.create()
+local SPECIAL_PATTERN_NAME = "__GRID_PIE__"
 local VB = nil
 local X_POS = 1
 local Y_POS = 1
@@ -47,12 +49,11 @@ end
 
 
 --------------------------------------------------------------------------------
--- Is garbage PM position?
+-- Is garbage Pattern Matrix position?
 --------------------------------------------------------------------------------
 
 function is_garbage_pos(x, y)
 
-  -- Garbage position?
   local sequencer = renoise.song().sequencer
   local total_sequence = #sequencer.pattern_sequence
 
@@ -91,7 +92,7 @@ end
 -- Toggle all slot mutes in Pattern Matrix
 --------------------------------------------------------------------------------
 
-function init_pm_slots_to(val)
+function init_pm_slots_to(muted)
 
   local rns = renoise.song()
   local tracks = rns.tracks
@@ -106,13 +107,13 @@ function init_pm_slots_to(val)
     then
       for y = 1, total_sequence do
         local tmp = x .. ',' .. y
-        if val and rns.sequencer:track_sequence_slot_is_muted(x, y) then
+        if muted and rns.sequencer:track_sequence_slot_is_muted(x, y) then
         -- Store original state
           REVERT_PM_SLOT[tmp] = true
         end
-        rns.sequencer:set_track_sequence_slot_is_muted(x , y, val)
-        if not val and REVERT_PM_SLOT ~= nil and REVERT_PM_SLOT[tmp] ~= nil then
-        -- Revert to original state
+        rns.sequencer:set_track_sequence_slot_is_muted(x , y, muted)
+        if not muted and REVERT_PM_SLOT ~= nil and REVERT_PM_SLOT[tmp] ~= nil then
+          -- Revert to original state
           rns.sequencer:set_track_sequence_slot_is_muted(x , y, true)
         end
       end
@@ -135,27 +136,29 @@ function init_gp_pattern()
   local total_sequence = #sequencer.pattern_sequence
   local last_pattern = rns.sequencer:pattern(total_sequence)
 
-  if rns.patterns[last_pattern].name ~= "__GRID_PIE__" then
+  if rns.patterns[last_pattern].name ~= SPECIAL_PATTERN_NAME then
     -- Create new pattern
     local new_pattern = rns.sequencer:insert_new_pattern_at(total_sequence + 1)
-    rns.patterns[new_pattern].name = "__GRID_PIE__"
+    rns.patterns[new_pattern]:clear()
+    rns.patterns[new_pattern].name = SPECIAL_PATTERN_NAME
     GRIDPIE_IDX = new_pattern
     total_sequence = total_sequence + 1
   else
     -- Clear pattern, unmute slot
     rns.patterns[last_pattern]:clear()
-    rns.patterns[last_pattern].name = "__GRID_PIE__"
+    rns.patterns[last_pattern].name = SPECIAL_PATTERN_NAME
     for x = 1, total_tracks do
       rns.sequencer:set_track_sequence_slot_is_muted(x , total_sequence, false)
     end
     GRIDPIE_IDX = last_pattern
   end
+ 
 
   -- Cleanup any other pattern named __GRID_PIE__
   for x = 1, total_sequence - 1 do
     local tmp = rns.sequencer:pattern(x)
 
-    if rns.patterns[tmp].name:find("__GRID_PIE__") ~= nil then
+    if rns.patterns[tmp].name:find(SPECIAL_PATTERN_NAME) ~= nil then
       rns.patterns[tmp].name = ""
     end
   end
@@ -176,21 +179,32 @@ end
 
 function adjust_grid()
 
-  local cell = nil
+  local rns = renoise.song()
   for x = X_POS, MATRIX_WIDTH + X_POS - 1 do
+    local mtx_x = x - X_POS + 1
     for y = Y_POS, MATRIX_HEIGHT + Y_POS - 1 do
-      cell = matrix_cell(x - X_POS + 1, y - Y_POS + 1)
+      -- Cell
+      local cell = matrix_cell(mtx_x, y - Y_POS + 1)
       if cell ~= nil and not is_garbage_pos(x, y) then
-        local val = renoise.song().sequencer:track_sequence_slot_is_muted(x, y)
-        if val then cell.color = { 0, 0, 0 }
+        local slot_is_muted = rns.sequencer:track_sequence_slot_is_muted(x, y)
+        if slot_is_muted then cell.color = { 0, 0, 0 }
         else cell.color = { 0, 255, 0 } end
       elseif cell ~= nil then
          cell.color = { 0, 0, 0 }
       end
     end
+    -- Indicator
+    local indicator = INDICATORS[mtx_x]
+    if indicator ~= nil and not is_garbage_pos(x, Y_POS) then
+      local track_is_empty = rns.patterns[GRIDPIE_IDX].tracks[x].is_empty
+      if track_is_empty then indicator.color = { 0, 0, 0 }
+      else indicator.color = { 255, 255, 0 } end
+    elseif indicator ~= nil then
+      indicator.color = { 0, 0, 0 }
+    end
   end
-  renoise.song().selected_track_index = X_POS
-  renoise.song().selected_sequence_index = Y_POS
+  rns.selected_track_index = X_POS
+  rns.selected_sequence_index = Y_POS
 
 end
 
@@ -403,7 +417,7 @@ function build_interface()
     },
   }
 
-  -- Checkmark Matrix
+  -- Matrix
   local matrix_view = VB:row { }
   for x = 1, MATRIX_WIDTH do
     local column = VB:column {  margin = 2, spacing = 2, }
@@ -422,7 +436,17 @@ function build_interface()
     matrix_view:add_child(column)
   end
 
-  -- Racks
+  -- Indicators
+  local indicators_view = VB:row { spacing = 29, margin = 2 }
+  for x = 1, MATRIX_WIDTH do
+     INDICATORS[x] = VB:button {
+       width = 10,
+       height = 10,
+     }
+     indicators_view:add_child(INDICATORS[x])
+  end
+
+  -- Assmble all the racks
   local rack = VB:column {
     uniform = true,
     margin = renoise.ViewBuilder.DEFAULT_DIALOG_MARGIN,
@@ -444,6 +468,14 @@ function build_interface()
       },
     },
 
+    VB:column {
+      VB:horizontal_aligner {
+        mode = "center",
+        indicators_view,
+      },
+    },
+
+
   }
 
   -- Show dialog
@@ -463,13 +495,16 @@ function main(x, y)
     x ~= MATRIX_WIDTH or
     y ~= MATRIX_HEIGHT
   then
+    if MY_INTERFACE and MY_INTERFACE.visible then
+      init_pm_slots_to(false)
+      MY_INTERFACE:close()
+    end
     MATRIX_WIDTH = x
     MATRIX_HEIGHT = y
     REVERT_PM_SLOT = table.create()
     POLY_COUNTER = table.create()
     init_pm_slots_to(true)
     init_gp_pattern()
-    if MY_INTERFACE and MY_INTERFACE.visible then MY_INTERFACE:close() end
     build_interface()
   end
   run()
@@ -485,7 +520,7 @@ end
 function abort(notification)
 
   renoise.app():show_message(
-  "You dun goofed! Grid Pie needs to be restarted."
+    "You dun goofed! Grid Pie needs to be restarted."
   )
   if MY_INTERFACE and MY_INTERFACE.visible then MY_INTERFACE:close() end
 
@@ -548,7 +583,7 @@ function idler(notification)
   end
 
   local last_pattern = renoise.song().sequencer:pattern(#renoise.song().sequencer.pattern_sequence)
-  if renoise.song().patterns[last_pattern].name ~= "__GRID_PIE__" then
+  if renoise.song().patterns[last_pattern].name ~= SPECIAL_PATTERN_NAME then
     abort()
   else
 
@@ -703,6 +738,16 @@ renoise.tool():add_menu_entry {
 renoise.tool():add_menu_entry {
   name = "Main Menu:Tools:Grid Pie:4x4...",
   invoke = function() main(4, 4) end
+}
+
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Grid Pie:8x2...",
+  invoke = function() main(8, 2) end
+}
+
+renoise.tool():add_menu_entry {
+  name = "Main Menu:Tools:Grid Pie:8x5...",
+  invoke = function() main(8, 5) end
 }
 
 renoise.tool():add_menu_entry {
