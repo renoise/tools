@@ -1610,7 +1610,7 @@ renoise.song().instruments[].phrases[].loop_end, _observable
   -> [number, loop_start-number_of_lines]
 
 -- Phrase autoseek settings.
-renoise.song().instruments[].phrases[].autoseek, _observable
+renoisesong().instruments[].phrases[].autoseek, _observable
   -> [boolean]
 
 -- Phrase local lines per beat setting. New phrases get initialized with 
