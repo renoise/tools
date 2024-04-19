@@ -934,6 +934,54 @@ for macro_index = 1, 8 do
   }
 end
 
+-- /song/instrument/XXX/macro_pitchbend
+
+add_instrument_action { 
+  pattern = ("/macro_pitchbend"), 
+  description = "Set instrument pitchbend macro parameter value [0 - 1]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "number") },
+  handler = function(instrument_index, value)
+    if (instrument_index >= 1 and instrument_index <= #song().instruments) then
+      song():instrument(instrument_index).pitchbend_macro.value = 
+        clamp_value(value, 0.0, 1.0)
+    end
+  end
+}
+
+-- /song/instrument/XXX/macro_modulation_wheel
+
+add_instrument_action { 
+  pattern = ("/macro_modulation_wheel"), 
+  description = "Set instrument modulation wheel macro parameter value [0 - 1]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "number") },
+  handler = function(instrument_index, value)
+    if (instrument_index >= 1 and instrument_index <= #song().instruments) then
+      song():instrument(instrument_index).modulation_wheel_macro.value = 
+        clamp_value(value, 0.0, 1.0)
+    end
+  end
+}
+
+-- /song/instrument/XXX/macro_channel_pressure
+
+add_instrument_action { 
+  pattern = ("/macro_channel_pressure"), 
+  description = "Set instrument channel pressure macro parameter value [0 - 1]\n"..
+    "XXX is the instrument index, -1 the currently selected one",
+  
+  arguments = { argument("value", "number") },
+  handler = function(instrument_index, value)
+    if (instrument_index >= 1 and instrument_index <= #song().instruments) then
+      song():instrument(instrument_index).channel_pressure_macro.value = 
+        clamp_value(value, 0.0, 1.0)
+    end
+  end
+}
+
 
 --------------------------------------------------------------------------------
 -- Track Action Registration
