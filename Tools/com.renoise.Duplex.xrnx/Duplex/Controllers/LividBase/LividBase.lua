@@ -50,21 +50,21 @@ function LividBase:output_value(pt,xarg,ui_obj)
     local color = self:quantize_color(pt.color)
     local rslt = nil
 
-    if cTable.compare(color,LividBase.COLOR_OFF) then
+    if cLib.table_compare(color,LividBase.COLOR_OFF) then
       rslt = 0
-    elseif cTable.compare(color,LividBase.COLOR_WHITE) then
+    elseif cLib.table_compare(color,LividBase.COLOR_WHITE) then
       rslt = 1
-    elseif cTable.compare(color,LividBase.COLOR_GREEN) then
+    elseif cLib.table_compare(color,LividBase.COLOR_GREEN) then
       rslt = 127
-    elseif cTable.compare(color,LividBase.COLOR_YELLOW) then
+    elseif cLib.table_compare(color,LividBase.COLOR_YELLOW) then
       rslt = 64
-    elseif cTable.compare(color,LividBase.COLOR_BLUE) then
+    elseif cLib.table_compare(color,LividBase.COLOR_BLUE) then
       rslt = 32
-    elseif cTable.compare(color,LividBase.COLOR_RED) then
+    elseif cLib.table_compare(color,LividBase.COLOR_RED) then
       rslt = 16
-    elseif cTable.compare(color,LividBase.COLOR_MAGENTA) then
+    elseif cLib.table_compare(color,LividBase.COLOR_MAGENTA) then
       rslt = 8
-    elseif cTable.compare(color,LividBase.COLOR_CYAN) then
+    elseif cLib.table_compare(color,LividBase.COLOR_CYAN) then
       rslt = 4
     end
 
