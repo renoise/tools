@@ -2593,12 +2593,12 @@ renoise.song().instruments[].samples[].loop_end, _observable
 
 -- The linked modulation set. 0 when disable, else a valid index for the
 -- instruments[].sample_modulation_sets table
-renoise.song().instruments[].sample[].modulation_set_index, _observable 
+renoise.song().instruments[].samples[].modulation_set_index, _observable 
   -> [number]
   
 -- The linked instrument device chain. 0 when disable, else a valid index for the
 -- instruments[].sample_device_chain table
-renoise.song().instruments[].sample[].device_chain_index, _observable 
+renoise.song().instruments[].samples[].device_chain_index, _observable 
   -> [number]
 
 -- Buffer.
