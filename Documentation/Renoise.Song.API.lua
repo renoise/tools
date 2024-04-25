@@ -1433,7 +1433,7 @@ renoise.song().instruments[].macros[]:mapping(index)
 
 -------- Properties
 
--- Macro name as visible in the GUI when mappings are presents.
+-- Macro name as visible in the GUI when mappings are present.
 renoise.song().instruments[].macros[].name, _observable 
   -> [string]
 
