@@ -1954,7 +1954,7 @@ renoise.song().instruments[].sample_modulation_sets[].devices[]:remove_point_at(
 
 -- External editor visibility.
 renoise.song().instruments[].sample_modulation_sets[].devices[].external_editor_visible
- -> [boolean, set to true to show he editor, false to close it]
+ -> [boolean, set to true to show the editor, false to close it]
 
 -- Play mode (interpolation mode).
 renoise.song().instruments[].sample_modulation_sets[].devices[].play_mode, _observable
@@ -2048,7 +2048,7 @@ renoise.song().instruments[].sample_modulation_sets[].devices[]:remove_point_at(
 
 -- External editor visibility.
 renoise.song().instruments[].sample_modulation_sets[].devices[].external_editor_visible
- -> [boolean, set to true to show he editor, false to close it]
+ -> [boolean, set to true to show the editor, false to close it]
   
 -- Play mode (interpolation mode).
 renoise.song().instruments[].sample_modulation_sets[].devices[].play_mode, _observable
