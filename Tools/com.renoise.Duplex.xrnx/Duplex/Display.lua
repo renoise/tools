@@ -401,7 +401,7 @@ function Display:set_parameter(param,ui_obj,point,skip_ui)
 
       local handle_fader_widget = function()
         widget:remove_notifier(self.ui_notifiers[param.xarg.id])
-        widget.value = tonumber(value)
+        widget.value = math.min(tonumber(value), param.xarg.maximum)
         widget:add_notifier(self.ui_notifiers[param.xarg.id])
       end
 
