@@ -43,12 +43,12 @@ Launchpad)</Description>
             <Param value="F#5" type="button" name="Button 2,8"  maximum="127" minimum="0"/>
             <Param value="C#4" type="button" name="Button 3,1"  maximum="127" minimum="0"/>
             <Param value="D-4" type="button" name="Button 3,2"  maximum="127" minimum="0"/>
-            <Param value="E-4" type="button" name="Button 3,3"  maximum="127" minimum="0"/>
-            <Param value="F-4" type="button" name="Button 3,4"  maximum="127" minimum="0"/>
-            <Param value="F#4" type="button" name="Button 3,5"  maximum="127" minimum="0"/>
-            <Param value="G-4" type="button" name="Button 3,6"  maximum="127" minimum="0"/>
-            <Param value="G#4" type="button" name="Button 3,7"  maximum="127" minimum="0"/>
-            <Param value="A-4" type="button" name="Button 3,8"  maximum="127" minimum="0"/>
+            <Param value="D#4" type="button" name="Button 3,3"  maximum="127" minimum="0"/>
+            <Param value="E-4" type="button" name="Button 3,4"  maximum="127" minimum="0"/>
+            <Param value="F-4" type="button" name="Button 3,5"  maximum="127" minimum="0"/>
+            <Param value="F#4" type="button" name="Button 3,6"  maximum="127" minimum="0"/>
+            <Param value="G-4" type="button" name="Button 3,7"  maximum="127" minimum="0"/>
+            <Param value="G#4" type="button" name="Button 3,8"  maximum="127" minimum="0"/>
             <Param value="D#3" type="button" name="Button 4,1"  maximum="127" minimum="0"/>
             <Param value="E-3" type="button" name="Button 4,2"  maximum="127" minimum="0"/>
             <Param value="F-3" type="button" name="Button 4,3"  maximum="127" minimum="0"/>
