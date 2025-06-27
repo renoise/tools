@@ -21,16 +21,6 @@ duplex_configurations:insert {
 
   applications = {
     GridPie = {
-      palette = {
-        empty = {color=LaunchpadMiniMK3.COLOR_OFF},
-        empty_current = {color=LaunchpadMiniMK3.COLOR_YELLOW},
-        empty_active = {color=LaunchpadMiniMK3.COLOR_MAGENTA},
-        empty_active_current = {color=LaunchpadMiniMK3.COLOR_MAGENTA},
-        content_active = {color=LaunchpadMiniMK3.COLOR_CYAN},
-        content_active_current = {color=LaunchpadMiniMK3.COLOR_CYAN},
-        content_selected = {color=LaunchpadMiniMK3.COLOR_GREEN},
-        inactive_content = {color=LaunchpadMiniMK3.COLOR_BLUE}
-      },
 	    mappings = {
 	      grid = {
           group_name = "Grid",
