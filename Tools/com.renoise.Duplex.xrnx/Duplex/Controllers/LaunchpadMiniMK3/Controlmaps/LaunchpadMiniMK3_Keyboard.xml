@@ -1,0 +1,160 @@
+<Device>
+  <Name>Novation Launchpad Mini MK3</Name>
+  <Author>Danoise/Jesse Stevens/Philipp Mildenberger/ylmrx</Author>
+  <Description>Controlmap for keyboard modern launchpads.
+    Note: If you have the Automap software running in the background, please disable it on the Launchpad to avoid
+    conflicts between Duplex and Automap: simply press User2 + Down at the same time (this will toggle Automap on/off
+    for the Launchpad)</Description>
+  <States>
+    <State name="DimStateA" hide_when_inactive="false" disable_when_inactive="true" value="CC#95" type="toggle" active="true" />
+    <State name="DimStateB" hide_when_inactive="false" disable_when_inactive="true" value="CC#95" type="toggle" />
+    <State name="ToggleStateA" hide_when_inactive="true" receive_when_inactive="false" value="CC#95" type="toggle" active="true" />
+    <State name="ToggleStateB" hide_when_inactive="true" receive_when_inactive="false" value="CC#95" type="toggle" />
+  </States>
+  <Parameters>
+    <Column>
+      <Row>
+        <Group name="Controls" orientation="horizontal">
+          <Param value="CC#91" type="button" name="1" maximum="127" minimum="0" />
+          <Param value="CC#92" type="button" name="2" maximum="127" minimum="0" />
+          <ToggleStateA:Param value="CC#93" type="button" name="3" maximum="127" minimum="0" />
+          <ToggleStateA:Param value="CC#94" type="button" name="4" maximum="127" minimum="0" />
+          <ToggleStateB:Param value="CC#93" type="button" name="5" maximum="127" minimum="0" />
+          <ToggleStateB:Param value="CC#94" type="button" name="6" maximum="127" minimum="0" />
+          <Param value="CC#95" type="button" name="7" maximum="127" minimum="0" text="⬓"/>
+          <Param value="CC#96" type="button" name="8" maximum="127" minimum="0" />
+          <Param value="CC#97" type="button" name="9" maximum="127" minimum="0" />
+          <Param value="CC#98" type="button" name="10" maximum="127" minimum="0" />
+        </Group>
+      </Row>
+      <Row>
+        <Column>
+          <Row>
+            <Group name="KeypadsLeft" columns="4">
+              <DimStateB:Param value="A-5" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="A#5" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="B-5" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="C-6" type="button"  maximum="127" minimum="0" />
+
+              <DimStateB:Param value="B-4" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="C-5" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="C#5" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="D-5" type="button"  maximum="127" minimum="0" />
+
+              <DimStateB:Param value="C#4" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="D-4" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="D#4" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="E-4" type="button"  maximum="127" minimum="0" />
+            </Group>
+
+            <Group name="KeypadsRight" columns="4">
+              <DimStateB:Param value="C#6" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="D-6" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="D#6" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="E-6" type="button"  maximum="127" minimum="0" />
+
+              <DimStateB:Param value="D#5" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="E-5" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="F-5" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="F#5" type="button"  maximum="127" minimum="0" />
+
+              <DimStateB:Param value="F-4" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="F#4" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="G-4" type="button"  maximum="127" minimum="0" />
+              <DimStateB:Param value="G#4" type="button"  maximum="127" minimum="0" />
+            </Group>
+          </Row>
+					<Group name="LargeGrid" columns="8">
+            <DimStateA:Param value="A-5" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="A#5" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="B-5" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="C-6" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="C#6" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="D-6" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="D#6" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="E-6" type="button"  visible="false" maximum="127" minimum="0" />
+
+            <DimStateA:Param value="B-4" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="C-5" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="C#5" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="D-5" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="D#5" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="E-5" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="F-5" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="F#5" type="button"  visible="false" maximum="127" minimum="0" />
+
+            <DimStateA:Param value="C#4" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="D-4" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="D#4" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="E-4" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="F-4" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="F#4" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="G-4" type="button"  visible="false" maximum="127" minimum="0" />
+            <DimStateA:Param value="G#4" type="button"  visible="false" maximum="127" minimum="0" />
+
+            <Param value="D#3" type="button" maximum="127" minimum="0" />
+            <Param value="E-3" type="button" maximum="127" minimum="0" />
+            <Param value="F-3" type="button" maximum="127" minimum="0" />
+            <Param value="F#3" type="button" maximum="127" minimum="0" />
+            <Param value="G-3" type="button" maximum="127" minimum="0" />
+            <Param value="G#3" type="button" maximum="127" minimum="0" />
+            <Param value="A-3" type="button" maximum="127" minimum="0" />
+            <Param value="A#3" type="button" maximum="127" minimum="0" />
+            <Param value="F-2" type="button" maximum="127" minimum="0" />
+            <Param value="F#2" type="button" maximum="127" minimum="0" />
+            <Param value="G-2" type="button" maximum="127" minimum="0" />
+            <Param value="G#2" type="button" maximum="127" minimum="0" />
+            <Param value="A-2" type="button" maximum="127" minimum="0" />
+            <Param value="A#2" type="button" maximum="127" minimum="0" />
+            <Param value="B-2" type="button" maximum="127" minimum="0" />
+            <Param value="C-3" type="button" maximum="127" minimum="0" />
+            <Param value="G-1" type="button" maximum="127" minimum="0" />
+            <Param value="G#1" type="button" maximum="127" minimum="0" />
+            <Param value="A-1" type="button" maximum="127" minimum="0" />
+            <Param value="A#1" type="button" maximum="127" minimum="0" />
+            <Param value="B-1" type="button" maximum="127" minimum="0" />
+            <Param value="C-2" type="button" maximum="127" minimum="0" />
+            <Param value="C#2" type="button" maximum="127" minimum="0" />
+            <Param value="D-2" type="button" maximum="127" minimum="0" />
+            <Param value="A-0" type="button" maximum="127" minimum="0" />
+            <Param value="A#0" type="button" maximum="127" minimum="0" />
+            <Param value="B-0" type="button" maximum="127" minimum="0" />
+            <Param value="C-1" type="button" maximum="127" minimum="0" />
+            <Param value="C#1" type="button" maximum="127" minimum="0" />
+            <Param value="D-1" type="button" maximum="127" minimum="0" />
+            <Param value="D#1" type="button" maximum="127" minimum="0" />
+            <Param value="E-1" type="button" maximum="127" minimum="0" />
+            <Param value="B--1" type="button" maximum="127" minimum="0" />
+            <Param value="C-0" type="button" maximum="127" minimum="0" />
+            <Param value="C#0" type="button" maximum="127" minimum="0" />
+            <Param value="D-0" type="button" maximum="127" minimum="0" />
+            <Param value="D#0" type="button" maximum="127" minimum="0" />
+            <Param value="E-0" type="button" maximum="127" minimum="0" />
+            <Param value="F-0" type="button" maximum="127" minimum="0" />
+            <Param value="F#0" type="button" maximum="127" minimum="0" />
+          </Group>
+        </Column>
+				<ToggleStateA:Group name="Triggers" orientation="vertical" columns="1">
+          <Param value="CC#89" type="button" maximum="127" minimum="0" />
+          <Param value="CC#79" type="button" maximum="127" minimum="0" />
+          <Param value="CC#69" type="button" maximum="127" minimum="0" />
+          <Param value="CC#59" type="button" maximum="127" minimum="0" />
+          <Param value="CC#49" type="button" maximum="127" minimum="0" />
+          <Param value="CC#39" type="button" maximum="127" minimum="0" />
+          <Param value="CC#29" type="button" maximum="127" minimum="0" />
+          <Param value="CC#19" type="button" maximum="127" minimum="0" />
+        </Group>
+				<ToggleStateB:Group name="TriggersAlt" orientation="vertical" columns="1">
+          <Param value="CC#89" type="button" maximum="127" minimum="0" />
+          <Param value="CC#79" type="button" maximum="127" minimum="0" />
+          <Param value="CC#69" type="button" maximum="127" minimum="0" />
+          <Param value="CC#59" type="button" maximum="127" minimum="0" />
+          <Param value="CC#49" type="button" maximum="127" minimum="0" />
+          <Param value="CC#39" type="button" maximum="127" minimum="0" />
+          <Param value="CC#29" type="button" maximum="127" minimum="0" />
+          <Param value="CC#19" type="button" maximum="127" minimum="0" />
+        </Group>
+      </Row>
+    </Column>
+  </Parameters>
+</Device>
