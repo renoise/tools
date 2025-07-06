@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool doc_version="0">
-  <Name>SononymPilot</Name>
+  <Name>Sononymph with Paketti Modifications</Name>
   <Id>com.renoise.Sononymph</Id>
-  <ApiVersion>5</ApiVersion>
-  <Version>0.1</Version>
-  <Author>danoise [bjorn.nesby@gmail.com]</Author>
+  <Version>0.91</Version>
+  <ApiVersion>6</ApiVersion>
+  <Author>danoise &amp; esaruoho</Author>
+  <AutoUpgraded>false</AutoUpgraded>
   <Category>Integration</Category>
-  <Description>This tool adds Sononym integration to Renoise. Launch from the Tools menu</Description>
-  <Homepage>http://renoise.com/tools/xStream</Homepage>
+  <Description>This tool adds Sononym integration to Renoise. Launch from the Tools menu
+minor fixes by Esa Ruoho</Description>
+  <Homepage>http://patreon.com/esaruoho</Homepage>
+  <Platform/>
+  <Icon/>
 </RenoiseScriptingTool>
