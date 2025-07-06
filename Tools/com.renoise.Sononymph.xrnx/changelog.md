@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.92
+
+### New Features
+- **Sample Navigator Enhancement**: Added "Load Selected Sample to Selected Slot" function specifically for Sample Navigator context
+- **Targeted Sample Loading**: Load samples from Sononym directly into the currently selected sample slot without creating new instruments
+- **Smart Slot Loading**: Preserves slice markers and settings when loading into existing sample slots
+- **Menu Entry**: New Sample Navigator menu entry for direct slot loading functionality
+
+### Technical Improvements
+- Enhanced sample loading with `load_selected_sample_to_selected_slot()` function
+- Improved error handling for sample slot selection validation
+- Better user feedback with specific status messages for slot loading operations
+
 ## 0.91
 
 ### Major Changes

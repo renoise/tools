@@ -1095,6 +1095,101 @@ function App:load_selected_sample_from_sononym(show_prompt)
 end
 
 ---------------------------------------------------------------------------------------------------
+-- Load currently selected sample from Sononym directly to the selected sample slot
+-- This function is specifically for Sample Navigator context
+function App:load_selected_sample_to_selected_slot()
+  TRACE("App:load_selected_sample_to_selected_slot()")
+  
+  -- Check if there's a selected sample slot
+  if not rns.selected_sample then
+    renoise.app():show_message("No sample slot selected.\nPlease select a sample slot first.")
+    return false
+  end
+  
+  -- Get the current selection directly from Sononym's JSON
+  local current_selection = App.parse_config(self.prefs.path_to_config.value)
+  if not current_selection then
+    renoise.app():show_message("Failed to get Sononym selection.\nMake sure Sononym has a file selected.")
+    return false
+  end
+  
+  -- Get the sample instance
+  local sample = rns.selected_sample
+  local sample_name = string.match(current_selection.filename, "([^/]+)$") or current_selection.filename
+  
+  -- Construct the full path (reusing the logic from do_transfer)
+  local config_folder,_,__ = cFilesystem.get_path_parts(self.prefs.path_to_config.value)
+  local folder,_,__ = cFilesystem.get_path_parts(current_selection.locationPath)
+  
+  local fpath
+  if (folder == config_folder) then 
+    -- internal sononym library means filename is relative to the library folder
+    -- Remove 'sononym.db' from locationPath to get the base folder
+    local library_base = string.gsub(current_selection.locationPath, "sononym%.db$", "")
+    fpath = cFilesystem.unixslashes(library_base .. current_selection.filename)
+  else
+    -- external path, filename should be combined with folder
+    fpath = cFilesystem.unixslashes(folder .. current_selection.filename)
+  end
+  
+  TRACE("Selected Sample Full path for sample slot: " .. fpath)
+  
+  -- If the constructed path doesn't exist, try alternative constructions
+  if not io.exists(fpath) then
+    TRACE("Primary path doesn't exist, trying alternatives...")
+    
+    -- Try treating the filename as an absolute path
+    local alt_path1 = cFilesystem.unixslashes(current_selection.filename)
+    if io.exists(alt_path1) then
+      TRACE("Found file using filename as absolute path:", alt_path1)
+      fpath = alt_path1
+    else
+      -- Try combining with the directory containing sononym.db
+      local alt_path2 = cFilesystem.unixslashes(folder .. "/" .. current_selection.filename)
+      if io.exists(alt_path2) then
+        TRACE("Found file using folder + filename with slash:", alt_path2)
+        fpath = alt_path2
+      end
+    end
+  end
+  
+  -- Check if the file exists before attempting to load
+  if not io.exists(fpath) then
+    TRACE("File not found at constructed path:", fpath)
+    renoise.app():show_message("Failed to load sample:\nFile does not exist:\n" .. fpath)
+    return false
+  end
+  
+  -- Load the sample directly into the selected sample slot
+  local success,err = pcall(function()
+    return self:load_sample_with_slice_preservation(sample, fpath)
+  end)
+  
+  if not success then 
+    TRACE("Loading failed with error:", err)
+    renoise.app():show_message("Failed to load sample:\n"..tostring(err))
+    return false
+  end
+  
+  if not err then
+    TRACE("Loading failed - load_sample_with_slice_preservation returned false")
+    renoise.app():show_message("Failed to load sample: unknown error")
+    return false
+  end
+  
+  -- Update sample name  
+  local folder,filename,ext = cFilesystem.get_path_parts(current_selection.filename)
+  sample.name = filename
+  
+  -- Display message in status bar
+  local msg = "Loaded sample to selected slot: "..filename
+  renoise.app():show_status(msg)
+  TRACE(msg)
+  
+  return true
+end
+
+---------------------------------------------------------------------------------------------------
 -- Static methods
 ---------------------------------------------------------------------------------------------------
 -- Parse sononym configuration file (query.json) to find currently selected path 
