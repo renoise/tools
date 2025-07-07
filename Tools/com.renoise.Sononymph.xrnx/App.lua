@@ -1534,7 +1534,7 @@ local os_name = os.platform()
   if os_name == "WINDOWS" then command = 'start "" "' .. directory_path .. '"'
   elseif os_name == "MACINTOSH" then command = 'open "' .. directory_path .. '"'
   else os_name = 'xdg-open "' .. directory_path .. '"' end
-  os.execute(command)
+  os.execute(command .. " &")
 
 
 end
