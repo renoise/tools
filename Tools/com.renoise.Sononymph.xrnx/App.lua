@@ -759,7 +759,7 @@ local tmp_path=cFilesystem.unixslashes(tmp_path)
   local path_to_exe = cFilesystem.unixslashes(self.prefs.path_to_exe.value)
   local cmd = string.format('"%s" %s',path_to_exe,cFilesystem.unixslashes(tmp_path))
 print (cmd)
-  local code = os.execute(cmd)
+  local code = os.execute(cmd .. " &")
 
 return true
 end
