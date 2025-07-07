@@ -2,7 +2,7 @@
 <RenoiseScriptingTool doc_version="0">
   <Name>Sononymph</Name>
   <Id>com.renoise.Sononymph</Id>
-  <Version>1.1.0</Version>
+  <Version>1.10</Version>
   <ApiVersion>6</ApiVersion>
   <Author>danoise &amp; esaruoho</Author>
   <AutoUpgraded>false</AutoUpgraded>
