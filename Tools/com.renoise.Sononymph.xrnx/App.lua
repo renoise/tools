@@ -789,7 +789,7 @@ function App:do_browse()
   TRACE("Launching Sononym browse mode:", cmd)
   
   local success = pcall(function()
-    os.execute(cmd)
+    os.execute(cmd .. " &")
   end)
   
   if success then
