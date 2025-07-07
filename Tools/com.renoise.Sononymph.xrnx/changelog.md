@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.92
+## 1.1.0
 
 ### New Features
 - **Sample Navigator Enhancement**: Added "Load Selected Sample to Selected Slot" function specifically for Sample Navigator context
@@ -13,7 +13,7 @@
 - Improved error handling for sample slot selection validation
 - Better user feedback with specific status messages for slot loading operations
 
-## 0.91
+## 1.0.5
 
 ### Major Changes
 - Removed vLib and xLib dependencies - dialog now uses native Renoise ViewBuilder to show an almost identical dialog. (Cleaned up 101 unused library files, making the tool much lighter)
@@ -22,10 +22,6 @@
 - Made "Autostart" text bold to match other labels
 - Fixed startup crash caused by DocumentNode constructor error
 - Removed AppPrefs.lua from the codebase, as it's consolidated into main.lua.
-
-## 0.9
-
-### Small tweaks and improvements by Esa Ruoho (Lackluster)
 - Added menu entries in 6 different contexts (Instrument Box, Sample Editor, Sample Navigator, Main Menu)
 - Auto-transfer can now create new instruments or sample slots instead of just overwriting
 - Added functions for loading samples from Sononym with or without prompts
@@ -59,7 +55,7 @@
 - Better JSON config validation and error handling
 - Detect button behavior improved for single vs multiple version scenarios
 
-## 0.52
+## 1.0
 
 - Add `changelog.md`
 - `cLib.require()`, use for avoiding circular dependencies
