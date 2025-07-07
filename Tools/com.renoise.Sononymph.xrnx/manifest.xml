@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RenoiseScriptingTool doc_version="0">
-  <Name>Sononymph with Paketti Modifications</Name>
+  <Name>Sononymph</Name>
   <Id>com.renoise.Sononymph</Id>
   <Version>1.1.0</Version>
   <ApiVersion>6</ApiVersion>
