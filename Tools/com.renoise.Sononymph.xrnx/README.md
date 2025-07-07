@@ -1,4 +1,4 @@
-# Sononymph - Paketti Modifications v1.1.0
+# Sononymph v1.10
 
 ![Splash Image](docs/splash-large.png)
 
@@ -126,7 +126,7 @@ When enabled, automatically imports samples as you browse in Sononym:
 
 - **Original Tool**: danoise
 - **Paketti Modifications**: Esa Ruoho (Lackluster): http://patreon.com/esaruoho
-- **Version**: 1.1.0 - Added Sample Navigator selected slot loading functionality
+- **Version**: 1.10 - Added Sample Navigator selected slot loading functionality
 
 ---
 
