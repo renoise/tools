@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0
+## 1.10
 
 ### New Features
 - **Sample Navigator Enhancement**: Added "Load Selected Sample to Selected Slot" function specifically for Sample Navigator context
@@ -13,7 +13,7 @@
 - Improved error handling for sample slot selection validation
 - Better user feedback with specific status messages for slot loading operations
 
-## 1.0.5
+## 1.05
 
 ### Major Changes
 - Removed vLib and xLib dependencies - dialog now uses native Renoise ViewBuilder to show an almost identical dialog. (Cleaned up 101 unused library files, making the tool much lighter)
