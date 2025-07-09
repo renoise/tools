@@ -130,12 +130,3 @@
 [submodule "Tools/com.renoise.SelectionShaper.xrnx/source/vLib"]
 	path = Tools/com.renoise.SelectionShaper.xrnx/source/vLib
 	url = https://github.com/renoise/vLib.git
-[submodule "Tools/com.renoise.Sononymph.xrnx/source/xLib"]
-	path = Tools/com.renoise.Sononymph.xrnx/source/xLib
-	url = https://github.com/renoise/xLib.git
-[submodule "Tools/com.renoise.Sononymph.xrnx/source/vLib"]
-	path = Tools/com.renoise.Sononymph.xrnx/source/vLib
-	url = https://github.com/renoise/vLib.git
-[submodule "Tools/com.renoise.Sononymph.xrnx/source/cLib"]
-	path = Tools/com.renoise.Sononymph.xrnx/source/cLib
-	url = https://github.com/renoise/cLib.git
