@@ -1,5 +1,5 @@
 --[[============================================================================
-process_slicer.lua
+process_slicer.lua (fixed for Lua 5.2+ / Renoise)
 ============================================================================]]--
 
 --[[
@@ -60,12 +60,11 @@ function ProcessSlicer:__init(process_func, callback, ...)
     "expected nil or a function as second argument")    
 
   self.__process_func = process_func
-  self.__process_func_args = arg
+  self.__process_func_args = {...}  -- FIXED: use {...} instead of arg
   self.__process_thread = nil
   self.__callback = callback
   self.__data = nil
 end
-
 
 --------------------------------------------------------------------------------
 -- returns true when the current process currently is running
@@ -73,7 +72,6 @@ end
 function ProcessSlicer:running()
   return (self.__process_thread ~= nil)
 end
-
 
 --------------------------------------------------------------------------------
 -- start a process
@@ -86,7 +84,6 @@ function ProcessSlicer:start()
   renoise.tool().app_idle_observable:add_notifier(
     ProcessSlicer.__on_idle, self)
 end
-
 
 --------------------------------------------------------------------------------
 -- stop a running process
@@ -103,7 +100,7 @@ end
 --------------------------------------------------------------------------------
 -- reverse of unpack: puts any number of arguments into a table
 local function pack(...)
-  return arg
+  return {...} -- FIXED: use {...} instead of arg
 end
 
 --------------------------------------------------------------------------------
