@@ -1,3 +1,6 @@
+local separator = package.config:sub(1,1)  -- Gets \ for Windows, / for Unix
+
+
 --[[
 This tool was originally created by danoise,
 and somewhat heavily modified by Esa Ruoho a.k.a. Lackluster.

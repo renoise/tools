@@ -495,15 +495,26 @@ function App:do_transfer()
   -- if any of these are true, instrument gets name of sample 
   local created_instrument = false 
   local instr_named_after_sample = false 
+  local created_new_instrument = false
 
 
-if self.prefs.autotransfercreateslot.value then
-  renoise.song().selected_instrument:insert_sample_at(#renoise.song().selected_instrument.samples+1)
-  renoise.song().selected_sample_index = #renoise.song().selected_instrument.samples
-elseif self.prefs.autotransfercreatenew.value then
-  renoise.song():insert_instrument_at(renoise.song().selected_instrument_index+1)
-  renoise.song().selected_instrument_index = renoise.song().selected_instrument_index + 1
-end
+  -- Debug: Show current preference values
+  TRACE("=== AUTO-TRANSFER DEBUG ===")
+  TRACE("autotransfercreateslot.value =", self.prefs.autotransfercreateslot.value)
+  TRACE("autotransfercreatenew.value =", self.prefs.autotransfercreatenew.value)
+
+  if self.prefs.autotransfercreateslot.value then
+    TRACE("Taking CREATE SLOT path...")
+    renoise.song().selected_instrument:insert_sample_at(#renoise.song().selected_instrument.samples+1)
+    renoise.song().selected_sample_index = #renoise.song().selected_instrument.samples
+  elseif self.prefs.autotransfercreatenew.value then
+    TRACE("Taking CREATE NEW INSTRUMENT path...")
+    renoise.song():insert_instrument_at(renoise.song().selected_instrument_index+1)
+    renoise.song().selected_instrument_index = renoise.song().selected_instrument_index + 1
+    created_new_instrument = true
+  else
+    TRACE("Taking DEFAULT path (load to existing sample)...")
+  end
   
   local sample,instr = rns.selected_sample,rns.selected_instrument 
 
@@ -695,7 +706,7 @@ end
   local folder,filename,ext = cFilesystem.get_path_parts(self.selection_in_sononym.filename)
   sample.name = filename
   
-  if created_instrument or instr_named_after_sample then 
+  if created_instrument or instr_named_after_sample or created_new_instrument then 
     instr.name = filename
   end
   
@@ -728,18 +739,7 @@ function App:do_search()
     return false,"There is no sample selected, doing nothing."
   end
   
-  -- show important notice the first time 
-  if self.prefs.show_search_warning.value then 
-    local choice = renoise.app():show_prompt("Important notice",""
-      .."Please make sure that Sononym is running before launching a search"
-      .."\n(NB: this message is only shown once!)"
-      ,{"Start Search","Cancel"})
-    if (choice == "Cancel") then 
-      return false
-    else
-      self.prefs.show_search_warning.value = false
-    end
-  end
+  -- Warning removed - user doesn't want to see it
     
   local success,err = App.check_path(self.prefs.path_to_exe.value)
   if not success then 

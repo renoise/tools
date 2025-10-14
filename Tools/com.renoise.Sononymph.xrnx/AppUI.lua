@@ -568,8 +568,8 @@ function AppUI:update()
   local paths_are_valid = self.owner.paths_are_valid_observable.value
   local monitor_active = self.owner.monitor_active_observable.value
   ctrl.text = (paths_are_valid and monitor_active) 
-    and "✔ Monitoring for changes..." 
-    or "⚠ Invalid path: "..self.owner.invalid_path_observable.value
+    and "Monitoring for changes..." 
+    or "Invalid path: "..self.owner.invalid_path_observable.value
 
 end
 
