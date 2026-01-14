@@ -19,6 +19,7 @@ end
 
 -- find least common multiplier with N args
 function least_common(...)
+  local arg = {...}
   local cm = arg[1]
   for i=1,#arg-1,1 do
     cm = lcm(cm,arg[i+1])
@@ -45,7 +46,7 @@ function OneShotIdleNotifier:__init(delay_in_ms, callback, ...)
   assert(type(callback) == "function")
 
   self._callback = callback
-  self._args = arg
+  self._args = {...}
   self._invoke_time = os.clock() + delay_in_ms / 1000
 
   renoise.tool().app_idle_observable:add_notifier(self, self.__on_idle)
