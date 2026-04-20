@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>6</ApiVersion>
+  <Id>com.renoise.ReMCP</Id>
+  <Version>0.1</Version>
+  <Author>kraken [kraken@renoise.com]</Author>
+  <Name>Renoise MCP</Name>
+  <Category>Workflow,Integration</Category>
+  <Description>MCP server that exposes Renoise as an AI-controllable tool via the Model Context Protocol. Start the server, then connect Claude Desktop or any MCP client.</Description>
+  <Homepage>https://github.com/renoise/xrnx</Homepage>
+</RenoiseScriptingTool>
