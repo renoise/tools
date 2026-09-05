@@ -420,21 +420,36 @@ function AppUI:create_dialog()
                       renoise.app():show_warning(err or "Failed to set ConfigPath")
                     end
                   else
-                    -- Multiple versions found - show dropdown for selection
+                    -- Multiple versions found - apply the newest one right away and
+                    -- offer the dropdown in case an older one is wanted.
+                    -- Do NOT rely on the popup notifier to apply the first entry:
+                    -- a popup does not fire its notifier when the picked index is
+                    -- already the current one, and the popup starts at index 1. So
+                    -- picking "the newest" - the obvious choice - would silently
+                    -- leave ConfigPath untouched and the tool stuck on "invalid paths".
                     self.config_paths = versions
-                    
+
+                    local newest = versions[1]
+                    local success, err = self.owner:set_path_to_config(newest.path)
+                    if not success then
+                      renoise.app():show_warning(err or "Failed to set ConfigPath")
+                    end
+                    vb.views["path_to_config"].text = newest.path
+
                     -- Build dropdown items
                     local dropdown_items = {}
                     for i, version_info in ipairs(versions) do
                       table.insert(dropdown_items, "Sononym " .. version_info.version .. " (" .. version_info.path .. ")")
                     end
-                    
-                    -- Populate the popup menu
+
+                    -- Populate the popup menu, pre-selecting the version just applied
                     vb.views["config_path_popup"].items = dropdown_items
+                    vb.views["config_path_popup"].value = 1
                     -- Show the popup and hide the textfield
                     vb.views["config_path_popup"].visible = true
                     vb.views["path_to_config"].visible = false
-                    renoise.app():show_status("Multiple versions found - please select one")
+                    renoise.app():show_status("ConfigPath set to newest: " .. newest.path
+                      .. " (" .. #versions .. " versions found - pick another from the list if needed)")
                   end
                 end               
               end

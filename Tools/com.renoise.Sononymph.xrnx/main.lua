@@ -79,7 +79,7 @@ require ('App')
 -- local variables & initialization
 ---------------------------------------------------------------------------------------------------
 local TOOL_NAME = "Sononymph"
-local TOOL_VERSION = "1.10"
+local TOOL_VERSION = "1.11"
 
 local prefs = AppPrefs()
 renoise.tool().preferences = prefs
