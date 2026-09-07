@@ -203,23 +203,6 @@ end
 ---------------------------------------------------------------------------------------------------
 -- check paths and update "paths_are_valid" with result
 
--- persist the preferences to disk.
--- setting a value on the document only keeps it in memory until Renoise shuts
--- down cleanly - writing it out immediately means a configured path also
--- survives a crash.
-
-function App:save_preferences()
-  local ok,err = pcall(function()
-    self.prefs:save_as("preferences.xml")
-  end)
-  if not ok then
-    LOG("Sononymph: could not save preferences:",err)
-  end
-end
-
----------------------------------------------------------------------------------------------------
--- check paths and update "paths_are_valid" with result
-
 function App:check_paths()
   TRACE("App:check_paths()")
 
@@ -246,7 +229,6 @@ function App:check_paths()
         LOG("check_paths: stored ConfigPath is gone ("..tostring(path)
           ..") - switching to detected Sononym "..newest.version..": "..newest.path)
         self.prefs.path_to_config.value = cFilesystem.unixslashes(newest.path)
-        self:save_preferences()
         path = self.prefs.path_to_config.value
         success,err = App.check_path(path)
         if success then
@@ -357,7 +339,6 @@ function App:set_path_to_exe(file_path)
 
   file_path = cFilesystem.unixslashes(file_path)
   self.prefs.path_to_exe.value = file_path
-  self:save_preferences()
   local success,err = App.check_path(file_path)
   if not success then 
     self:stop_monitoring()
@@ -389,7 +370,6 @@ function App:set_path_to_config(file_path)
 
   file_path = cFilesystem.unixslashes(file_path)
   self.prefs.path_to_config.value = file_path  
-  self:save_preferences()
   local success,err = App.check_path(file_path)
   if not success then 
     self:stop_monitoring()
@@ -1592,23 +1572,13 @@ function OpenConfigPath()
 
   -- accept both unix and windows separators: the path can be typed in by hand
   local directory_path = config_path:match("(.*[/\\])")
-  if not directory_path then
-    renoise.app():show_status("Sononymph: ConfigPath does not look like a file path: "..config_path)
+  if not directory_path or not io.exists(directory_path) then
+    renoise.app():show_status("Sononymph: the ConfigPath folder does not exist: "..config_path)
     return
   end
 
-  local os_name = os.platform()
-  local command
-  if os_name == "WINDOWS" then
-    command = 'start "" "' .. App.native_path(directory_path) .. '"'
-  elseif os_name == "MACINTOSH" then
-    command = 'open "' .. directory_path .. '"'
-  else
-    command = 'xdg-open "' .. directory_path .. '"'
-  end
-
-  LOG("OpenConfigPath:",os_name,config_path,command)
-  os.execute(command .. " &")
+  LOG("OpenConfigPath:",directory_path)
+  renoise.app():open_path(directory_path)
 
 end
 
