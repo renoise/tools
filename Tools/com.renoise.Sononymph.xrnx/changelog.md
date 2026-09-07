@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.11
+
+### Fixes
+- **Similarity search now works on Windows**: Sononym answered every search launched from Renoise with `Indexing error - Reason: Unable to resolve location`. The temporary sample file was passed with forward slashes (`C:/Users/.../Renoise_TmpFile.flac`), which Sononym's crawler cannot resolve. Arguments handed to the Sononym executable are now converted to native separators (`App.native_path()`); the same applies to Browse Folder in Sononym.
+- **Quoted the search argument**: the temp file path was passed unquoted, so a user or temp folder containing a space broke the launch.
+- **"Detect" applied nothing when several Sononym versions were installed**: with 2+ versions the button only populated the dropdown and relied on its notifier. A popup does not fire its notifier when the picked index is already the current one, and it starts at index 1 - so choosing the newest version, the obvious choice, silently left ConfigPath unset and the tool stuck on "invalid paths". Detect now applies the newest version immediately and keeps the dropdown for picking an older one.
+- **"Open Path" crashed when ConfigPath was unset**: `App.lua:1521: attempt to concatenate local 'directory_path' (a nil value)`, which Renoise reports as the tool failing in one of its notifiers. Empty and non-matching paths are now reported in the status bar, and both unix and windows separators are accepted. The folder is now opened with `renoise.app():open_path()` instead of a hand-rolled per-platform shell command, which also fixes Linux, where the branch assigned its command to `os_name` instead of `command` and threw.
+- **A Sononym update no longer breaks the configuration**: Sononym keeps `query.json` in a version-named folder, so `.../Sononym/1.6.2/query.json` becomes `.../Sononym/1.6.14/query.json` as soon as Sononym updates itself. The tool was left pointing at a file that no longer existed and simply reported "invalid paths". It now adopts the newest version it can find and says which one in the status bar.
+
 ## 1.10
 
 ### New Features
